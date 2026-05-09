@@ -82,10 +82,10 @@ Conventions used throughout:
   - [x] 6.11 Extend the corruption PBT (or add `aggregate_corruption_test.dart`) so that Property 10 covers aggregate-level `DeserializationError` naming for every aggregate type above (Reqs 2.5, 11.4; Design §9 P10)
   - [x] 6.12 Commit golden JSON fixtures for one canonical instance of each aggregate type and byte-compare against `toJson` output (Design §10.3)
 
-- [ ] 7. Define the abstract repository contracts
-  - [ ] 7.1 Implement `lib/modules/domain/repositories/program_repository.dart` as an `abstract class ProgramRepository` exposing the methods listed in Design §6.2, typed solely in domain terms (Reqs 10.1, 10.3, 10.6; Design §6.2)
-  - [ ] 7.2 Implement `lib/modules/domain/repositories/session_repository.dart` as an `abstract class SessionRepository` exposing the methods listed in Design §6.3, typed solely in domain terms (Reqs 10.2, 10.4, 10.6; Design §6.3)
-  - [ ] 7.3 Add `test/domain/repository_contract_purity_test.dart` that imports both abstract repositories and statically asserts the barrel imports no Drift types — the test file itself must not import `package:drift/drift.dart` nor reference any generated Drift table (Reqs 10.1, 10.2; Design §10.3)
+- [x] 7. Define the abstract repository contracts
+  - [x] 7.1 Implement `lib/modules/domain/repositories/program_repository.dart` as an `abstract class ProgramRepository` exposing the methods listed in Design §6.2, typed solely in domain terms (Reqs 10.1, 10.3, 10.6; Design §6.2)
+  - [x] 7.2 Implement `lib/modules/domain/repositories/session_repository.dart` as an `abstract class SessionRepository` exposing the methods listed in Design §6.3, typed solely in domain terms (Reqs 10.2, 10.4, 10.6; Design §6.3)
+  - [x] 7.3 Add `test/domain/repository_contract_purity_test.dart` that imports both abstract repositories and statically asserts the barrel imports no Drift types — the test file itself must not import `package:drift/drift.dart` nor reference any generated Drift table (Reqs 10.1, 10.2; Design §10.3)
 
 - [ ] 8. Checkpoint — domain layer complete
   - [ ] 8.1 Run `dart run build_runner build --delete-conflicting-outputs`, run `flutter analyze`, and run `flutter test` to confirm every domain and serialization test passes. Ensure all tests pass, ask the user if questions arise. (Reqs 11.1, 11.2, 11.4, 13.4; Design §10.1)
