@@ -34,13 +34,13 @@ Conventions used throughout:
   - [x] 1.5 Create the module scaffolding: `lib/core/`, `lib/modules/domain/models/`, `lib/modules/domain/repositories/`, `lib/modules/persistence/database/`, `lib/modules/persistence/mappers/`, `lib/modules/persistence/repositories/`, `test/support/`, `test/domain/`, `test/serialization/`, `test/repository/`, `test/integration/`, plus empty barrel files `domain.dart` and `persistence.dart` (Design §3)
   - [x] 1.6 Add `tool/check_offline_imports.sh` that greps `lib/core/**`, `lib/modules/domain/**`, `lib/modules/persistence/**` for forbidden imports (`dart:io` network APIs, `package:http`, `package:dio`, `package:web_socket_channel`, `package:grpc`, `package:socket_io_client`) and exits non-zero on any match; document invocation in `README.md` (Reqs 12.1, 12.2, 12.3; Design §2)
 
-- [ ] 2. Build core infrastructure primitives
-  - [ ] 2.1 Implement `lib/core/clock.dart` wrapping `package:clock` with a thin `AppClock` abstraction that exposes `DateTime nowUtc()` (Design §6.5)
-  - [ ] 2.2 Implement `lib/core/schema_versions.dart` with `SchemaVersions.drift = 1` and `SchemaVersions.domain = 1` as the single source of truth and a private constructor that prevents instantiation (Reqs 8.5, 9.3; Design §5.4)
-  - [ ] 2.3 Implement `lib/core/canonical_json.dart` exposing `CanonicalJson.encode(Object?)` with sorted keys, RFC 8259 escaping, deterministic number formatting, and rejection of `NaN`/`±Infinity`, plus `CanonicalJson.sha256Hex(String)` using `package:crypto` (Reqs 6.1, 6.3, 11.1; Design §5.3, §7.4)
-  - [ ] 2.4 Write PBT in `test/core/canonical_json_property_test.dart` covering **determinism**, **round-trip compatibility**, and **idempotence** per Design §5.3 with at least 100 iterations using custom `Random`-based generators (Reqs 6.3; Design §5.3, §10.1)
-  - [ ] 2.5 Add example-based unit tests for `CanonicalJson` covering NaN/Infinity rejection, deeply nested maps, Unicode strings, and empty containers (Design §5.3)
-  - [ ] 2.6 Implement `lib/core/app_error.dart` exposing a top-level `AppError` marker interface (cross-cutting; BLoCs and future features will extend it) (Design §2, §8)
+- [x] 2. Build core infrastructure primitives
+  - [x] 2.1 Implement `lib/core/clock.dart` wrapping `package:clock` with a thin `AppClock` abstraction that exposes `DateTime nowUtc()` (Design §6.5)
+  - [x] 2.2 Implement `lib/core/schema_versions.dart` with `SchemaVersions.drift = 1` and `SchemaVersions.domain = 1` as the single source of truth and a private constructor that prevents instantiation (Reqs 8.5, 9.3; Design §5.4)
+  - [x] 2.3 Implement `lib/core/canonical_json.dart` exposing `CanonicalJson.encode(Object?)` with sorted keys, RFC 8259 escaping, deterministic number formatting, and rejection of `NaN`/`±Infinity`, plus `CanonicalJson.sha256Hex(String)` using `package:crypto` (Reqs 6.1, 6.3, 11.1; Design §5.3, §7.4)
+  - [x] 2.4 Write PBT in `test/core/canonical_json_property_test.dart` covering **determinism**, **round-trip compatibility**, and **idempotence** per Design §5.3 with at least 100 iterations using custom `Random`-based generators (Reqs 6.3; Design §5.3, §10.1)
+  - [x] 2.5 Add example-based unit tests for `CanonicalJson` covering NaN/Infinity rejection, deeply nested maps, Unicode strings, and empty containers (Design §5.3)
+  - [x] 2.6 Implement `lib/core/app_error.dart` exposing a top-level `AppError` marker interface (cross-cutting; BLoCs and future features will extend it) (Design §2, §8)
 
 - [ ] 3. Define the `DomainError` hierarchy
   - [ ] 3.1 Implement `lib/modules/domain/errors.dart` with a sealed `DomainError implements Exception` base and the final subclasses `ValidationError`, `ImmutabilityError`, `OrderingError`, `VersionMismatchError`, `DeserializationError`, `NotFoundError`, matching field shapes in Design §8 (Reqs 2.5, 3.4, 6.5, 7.3, 9.5, 11.4, 13.4; Design §8)
