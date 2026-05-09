@@ -87,8 +87,8 @@ Conventions used throughout:
   - [x] 7.2 Implement `lib/modules/domain/repositories/session_repository.dart` as an `abstract class SessionRepository` exposing the methods listed in Design §6.3, typed solely in domain terms (Reqs 10.2, 10.4, 10.6; Design §6.3)
   - [x] 7.3 Add `test/domain/repository_contract_purity_test.dart` that imports both abstract repositories and statically asserts the barrel imports no Drift types — the test file itself must not import `package:drift/drift.dart` nor reference any generated Drift table (Reqs 10.1, 10.2; Design §10.3)
 
-- [ ] 8. Checkpoint — domain layer complete
-  - [ ] 8.1 Run `dart run build_runner build --delete-conflicting-outputs`, run `flutter analyze`, and run `flutter test` to confirm every domain and serialization test passes. Ensure all tests pass, ask the user if questions arise. (Reqs 11.1, 11.2, 11.4, 13.4; Design §10.1)
+- [x] 8. Checkpoint — domain layer complete
+  - [x] 8.1 Run `dart run build_runner build --delete-conflicting-outputs`, run `flutter analyze`, and run `flutter test` to confirm every domain and serialization test passes. Ensure all tests pass, ask the user if questions arise. (Reqs 11.1, 11.2, 11.4, 13.4; Design §10.1)
 
 - [ ] 9. Build the Drift schema and database
   - [ ] 9.1 Implement `lib/modules/persistence/database/tables.dart` declaring `Programs`, `ProgramWorkoutDays`, `WorkoutDays`, `ExerciseGroups`, `Exercises`, `Sets`, `Sessions`, `SessionExercises`, `ExecutedSets`, `SessionNotes`, `ExtraWorkItems` with primary keys, unique `(parent_id, position)` constraints, `onDelete: KeyAction.cascade` on every template FK, and `sessions.workoutDayId` as a plain column with **no FK** (Reqs 9.1, 9.6; Design §5.1, §12 resolved decision 8)

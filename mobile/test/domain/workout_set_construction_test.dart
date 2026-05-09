@@ -13,7 +13,7 @@ void main() {
     test('valid repBased sets construct without error', () {
       final rng = Random(42);
       for (var i = 0; i < 100; i++) {
-        final mt = const MeasurementType.repBased();
+        const mt = MeasurementType.repBased();
         final set = anyWorkoutSet(rng, mt);
         expect(set.measurementType, equals(mt));
         expect(set.plannedValues, isA<PlannedRepBased>());
@@ -23,7 +23,7 @@ void main() {
     test('valid timeBased sets construct without error', () {
       final rng = Random(43);
       for (var i = 0; i < 100; i++) {
-        final mt = const MeasurementType.timeBased();
+        const mt = MeasurementType.timeBased();
         final set = anyWorkoutSet(rng, mt);
         expect(set.measurementType, equals(mt));
         expect(set.plannedValues, isA<PlannedTimeBased>());
@@ -44,7 +44,9 @@ void main() {
               exerciseId: anyUuidV4(rng),
               position: 0,
               measurementType: const MeasurementType.repBased(),
-              plannedValues: PlannedSetValues.timeBased(durationSeconds: 30),
+              plannedValues: const PlannedSetValues.timeBased(
+                durationSeconds: 30,
+              ),
               createdAt: now,
               updatedAt: now,
               schemaVersion: 1,
@@ -68,7 +70,10 @@ void main() {
             exerciseId: anyUuidV4(rng),
             position: 0,
             measurementType: const MeasurementType.timeBased(),
-            plannedValues: PlannedSetValues.repBased(weightKg: 60.0, reps: 10),
+            plannedValues: const PlannedSetValues.repBased(
+              weightKg: 60.0,
+              reps: 10,
+            ),
             createdAt: now,
             updatedAt: now,
             schemaVersion: 1,

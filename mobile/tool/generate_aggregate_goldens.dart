@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:zamaj/core/canonical_json.dart';
 import 'package:zamaj/modules/domain/models/actual_set_values.dart';
 import 'package:zamaj/modules/domain/models/executed_set.dart';
 import 'package:zamaj/modules/domain/models/exercise.dart';
@@ -19,12 +20,11 @@ import 'package:zamaj/modules/domain/models/session_snapshot.dart';
 import 'package:zamaj/modules/domain/models/substitute_exercise.dart';
 import 'package:zamaj/modules/domain/models/workout_day.dart';
 import 'package:zamaj/modules/domain/models/workout_set.dart';
-import 'package:zamaj/core/canonical_json.dart';
 
 void writeGolden(String name, Map<String, dynamic> json) {
   final file = File('test/serialization/golden/$name.json');
   file.writeAsStringSync(jsonEncode(json));
-  print('Wrote $name.json');
+  stdout.writeln('Wrote $name.json');
 }
 
 void main() {
@@ -43,7 +43,7 @@ void main() {
   const sessionNoteId = '99999999-9999-4999-8999-999999999999';
   const extraWorkId = 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa';
 
-  final metadata = const ExerciseMetadata(
+  const metadata = ExerciseMetadata(
     notes: 'Squeeze at the top',
     videoUrl: 'https://example.com/bench-press',
   );
@@ -102,7 +102,7 @@ void main() {
     schemaVersion: 1,
   );
 
-  final substitute = const SubstituteExercise(
+  const substitute = SubstituteExercise(
     name: 'Dumbbell Press',
     measurementType: MeasurementType.repBased(),
     metadata: ExerciseMetadata(notes: 'Use 30kg dumbbells'),

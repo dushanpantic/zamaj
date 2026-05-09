@@ -87,7 +87,7 @@ void main() {
         metadata: null,
       );
       expect(
-        _encode(ExerciseState.replaced(substitute: substitute).toJson()),
+        _encode(const ExerciseState.replaced(substitute: substitute).toJson()),
         equals(_golden('exercise_state_replaced')),
       );
     });
@@ -141,7 +141,7 @@ void main() {
     const sessionNoteId = '99999999-9999-4999-8999-999999999999';
     const extraWorkId = 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa';
 
-    final metadata = const ExerciseMetadata(
+    const metadata = ExerciseMetadata(
       notes: 'Squeeze at the top',
       videoUrl: 'https://example.com/bench-press',
     );

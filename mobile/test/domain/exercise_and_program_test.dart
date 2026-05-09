@@ -14,7 +14,7 @@ import '../support/generators.dart';
 void main() {
   final rng = Random(200);
 
-  WorkoutSet _makeSet({
+  WorkoutSet makeSet({
     required String exerciseId,
     required MeasurementType measurementType,
     required PlannedSetValues plannedValues,
@@ -44,7 +44,7 @@ void main() {
         measurementType: const MeasurementType.repBased(),
         metadata: ExerciseMetadata.empty,
         sets: [
-          _makeSet(
+          makeSet(
             exerciseId: exerciseId,
             measurementType: const MeasurementType.repBased(),
             plannedValues: const PlannedSetValues.repBased(
@@ -52,7 +52,7 @@ void main() {
               reps: 8,
             ),
           ),
-          _makeSet(
+          makeSet(
             exerciseId: exerciseId,
             measurementType: const MeasurementType.repBased(),
             plannedValues: const PlannedSetValues.repBased(
@@ -91,7 +91,7 @@ void main() {
       () {
         final exerciseId = anyUuidV4(rng);
         final now = anyUtcDateTime(rng);
-        final mismatchedSet = _makeSet(
+        final mismatchedSet = makeSet(
           exerciseId: exerciseId,
           measurementType: const MeasurementType.timeBased(),
           plannedValues: const PlannedSetValues.timeBased(durationSeconds: 60),
@@ -121,7 +121,7 @@ void main() {
     test('only the first mismatched set triggers the error', () {
       final exerciseId = anyUuidV4(rng);
       final now = anyUtcDateTime(rng);
-      final goodSet = _makeSet(
+      final goodSet = makeSet(
         exerciseId: exerciseId,
         measurementType: const MeasurementType.repBased(),
         plannedValues: const PlannedSetValues.repBased(
@@ -129,7 +129,7 @@ void main() {
           reps: 10,
         ),
       );
-      final badSet = _makeSet(
+      final badSet = makeSet(
         exerciseId: exerciseId,
         measurementType: const MeasurementType.timeBased(),
         plannedValues: const PlannedSetValues.timeBased(durationSeconds: 30),

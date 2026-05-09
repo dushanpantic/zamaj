@@ -135,7 +135,6 @@ void main() {
       test(
         'replaced state JSON with missing substitute raises DeserializationError',
         () {
-          final rng = Random(306);
           for (var i = 0; i < iterations; i++) {
             final corrupted = <String, dynamic>{'type': 'replaced'};
 
