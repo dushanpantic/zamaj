@@ -70,3 +70,28 @@ DateTime anyUtcDateTime(Random rng) {
   return DateTime.fromMillisecondsSinceEpoch(base + offsetMs, isUtc: true);
 }
 ```
+
+## Dart MCP `add_roots` — correct project URI
+
+The workspace root is `/Users/dusanpantic/Projects/github.com/dushanpantic/zamaj/mobile`.
+
+Always use this exact URI when calling `mcp_dart_add_roots`:
+
+```
+file:///Users/dusanpantic/Projects/github.com/dushanpantic/zamaj/mobile
+```
+
+Example call:
+
+```json
+{
+  "roots": [
+    {
+      "name": "zamaj",
+      "uri": "file:///Users/dusanpantic/Projects/github.com/dushanpantic/zamaj/mobile"
+    }
+  ]
+}
+```
+
+If `add_roots` fails with "Unknown project kind", the URI is wrong — run `pwd` in a bash tool to re-confirm the path before retrying.

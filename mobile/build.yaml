@@ -17,6 +17,7 @@ targets:
         generate_for:
           include:
             - lib/modules/persistence/database/app_database.dart
+            - lib/modules/persistence/database/tables.dart
         options:
           generate_connect_constructor: false
           sqlite_modules: []

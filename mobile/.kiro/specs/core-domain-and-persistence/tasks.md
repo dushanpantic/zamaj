@@ -90,12 +90,12 @@ Conventions used throughout:
 - [x] 8. Checkpoint — domain layer complete
   - [x] 8.1 Run `dart run build_runner build --delete-conflicting-outputs`, run `flutter analyze`, and run `flutter test` to confirm every domain and serialization test passes. Ensure all tests pass, ask the user if questions arise. (Reqs 11.1, 11.2, 11.4, 13.4; Design §10.1)
 
-- [ ] 9. Build the Drift schema and database
-  - [ ] 9.1 Implement `lib/modules/persistence/database/tables.dart` declaring `Programs`, `ProgramWorkoutDays`, `WorkoutDays`, `ExerciseGroups`, `Exercises`, `Sets`, `Sessions`, `SessionExercises`, `ExecutedSets`, `SessionNotes`, `ExtraWorkItems` with primary keys, unique `(parent_id, position)` constraints, `onDelete: KeyAction.cascade` on every template FK, and `sessions.workoutDayId` as a plain column with **no FK** (Reqs 9.1, 9.6; Design §5.1, §12 resolved decision 8)
-  - [ ] 9.2 Implement `lib/modules/persistence/database/app_database.dart` with `@DriftDatabase(tables: [...])`, `schemaVersion = SchemaVersions.drift`, and a `MigrationStrategy` whose `beforeOpen` enables `PRAGMA foreign_keys = ON` and raises `VersionMismatchError(persisted, expected)` when `details.versionBefore > schemaVersion` (Reqs 9.2, 9.3, 9.4, 9.5, 9.6; Design §5.5)
-  - [ ] 9.3 Implement `lib/modules/persistence/database/migrations.dart` with an empty v1 `onUpgrade` body plus the documented pattern for future `if (from < N)` branches (Req 9.4; Design §5.5)
-  - [ ] 9.4 Run `dart run build_runner build --delete-conflicting-outputs` to generate `app_database.g.dart`; commit the generated file per project convention and verify it compiles (Reqs 9.1; Design §5.1)
-  - [ ] 9.5 Add a unit test that opens an in-memory `AppDatabase` and asserts `PRAGMA foreign_keys` returns `1` (Req 9.6; Design §5.5)
+- [x] 9. Build the Drift schema and database
+  - [x] 9.1 Implement `lib/modules/persistence/database/tables.dart` declaring `Programs`, `ProgramWorkoutDays`, `WorkoutDays`, `ExerciseGroups`, `Exercises`, `Sets`, `Sessions`, `SessionExercises`, `ExecutedSets`, `SessionNotes`, `ExtraWorkItems` with primary keys, unique `(parent_id, position)` constraints, `onDelete: KeyAction.cascade` on every template FK, and `sessions.workoutDayId` as a plain column with **no FK** (Reqs 9.1, 9.6; Design §5.1, §12 resolved decision 8)
+  - [x] 9.2 Implement `lib/modules/persistence/database/app_database.dart` with `@DriftDatabase(tables: [...])`, `schemaVersion = SchemaVersions.drift`, and a `MigrationStrategy` whose `beforeOpen` enables `PRAGMA foreign_keys = ON` and raises `VersionMismatchError(persisted, expected)` when `details.versionBefore > schemaVersion` (Reqs 9.2, 9.3, 9.4, 9.5, 9.6; Design §5.5)
+  - [x] 9.3 Implement `lib/modules/persistence/database/migrations.dart` with an empty v1 `onUpgrade` body plus the documented pattern for future `if (from < N)` branches (Req 9.4; Design §5.5)
+  - [x] 9.4 Run `dart run build_runner build --delete-conflicting-outputs` to generate `app_database.g.dart`; commit the generated file per project convention and verify it compiles (Reqs 9.1; Design §5.1)
+  - [x] 9.5 Add a unit test that opens an in-memory `AppDatabase` and asserts `PRAGMA foreign_keys` returns `1` (Req 9.6; Design §5.5)
 
 - [ ] 10. Implement the mapping layer
   - [ ] 10.1 Implement `lib/modules/persistence/mappers/program_mapper.dart` and `workout_day_mapper.dart` converting between Drift `Programs`/`WorkoutDays`/`ExerciseGroups`/`Exercises`/`Sets` rows and their domain counterparts; discriminator+payload columns go through `CanonicalJson.encode` on write and `jsonDecode` + typed `fromJson` on read (Reqs 2.6, 3.6, 11.1; Design §5.1, §7.2)
