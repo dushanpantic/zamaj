@@ -42,9 +42,9 @@ Conventions used throughout:
   - [x] 2.5 Add example-based unit tests for `CanonicalJson` covering NaN/Infinity rejection, deeply nested maps, Unicode strings, and empty containers (Design §5.3)
   - [x] 2.6 Implement `lib/core/app_error.dart` exposing a top-level `AppError` marker interface (cross-cutting; BLoCs and future features will extend it) (Design §2, §8)
 
-- [ ] 3. Define the `DomainError` hierarchy
-  - [ ] 3.1 Implement `lib/modules/domain/errors.dart` with a sealed `DomainError implements Exception` base and the final subclasses `ValidationError`, `ImmutabilityError`, `OrderingError`, `VersionMismatchError`, `DeserializationError`, `NotFoundError`, matching field shapes in Design §8 (Reqs 2.5, 3.4, 6.5, 7.3, 9.5, 11.4, 13.4; Design §8)
-  - [ ] 3.2 Add unit tests that instantiate each error subclass and verify its `message` composition and typed fields (Design §8)
+- [x] 3. Define the `DomainError` hierarchy
+  - [x] 3.1 Implement `lib/modules/domain/errors.dart` with a sealed `DomainError implements Exception` base and the final subclasses `ValidationError`, `ImmutabilityError`, `OrderingError`, `VersionMismatchError`, `DeserializationError`, `NotFoundError`, matching field shapes in Design §8 (Reqs 2.5, 3.4, 6.5, 7.3, 9.5, 11.4, 13.4; Design §8)
+  - [x] 3.2 Add unit tests that instantiate each error subclass and verify its `message` composition and typed fields (Design §8)
 
 - [ ] 4. Implement leaf sealed families with JSON round-trip
   - [ ] 4.1 Implement `lib/modules/domain/models/measurement_type.dart` as `@Freezed(unionKey: 'type')` with `repBased` and `timeBased` variants and generated `fromJson`/`toJson`; regenerate with `build_runner` (Reqs 2.1, 2.4, 11.1, 11.3; Design §4.2, §7.2)
