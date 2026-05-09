@@ -1,6 +1,3 @@
-import 'package:meta/meta.dart';
-
-@immutable
 sealed class DomainError implements Exception {
   const DomainError(this.message);
   final String message;
@@ -35,7 +32,6 @@ final class OrderingError extends DomainError {
   }) : super(message);
 
   final String sessionExerciseId;
-  // TODO(exercise-state-typing): replace String with ExerciseState once task 4 lands.
   final String currentState;
 }
 
