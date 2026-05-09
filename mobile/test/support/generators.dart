@@ -1,14 +1,21 @@
 import 'dart:math';
 
+import 'package:zamaj/core/canonical_json.dart';
 import 'package:zamaj/modules/domain/models/actual_set_values.dart';
+import 'package:zamaj/modules/domain/models/executed_set.dart';
 import 'package:zamaj/modules/domain/models/exercise.dart';
 import 'package:zamaj/modules/domain/models/exercise_group.dart';
 import 'package:zamaj/modules/domain/models/exercise_group_kind.dart';
 import 'package:zamaj/modules/domain/models/exercise_metadata.dart';
 import 'package:zamaj/modules/domain/models/exercise_state.dart';
+import 'package:zamaj/modules/domain/models/extra_work.dart';
 import 'package:zamaj/modules/domain/models/measurement_type.dart';
 import 'package:zamaj/modules/domain/models/planned_set_values.dart';
 import 'package:zamaj/modules/domain/models/program.dart';
+import 'package:zamaj/modules/domain/models/session.dart';
+import 'package:zamaj/modules/domain/models/session_exercise.dart';
+import 'package:zamaj/modules/domain/models/session_note.dart';
+import 'package:zamaj/modules/domain/models/session_snapshot.dart';
 import 'package:zamaj/modules/domain/models/substitute_exercise.dart';
 import 'package:zamaj/modules/domain/models/workout_day.dart';
 import 'package:zamaj/modules/domain/models/workout_set.dart';
@@ -273,5 +280,130 @@ anyInconsistentExercise(Random rng) {
     exerciseGroupId: anyUuidV4(rng),
     measurementType: exerciseMt,
     sets: [goodSet, badSet],
+  );
+}
+
+ExecutedSet anyExecutedSet(Random rng, MeasurementType measurementType) {
+  return ExecutedSet(
+    id: anyUuidV4(rng),
+    sessionExerciseId: anyUuidV4(rng),
+    position: rng.nextInt(10),
+    measurementType: measurementType,
+    actualValues: anyActualSetValuesForMeasurement(rng, measurementType),
+    plannedSetIdInSnapshot: rng.nextBool() ? anyUuidV4(rng) : null,
+    completedAt: anyUtcDateTime(rng),
+    createdAt: anyUtcDateTime(rng),
+    updatedAt: anyUtcDateTime(rng),
+    schemaVersion: 1,
+  );
+}
+
+SessionExercise anySessionExercise(Random rng) {
+  final mt = anyMeasurementType(rng);
+  final setCount = rng.nextInt(5);
+  return SessionExercise(
+    id: anyUuidV4(rng),
+    sessionId: anyUuidV4(rng),
+    position: rng.nextInt(20),
+    plannedExerciseIdInSnapshot: anyUuidV4(rng),
+    state: anyExerciseState(rng),
+    executedSets: List.generate(setCount, (i) {
+      final s = anyExecutedSet(rng, mt);
+      return ExecutedSet(
+        id: s.id,
+        sessionExerciseId: s.sessionExerciseId,
+        position: i,
+        measurementType: mt,
+        actualValues: s.actualValues,
+        plannedSetIdInSnapshot: s.plannedSetIdInSnapshot,
+        completedAt: s.completedAt,
+        createdAt: s.createdAt,
+        updatedAt: s.updatedAt,
+        schemaVersion: s.schemaVersion,
+      );
+    }),
+    createdAt: anyUtcDateTime(rng),
+    updatedAt: anyUtcDateTime(rng),
+    schemaVersion: 1,
+  );
+}
+
+SessionNote anySessionNote(Random rng) {
+  return SessionNote(
+    id: anyUuidV4(rng),
+    sessionId: anyUuidV4(rng),
+    body: _anyString(rng, maxLen: 200),
+    createdAt: anyUtcDateTime(rng),
+    updatedAt: anyUtcDateTime(rng),
+    schemaVersion: 1,
+  );
+}
+
+ExtraWork anyExtraWork(Random rng) {
+  return ExtraWork(
+    id: anyUuidV4(rng),
+    sessionId: anyUuidV4(rng),
+    position: rng.nextInt(10),
+    body: _anyString(rng, maxLen: 200),
+    createdAt: anyUtcDateTime(rng),
+    updatedAt: anyUtcDateTime(rng),
+    schemaVersion: 1,
+  );
+}
+
+SessionSnapshot anySessionSnapshot(Random rng) {
+  final workoutDay = anyWorkoutDay(rng);
+  final json = CanonicalJson.encode(workoutDay.toJson());
+  final hash = CanonicalJson.sha256Hex(json);
+  return SessionSnapshot(
+    workoutDay: workoutDay,
+    canonicalJson: json,
+    sha256Hash: hash,
+    capturedAt: anyUtcDateTime(rng),
+    schemaVersion: 1,
+  );
+}
+
+Session anySession(Random rng) {
+  final snapshot = anySessionSnapshot(rng);
+  final exerciseCount = 1 + rng.nextInt(5);
+  final noteCount = rng.nextInt(3);
+  final extraWorkCount = rng.nextInt(3);
+  return Session(
+    id: anyUuidV4(rng),
+    workoutDayId: anyUuidV4(rng),
+    snapshot: snapshot,
+    sessionExercises: List.generate(exerciseCount, (i) {
+      final se = anySessionExercise(rng);
+      return SessionExercise(
+        id: se.id,
+        sessionId: se.sessionId,
+        position: i,
+        plannedExerciseIdInSnapshot: se.plannedExerciseIdInSnapshot,
+        state: se.state,
+        executedSets: se.executedSets,
+        createdAt: se.createdAt,
+        updatedAt: se.updatedAt,
+        schemaVersion: se.schemaVersion,
+      );
+    }),
+    notes: List.generate(noteCount, (_) => anySessionNote(rng)),
+    extraWork: List.generate(extraWorkCount, (i) {
+      final ew = anyExtraWork(rng);
+      return ExtraWork(
+        id: ew.id,
+        sessionId: ew.sessionId,
+        position: i,
+        body: ew.body,
+        createdAt: ew.createdAt,
+        updatedAt: ew.updatedAt,
+        schemaVersion: ew.schemaVersion,
+      );
+    }),
+    startedAt: anyUtcDateTime(rng),
+    endedAt: rng.nextBool() ? anyUtcDateTime(rng) : null,
+    createdAt: anyUtcDateTime(rng),
+    updatedAt: anyUtcDateTime(rng),
+    schemaVersion: 1,
   );
 }
