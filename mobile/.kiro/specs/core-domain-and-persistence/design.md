@@ -1469,16 +1469,12 @@ or whose `discriminator` exposes the offending string (case b).
 ### 10.1 Tooling
 
 - **Unit / example tests:** `package:test` (via `flutter test`).
-- **Property-based tests:** `package:glados` (Dart's idiomatic PBT library;
-  integrates with `package:test`, supports shrinking, composes generators
-  via `Arbitrary`). We do not implement PBT from scratch.
+- **Property-based tests:** Implemented using `flutter_test`'s built-in `test` runner with custom `Random`-based generator functions in `test/support/generators.dart`. No third-party PBT library is used — `glados`, `kiri_check`, and all similar packages conflict with `drift_dev`'s transitive `analyzer >=10.0.0` constraint under Flutter 3.38.x / Dart 3.10.4. Each property test runs at least **100 iterations** via a `for` loop inside a standard `test()` block.
 - **Integration tests:** Drift's in-memory DB (`NativeDatabase.memory()`),
   allowing the full repository contract to be exercised without platform
   setup.
 
-Each property-based test is configured to run at least **100 iterations**
-(`Glados(...).test`, which defaults to 100 examples with adjustable seeding).
-Each test is tagged with a comment of the form:
+Each property-based test runs at least **100 iterations** and is tagged with a comment of the form:
 
 ```
 // Feature: core-domain-and-persistence, Property N: <property text>
@@ -1522,38 +1518,28 @@ In addition to the properties above, we ship:
   network APIs, `package:http`, `package:dio`, etc., in the three in-scope
   modules (Req 12.1/12.2/12.3).
 
-### 10.4 Generators (glados `Arbitrary` sketches)
+### 10.4 Generators
 
-Key generators and how they shrink:
+Key generator functions in `test/support/generators.dart` (plain Dart, `dart:math` `Random`):
 
-- `anyUuidV4`: produces canonical-form UUIDs; effectively a leaf (no
-  meaningful shrink).
-- `anyUtcDateTime`: wraps an int ms-since-epoch generator; shrinks toward
-  epoch.
-- `anyMeasurementType`: shrinks to `RepBased`.
-- `anyPlannedSetValues`: composite; `RepBased` shrinks toward `(0.0, 0)`,
-  `TimeBased` toward `0`.
-- `anyExerciseGroupKind`: shrinks to `single`.
-- `anyExercise(measurementType)`: parameterized so that sets honor the
-  passed-in `MeasurementType` (for positive tests); an adversarial variant
-  `anyInconsistentExercise` deliberately desyncs for negative tests.
-- `anyWorkoutDay`: composes the above, with configurable
-  `exerciseGroupCount`, `exercisesPerGroup`, and `setsPerExercise` bounds.
-- `anyProgramRepoOpSequence`: sequence of template mutation ops; used in P4
-  and P5 to fuzz template churn.
-- `anySessionRepoOpSequence`: sequence of session ops biased toward locking
-  states (so P6 sees many unfinished↔locked transitions).
-- `anyCorruption(Map<String, dynamic>)`: drops a random required field OR
-  rewrites a random discriminator to a non-whitelisted string; used in P10.
-- `RegressingClock`: test-double that returns arbitrary non-monotonic UTC
-  times; used in P8.
+- `anyUuidV4(Random r)`: produces canonical-form UUIDs.
+- `anyUtcDateTime(Random r)`: wraps a random int ms-since-epoch.
+- `anyMeasurementType(Random r)`: randomly picks `repBased` or `timeBased`.
+- `anyPlannedSetValues(Random r)`: composite; `repBased` with valid weight/reps, `timeBased` with valid duration.
+- `anyExerciseGroupKind(Random r)`: randomly picks `single` or `superset`.
+- `anyExercise(Random r, MeasurementType measurementType)`: parameterized so that sets honor the passed-in `MeasurementType` (for positive tests); an adversarial variant `anyInconsistentExercise(Random r)` deliberately desyncs for negative tests.
+- `anyWorkoutDay(Random r)`: composes the above, with configurable `exerciseGroupCount`, `exercisesPerGroup`, and `setsPerExercise` bounds.
+- `anyProgramRepoOpSequence(Random r)`: sequence of template mutation ops; used in P4 and P5 to fuzz template churn.
+- `anySessionRepoOpSequence(Random r)`: sequence of session ops biased toward locking states (so P6 sees many unfinished↔locked transitions).
+- `anyCorruption(Random r, Map<String, dynamic> json)`: drops a random required field OR rewrites a random discriminator to a non-whitelisted string; used in P10.
+- `RegressingClock`: test-double that returns arbitrary non-monotonic UTC times; used in P8.
 
 ### 10.5 PBT iteration count and seeds
 
-Every property test sets the `Glados` repetitions count to at least **100**.
+Every property test runs at least **100 iterations** in a `for` loop.
 Tests that exercise the in-memory DB use a single long-lived DB per test
-with `setUp`/`tearDown`. A fixed seed is used per test for reproducibility;
-CI also runs a "daily random seed" job to broaden coverage.
+with `setUp`/`tearDown`. A fixed seed (`Random(42)`) is used per test for
+reproducibility; CI also runs a "daily random seed" job to broaden coverage.
 
 ---
 
@@ -1582,7 +1568,7 @@ CI also runs a "daily random seed" job to broaden coverage.
 The following items were flagged during design review and have been confirmed
 by the user. They are locked in for `tasks.md`:
 
-1. **Dart PBT library:** `package:glados`.
+1. **Dart PBT approach:** Custom `Random`-based generator functions in `test/support/generators.dart`, run in `for` loops of ≥100 iterations inside standard `test()` blocks. `package:glados`, `kiri_check`, and all other third-party PBT libraries are incompatible with this project's Flutter 3.38.x / Dart 3.10.4 SDK because `drift_dev >=2.32.1` requires `analyzer >=10.0.0`, which conflicts with the transitive `test_api 0.7.7` pin from `flutter_test`.
 2. **Clock abstraction:** `package:clock`.
 3. **Import-allowlist enforcement:** CI `grep` script initially; upgrade to a
    `custom_lint` rule later if noise warrants.

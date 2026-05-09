@@ -1,0 +1,21 @@
+targets:
+  $default:
+    builders:
+      freezed:
+        generate_for:
+          include:
+            - lib/modules/domain/models/**.dart
+      json_serializable:
+        generate_for:
+          include:
+            - lib/modules/domain/models/**.dart
+        options:
+          explicit_to_json: true
+          include_if_null: false
+      drift_dev:
+        generate_for:
+          include:
+            - lib/modules/persistence/database/app_database.dart
+        options:
+          generate_connect_constructor: false
+          sqlite_modules: []

@@ -7,13 +7,26 @@ environment:
   sdk: ^3.10.4
 
 dependencies:
+  clock: ^1.1.2
+  crypto: ^3.0.7
+  drift: ^2.33.0
+  drift_flutter: ^0.3.0
   flutter:
     sdk: flutter
+  freezed_annotation: ^3.1.0
+  json_annotation: ^4.11.0
+  path: ^1.9.1
+  path_provider: ^2.1.5
+  uuid: ^4.5.3
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
   flutter_lints: ^6.0.0
+  build_runner: ^2.15.0
+  freezed: ^3.2.5
+  json_serializable: ^6.13.2
+  drift_dev: ^2.33.0
 
 flutter:
   uses-material-design: true
