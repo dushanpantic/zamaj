@@ -41,3 +41,12 @@ The script greps `lib/core/`, `lib/modules/domain/`, and
 `lib/modules/persistence/` for forbidden imports (`dart:io` network APIs,
 `package:http`, `package:dio`, `package:web_socket_channel`, `package:grpc`,
 `package:socket_io_client`) and exits non-zero if any are found.
+
+### Running the full CI sequence locally
+
+```bash
+bash tool/ci.sh
+```
+
+This runs the four steps in the same order as CI: import-allowlist check,
+code generation, static analysis, and the test suite.
