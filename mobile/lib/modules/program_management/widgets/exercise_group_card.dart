@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:zamaj/core/app_colors.dart';
 import 'package:zamaj/core/app_spacing.dart';
+import 'package:zamaj/core/app_theme.dart';
 import 'package:zamaj/modules/domain/domain.dart';
 import 'package:zamaj/modules/program_management/models/program_editor_draft.dart';
 import 'package:zamaj/modules/program_management/widgets/exercise_tile.dart';
@@ -10,7 +10,6 @@ class ExerciseGroupCard extends StatelessWidget {
     super.key,
     required this.group,
     required this.onDelete,
-    required this.onSave,
     required this.onAddExercise,
     required this.onDeleteExercise,
     required this.onReorderExercises,
@@ -21,7 +20,6 @@ class ExerciseGroupCard extends StatelessWidget {
 
   final ExerciseGroupDraft group;
   final VoidCallback onDelete;
-  final VoidCallback onSave;
   final VoidCallback onAddExercise;
   final void Function(String exerciseDraftId) onDeleteExercise;
   final void Function(List<String> orderedIds) onReorderExercises;
@@ -31,7 +29,7 @@ class ExerciseGroupCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    const colors = AppColors.dark;
+    final colors = Theme.of(context).appColors;
     final kind = group.kind();
 
     return Card(
@@ -49,7 +47,6 @@ class ExerciseGroupCard extends StatelessWidget {
             _GroupHeader(
               kind: kind,
               onDelete: onDelete,
-              onSave: onSave,
               reorderIndex: reorderIndex,
             ),
             if (validationError != null) ...[
@@ -78,18 +75,16 @@ class _GroupHeader extends StatelessWidget {
   const _GroupHeader({
     required this.kind,
     required this.onDelete,
-    required this.onSave,
     this.reorderIndex,
   });
 
   final ExerciseGroupKind kind;
   final VoidCallback onDelete;
-  final VoidCallback onSave;
   final int? reorderIndex;
 
   @override
   Widget build(BuildContext context) {
-    const colors = AppColors.dark;
+    final colors = Theme.of(context).appColors;
     final label = switch (kind) {
       SingleKind() => 'Single',
       SupersetKind() => 'Superset',
@@ -125,16 +120,6 @@ class _GroupHeader extends StatelessWidget {
         ),
         const Spacer(),
         IconButton(
-          icon: Icon(Icons.save_outlined, color: colors.primary, size: 20),
-          onPressed: onSave,
-          tooltip: 'Save group',
-          padding: EdgeInsets.zero,
-          constraints: const BoxConstraints(
-            minWidth: AppSpacing.touchMin,
-            minHeight: AppSpacing.touchMin,
-          ),
-        ),
-        IconButton(
           icon: Icon(Icons.delete_outline, color: colors.error, size: 20),
           onPressed: onDelete,
           tooltip: 'Delete group',
@@ -156,7 +141,7 @@ class _CardinalityErrorBanner extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    const colors = AppColors.dark;
+    final colors = Theme.of(context).appColors;
     final message = switch (invariant) {
       'single_requires_exactly_one_exercise' =>
         'A Single group must have exactly 1 exercise.',
@@ -242,7 +227,7 @@ class _AddExerciseButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    const colors = AppColors.dark;
+    final colors = Theme.of(context).appColors;
     return TextButton.icon(
       onPressed: onAddExercise,
       icon: Icon(Icons.add, color: colors.primary, size: 18),

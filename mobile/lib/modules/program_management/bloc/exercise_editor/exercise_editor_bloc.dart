@@ -38,6 +38,7 @@ class ExerciseEditorBloc
   final ExternalLinkLauncher _externalLinkLauncher;
   final _uuid = const Uuid();
 
+  Exercise? _baselineExercise;
   String? _plannedRestInput;
 
   Future<void> _onOpened(
@@ -45,11 +46,12 @@ class ExerciseEditorBloc
     Emitter<ExerciseEditorState> emit,
   ) async {
     emit(const ExerciseEditorLoading());
-    final exercise = await _findExercise(event.exerciseId);
+    final exercise = await _programRepository.getExercise(event.exerciseId);
     if (exercise == null) {
       emit(ExerciseEditorNotFound(exerciseId: event.exerciseId));
       return;
     }
+    _baselineExercise = exercise;
     final draft = _exerciseToDraft(exercise);
     _plannedRestInput = exercise.plannedRestSeconds?.toString();
     final validation = _computeValidation(draft);
@@ -217,7 +219,8 @@ class ExerciseEditorBloc
         .whereType<PlannedSetDraft>()
         .toList();
     final updated = current.draft.copyWith(sets: reordered);
-    emit(current.copyWith(draft: updated));
+    final validation = _computeValidation(updated);
+    emit(current.copyWith(draft: updated, validation: validation));
   }
 
   Future<void> _onPlannedSetWeightChanged(
@@ -234,7 +237,8 @@ class ExerciseEditorBloc
         return s.copyWith(values: values.copyWith(weightInput: event.rawInput));
       }).toList(),
     );
-    emit(current.copyWith(draft: updated));
+    final validation = _computeValidation(updated);
+    emit(current.copyWith(draft: updated, validation: validation));
   }
 
   Future<void> _onPlannedSetRepsChanged(
@@ -251,7 +255,8 @@ class ExerciseEditorBloc
         return s.copyWith(values: values.copyWith(repsInput: event.rawInput));
       }).toList(),
     );
-    emit(current.copyWith(draft: updated));
+    final validation = _computeValidation(updated);
+    emit(current.copyWith(draft: updated, validation: validation));
   }
 
   Future<void> _onPlannedSetDurationChanged(
@@ -270,7 +275,8 @@ class ExerciseEditorBloc
         );
       }).toList(),
     );
-    emit(current.copyWith(draft: updated));
+    final validation = _computeValidation(updated);
+    emit(current.copyWith(draft: updated, validation: validation));
   }
 
   Future<void> _onSavePressed(
@@ -286,6 +292,8 @@ class ExerciseEditorBloc
     }
     final persistedId = current.draft.persistedId;
     if (persistedId == null) return;
+    final baseline = _baselineExercise;
+    if (baseline == null) return;
 
     final restResult = ProgramValidation.validatePlannedRest(_plannedRestInput);
     final plannedRestSeconds = restResult is Valid<int?>
@@ -294,26 +302,48 @@ class ExerciseEditorBloc
 
     emit(ExerciseEditorSaving(draft: current.draft));
     try {
-      final exercise = await _findExercise(persistedId);
-      if (exercise == null) {
-        emit(ExerciseEditorNotFound(exerciseId: persistedId));
-        return;
+      final measurementType = current.draft.measurementType;
+      final baselineSetsById = {for (final s in baseline.sets) s.id: s};
+      final sets = <WorkoutSet>[];
+      for (var i = 0; i < current.draft.sets.length; i++) {
+        final setDraft = current.draft.sets[i];
+        final plannedValues = _draftToPlannedValues(
+          setDraft.values,
+          measurementType,
+        );
+        final persistedSetId = setDraft.persistedId;
+        final baselineSet = persistedSetId != null
+            ? baselineSetsById[persistedSetId]
+            : null;
+        sets.add(
+          WorkoutSet(
+            id: baselineSet?.id ?? _uuid.v4(),
+            exerciseId: baseline.id,
+            position: i,
+            measurementType: measurementType,
+            plannedValues: plannedValues,
+            createdAt: baselineSet?.createdAt ?? baseline.createdAt,
+            updatedAt: baselineSet?.updatedAt ?? baseline.updatedAt,
+            schemaVersion: baselineSet?.schemaVersion ?? baseline.schemaVersion,
+          ),
+        );
       }
+
       final updatedExercise = Exercise(
-        id: exercise.id,
-        exerciseGroupId: exercise.exerciseGroupId,
-        position: exercise.position,
+        id: baseline.id,
+        exerciseGroupId: baseline.exerciseGroupId,
+        position: baseline.position,
         name: current.draft.name.trim(),
-        measurementType: current.draft.measurementType,
+        measurementType: measurementType,
         metadata: ExerciseMetadata(
           notes: _nullIfBlank(current.draft.metadata.notes),
           videoUrl: _nullIfBlank(current.draft.metadata.videoUrl),
         ),
         plannedRestSeconds: plannedRestSeconds,
-        sets: exercise.sets,
-        createdAt: exercise.createdAt,
-        updatedAt: exercise.updatedAt,
-        schemaVersion: exercise.schemaVersion,
+        sets: sets,
+        createdAt: baseline.createdAt,
+        updatedAt: baseline.updatedAt,
+        schemaVersion: baseline.schemaVersion,
       );
       await _programRepository.updateExercise(updatedExercise);
       emit(ExerciseEditorSaved(exerciseId: persistedId));
@@ -326,23 +356,6 @@ class ExerciseEditorBloc
         ),
       );
     }
-  }
-
-  Future<Exercise?> _findExercise(String exerciseId) async {
-    final programs = await _programRepository.listPrograms();
-    for (final program in programs) {
-      final days = await _programRepository.listWorkoutDaysForProgram(
-        program.id,
-      );
-      for (final day in days) {
-        for (final group in day.exerciseGroups) {
-          for (final exercise in group.exercises) {
-            if (exercise.id == exerciseId) return exercise;
-          }
-        }
-      }
-    }
-    return null;
   }
 
   ExerciseDraft _exerciseToDraft(Exercise exercise) {
@@ -388,12 +401,56 @@ class ExerciseEditorBloc
     };
   }
 
+  PlannedSetValues _draftToPlannedValues(
+    PlannedSetDraftValues values,
+    MeasurementType measurementType,
+  ) {
+    return switch ((values, measurementType)) {
+      (
+        PlannedSetDraftRepBased(:final weightInput, :final repsInput),
+        RepBasedMeasurement(),
+      ) =>
+        () {
+          final result = ProgramValidation.validateRepBasedSet(
+            weightInput: weightInput,
+            repsInput: repsInput,
+          );
+          return switch (result) {
+            Valid(:final value) => PlannedSetValues.repBased(
+              weightKg: value.weightKg,
+              reps: value.reps,
+            ),
+            Invalid() => const PlannedSetValues.repBased(weightKg: 0, reps: 0),
+          };
+        }(),
+      (
+        PlannedSetDraftTimeBased(:final durationInput),
+        TimeBasedMeasurement(),
+      ) =>
+        () {
+          final result = ProgramValidation.validateTimeBasedSet(durationInput);
+          return switch (result) {
+            Valid(:final value) => PlannedSetValues.timeBased(
+              durationSeconds: value,
+            ),
+            Invalid() => const PlannedSetValues.timeBased(durationSeconds: 0),
+          };
+        }(),
+      (PlannedSetDraftRepBased(), TimeBasedMeasurement()) =>
+        const PlannedSetValues.timeBased(durationSeconds: 0),
+      (PlannedSetDraftTimeBased(), RepBasedMeasurement()) =>
+        const PlannedSetValues.repBased(weightKg: 0, reps: 0),
+    };
+  }
+
   ExerciseDraftValidation _computeValidation(ExerciseDraft draft) {
     return ExerciseDraftValidation.compute(
       name: draft.name,
       plannedRestInput: _plannedRestInput,
       videoUrl: draft.metadata.videoUrl,
       notes: draft.metadata.notes,
+      measurementType: draft.measurementType,
+      sets: draft.sets,
     );
   }
 

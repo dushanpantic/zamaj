@@ -24,6 +24,7 @@ class ProgramEditorScreen extends StatefulWidget {
 class _ProgramEditorScreenState extends State<ProgramEditorScreen> {
   late final TextEditingController _nameController;
   bool _nameControllerSynced = false;
+  bool _wasSaving = false;
   String? _shownDeletionCandidate;
 
   @override
@@ -223,11 +224,17 @@ class _ProgramEditorScreenState extends State<ProgramEditorScreen> {
         if (state is ProgramEditorSaved) {
           Navigator.of(context).pop();
         }
-        if (state is ProgramEditorEditing && !_nameControllerSynced) {
-          _syncNameController(state.draft.name);
-          _nameControllerSynced = true;
-        }
         if (state is ProgramEditorEditing) {
+          if (_wasSaving) {
+            _wasSaving = false;
+            ScaffoldMessenger.of(
+              context,
+            ).showSnackBar(const SnackBar(content: Text('Saved')));
+          }
+          if (!_nameControllerSynced) {
+            _syncNameController(state.draft.name);
+            _nameControllerSynced = true;
+          }
           final candidate = state.deletionCandidateDraftId;
           if (candidate != null && candidate != _shownDeletionCandidate) {
             _shownDeletionCandidate = candidate;
@@ -240,6 +247,9 @@ class _ProgramEditorScreenState extends State<ProgramEditorScreen> {
           } else if (candidate == null) {
             _shownDeletionCandidate = null;
           }
+        }
+        if (state is ProgramEditorSaving) {
+          _wasSaving = true;
         }
       },
       builder: (context, state) => _buildScaffold(context, state),
@@ -480,7 +490,15 @@ class _ProgramEditorScreenState extends State<ProgramEditorScreen> {
                   ProgramManagementRoutes.workoutDay,
                   arguments: WorkoutDayArgs(workoutDayId: day.persistedId!),
                 )
-              : () {},
+              : () {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text(
+                        'Save the program before editing this day.',
+                      ),
+                    ),
+                  );
+                },
           onRename: () => _showRenameWorkoutDayDialog(day.draftId, day.name),
           onDelete: () => context.read<ProgramEditorBloc>().add(
             ProgramEditorWorkoutDayDeleteRequested(draftId: day.draftId),

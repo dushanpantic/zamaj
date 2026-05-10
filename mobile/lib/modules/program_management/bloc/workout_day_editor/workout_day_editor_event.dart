@@ -89,15 +89,6 @@ final class ExerciseReorderedWithinGroup extends WorkoutDayEditorEvent {
   List<Object?> get props => [groupDraftId, orderedExerciseDraftIds];
 }
 
-final class GroupSavePressed extends WorkoutDayEditorEvent {
-  const GroupSavePressed({required this.groupDraftId});
-
-  final String groupDraftId;
-
-  @override
-  List<Object?> get props => [groupDraftId];
-}
-
 final class WorkoutDayExercisePressed extends WorkoutDayEditorEvent {
   const WorkoutDayExercisePressed({required this.exerciseDraftId});
 

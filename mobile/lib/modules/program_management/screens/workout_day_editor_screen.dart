@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:zamaj/core/app_colors.dart';
 import 'package:zamaj/core/app_spacing.dart';
+import 'package:zamaj/core/app_theme.dart';
+import 'package:zamaj/core/app_typography.dart';
 import 'package:zamaj/modules/domain/domain.dart';
 import 'package:zamaj/modules/program_management/bloc/workout_day_editor/workout_day_editor_bloc.dart';
 import 'package:zamaj/modules/program_management/bloc/workout_day_editor/workout_day_editor_event.dart';
@@ -21,6 +22,7 @@ class WorkoutDayEditorScreen extends StatefulWidget {
 
 class _WorkoutDayEditorScreenState extends State<WorkoutDayEditorScreen> {
   late final TextEditingController _nameController;
+  bool _initialLoadDispatched = false;
 
   @override
   void initState() {
@@ -37,15 +39,38 @@ class _WorkoutDayEditorScreenState extends State<WorkoutDayEditorScreen> {
     super.dispose();
   }
 
+  void _syncNameController(String name) {
+    if (_nameController.text != name) {
+      _nameController.value = _nameController.value.copyWith(
+        text: name,
+        selection: TextSelection.collapsed(offset: name.length),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return BlocConsumer<WorkoutDayEditorBloc, WorkoutDayEditorState>(
-      listenWhen: (previous, current) =>
-          current is WorkoutDayEditorEditing &&
-          previous is! WorkoutDayEditorEditing,
+      listenWhen: (previous, current) {
+        if (current is WorkoutDayEditorEditing &&
+            previous is WorkoutDayEditorSaving) {
+          return true;
+        }
+        if (current is WorkoutDayEditorEditing && !_initialLoadDispatched) {
+          return true;
+        }
+        return false;
+      },
       listener: (context, state) {
         if (state is WorkoutDayEditorEditing) {
-          _nameController.text = state.draft.name;
+          if (!_initialLoadDispatched) {
+            _initialLoadDispatched = true;
+          } else {
+            ScaffoldMessenger.of(
+              context,
+            ).showSnackBar(const SnackBar(content: Text('Saved')));
+          }
+          _syncNameController(state.draft.name);
         }
       },
       builder: (context, state) {
@@ -99,7 +124,7 @@ class _LoadingView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    const colors = AppColors.dark;
+    final colors = Theme.of(context).appColors;
     return Scaffold(
       backgroundColor: colors.background,
       body: Center(child: CircularProgressIndicator(color: colors.primary)),
@@ -114,7 +139,7 @@ class _NotFoundView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    const colors = AppColors.dark;
+    final colors = Theme.of(context).appColors;
     return Scaffold(
       backgroundColor: colors.background,
       body: Center(
@@ -170,8 +195,10 @@ class _EditingBody extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    const colors = AppColors.dark;
+    final colors = Theme.of(context).appColors;
+    const typography = AppTypography.standard;
     final bloc = context.read<WorkoutDayEditorBloc>();
+    final canSave = validation.isNameValid && !isSaving;
 
     return Scaffold(
       backgroundColor: colors.background,
@@ -188,7 +215,24 @@ class _EditingBody extends StatelessWidget {
           IconButton(
             icon: Icon(Icons.add, color: colors.primary),
             tooltip: 'Add group',
-            onPressed: () => bloc.add(const ExerciseGroupAdded()),
+            onPressed: isSaving
+                ? null
+                : () => bloc.add(const ExerciseGroupAdded()),
+          ),
+          Padding(
+            padding: const EdgeInsets.only(right: AppSpacing.sm),
+            child: TextButton(
+              onPressed: canSave
+                  ? () => bloc.add(const WorkoutDaySavePressed())
+                  : null,
+              child: Text(
+                'Save',
+                style: typography.label.copyWith(
+                  color: canSave ? colors.primary : colors.onSurfaceMuted,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
           ),
         ],
       ),
@@ -219,7 +263,7 @@ class _NameField extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    const colors = AppColors.dark;
+    final colors = Theme.of(context).appColors;
     return TextField(
       controller: controller,
       onChanged: onChanged,
@@ -253,7 +297,7 @@ class _GroupList extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    const colors = AppColors.dark;
+    final colors = Theme.of(context).appColors;
     final bloc = context.read<WorkoutDayEditorBloc>();
 
     if (draft.groups.isEmpty) {
@@ -307,8 +351,6 @@ class _GroupList extends StatelessWidget {
                 reorderIndex: index,
                 onDelete: () =>
                     bloc.add(ExerciseGroupDeleted(groupDraftId: group.draftId)),
-                onSave: () =>
-                    bloc.add(GroupSavePressed(groupDraftId: group.draftId)),
                 onAddExercise: () =>
                     _showAddExerciseDialog(context, group.draftId),
                 onDeleteExercise: (exerciseDraftId) => bloc.add(
@@ -327,11 +369,18 @@ class _GroupList extends StatelessWidget {
                   final exercise = group.exercises
                       .where((e) => e.draftId == exerciseDraftId)
                       .firstOrNull;
-                  if (exercise?.persistedId != null) {
+                  if (exercise == null) return;
+                  if (exercise.persistedId != null) {
                     Navigator.of(context).pushNamed(
                       ProgramManagementRoutes.exercise,
                       arguments: ExerciseArgs(
-                        exerciseId: exercise!.persistedId!,
+                        exerciseId: exercise.persistedId!,
+                      ),
+                    );
+                  } else {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('Save this day before editing sets.'),
                       ),
                     );
                   }
@@ -362,7 +411,7 @@ class _SaveErrorBanner extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    const colors = AppColors.dark;
+    final colors = Theme.of(context).appColors;
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.symmetric(
@@ -391,7 +440,7 @@ class _SavingOverlay extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    const colors = AppColors.dark;
+    final colors = Theme.of(context).appColors;
     return ColoredBox(
       color: colors.background.withValues(alpha: 0.6),
       child: Center(child: CircularProgressIndicator(color: colors.primary)),
@@ -421,7 +470,7 @@ class _AddExerciseDialogState extends State<_AddExerciseDialog> {
 
   @override
   Widget build(BuildContext context) {
-    const colors = AppColors.dark;
+    final colors = Theme.of(context).appColors;
     return AlertDialog(
       backgroundColor: colors.surface,
       title: Text('Add exercise', style: TextStyle(color: colors.onSurface)),
@@ -496,21 +545,18 @@ class _MeasurementTypeToggle extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    const colors = AppColors.dark;
     return Row(
       children: [
         _TypeChip(
           label: 'Rep-based',
           isSelected: selected is RepBasedMeasurement,
           onTap: () => onChanged(const MeasurementType.repBased()),
-          colors: colors,
         ),
         const SizedBox(width: AppSpacing.sm),
         _TypeChip(
           label: 'Time-based',
           isSelected: selected is TimeBasedMeasurement,
           onTap: () => onChanged(const MeasurementType.timeBased()),
-          colors: colors,
         ),
       ],
     );
@@ -522,16 +568,15 @@ class _TypeChip extends StatelessWidget {
     required this.label,
     required this.isSelected,
     required this.onTap,
-    required this.colors,
   });
 
   final String label;
   final bool isSelected;
   final VoidCallback onTap;
-  final AppColors colors;
 
   @override
   Widget build(BuildContext context) {
+    final colors = Theme.of(context).appColors;
     return GestureDetector(
       onTap: onTap,
       child: Container(

@@ -94,6 +94,10 @@ class _ThrowingProgramRepository implements ProgramRepository {
       throw UnimplementedError();
 
   @override
+  Future<Exercise?> getExercise(String exerciseId) =>
+      throw UnimplementedError();
+
+  @override
   Future<void> deleteExercise(String exerciseId) => throw UnimplementedError();
 
   @override

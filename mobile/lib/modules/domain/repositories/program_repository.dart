@@ -54,6 +54,7 @@ abstract class ProgramRepository {
     ExerciseMetadata metadata = ExerciseMetadata.empty,
     int? plannedRestSeconds,
   });
+  Future<Exercise?> getExercise(String exerciseId);
   Future<Exercise> updateExercise(Exercise exercise);
   Future<void> deleteExercise(String exerciseId);
   Future<void> reorderExercises(

@@ -183,6 +183,8 @@ class _ExerciseEditorScreenState extends State<ExerciseEditorScreen> {
               isPlannedRestValid: true,
               isVideoUrlValid: true,
               isNotesValid: true,
+              isSetCountValid: true,
+              areSetsValid: true,
             ),
             isSaving: true,
             lastSaveError: null,
@@ -473,7 +475,7 @@ class _EditorBody extends StatelessWidget {
                   decoration: InputDecoration(
                     labelText: 'Planned rest (seconds)',
                     errorText: !validation.isPlannedRestValid
-                        ? 'Enter a valid rest duration (0–600 seconds)'
+                        ? 'Enter a valid rest duration (0–3600 seconds)'
                         : null,
                   ),
                   onChanged: (value) =>

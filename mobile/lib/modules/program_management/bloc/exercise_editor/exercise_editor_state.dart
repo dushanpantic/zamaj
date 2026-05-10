@@ -9,21 +9,32 @@ final class ExerciseDraftValidation extends Equatable {
     required this.isPlannedRestValid,
     required this.isVideoUrlValid,
     required this.isNotesValid,
+    required this.isSetCountValid,
+    required this.areSetsValid,
   });
 
   final bool isNameValid;
   final bool isPlannedRestValid;
   final bool isVideoUrlValid;
   final bool isNotesValid;
+  final bool isSetCountValid;
+  final bool areSetsValid;
 
   bool get canSave =>
-      isNameValid && isPlannedRestValid && isVideoUrlValid && isNotesValid;
+      isNameValid &&
+      isPlannedRestValid &&
+      isVideoUrlValid &&
+      isNotesValid &&
+      isSetCountValid &&
+      areSetsValid;
 
   static ExerciseDraftValidation compute({
     required String name,
     required String? plannedRestInput,
     required String? videoUrl,
     required String? notes,
+    required MeasurementType measurementType,
+    required List<PlannedSetDraft> sets,
   }) {
     final isNameValid =
         ProgramValidation.validateExerciseName(name) is Valid<String>;
@@ -33,12 +44,37 @@ final class ExerciseDraftValidation extends Equatable {
         ProgramValidation.validateVideoUrl(videoUrl) is Valid<Uri?>;
     final isNotesValid =
         ProgramValidation.validateNotes(notes) is Valid<String?>;
+    final isSetCountValid =
+        ProgramValidation.validateSetCount(sets.length) is Valid<int>;
+    final areSetsValid = sets.every((s) => _isSetValid(s, measurementType));
     return ExerciseDraftValidation(
       isNameValid: isNameValid,
       isPlannedRestValid: isPlannedRestValid,
       isVideoUrlValid: isVideoUrlValid,
       isNotesValid: isNotesValid,
+      isSetCountValid: isSetCountValid,
+      areSetsValid: areSetsValid,
     );
+  }
+
+  static bool _isSetValid(PlannedSetDraft set, MeasurementType type) {
+    return switch ((set.values, type)) {
+      (
+        PlannedSetDraftRepBased(:final weightInput, :final repsInput),
+        RepBasedMeasurement(),
+      ) =>
+        ProgramValidation.validateRepBasedSet(
+              weightInput: weightInput,
+              repsInput: repsInput,
+            )
+            is Valid,
+      (
+        PlannedSetDraftTimeBased(:final durationInput),
+        TimeBasedMeasurement(),
+      ) =>
+        ProgramValidation.validateTimeBasedSet(durationInput) is Valid<int>,
+      _ => false,
+    };
   }
 
   @override
@@ -47,6 +83,8 @@ final class ExerciseDraftValidation extends Equatable {
     isPlannedRestValid,
     isVideoUrlValid,
     isNotesValid,
+    isSetCountValid,
+    areSetsValid,
   ];
 }
 

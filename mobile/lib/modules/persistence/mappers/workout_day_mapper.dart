@@ -73,6 +73,9 @@ class WorkoutDayMapper {
     );
   }
 
+  domain.Exercise exerciseToDomain(Exercise row, List<WorkoutSet> setRows) =>
+      _exerciseToDomain(row, setRows);
+
   domain.Exercise _exerciseToDomain(Exercise row, List<WorkoutSet> setRows) {
     final sets = setRows.where((s) => s.exerciseId == row.id).toList()
       ..sort((a, b) => a.position.compareTo(b.position));
@@ -101,6 +104,8 @@ class WorkoutDayMapper {
       schemaVersion: row.schemaVersion,
     );
   }
+
+  domain.WorkoutSet setToDomain(WorkoutSet row) => _setToDomain(row);
 
   domain.WorkoutSet _setToDomain(WorkoutSet row) {
     final plannedValues = PlannedSetValues.fromJson(

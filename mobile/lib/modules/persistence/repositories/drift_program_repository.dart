@@ -478,6 +478,15 @@ class DriftProgramRepository implements ProgramRepository {
   }
 
   @override
+  Future<domain.Exercise?> getExercise(String exerciseId) async {
+    final row = await (_db.select(
+      _db.exercises,
+    )..where((t) => t.id.equals(exerciseId))).getSingleOrNull();
+    if (row == null) return null;
+    return _loadExercise(exerciseId);
+  }
+
+  @override
   Future<domain.Exercise> updateExercise(domain.Exercise exercise) async {
     return _db.transaction(() async {
       final existing = await (_db.select(
@@ -504,12 +513,85 @@ class DriftProgramRepository implements ProgramRepository {
           ),
           notes: Value(exercise.metadata.notes),
           videoUrl: Value(exercise.metadata.videoUrl),
+          plannedRestSeconds: Value(exercise.plannedRestSeconds),
           updatedAtMs: Value(utcToMs(updatedAt)),
           schemaVersion: const Value(SchemaVersions.domain),
         ),
       );
+
+      await _reconcileExerciseSets(exercise, updatedAt);
+
       return _loadExercise(exercise.id);
     });
+  }
+
+  Future<void> _reconcileExerciseSets(
+    domain.Exercise exercise,
+    DateTime writeTime,
+  ) async {
+    final existingRows = await (_db.select(
+      _db.workoutSets,
+    )..where((t) => t.exerciseId.equals(exercise.id))).get();
+    final existingById = {for (final r in existingRows) r.id: r};
+    final desiredIds = exercise.sets.map((s) => s.id).toSet();
+
+    for (final existing in existingRows) {
+      if (!desiredIds.contains(existing.id)) {
+        await (_db.delete(
+          _db.workoutSets,
+        )..where((t) => t.id.equals(existing.id))).go();
+      }
+    }
+
+    final offset = exercise.sets.length + existingRows.length + 1000;
+
+    for (var i = 0; i < exercise.sets.length; i++) {
+      final set = exercise.sets[i];
+      final plannedJson = set.plannedValues.toJson();
+      final plannedDiscriminator = plannedJson['type'] as String;
+      final plannedPayload = CanonicalJson.encode(plannedJson);
+      final existing = existingById[set.id];
+      final parkedPosition = offset + i;
+
+      if (existing == null) {
+        await _db
+            .into(_db.workoutSets)
+            .insert(
+              WorkoutSetsCompanion.insert(
+                id: set.id,
+                exerciseId: exercise.id,
+                position: parkedPosition,
+                plannedValuesDiscriminator: plannedDiscriminator,
+                plannedValuesPayloadJson: plannedPayload,
+                createdAtMs: utcToMs(writeTime),
+                updatedAtMs: utcToMs(writeTime),
+                schemaVersion: SchemaVersions.domain,
+              ),
+            );
+      } else {
+        final setUpdatedAt = _nextUpdatedAt(
+          previousUpdatedAt: msToUtc(existing.updatedAtMs),
+          createdAt: msToUtc(existing.createdAtMs),
+        );
+        await (_db.update(
+          _db.workoutSets,
+        )..where((t) => t.id.equals(set.id))).write(
+          WorkoutSetsCompanion(
+            position: Value(parkedPosition),
+            plannedValuesDiscriminator: Value(plannedDiscriminator),
+            plannedValuesPayloadJson: Value(plannedPayload),
+            updatedAtMs: Value(utcToMs(setUpdatedAt)),
+            schemaVersion: const Value(SchemaVersions.domain),
+          ),
+        );
+      }
+    }
+
+    for (var i = 0; i < exercise.sets.length; i++) {
+      await (_db.update(_db.workoutSets)
+            ..where((t) => t.id.equals(exercise.sets[i].id)))
+          .write(WorkoutSetsCompanion(position: Value(i)));
+    }
   }
 
   @override
@@ -840,42 +922,13 @@ class DriftProgramRepository implements ProgramRepository {
               ..where((t) => t.exerciseId.equals(exerciseId))
               ..orderBy([(t) => OrderingTerm.asc(t.position)]))
             .get();
-    final groupRow = await (_db.select(
-      _db.exerciseGroups,
-    )..where((t) => t.id.equals(exerciseRow.exerciseGroupId))).getSingle();
-    final dayRow = await (_db.select(
-      _db.workoutDays,
-    )..where((t) => t.id.equals(groupRow.workoutDayId))).getSingle();
-
-    return _workoutDayMapper
-        .toDomain(dayRow, [groupRow], [exerciseRow], setRows)
-        .exerciseGroups
-        .first
-        .exercises
-        .first;
+    return _workoutDayMapper.exerciseToDomain(exerciseRow, setRows);
   }
 
   Future<domain.WorkoutSet> _loadSet(String setId) async {
     final setRow = await (_db.select(
       _db.workoutSets,
     )..where((t) => t.id.equals(setId))).getSingle();
-    final exerciseRow = await (_db.select(
-      _db.exercises,
-    )..where((t) => t.id.equals(setRow.exerciseId))).getSingle();
-    final groupRow = await (_db.select(
-      _db.exerciseGroups,
-    )..where((t) => t.id.equals(exerciseRow.exerciseGroupId))).getSingle();
-    final dayRow = await (_db.select(
-      _db.workoutDays,
-    )..where((t) => t.id.equals(groupRow.workoutDayId))).getSingle();
-
-    return _workoutDayMapper
-        .toDomain(dayRow, [groupRow], [exerciseRow], [setRow])
-        .exerciseGroups
-        .first
-        .exercises
-        .first
-        .sets
-        .first;
+    return _workoutDayMapper.setToDomain(setRow);
   }
 }

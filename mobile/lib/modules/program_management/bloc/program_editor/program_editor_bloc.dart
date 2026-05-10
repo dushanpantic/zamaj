@@ -333,7 +333,42 @@ class ProgramEditorBloc extends Bloc<ProgramEditorEvent, ProgramEditorState> {
         );
       }
 
-      emit(ProgramEditorSaved(programId: programId));
+      final reloadedProgram = await _programRepository.getProgram(programId);
+      if (reloadedProgram == null) {
+        emit(ProgramEditorNotFound(programId: programId));
+        return;
+      }
+      final reloadedDays = await _programRepository.listWorkoutDaysForProgram(
+        programId,
+      );
+      _baselineWorkoutDays = List.unmodifiable(reloadedDays);
+
+      final reloadedDraft = ProgramDraft(
+        programId: reloadedProgram.id,
+        name: reloadedProgram.name,
+        workoutDays: reloadedDays
+            .map(
+              (day) => WorkoutDayDraft(
+                draftId: day.id,
+                persistedId: day.id,
+                name: day.name,
+                groups: const [],
+              ),
+            )
+            .toList(),
+        schemaVersion: reloadedProgram.schemaVersion,
+      );
+
+      emit(
+        ProgramEditorEditing(
+          draft: reloadedDraft,
+          isCreateMode: false,
+          validation: ProgramDraftValidation.compute(
+            name: reloadedDraft.name,
+            isCreateMode: false,
+          ),
+        ),
+      );
     } on DomainError catch (e) {
       emit(editing.copyWith(lastSaveError: () => e));
     }
