@@ -244,10 +244,12 @@ bool _isSupersetMarker(String trimmed) {
 
 bool _isSetLine(String trimmed) {
   final firstToken = trimmed.split(RegExp(r'[ \t]+')).first;
-  return _setsByRepsPattern.hasMatch(firstToken);
+  return _setsByRepsPattern.hasMatch(firstToken) ||
+      _setsByTimePattern.hasMatch(firstToken);
 }
 
 final _setsByRepsPattern = RegExp(r'^\d+[xX×]\d+$');
+final _setsByTimePattern = RegExp(r'^\d+[xX×]\d+[sS]$');
 
 sealed class _Classification {}
 
@@ -287,7 +289,8 @@ _Classification _classify(String trimmed, bool hasDayScope) {
   }
 
   final tokens = trimmed.split(RegExp(r'[ \t]+'));
-  if (_setsByRepsPattern.hasMatch(tokens.first)) {
+  if (_setsByRepsPattern.hasMatch(tokens.first) ||
+      _setsByTimePattern.hasMatch(tokens.first)) {
     return _SetLineClassification(tokens);
   }
 
@@ -306,9 +309,31 @@ void _attachPlannedSet(
 ) {
   final setToken = tokens.first;
   final multMatch = RegExp(r'^(\d+)([xX×])(\d+)$').firstMatch(setToken);
-  if (multMatch == null) return;
+  final timeMatch = RegExp(r'^(\d+)([xX×])(\d+)[sS]$').firstMatch(setToken);
 
-  final count = int.parse(multMatch.group(1)!);
+  if (multMatch == null && timeMatch == null) return;
+
+  if (timeMatch != null) {
+    final count = int.parse(timeMatch.group(1)!);
+    final durationSeconds = int.parse(timeMatch.group(3)!);
+    final remaining = tokens.skip(1).toList();
+    final restResult = _parseRestTokens(
+      remaining,
+      lineNumber,
+      rawLine,
+      exercise.draftId,
+    );
+    exercise.sets.add(
+      PlanDraftSet.timeBased(count: count, durationSeconds: durationSeconds),
+    );
+    if (restResult.restSeconds != null) {
+      exercise.plannedRestSeconds = restResult.restSeconds;
+    }
+    exercise.warnings.addAll(restResult.warnings);
+    return;
+  }
+
+  final count = int.parse(multMatch!.group(1)!);
   final rhs = int.parse(multMatch.group(3)!);
 
   final remaining = tokens.skip(1).toList();

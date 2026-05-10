@@ -148,23 +148,23 @@ Conventions:
     - _Requirements: R10 AC1, R13 AC3_
     - _Design: §5.7, §5.8_
 
-  - [ ]* 6.6 Write example-based parser tests in `test/modules/program_management/text_plan/text_plan_parser_test.dart` covering a rep-based plan, a time-based plan, a superset plan, a mixed plan with `4x8 100kg 2m`, an orphan set line, an unknown line, an empty input, a whitespace-only input, the `100_001` code-unit cap, and both `\n` / `\r\n` / bare-tail line endings; commit matching input fixtures under `test/modules/program_management/text_plan/golden/`
+  - [x] 6.6 Write example-based parser tests in `test/modules/program_management/text_plan/text_plan_parser_test.dart` covering a rep-based plan, a time-based plan, a superset plan, a mixed plan with `4x8 100kg 2m`, an orphan set line, an unknown line, an empty input, a whitespace-only input, the `100_001` code-unit cap, and both `\n` / `\r\n` / bare-tail line endings; commit matching input fixtures under `test/modules/program_management/text_plan/golden/`
     - _Requirements: R8 AC1, R8 AC3, R8 AC4, R8 AC6, R8 AC8, R8 AC9_
     - _Design: §5.4, §14.3_
 
-  - [ ]* 6.7 Write PBT `test/modules/program_management/text_plan/parse_print_roundtrip_property_test.dart`. **Property 1: parse → print → parse = parse.** Generate a `PlanDraft` via `anyPlanDraft(rng)`, pretty-print, re-parse, assert the re-parsed draft is `==` the original (warnings excluded). ≥100 iterations. **Validates: Requirement R10 AC1.**
+  - [x] 6.7 Write PBT `test/modules/program_management/text_plan/parse_print_roundtrip_property_test.dart`. **Property 1: parse → print → parse = parse.** Generate a `PlanDraft` via `anyPlanDraft(rng)`, pretty-print, re-parse, assert the re-parsed draft is `==` the original (warnings excluded). ≥100 iterations. **Validates: Requirement R10 AC1.**
     - _Requirements: R10 AC1_
     - _Design: §12.1, §12.2_
 
-  - [ ]* 6.8 Write PBT `test/modules/program_management/text_plan/parser_determinism_property_test.dart`. **Property 2: parser determinism.** Generate a `Plan_Text`, invoke the parser twice in the same isolate, assert the returned `ParseResult` values compare equal (including warning list order in success case, error fields in failure case). ≥100 iterations. **Validates: Requirement R10 AC2.**
+  - [x] 6.8 Write PBT `test/modules/program_management/text_plan/parser_determinism_property_test.dart`. **Property 2: parser determinism.** Generate a `Plan_Text`, invoke the parser twice in the same isolate, assert the returned `ParseResult` values compare equal (including warning list order in success case, error fields in failure case). ≥100 iterations. **Validates: Requirement R10 AC2.**
     - _Requirements: R10 AC2_
     - _Design: §12.1_
 
-  - [ ]* 6.9 Write PBT `test/modules/program_management/text_plan/parser_tolerance_property_test.dart`. **Property 3: tolerance invariants.** Generate a `Plan_Text` P, derive P' by applying random combinations of whitespace collapse/expand, leading/trailing whitespace, `\n` / `\r\n` / `\r` swap, and case changes on keywords / unit suffixes / multiplication signs; assert `parse(P) == parse(P')`. ≥100 iterations. **Validates: Requirement R10 AC3.**
+  - [x] 6.9 Write PBT `test/modules/program_management/text_plan/parser_tolerance_property_test.dart`. **Property 3: tolerance invariants.** Generate a `Plan_Text` P, derive P' by applying random combinations of whitespace collapse/expand, leading/trailing whitespace, `\n` / `\r\n` / `\r` swap, and case changes on keywords / unit suffixes / multiplication signs; assert `parse(P) == parse(P')`. ≥100 iterations. **Validates: Requirement R10 AC3.**
     - _Requirements: R10 AC3_
     - _Design: §12.1_
 
-  - [ ]* 6.10 Write PBT `test/modules/program_management/text_plan/parser_error_determinism_property_test.dart`. **Property 5: error determinism.** Generate unparseable `Plan_Text` via `anyUnparseablePlanText(rng)`; invoke the parser multiple times; assert the returned `PlanParseError` has the same `line`, `column`, and `code` every time. ≥100 iterations. **Validates: Requirement R10 AC5.**
+  - [x] 6.10 Write PBT `test/modules/program_management/text_plan/parser_error_determinism_property_test.dart`. **Property 5: error determinism.** Generate unparseable `Plan_Text` via `anyUnparseablePlanText(rng)`; invoke the parser multiple times; assert the returned `PlanParseError` has the same `line`, `column`, and `code` every time. ≥100 iterations. **Validates: Requirement R10 AC5.**
     - _Requirements: R10 AC5_
     - _Design: §12.1_
 
