@@ -121,9 +121,9 @@ Conventions used throughout:
 - [x] 13. Checkpoint — repositories complete
   - [x] 13.1 Run `dart run build_runner build --delete-conflicting-outputs`, `flutter analyze`, and `flutter test`; confirm the full existing suite is green before moving to repository-level PBT. Ensure all tests pass, ask the user if questions arise. (Design §10.1)
 
-- [ ] 14. Add repository-level test support
-  - [ ] 14.1 Extend `test/support/generators.dart` with `anyProgramRepoOpSequence` (mix of create/update/delete/reorder template ops), `anySessionRepoOpSequence` (biased toward state transitions), `anyCorruption(Map<String, dynamic>)`, and `RegressingClock` fake — all plain Dart using `dart:math` `Random`, no third-party PBT library (Design §10.4)
-  - [ ] 14.2 Add `test/support/in_memory_app_database.dart` helper that opens a fresh `AppDatabase` backed by `NativeDatabase.memory()` per test with `setUp` / `tearDown` plumbing (Design §10.1)
+- [x] 14. Add repository-level test support
+  - [x] 14.1 Extend `test/support/generators.dart` with `anyProgramRepoOpSequence` (mix of create/update/delete/reorder template ops), `anySessionRepoOpSequence` (biased toward state transitions), `anyCorruption(Map<String, dynamic>)`, and `RegressingClock` fake — all plain Dart using `dart:math` `Random`, no third-party PBT library (Design §10.4)
+  - [x] 14.2 Add `test/support/in_memory_app_database.dart` helper that opens a fresh `AppDatabase` backed by `NativeDatabase.memory()` per test with `setUp` / `tearDown` plumbing (Design §10.1)
 
 - [ ] 15. Write repository-level property-based tests
   - [ ] 15.1 Write PBT in `test/repository/replacement_no_template_mutation_test.dart`: snapshot every template-table row before a random `replaceExercise` sequence, run the sequence, diff every row byte-for-byte afterward and assert equality. **Property 4: Replacement does not mutate templates.** **Validates: Req 5.3** (Req 5.3; Design §9 P4)

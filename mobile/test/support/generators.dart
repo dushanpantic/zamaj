@@ -1,6 +1,7 @@
 import 'dart:math';
 
 import 'package:zamaj/core/canonical_json.dart';
+import 'package:zamaj/core/clock.dart';
 import 'package:zamaj/modules/domain/models/actual_set_values.dart';
 import 'package:zamaj/modules/domain/models/executed_set.dart';
 import 'package:zamaj/modules/domain/models/exercise.dart';
@@ -406,4 +407,467 @@ Session anySession(Random rng) {
     updatedAt: anyUtcDateTime(rng),
     schemaVersion: 1,
   );
+}
+
+// ---------------------------------------------------------------------------
+// Program repository operation sequence
+// ---------------------------------------------------------------------------
+
+sealed class ProgramRepoOp {}
+
+final class CreateProgramOp extends ProgramRepoOp {
+  CreateProgramOp({required this.name});
+  final String name;
+}
+
+final class UpdateProgramNameOp extends ProgramRepoOp {
+  UpdateProgramNameOp({required this.programId, required this.newName});
+  final String programId;
+  final String newName;
+}
+
+final class DeleteProgramOp extends ProgramRepoOp {
+  DeleteProgramOp({required this.programId});
+  final String programId;
+}
+
+final class CreateWorkoutDayOp extends ProgramRepoOp {
+  CreateWorkoutDayOp({required this.programId, required this.name});
+  final String programId;
+  final String name;
+}
+
+final class ReorderWorkoutDaysOp extends ProgramRepoOp {
+  ReorderWorkoutDaysOp({
+    required this.programId,
+    required this.orderedWorkoutDayIds,
+  });
+  final String programId;
+  final List<String> orderedWorkoutDayIds;
+}
+
+final class CreateExerciseGroupOp extends ProgramRepoOp {
+  CreateExerciseGroupOp({
+    required this.workoutDayId,
+    required this.kind,
+    required this.exercises,
+  });
+  final String workoutDayId;
+  final ExerciseGroupKind kind;
+  final List<Exercise> exercises;
+}
+
+final class ReorderExerciseGroupsOp extends ProgramRepoOp {
+  ReorderExerciseGroupsOp({
+    required this.workoutDayId,
+    required this.orderedGroupIds,
+  });
+  final String workoutDayId;
+  final List<String> orderedGroupIds;
+}
+
+final class CreateExerciseOp extends ProgramRepoOp {
+  CreateExerciseOp({
+    required this.exerciseGroupId,
+    required this.name,
+    required this.measurementType,
+  });
+  final String exerciseGroupId;
+  final String name;
+  final MeasurementType measurementType;
+}
+
+final class ReorderExercisesOp extends ProgramRepoOp {
+  ReorderExercisesOp({
+    required this.exerciseGroupId,
+    required this.orderedExerciseIds,
+  });
+  final String exerciseGroupId;
+  final List<String> orderedExerciseIds;
+}
+
+final class CreateSetOp extends ProgramRepoOp {
+  CreateSetOp({required this.exerciseId, required this.plannedValues});
+  final String exerciseId;
+  final PlannedSetValues plannedValues;
+}
+
+final class ReorderSetsOp extends ProgramRepoOp {
+  ReorderSetsOp({required this.exerciseId, required this.orderedSetIds});
+  final String exerciseId;
+  final List<String> orderedSetIds;
+}
+
+List<ProgramRepoOp> anyProgramRepoOpSequence(Random rng) {
+  final count = 3 + rng.nextInt(8);
+  final ops = <ProgramRepoOp>[];
+  final programIds = <String>[];
+  final workoutDayIds = <String>[];
+  final exerciseGroupIds = <String>[];
+  final exerciseIds = <String>[];
+  final setIds = <String>[];
+
+  for (var i = 0; i < count; i++) {
+    final choice = rng.nextInt(11);
+    switch (choice) {
+      case 0:
+        final id = anyUuidV4(rng);
+        programIds.add(id);
+        ops.add(CreateProgramOp(name: _anyString(rng, maxLen: 30)));
+      case 1:
+        if (programIds.isEmpty) {
+          final id = anyUuidV4(rng);
+          programIds.add(id);
+          ops.add(CreateProgramOp(name: _anyString(rng, maxLen: 30)));
+        } else {
+          final id = programIds[rng.nextInt(programIds.length)];
+          ops.add(
+            UpdateProgramNameOp(
+              programId: id,
+              newName: _anyString(rng, maxLen: 30),
+            ),
+          );
+        }
+      case 2:
+        if (programIds.isEmpty) {
+          final id = anyUuidV4(rng);
+          programIds.add(id);
+          ops.add(CreateProgramOp(name: _anyString(rng, maxLen: 30)));
+        } else {
+          final idx = rng.nextInt(programIds.length);
+          ops.add(DeleteProgramOp(programId: programIds.removeAt(idx)));
+        }
+      case 3:
+        if (programIds.isEmpty) {
+          final id = anyUuidV4(rng);
+          programIds.add(id);
+          ops.add(CreateProgramOp(name: _anyString(rng, maxLen: 30)));
+        }
+        final programId = programIds[rng.nextInt(programIds.length)];
+        final wdId = anyUuidV4(rng);
+        workoutDayIds.add(wdId);
+        ops.add(
+          CreateWorkoutDayOp(
+            programId: programId,
+            name: _anyString(rng, maxLen: 30),
+          ),
+        );
+      case 4:
+        if (workoutDayIds.length >= 2) {
+          final programId = programIds.isEmpty ? anyUuidV4(rng) : programIds[0];
+          final shuffled = List<String>.from(workoutDayIds)..shuffle(rng);
+          ops.add(
+            ReorderWorkoutDaysOp(
+              programId: programId,
+              orderedWorkoutDayIds: shuffled,
+            ),
+          );
+        } else {
+          ops.add(CreateProgramOp(name: _anyString(rng, maxLen: 30)));
+        }
+      case 5:
+        if (workoutDayIds.isEmpty) {
+          ops.add(CreateProgramOp(name: _anyString(rng, maxLen: 30)));
+        } else {
+          final wdId = workoutDayIds[rng.nextInt(workoutDayIds.length)];
+          final kind = anyExerciseGroupKind(rng);
+          final exerciseCount = kind.when(
+            single: () => 1,
+            superset: () => 2 + rng.nextInt(2),
+          );
+          final exercises = List.generate(
+            exerciseCount,
+            (j) => anyExercise(rng),
+          );
+          final egId = anyUuidV4(rng);
+          exerciseGroupIds.add(egId);
+          ops.add(
+            CreateExerciseGroupOp(
+              workoutDayId: wdId,
+              kind: kind,
+              exercises: exercises,
+            ),
+          );
+        }
+      case 6:
+        if (exerciseGroupIds.length >= 2) {
+          final wdId = workoutDayIds.isEmpty
+              ? anyUuidV4(rng)
+              : workoutDayIds[0];
+          final shuffled = List<String>.from(exerciseGroupIds)..shuffle(rng);
+          ops.add(
+            ReorderExerciseGroupsOp(
+              workoutDayId: wdId,
+              orderedGroupIds: shuffled,
+            ),
+          );
+        } else {
+          ops.add(CreateProgramOp(name: _anyString(rng, maxLen: 30)));
+        }
+      case 7:
+        if (exerciseGroupIds.isEmpty) {
+          ops.add(CreateProgramOp(name: _anyString(rng, maxLen: 30)));
+        } else {
+          final egId = exerciseGroupIds[rng.nextInt(exerciseGroupIds.length)];
+          final exId = anyUuidV4(rng);
+          exerciseIds.add(exId);
+          ops.add(
+            CreateExerciseOp(
+              exerciseGroupId: egId,
+              name: _anyString(rng, maxLen: 30),
+              measurementType: anyMeasurementType(rng),
+            ),
+          );
+        }
+      case 8:
+        if (exerciseIds.length >= 2) {
+          final egId = exerciseGroupIds.isEmpty
+              ? anyUuidV4(rng)
+              : exerciseGroupIds[0];
+          final shuffled = List<String>.from(exerciseIds)..shuffle(rng);
+          ops.add(
+            ReorderExercisesOp(
+              exerciseGroupId: egId,
+              orderedExerciseIds: shuffled,
+            ),
+          );
+        } else {
+          ops.add(CreateProgramOp(name: _anyString(rng, maxLen: 30)));
+        }
+      case 9:
+        if (exerciseIds.isEmpty) {
+          ops.add(CreateProgramOp(name: _anyString(rng, maxLen: 30)));
+        } else {
+          final exId = exerciseIds[rng.nextInt(exerciseIds.length)];
+          final mt = anyMeasurementType(rng);
+          final sId = anyUuidV4(rng);
+          setIds.add(sId);
+          ops.add(
+            CreateSetOp(
+              exerciseId: exId,
+              plannedValues: anyPlannedSetValuesForMeasurement(rng, mt),
+            ),
+          );
+        }
+      default:
+        if (setIds.length >= 2) {
+          final exId = exerciseIds.isEmpty ? anyUuidV4(rng) : exerciseIds[0];
+          final shuffled = List<String>.from(setIds)..shuffle(rng);
+          ops.add(ReorderSetsOp(exerciseId: exId, orderedSetIds: shuffled));
+        } else {
+          ops.add(CreateProgramOp(name: _anyString(rng, maxLen: 30)));
+        }
+    }
+  }
+  return ops;
+}
+
+// ---------------------------------------------------------------------------
+// Session repository operation sequence
+// ---------------------------------------------------------------------------
+
+sealed class SessionRepoOp {}
+
+final class CompleteSetOp extends SessionRepoOp {
+  CompleteSetOp({
+    required this.sessionExerciseId,
+    required this.actualValues,
+    this.plannedSetIdInSnapshot,
+  });
+  final String sessionExerciseId;
+  final ActualSetValues actualValues;
+  final String? plannedSetIdInSnapshot;
+}
+
+final class SkipExerciseOp extends SessionRepoOp {
+  SkipExerciseOp({required this.sessionExerciseId});
+  final String sessionExerciseId;
+}
+
+final class ReplaceExerciseOp extends SessionRepoOp {
+  ReplaceExerciseOp({
+    required this.sessionExerciseId,
+    required this.substituteName,
+    required this.substituteMeasurementType,
+    this.substituteMetadata,
+  });
+  final String sessionExerciseId;
+  final String substituteName;
+  final MeasurementType substituteMeasurementType;
+  final ExerciseMetadata? substituteMetadata;
+}
+
+final class ReorderUnfinishedOp extends SessionRepoOp {
+  ReorderUnfinishedOp({
+    required this.sessionId,
+    required this.orderedUnfinishedIds,
+  });
+  final String sessionId;
+  final List<String> orderedUnfinishedIds;
+}
+
+final class AddSessionNoteOp extends SessionRepoOp {
+  AddSessionNoteOp({required this.sessionId, required this.body});
+  final String sessionId;
+  final String body;
+}
+
+final class AddExtraWorkOp extends SessionRepoOp {
+  AddExtraWorkOp({required this.sessionId, required this.body});
+  final String sessionId;
+  final String body;
+}
+
+final class EndSessionOp extends SessionRepoOp {
+  EndSessionOp({required this.sessionId});
+  final String sessionId;
+}
+
+List<SessionRepoOp> anySessionRepoOpSequence(Random rng) {
+  final count = 3 + rng.nextInt(6);
+  final ops = <SessionRepoOp>[];
+  final sessionIds = [anyUuidV4(rng)];
+  final sessionExerciseIds = List.generate(4, (_) => anyUuidV4(rng));
+
+  for (var i = 0; i < count; i++) {
+    final sessionId = sessionIds[rng.nextInt(sessionIds.length)];
+    final seId = sessionExerciseIds[rng.nextInt(sessionExerciseIds.length)];
+
+    // Bias: 60% state transitions, 40% structural ops
+    final roll = rng.nextInt(10);
+    if (roll < 3) {
+      final mt = anyMeasurementType(rng);
+      ops.add(
+        CompleteSetOp(
+          sessionExerciseId: seId,
+          actualValues: anyActualSetValuesForMeasurement(rng, mt),
+          plannedSetIdInSnapshot: rng.nextBool() ? anyUuidV4(rng) : null,
+        ),
+      );
+    } else if (roll < 5) {
+      ops.add(SkipExerciseOp(sessionExerciseId: seId));
+    } else if (roll < 7) {
+      ops.add(
+        ReplaceExerciseOp(
+          sessionExerciseId: seId,
+          substituteName: _anyString(rng, maxLen: 30),
+          substituteMeasurementType: anyMeasurementType(rng),
+          substituteMetadata: rng.nextBool() ? anyExerciseMetadata(rng) : null,
+        ),
+      );
+    } else if (roll == 7) {
+      final shuffled = List<String>.from(sessionExerciseIds)..shuffle(rng);
+      ops.add(
+        ReorderUnfinishedOp(
+          sessionId: sessionId,
+          orderedUnfinishedIds: shuffled,
+        ),
+      );
+    } else if (roll == 8) {
+      ops.add(
+        AddSessionNoteOp(
+          sessionId: sessionId,
+          body: _anyString(rng, maxLen: 100),
+        ),
+      );
+    } else {
+      ops.add(EndSessionOp(sessionId: sessionId));
+    }
+  }
+  return ops;
+}
+
+// ---------------------------------------------------------------------------
+// Corruption generator
+// ---------------------------------------------------------------------------
+
+Map<String, dynamic> anyCorruption(Map<String, dynamic> original, Random rng) {
+  final copy = _deepCopyMap(original);
+  final allPaths = _collectLeafPaths(copy);
+  if (allPaths.isEmpty) return copy;
+
+  final path = allPaths[rng.nextInt(allPaths.length)];
+  final corruptionKind = rng.nextBool();
+
+  if (corruptionKind) {
+    _dropAtPath(copy, path);
+  } else {
+    _replaceAtPath(copy, path, '__unknown__');
+  }
+  return copy;
+}
+
+Map<String, dynamic> _deepCopyMap(Map<String, dynamic> source) {
+  return source.map((k, v) {
+    if (v is Map<String, dynamic>) return MapEntry(k, _deepCopyMap(v));
+    if (v is List) return MapEntry(k, _deepCopyList(v));
+    return MapEntry(k, v);
+  });
+}
+
+List<dynamic> _deepCopyList(List<dynamic> source) {
+  return source.map((v) {
+    if (v is Map<String, dynamic>) return _deepCopyMap(v);
+    if (v is List) return _deepCopyList(v);
+    return v;
+  }).toList();
+}
+
+List<List<String>> _collectLeafPaths(Map<String, dynamic> map) {
+  final paths = <List<String>>[];
+  for (final entry in map.entries) {
+    final v = entry.value;
+    if (v is Map<String, dynamic>) {
+      for (final sub in _collectLeafPaths(v)) {
+        paths.add([entry.key, ...sub]);
+      }
+    } else {
+      paths.add([entry.key]);
+    }
+  }
+  return paths;
+}
+
+void _dropAtPath(Map<String, dynamic> map, List<String> path) {
+  if (path.length == 1) {
+    map.remove(path.first);
+    return;
+  }
+  final child = map[path.first];
+  if (child is Map<String, dynamic>) {
+    _dropAtPath(child, path.sublist(1));
+  }
+}
+
+void _replaceAtPath(
+  Map<String, dynamic> map,
+  List<String> path,
+  String replacement,
+) {
+  if (path.length == 1) {
+    map[path.first] = replacement;
+    return;
+  }
+  final child = map[path.first];
+  if (child is Map<String, dynamic>) {
+    _replaceAtPath(child, path.sublist(1), replacement);
+  }
+}
+
+// ---------------------------------------------------------------------------
+// RegressingClock — fake AppClock that returns non-monotonic times
+// ---------------------------------------------------------------------------
+
+class RegressingClock extends AppClock {
+  RegressingClock(this._times) : assert(_times.isNotEmpty);
+
+  final List<DateTime> _times;
+  int _index = 0;
+
+  @override
+  DateTime nowUtc() {
+    final t = _times[_index % _times.length];
+    _index++;
+    return t.isUtc ? t : t.toUtc();
+  }
 }
