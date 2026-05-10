@@ -91,8 +91,9 @@ abstract final class ProgramValidation {
     final trimmed = input.trim();
     if (trimmed.length > 2048) return const Invalid('url_too_long');
     final uri = Uri.tryParse(trimmed);
-    if (uri == null || !uri.isAbsolute)
+    if (uri == null || !uri.isAbsolute) {
       return const Invalid('url_not_absolute');
+    }
     if (uri.scheme != 'http' && uri.scheme != 'https') {
       return const Invalid('url_scheme_not_http_https');
     }

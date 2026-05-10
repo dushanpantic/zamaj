@@ -122,8 +122,8 @@ Conventions:
     - _Requirements: R7 AC5, R7 AC6, R7 AC8, R12 AC3, R13 AC4_
     - _Design: §9, §13.1_
 
-- [ ] 5. Checkpoint — foundation is green
-  - [ ] 5.1 Run `bash tool/check_offline_imports.sh`, `dart run build_runner build --force-jit`, `flutter analyze`, and `flutter test`; confirm every existing suite plus the new domain / repository / service tests pass. Ensure all tests pass, ask the user if questions arise.
+- [x] 5. Checkpoint — foundation is green
+  - [x] 5.1 Run `bash tool/check_offline_imports.sh`, `dart run build_runner build --force-jit`, `flutter analyze`, and `flutter test`; confirm every existing suite plus the new domain / repository / service tests pass. Ensure all tests pass, ask the user if questions arise.
     - _Requirements: R14 AC6_
     - _Design: §14.5_
 
