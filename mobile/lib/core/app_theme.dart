@@ -96,7 +96,7 @@ abstract final class AppTheme {
         style: ElevatedButton.styleFrom(
           backgroundColor: colors.primary,
           foregroundColor: colors.onPrimary,
-          minimumSize: const Size.fromHeight(AppSpacing.touchMin),
+          minimumSize: const Size(64, AppSpacing.touchMin),
           padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xl),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(AppRadius.md),
@@ -108,7 +108,7 @@ abstract final class AppTheme {
         style: FilledButton.styleFrom(
           backgroundColor: colors.primary,
           foregroundColor: colors.onPrimary,
-          minimumSize: const Size.fromHeight(AppSpacing.touchMin),
+          minimumSize: const Size(64, AppSpacing.touchMin),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(AppRadius.md),
           ),
@@ -118,7 +118,7 @@ abstract final class AppTheme {
       outlinedButtonTheme: OutlinedButtonThemeData(
         style: OutlinedButton.styleFrom(
           foregroundColor: colors.onSurface,
-          minimumSize: const Size.fromHeight(AppSpacing.touchMin),
+          minimumSize: const Size(64, AppSpacing.touchMin),
           side: BorderSide(color: colors.outline),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(AppRadius.md),
@@ -129,7 +129,7 @@ abstract final class AppTheme {
       textButtonTheme: TextButtonThemeData(
         style: TextButton.styleFrom(
           foregroundColor: colors.primary,
-          minimumSize: const Size.fromHeight(AppSpacing.touchMin),
+          minimumSize: const Size(64, AppSpacing.touchMin),
           padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
           textStyle: typography.label,
         ),
