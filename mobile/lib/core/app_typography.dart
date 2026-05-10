@@ -39,7 +39,11 @@ class AppTypography {
       height: 1.25,
     ),
     body: TextStyle(fontSize: 16, fontWeight: FontWeight.w400, height: 1.4),
-    bodySmall: TextStyle(fontSize: 14, fontWeight: FontWeight.w400, height: 1.4),
+    bodySmall: TextStyle(
+      fontSize: 14,
+      fontWeight: FontWeight.w400,
+      height: 1.4,
+    ),
     label: TextStyle(fontSize: 14, fontWeight: FontWeight.w500, height: 1.25),
     caption: TextStyle(fontSize: 12, fontWeight: FontWeight.w400, height: 1.3),
     numeric: TextStyle(

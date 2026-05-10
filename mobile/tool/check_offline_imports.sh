@@ -45,4 +45,119 @@ if [ "$found" -ne 0 ]; then
   exit 1
 fi
 
+# --- program_management superset check ---
+
+PM_DIR="lib/modules/program_management"
+
+PM_NETWORKING_PATTERNS=(
+  "import 'dart:io'"
+  'import "dart:io"'
+  "import 'package:http/"
+  'import "package:http/'
+  "import 'package:dio/"
+  'import "package:dio/'
+  "import 'package:web_socket_channel/"
+  'import "package:web_socket_channel/'
+  "import 'package:grpc/"
+  'import "package:grpc/'
+  "import 'package:socket_io_client/"
+  'import "package:socket_io_client/'
+)
+
+PM_DRIFT_PATTERNS=(
+  "import 'package:drift/"
+  'import "package:drift/'
+  "import 'package:drift_flutter/"
+  'import "package:drift_flutter/'
+  "import 'package:sqlite3/"
+  'import "package:sqlite3/'
+)
+
+PM_DART_IO_SYMBOLS=(
+  "HttpClient"
+  "HttpServer"
+  "Socket"
+  "ServerSocket"
+  "RawSocket"
+  "SecureSocket"
+  "SecureServerSocket"
+)
+
+PM_DB_SYMBOLS=(
+  "AppDatabase"
+  "NativeDatabase"
+  "driftDatabase"
+  "GeneratedDatabase"
+)
+
+pm_found=0
+
+emit_violation() {
+  local file="$1"
+  local line="$2"
+  local symbol="$3"
+  echo "${file}:${line}:${symbol}"
+  pm_found=1
+}
+
+if [ -d "$PM_DIR" ]; then
+  # Check networking import patterns
+  for pattern in "${PM_NETWORKING_PATTERNS[@]}"; do
+    while IFS=: read -r file line _rest; do
+      [ -n "$file" ] && emit_violation "$file" "$line" "$pattern"
+    done < <(grep -rn --include="*.dart" \
+      --exclude="*.freezed.dart" --exclude="*.g.dart" \
+      -F "$pattern" "$PM_DIR" 2>/dev/null || true)
+  done
+
+  # Check drift/sqlite import patterns
+  for pattern in "${PM_DRIFT_PATTERNS[@]}"; do
+    while IFS=: read -r file line _rest; do
+      [ -n "$file" ] && emit_violation "$file" "$line" "$pattern"
+    done < <(grep -rn --include="*.dart" \
+      --exclude="*.freezed.dart" --exclude="*.g.dart" \
+      -F "$pattern" "$PM_DIR" 2>/dev/null || true)
+  done
+
+  # Check imports of *.g.dart files under lib/modules/persistence/
+  while IFS=: read -r file line _rest; do
+    [ -n "$file" ] && emit_violation "$file" "$line" "import of persistence *.g.dart"
+  done < <(grep -rn --include="*.dart" \
+    --exclude="*.freezed.dart" --exclude="*.g.dart" \
+    -E "import ['\"]package:zamaj/modules/persistence/[^'\"]*\.g\.dart['\"]" \
+    "$PM_DIR" 2>/dev/null || true)
+
+  # Also catch relative imports of persistence .g.dart files
+  while IFS=: read -r file line _rest; do
+    [ -n "$file" ] && emit_violation "$file" "$line" "import of persistence *.g.dart"
+  done < <(grep -rn --include="*.dart" \
+    --exclude="*.freezed.dart" --exclude="*.g.dart" \
+    -E "import ['\"][^'\"]*lib/modules/persistence/[^'\"]*\.g\.dart['\"]" \
+    "$PM_DIR" 2>/dev/null || true)
+
+  # Check dart:io socket/HTTP symbol references
+  for symbol in "${PM_DART_IO_SYMBOLS[@]}"; do
+    while IFS=: read -r file line _rest; do
+      [ -n "$file" ] && emit_violation "$file" "$line" "$symbol"
+    done < <(grep -rn --include="*.dart" \
+      --exclude="*.freezed.dart" --exclude="*.g.dart" \
+      -w "$symbol" "$PM_DIR" 2>/dev/null || true)
+  done
+
+  # Check forbidden database symbols
+  for symbol in "${PM_DB_SYMBOLS[@]}"; do
+    while IFS=: read -r file line _rest; do
+      [ -n "$file" ] && emit_violation "$file" "$line" "$symbol"
+    done < <(grep -rn --include="*.dart" \
+      --exclude="*.freezed.dart" --exclude="*.g.dart" \
+      -w "$symbol" "$PM_DIR" 2>/dev/null || true)
+  done
+fi
+
+if [ "$pm_found" -ne 0 ]; then
+  echo ""
+  echo "ERROR: program_management offline-first isolation violated. Remove the symbols listed above."
+  exit 1
+fi
+
 echo "check_offline_imports: OK"

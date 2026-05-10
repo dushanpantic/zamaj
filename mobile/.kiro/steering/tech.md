@@ -69,11 +69,15 @@ bash tool/ci.sh
 
 ## Test strategy
 
+**Current scope: domain layer only.** Do not write BLoC tests, widget tests, or screen tests. Only the following test categories are in scope for now:
+
 - **Unit tests** per layer under `test/core`, `test/domain`, `test/persistence`, `test/repository`, `test/serialization`.
 - **Integration tests** under `test/integration` exercise the Drift DB end-to-end (foreign keys, version mismatch, soft refs).
 - **Property-based tests** (e.g. `test/core/canonical_json_property_test.dart`) using generators in `test/support/generators.dart`.
 - **Golden fixtures** for JSON serialization under `test/serialization/golden/`. Regenerate via `tool/generate_aggregate_goldens.dart`.
 - **In-memory DB** helper lives at `test/support/in_memory_app_database.dart`.
+
+`bloc_test` is not a dependency. Do not add it.
 
 ## Random ranges in tests
 
