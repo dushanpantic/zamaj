@@ -22,6 +22,10 @@ _Exercise _$ExerciseFromJson(
       'metadata',
       (v) => ExerciseMetadata.fromJson(v as Map<String, dynamic>),
     ),
+    plannedRestSeconds: $checkedConvert(
+      'plannedRestSeconds',
+      (v) => (v as num?)?.toInt(),
+    ),
     sets: $checkedConvert(
       'sets',
       (v) => (v as List<dynamic>)
@@ -42,6 +46,7 @@ Map<String, dynamic> _$ExerciseToJson(_Exercise instance) => <String, dynamic>{
   'name': instance.name,
   'measurementType': instance.measurementType.toJson(),
   'metadata': instance.metadata.toJson(),
+  'plannedRestSeconds': ?instance.plannedRestSeconds,
   'sets': instance.sets.map((e) => e.toJson()).toList(),
   'createdAt': instance.createdAt.toIso8601String(),
   'updatedAt': instance.updatedAt.toIso8601String(),

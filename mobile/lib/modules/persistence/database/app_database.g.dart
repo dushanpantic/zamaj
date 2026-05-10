@@ -1746,6 +1746,16 @@ class $ExercisesTable extends Exercises
     type: DriftSqlType.string,
     requiredDuringInsert: false,
   );
+  static const VerificationMeta _plannedRestSecondsMeta =
+      const VerificationMeta('plannedRestSeconds');
+  @override
+  late final GeneratedColumn<int> plannedRestSeconds = GeneratedColumn<int>(
+    'planned_rest_seconds',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
   static const VerificationMeta _createdAtMsMeta = const VerificationMeta(
     'createdAtMs',
   );
@@ -1789,6 +1799,7 @@ class $ExercisesTable extends Exercises
     measurementTypePayloadJson,
     notes,
     videoUrl,
+    plannedRestSeconds,
     createdAtMs,
     updatedAtMs,
     schemaVersion,
@@ -1871,6 +1882,15 @@ class $ExercisesTable extends Exercises
         videoUrl.isAcceptableOrUnknown(data['video_url']!, _videoUrlMeta),
       );
     }
+    if (data.containsKey('planned_rest_seconds')) {
+      context.handle(
+        _plannedRestSecondsMeta,
+        plannedRestSeconds.isAcceptableOrUnknown(
+          data['planned_rest_seconds']!,
+          _plannedRestSecondsMeta,
+        ),
+      );
+    }
     if (data.containsKey('created_at_ms')) {
       context.handle(
         _createdAtMsMeta,
@@ -1949,6 +1969,10 @@ class $ExercisesTable extends Exercises
         DriftSqlType.string,
         data['${effectivePrefix}video_url'],
       ),
+      plannedRestSeconds: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}planned_rest_seconds'],
+      ),
       createdAtMs: attachedDatabase.typeMapping.read(
         DriftSqlType.int,
         data['${effectivePrefix}created_at_ms'],
@@ -1979,6 +2003,7 @@ class Exercise extends DataClass implements Insertable<Exercise> {
   final String measurementTypePayloadJson;
   final String? notes;
   final String? videoUrl;
+  final int? plannedRestSeconds;
   final int createdAtMs;
   final int updatedAtMs;
   final int schemaVersion;
@@ -1991,6 +2016,7 @@ class Exercise extends DataClass implements Insertable<Exercise> {
     required this.measurementTypePayloadJson,
     this.notes,
     this.videoUrl,
+    this.plannedRestSeconds,
     required this.createdAtMs,
     required this.updatedAtMs,
     required this.schemaVersion,
@@ -2014,6 +2040,9 @@ class Exercise extends DataClass implements Insertable<Exercise> {
     if (!nullToAbsent || videoUrl != null) {
       map['video_url'] = Variable<String>(videoUrl);
     }
+    if (!nullToAbsent || plannedRestSeconds != null) {
+      map['planned_rest_seconds'] = Variable<int>(plannedRestSeconds);
+    }
     map['created_at_ms'] = Variable<int>(createdAtMs);
     map['updated_at_ms'] = Variable<int>(updatedAtMs);
     map['schema_version'] = Variable<int>(schemaVersion);
@@ -2034,6 +2063,9 @@ class Exercise extends DataClass implements Insertable<Exercise> {
       videoUrl: videoUrl == null && nullToAbsent
           ? const Value.absent()
           : Value(videoUrl),
+      plannedRestSeconds: plannedRestSeconds == null && nullToAbsent
+          ? const Value.absent()
+          : Value(plannedRestSeconds),
       createdAtMs: Value(createdAtMs),
       updatedAtMs: Value(updatedAtMs),
       schemaVersion: Value(schemaVersion),
@@ -2058,6 +2090,7 @@ class Exercise extends DataClass implements Insertable<Exercise> {
       ),
       notes: serializer.fromJson<String?>(json['notes']),
       videoUrl: serializer.fromJson<String?>(json['videoUrl']),
+      plannedRestSeconds: serializer.fromJson<int?>(json['plannedRestSeconds']),
       createdAtMs: serializer.fromJson<int>(json['createdAtMs']),
       updatedAtMs: serializer.fromJson<int>(json['updatedAtMs']),
       schemaVersion: serializer.fromJson<int>(json['schemaVersion']),
@@ -2079,6 +2112,7 @@ class Exercise extends DataClass implements Insertable<Exercise> {
       ),
       'notes': serializer.toJson<String?>(notes),
       'videoUrl': serializer.toJson<String?>(videoUrl),
+      'plannedRestSeconds': serializer.toJson<int?>(plannedRestSeconds),
       'createdAtMs': serializer.toJson<int>(createdAtMs),
       'updatedAtMs': serializer.toJson<int>(updatedAtMs),
       'schemaVersion': serializer.toJson<int>(schemaVersion),
@@ -2094,6 +2128,7 @@ class Exercise extends DataClass implements Insertable<Exercise> {
     String? measurementTypePayloadJson,
     Value<String?> notes = const Value.absent(),
     Value<String?> videoUrl = const Value.absent(),
+    Value<int?> plannedRestSeconds = const Value.absent(),
     int? createdAtMs,
     int? updatedAtMs,
     int? schemaVersion,
@@ -2108,6 +2143,9 @@ class Exercise extends DataClass implements Insertable<Exercise> {
         measurementTypePayloadJson ?? this.measurementTypePayloadJson,
     notes: notes.present ? notes.value : this.notes,
     videoUrl: videoUrl.present ? videoUrl.value : this.videoUrl,
+    plannedRestSeconds: plannedRestSeconds.present
+        ? plannedRestSeconds.value
+        : this.plannedRestSeconds,
     createdAtMs: createdAtMs ?? this.createdAtMs,
     updatedAtMs: updatedAtMs ?? this.updatedAtMs,
     schemaVersion: schemaVersion ?? this.schemaVersion,
@@ -2128,6 +2166,9 @@ class Exercise extends DataClass implements Insertable<Exercise> {
           : this.measurementTypePayloadJson,
       notes: data.notes.present ? data.notes.value : this.notes,
       videoUrl: data.videoUrl.present ? data.videoUrl.value : this.videoUrl,
+      plannedRestSeconds: data.plannedRestSeconds.present
+          ? data.plannedRestSeconds.value
+          : this.plannedRestSeconds,
       createdAtMs: data.createdAtMs.present
           ? data.createdAtMs.value
           : this.createdAtMs,
@@ -2153,6 +2194,7 @@ class Exercise extends DataClass implements Insertable<Exercise> {
           ..write('measurementTypePayloadJson: $measurementTypePayloadJson, ')
           ..write('notes: $notes, ')
           ..write('videoUrl: $videoUrl, ')
+          ..write('plannedRestSeconds: $plannedRestSeconds, ')
           ..write('createdAtMs: $createdAtMs, ')
           ..write('updatedAtMs: $updatedAtMs, ')
           ..write('schemaVersion: $schemaVersion')
@@ -2170,6 +2212,7 @@ class Exercise extends DataClass implements Insertable<Exercise> {
     measurementTypePayloadJson,
     notes,
     videoUrl,
+    plannedRestSeconds,
     createdAtMs,
     updatedAtMs,
     schemaVersion,
@@ -2187,6 +2230,7 @@ class Exercise extends DataClass implements Insertable<Exercise> {
           other.measurementTypePayloadJson == this.measurementTypePayloadJson &&
           other.notes == this.notes &&
           other.videoUrl == this.videoUrl &&
+          other.plannedRestSeconds == this.plannedRestSeconds &&
           other.createdAtMs == this.createdAtMs &&
           other.updatedAtMs == this.updatedAtMs &&
           other.schemaVersion == this.schemaVersion);
@@ -2201,6 +2245,7 @@ class ExercisesCompanion extends UpdateCompanion<Exercise> {
   final Value<String> measurementTypePayloadJson;
   final Value<String?> notes;
   final Value<String?> videoUrl;
+  final Value<int?> plannedRestSeconds;
   final Value<int> createdAtMs;
   final Value<int> updatedAtMs;
   final Value<int> schemaVersion;
@@ -2214,6 +2259,7 @@ class ExercisesCompanion extends UpdateCompanion<Exercise> {
     this.measurementTypePayloadJson = const Value.absent(),
     this.notes = const Value.absent(),
     this.videoUrl = const Value.absent(),
+    this.plannedRestSeconds = const Value.absent(),
     this.createdAtMs = const Value.absent(),
     this.updatedAtMs = const Value.absent(),
     this.schemaVersion = const Value.absent(),
@@ -2228,6 +2274,7 @@ class ExercisesCompanion extends UpdateCompanion<Exercise> {
     required String measurementTypePayloadJson,
     this.notes = const Value.absent(),
     this.videoUrl = const Value.absent(),
+    this.plannedRestSeconds = const Value.absent(),
     required int createdAtMs,
     required int updatedAtMs,
     required int schemaVersion,
@@ -2250,6 +2297,7 @@ class ExercisesCompanion extends UpdateCompanion<Exercise> {
     Expression<String>? measurementTypePayloadJson,
     Expression<String>? notes,
     Expression<String>? videoUrl,
+    Expression<int>? plannedRestSeconds,
     Expression<int>? createdAtMs,
     Expression<int>? updatedAtMs,
     Expression<int>? schemaVersion,
@@ -2266,6 +2314,8 @@ class ExercisesCompanion extends UpdateCompanion<Exercise> {
         'measurement_type_payload_json': measurementTypePayloadJson,
       if (notes != null) 'notes': notes,
       if (videoUrl != null) 'video_url': videoUrl,
+      if (plannedRestSeconds != null)
+        'planned_rest_seconds': plannedRestSeconds,
       if (createdAtMs != null) 'created_at_ms': createdAtMs,
       if (updatedAtMs != null) 'updated_at_ms': updatedAtMs,
       if (schemaVersion != null) 'schema_version': schemaVersion,
@@ -2282,6 +2332,7 @@ class ExercisesCompanion extends UpdateCompanion<Exercise> {
     Value<String>? measurementTypePayloadJson,
     Value<String?>? notes,
     Value<String?>? videoUrl,
+    Value<int?>? plannedRestSeconds,
     Value<int>? createdAtMs,
     Value<int>? updatedAtMs,
     Value<int>? schemaVersion,
@@ -2298,6 +2349,7 @@ class ExercisesCompanion extends UpdateCompanion<Exercise> {
           measurementTypePayloadJson ?? this.measurementTypePayloadJson,
       notes: notes ?? this.notes,
       videoUrl: videoUrl ?? this.videoUrl,
+      plannedRestSeconds: plannedRestSeconds ?? this.plannedRestSeconds,
       createdAtMs: createdAtMs ?? this.createdAtMs,
       updatedAtMs: updatedAtMs ?? this.updatedAtMs,
       schemaVersion: schemaVersion ?? this.schemaVersion,
@@ -2336,6 +2388,9 @@ class ExercisesCompanion extends UpdateCompanion<Exercise> {
     if (videoUrl.present) {
       map['video_url'] = Variable<String>(videoUrl.value);
     }
+    if (plannedRestSeconds.present) {
+      map['planned_rest_seconds'] = Variable<int>(plannedRestSeconds.value);
+    }
     if (createdAtMs.present) {
       map['created_at_ms'] = Variable<int>(createdAtMs.value);
     }
@@ -2364,6 +2419,7 @@ class ExercisesCompanion extends UpdateCompanion<Exercise> {
           ..write('measurementTypePayloadJson: $measurementTypePayloadJson, ')
           ..write('notes: $notes, ')
           ..write('videoUrl: $videoUrl, ')
+          ..write('plannedRestSeconds: $plannedRestSeconds, ')
           ..write('createdAtMs: $createdAtMs, ')
           ..write('updatedAtMs: $updatedAtMs, ')
           ..write('schemaVersion: $schemaVersion, ')
@@ -7822,6 +7878,7 @@ typedef $$ExercisesTableCreateCompanionBuilder =
       required String measurementTypePayloadJson,
       Value<String?> notes,
       Value<String?> videoUrl,
+      Value<int?> plannedRestSeconds,
       required int createdAtMs,
       required int updatedAtMs,
       required int schemaVersion,
@@ -7837,6 +7894,7 @@ typedef $$ExercisesTableUpdateCompanionBuilder =
       Value<String> measurementTypePayloadJson,
       Value<String?> notes,
       Value<String?> videoUrl,
+      Value<int?> plannedRestSeconds,
       Value<int> createdAtMs,
       Value<int> updatedAtMs,
       Value<int> schemaVersion,
@@ -7929,6 +7987,11 @@ class $$ExercisesTableFilterComposer
 
   ColumnFilters<String> get videoUrl => $composableBuilder(
     column: $table.videoUrl,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get plannedRestSeconds => $composableBuilder(
+    column: $table.plannedRestSeconds,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -8041,6 +8104,11 @@ class $$ExercisesTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<int> get plannedRestSeconds => $composableBuilder(
+    column: $table.plannedRestSeconds,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<int> get createdAtMs => $composableBuilder(
     column: $table.createdAtMs,
     builder: (column) => ColumnOrderings(column),
@@ -8114,6 +8182,11 @@ class $$ExercisesTableAnnotationComposer
 
   GeneratedColumn<String> get videoUrl =>
       $composableBuilder(column: $table.videoUrl, builder: (column) => column);
+
+  GeneratedColumn<int> get plannedRestSeconds => $composableBuilder(
+    column: $table.plannedRestSeconds,
+    builder: (column) => column,
+  );
 
   GeneratedColumn<int> get createdAtMs => $composableBuilder(
     column: $table.createdAtMs,
@@ -8216,6 +8289,7 @@ class $$ExercisesTableTableManager
                 Value<String> measurementTypePayloadJson = const Value.absent(),
                 Value<String?> notes = const Value.absent(),
                 Value<String?> videoUrl = const Value.absent(),
+                Value<int?> plannedRestSeconds = const Value.absent(),
                 Value<int> createdAtMs = const Value.absent(),
                 Value<int> updatedAtMs = const Value.absent(),
                 Value<int> schemaVersion = const Value.absent(),
@@ -8229,6 +8303,7 @@ class $$ExercisesTableTableManager
                 measurementTypePayloadJson: measurementTypePayloadJson,
                 notes: notes,
                 videoUrl: videoUrl,
+                plannedRestSeconds: plannedRestSeconds,
                 createdAtMs: createdAtMs,
                 updatedAtMs: updatedAtMs,
                 schemaVersion: schemaVersion,
@@ -8244,6 +8319,7 @@ class $$ExercisesTableTableManager
                 required String measurementTypePayloadJson,
                 Value<String?> notes = const Value.absent(),
                 Value<String?> videoUrl = const Value.absent(),
+                Value<int?> plannedRestSeconds = const Value.absent(),
                 required int createdAtMs,
                 required int updatedAtMs,
                 required int schemaVersion,
@@ -8257,6 +8333,7 @@ class $$ExercisesTableTableManager
                 measurementTypePayloadJson: measurementTypePayloadJson,
                 notes: notes,
                 videoUrl: videoUrl,
+                plannedRestSeconds: plannedRestSeconds,
                 createdAtMs: createdAtMs,
                 updatedAtMs: updatedAtMs,
                 schemaVersion: schemaVersion,

@@ -70,6 +70,7 @@ class Exercises extends Table {
   TextColumn get measurementTypePayloadJson => text()();
   TextColumn get notes => text().nullable()();
   TextColumn get videoUrl => text().nullable()();
+  IntColumn get plannedRestSeconds => integer().nullable()();
   IntColumn get createdAtMs => integer()();
   IntColumn get updatedAtMs => integer()();
   IntColumn get schemaVersion => integer()();

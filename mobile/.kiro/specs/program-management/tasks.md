@@ -43,8 +43,8 @@ Conventions:
     - _Requirements: R14 AC1, R14 AC2_
     - _Design: §1.2_
 
-- [ ] 2. Extend the domain + Drift layer with `Exercise.plannedRestSeconds`
-  - [ ] 2.1 Add the nullable `plannedRestSeconds` field to `lib/modules/domain/models/exercise.dart` (freezed redirecting factory) and add the range invariant in the `Exercise._()` body that throws `ValidationError(invariant: 'plannedRestSeconds_out_of_range')` when non-null and outside `[0, 3600]`; regenerate with `dart run build_runner build --force-jit`
+- [x] 2. Extend the domain + Drift layer with `Exercise.plannedRestSeconds`
+  - [x] 2.1 Add the nullable `plannedRestSeconds` field to `lib/modules/domain/models/exercise.dart` (freezed redirecting factory) and add the range invariant in the `Exercise._()` body that throws `ValidationError(invariant: 'plannedRestSeconds_out_of_range')` when non-null and outside `[0, 3600]`; regenerate with `dart run build_runner build --force-jit`
     - _Requirements: R6 AC2, R6 AC3, R6 AC5, R6 AC6_
     - _Design: §7.1_
 
@@ -52,19 +52,19 @@ Conventions:
     - _Requirements: R6 AC2, R6 AC3_
     - _Design: §7.1_
 
-  - [ ] 2.3 Add the `plannedRestSeconds` nullable integer column to `Exercises` in `lib/modules/persistence/database/tables.dart`
+  - [x] 2.3 Add the `plannedRestSeconds` nullable integer column to `Exercises` in `lib/modules/persistence/database/tables.dart`
     - _Requirements: R6 AC5, R6 AC6_
     - _Design: §7.2_
 
-  - [ ] 2.4 Bump both `SchemaVersions.drift` and `SchemaVersions.domain` to `2` in `lib/core/schema_versions.dart`
+  - [x] 2.4 Bump both `SchemaVersions.drift` and `SchemaVersions.domain` to `2` in `lib/core/schema_versions.dart`
     - _Requirements: R6 AC6_
     - _Design: §7.3, §15 decision 6_
 
-  - [ ] 2.5 Implement the v1→v2 migration branch in `lib/modules/persistence/database/migrations.dart` that calls `m.addColumn(m.database.exercises, m.database.exercises.plannedRestSeconds)` and regenerate Drift sources
+  - [x] 2.5 Implement the v1→v2 migration branch in `lib/modules/persistence/database/migrations.dart` that calls `m.addColumn(m.database.exercises, m.database.exercises.plannedRestSeconds)` and regenerate Drift sources
     - _Requirements: R6 AC6_
     - _Design: §7.3_
 
-  - [ ] 2.6 Update `lib/modules/persistence/mappers/program_mapper.dart` (or the exercise mapper) to carry `plannedRestSeconds` between domain and Drift rows in both directions
+  - [x] 2.6 Update `lib/modules/persistence/mappers/program_mapper.dart` (or the exercise mapper) to carry `plannedRestSeconds` between domain and Drift rows in both directions
     - _Requirements: R6 AC5, R6 AC6_
     - _Design: §7.2_
 

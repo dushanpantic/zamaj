@@ -15,7 +15,7 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$Exercise {
 
- String get id; String get exerciseGroupId; int get position; String get name; MeasurementType get measurementType; ExerciseMetadata get metadata; List<WorkoutSet> get sets; DateTime get createdAt; DateTime get updatedAt; int get schemaVersion;
+ String get id; String get exerciseGroupId; int get position; String get name; MeasurementType get measurementType; ExerciseMetadata get metadata; int? get plannedRestSeconds; List<WorkoutSet> get sets; DateTime get createdAt; DateTime get updatedAt; int get schemaVersion;
 /// Create a copy of Exercise
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -28,16 +28,16 @@ $ExerciseCopyWith<Exercise> get copyWith => _$ExerciseCopyWithImpl<Exercise>(thi
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is Exercise&&(identical(other.id, id) || other.id == id)&&(identical(other.exerciseGroupId, exerciseGroupId) || other.exerciseGroupId == exerciseGroupId)&&(identical(other.position, position) || other.position == position)&&(identical(other.name, name) || other.name == name)&&(identical(other.measurementType, measurementType) || other.measurementType == measurementType)&&(identical(other.metadata, metadata) || other.metadata == metadata)&&const DeepCollectionEquality().equals(other.sets, sets)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt)&&(identical(other.updatedAt, updatedAt) || other.updatedAt == updatedAt)&&(identical(other.schemaVersion, schemaVersion) || other.schemaVersion == schemaVersion));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is Exercise&&(identical(other.id, id) || other.id == id)&&(identical(other.exerciseGroupId, exerciseGroupId) || other.exerciseGroupId == exerciseGroupId)&&(identical(other.position, position) || other.position == position)&&(identical(other.name, name) || other.name == name)&&(identical(other.measurementType, measurementType) || other.measurementType == measurementType)&&(identical(other.metadata, metadata) || other.metadata == metadata)&&(identical(other.plannedRestSeconds, plannedRestSeconds) || other.plannedRestSeconds == plannedRestSeconds)&&const DeepCollectionEquality().equals(other.sets, sets)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt)&&(identical(other.updatedAt, updatedAt) || other.updatedAt == updatedAt)&&(identical(other.schemaVersion, schemaVersion) || other.schemaVersion == schemaVersion));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,id,exerciseGroupId,position,name,measurementType,metadata,const DeepCollectionEquality().hash(sets),createdAt,updatedAt,schemaVersion);
+int get hashCode => Object.hash(runtimeType,id,exerciseGroupId,position,name,measurementType,metadata,plannedRestSeconds,const DeepCollectionEquality().hash(sets),createdAt,updatedAt,schemaVersion);
 
 @override
 String toString() {
-  return 'Exercise(id: $id, exerciseGroupId: $exerciseGroupId, position: $position, name: $name, measurementType: $measurementType, metadata: $metadata, sets: $sets, createdAt: $createdAt, updatedAt: $updatedAt, schemaVersion: $schemaVersion)';
+  return 'Exercise(id: $id, exerciseGroupId: $exerciseGroupId, position: $position, name: $name, measurementType: $measurementType, metadata: $metadata, plannedRestSeconds: $plannedRestSeconds, sets: $sets, createdAt: $createdAt, updatedAt: $updatedAt, schemaVersion: $schemaVersion)';
 }
 
 
@@ -48,7 +48,7 @@ abstract mixin class $ExerciseCopyWith<$Res>  {
   factory $ExerciseCopyWith(Exercise value, $Res Function(Exercise) _then) = _$ExerciseCopyWithImpl;
 @useResult
 $Res call({
- String id, String exerciseGroupId, int position, String name, MeasurementType measurementType, ExerciseMetadata metadata, List<WorkoutSet> sets, DateTime createdAt, DateTime updatedAt, int schemaVersion
+ String id, String exerciseGroupId, int position, String name, MeasurementType measurementType, ExerciseMetadata metadata, int? plannedRestSeconds, List<WorkoutSet> sets, DateTime createdAt, DateTime updatedAt, int schemaVersion
 });
 
 
@@ -65,7 +65,7 @@ class _$ExerciseCopyWithImpl<$Res>
 
 /// Create a copy of Exercise
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? exerciseGroupId = null,Object? position = null,Object? name = null,Object? measurementType = null,Object? metadata = null,Object? sets = null,Object? createdAt = null,Object? updatedAt = null,Object? schemaVersion = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? exerciseGroupId = null,Object? position = null,Object? name = null,Object? measurementType = null,Object? metadata = null,Object? plannedRestSeconds = freezed,Object? sets = null,Object? createdAt = null,Object? updatedAt = null,Object? schemaVersion = null,}) {
   return _then(_self.copyWith(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as String,exerciseGroupId: null == exerciseGroupId ? _self.exerciseGroupId : exerciseGroupId // ignore: cast_nullable_to_non_nullable
@@ -73,7 +73,8 @@ as String,position: null == position ? _self.position : position // ignore: cast
 as int,name: null == name ? _self.name : name // ignore: cast_nullable_to_non_nullable
 as String,measurementType: null == measurementType ? _self.measurementType : measurementType // ignore: cast_nullable_to_non_nullable
 as MeasurementType,metadata: null == metadata ? _self.metadata : metadata // ignore: cast_nullable_to_non_nullable
-as ExerciseMetadata,sets: null == sets ? _self.sets : sets // ignore: cast_nullable_to_non_nullable
+as ExerciseMetadata,plannedRestSeconds: freezed == plannedRestSeconds ? _self.plannedRestSeconds : plannedRestSeconds // ignore: cast_nullable_to_non_nullable
+as int?,sets: null == sets ? _self.sets : sets // ignore: cast_nullable_to_non_nullable
 as List<WorkoutSet>,createdAt: null == createdAt ? _self.createdAt : createdAt // ignore: cast_nullable_to_non_nullable
 as DateTime,updatedAt: null == updatedAt ? _self.updatedAt : updatedAt // ignore: cast_nullable_to_non_nullable
 as DateTime,schemaVersion: null == schemaVersion ? _self.schemaVersion : schemaVersion // ignore: cast_nullable_to_non_nullable
@@ -180,10 +181,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id,  String exerciseGroupId,  int position,  String name,  MeasurementType measurementType,  ExerciseMetadata metadata,  List<WorkoutSet> sets,  DateTime createdAt,  DateTime updatedAt,  int schemaVersion)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id,  String exerciseGroupId,  int position,  String name,  MeasurementType measurementType,  ExerciseMetadata metadata,  int? plannedRestSeconds,  List<WorkoutSet> sets,  DateTime createdAt,  DateTime updatedAt,  int schemaVersion)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _Exercise() when $default != null:
-return $default(_that.id,_that.exerciseGroupId,_that.position,_that.name,_that.measurementType,_that.metadata,_that.sets,_that.createdAt,_that.updatedAt,_that.schemaVersion);case _:
+return $default(_that.id,_that.exerciseGroupId,_that.position,_that.name,_that.measurementType,_that.metadata,_that.plannedRestSeconds,_that.sets,_that.createdAt,_that.updatedAt,_that.schemaVersion);case _:
   return orElse();
 
 }
@@ -201,10 +202,10 @@ return $default(_that.id,_that.exerciseGroupId,_that.position,_that.name,_that.m
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id,  String exerciseGroupId,  int position,  String name,  MeasurementType measurementType,  ExerciseMetadata metadata,  List<WorkoutSet> sets,  DateTime createdAt,  DateTime updatedAt,  int schemaVersion)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id,  String exerciseGroupId,  int position,  String name,  MeasurementType measurementType,  ExerciseMetadata metadata,  int? plannedRestSeconds,  List<WorkoutSet> sets,  DateTime createdAt,  DateTime updatedAt,  int schemaVersion)  $default,) {final _that = this;
 switch (_that) {
 case _Exercise():
-return $default(_that.id,_that.exerciseGroupId,_that.position,_that.name,_that.measurementType,_that.metadata,_that.sets,_that.createdAt,_that.updatedAt,_that.schemaVersion);case _:
+return $default(_that.id,_that.exerciseGroupId,_that.position,_that.name,_that.measurementType,_that.metadata,_that.plannedRestSeconds,_that.sets,_that.createdAt,_that.updatedAt,_that.schemaVersion);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -221,10 +222,10 @@ return $default(_that.id,_that.exerciseGroupId,_that.position,_that.name,_that.m
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id,  String exerciseGroupId,  int position,  String name,  MeasurementType measurementType,  ExerciseMetadata metadata,  List<WorkoutSet> sets,  DateTime createdAt,  DateTime updatedAt,  int schemaVersion)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id,  String exerciseGroupId,  int position,  String name,  MeasurementType measurementType,  ExerciseMetadata metadata,  int? plannedRestSeconds,  List<WorkoutSet> sets,  DateTime createdAt,  DateTime updatedAt,  int schemaVersion)?  $default,) {final _that = this;
 switch (_that) {
 case _Exercise() when $default != null:
-return $default(_that.id,_that.exerciseGroupId,_that.position,_that.name,_that.measurementType,_that.metadata,_that.sets,_that.createdAt,_that.updatedAt,_that.schemaVersion);case _:
+return $default(_that.id,_that.exerciseGroupId,_that.position,_that.name,_that.measurementType,_that.metadata,_that.plannedRestSeconds,_that.sets,_that.createdAt,_that.updatedAt,_that.schemaVersion);case _:
   return null;
 
 }
@@ -236,7 +237,7 @@ return $default(_that.id,_that.exerciseGroupId,_that.position,_that.name,_that.m
 @JsonSerializable()
 
 class _Exercise extends Exercise {
-   _Exercise({required this.id, required this.exerciseGroupId, required this.position, required this.name, required this.measurementType, required this.metadata, required final  List<WorkoutSet> sets, required this.createdAt, required this.updatedAt, required this.schemaVersion}): _sets = sets,super._();
+   _Exercise({required this.id, required this.exerciseGroupId, required this.position, required this.name, required this.measurementType, required this.metadata, this.plannedRestSeconds, required final  List<WorkoutSet> sets, required this.createdAt, required this.updatedAt, required this.schemaVersion}): _sets = sets,super._();
   factory _Exercise.fromJson(Map<String, dynamic> json) => _$ExerciseFromJson(json);
 
 @override final  String id;
@@ -245,6 +246,7 @@ class _Exercise extends Exercise {
 @override final  String name;
 @override final  MeasurementType measurementType;
 @override final  ExerciseMetadata metadata;
+@override final  int? plannedRestSeconds;
  final  List<WorkoutSet> _sets;
 @override List<WorkoutSet> get sets {
   if (_sets is EqualUnmodifiableListView) return _sets;
@@ -269,16 +271,16 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _Exercise&&(identical(other.id, id) || other.id == id)&&(identical(other.exerciseGroupId, exerciseGroupId) || other.exerciseGroupId == exerciseGroupId)&&(identical(other.position, position) || other.position == position)&&(identical(other.name, name) || other.name == name)&&(identical(other.measurementType, measurementType) || other.measurementType == measurementType)&&(identical(other.metadata, metadata) || other.metadata == metadata)&&const DeepCollectionEquality().equals(other._sets, _sets)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt)&&(identical(other.updatedAt, updatedAt) || other.updatedAt == updatedAt)&&(identical(other.schemaVersion, schemaVersion) || other.schemaVersion == schemaVersion));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _Exercise&&(identical(other.id, id) || other.id == id)&&(identical(other.exerciseGroupId, exerciseGroupId) || other.exerciseGroupId == exerciseGroupId)&&(identical(other.position, position) || other.position == position)&&(identical(other.name, name) || other.name == name)&&(identical(other.measurementType, measurementType) || other.measurementType == measurementType)&&(identical(other.metadata, metadata) || other.metadata == metadata)&&(identical(other.plannedRestSeconds, plannedRestSeconds) || other.plannedRestSeconds == plannedRestSeconds)&&const DeepCollectionEquality().equals(other._sets, _sets)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt)&&(identical(other.updatedAt, updatedAt) || other.updatedAt == updatedAt)&&(identical(other.schemaVersion, schemaVersion) || other.schemaVersion == schemaVersion));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,id,exerciseGroupId,position,name,measurementType,metadata,const DeepCollectionEquality().hash(_sets),createdAt,updatedAt,schemaVersion);
+int get hashCode => Object.hash(runtimeType,id,exerciseGroupId,position,name,measurementType,metadata,plannedRestSeconds,const DeepCollectionEquality().hash(_sets),createdAt,updatedAt,schemaVersion);
 
 @override
 String toString() {
-  return 'Exercise(id: $id, exerciseGroupId: $exerciseGroupId, position: $position, name: $name, measurementType: $measurementType, metadata: $metadata, sets: $sets, createdAt: $createdAt, updatedAt: $updatedAt, schemaVersion: $schemaVersion)';
+  return 'Exercise(id: $id, exerciseGroupId: $exerciseGroupId, position: $position, name: $name, measurementType: $measurementType, metadata: $metadata, plannedRestSeconds: $plannedRestSeconds, sets: $sets, createdAt: $createdAt, updatedAt: $updatedAt, schemaVersion: $schemaVersion)';
 }
 
 
@@ -289,7 +291,7 @@ abstract mixin class _$ExerciseCopyWith<$Res> implements $ExerciseCopyWith<$Res>
   factory _$ExerciseCopyWith(_Exercise value, $Res Function(_Exercise) _then) = __$ExerciseCopyWithImpl;
 @override @useResult
 $Res call({
- String id, String exerciseGroupId, int position, String name, MeasurementType measurementType, ExerciseMetadata metadata, List<WorkoutSet> sets, DateTime createdAt, DateTime updatedAt, int schemaVersion
+ String id, String exerciseGroupId, int position, String name, MeasurementType measurementType, ExerciseMetadata metadata, int? plannedRestSeconds, List<WorkoutSet> sets, DateTime createdAt, DateTime updatedAt, int schemaVersion
 });
 
 
@@ -306,7 +308,7 @@ class __$ExerciseCopyWithImpl<$Res>
 
 /// Create a copy of Exercise
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? exerciseGroupId = null,Object? position = null,Object? name = null,Object? measurementType = null,Object? metadata = null,Object? sets = null,Object? createdAt = null,Object? updatedAt = null,Object? schemaVersion = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? exerciseGroupId = null,Object? position = null,Object? name = null,Object? measurementType = null,Object? metadata = null,Object? plannedRestSeconds = freezed,Object? sets = null,Object? createdAt = null,Object? updatedAt = null,Object? schemaVersion = null,}) {
   return _then(_Exercise(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as String,exerciseGroupId: null == exerciseGroupId ? _self.exerciseGroupId : exerciseGroupId // ignore: cast_nullable_to_non_nullable
@@ -314,7 +316,8 @@ as String,position: null == position ? _self.position : position // ignore: cast
 as int,name: null == name ? _self.name : name // ignore: cast_nullable_to_non_nullable
 as String,measurementType: null == measurementType ? _self.measurementType : measurementType // ignore: cast_nullable_to_non_nullable
 as MeasurementType,metadata: null == metadata ? _self.metadata : metadata // ignore: cast_nullable_to_non_nullable
-as ExerciseMetadata,sets: null == sets ? _self._sets : sets // ignore: cast_nullable_to_non_nullable
+as ExerciseMetadata,plannedRestSeconds: freezed == plannedRestSeconds ? _self.plannedRestSeconds : plannedRestSeconds // ignore: cast_nullable_to_non_nullable
+as int?,sets: null == sets ? _self._sets : sets // ignore: cast_nullable_to_non_nullable
 as List<WorkoutSet>,createdAt: null == createdAt ? _self.createdAt : createdAt // ignore: cast_nullable_to_non_nullable
 as DateTime,updatedAt: null == updatedAt ? _self.updatedAt : updatedAt // ignore: cast_nullable_to_non_nullable
 as DateTime,schemaVersion: null == schemaVersion ? _self.schemaVersion : schemaVersion // ignore: cast_nullable_to_non_nullable

@@ -11,6 +11,15 @@ part 'exercise.g.dart';
 @freezed
 abstract class Exercise with _$Exercise {
   Exercise._() {
+    if (plannedRestSeconds != null &&
+        (plannedRestSeconds! < 0 || plannedRestSeconds! > 3600)) {
+      throw ValidationError(
+        entityId: id,
+        invariant: 'plannedRestSeconds_out_of_range',
+        message:
+            'plannedRestSeconds must be in [0, 3600], got $plannedRestSeconds',
+      );
+    }
     for (final s in sets) {
       if (s.measurementType != measurementType) {
         throw ValidationError(
@@ -31,6 +40,7 @@ abstract class Exercise with _$Exercise {
     required String name,
     required MeasurementType measurementType,
     required ExerciseMetadata metadata,
+    int? plannedRestSeconds,
     required List<WorkoutSet> sets,
     required DateTime createdAt,
     required DateTime updatedAt,
