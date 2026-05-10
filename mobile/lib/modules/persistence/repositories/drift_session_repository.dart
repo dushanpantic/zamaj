@@ -220,9 +220,13 @@ class DriftSessionRepository implements SessionRepository {
         createdAt: msToUtc(exerciseRow.createdAtMs),
       );
 
-      if (completedSetCount >= plannedSetCount) {
-        final lockedPos = await _maxLockedPosition(exerciseRow.sessionId);
-        final newExercisePosition = lockedPos + _gap;
+      if (completedSetCount >= plannedSetCount &&
+          exerciseRow.stateDiscriminator == 'unfinished') {
+        final lockedPos = await _maxLockedPositionExcluding(
+          exerciseRow.sessionId,
+          excludeId: sessionExerciseId,
+        );
+        final newExercisePosition = lockedPos + 1;
 
         await (_db.update(
           _db.sessionExercises,
@@ -232,6 +236,12 @@ class DriftSessionRepository implements SessionRepository {
             position: Value(newExercisePosition),
             updatedAtMs: Value(utcToMs(exerciseUpdatedAt)),
           ),
+        );
+
+        await _renumberUnfinishedAfterLock(
+          sessionId: exerciseRow.sessionId,
+          lockedPosition: newExercisePosition,
+          excludeId: sessionExerciseId,
         );
       } else {
         await (_db.update(
@@ -335,8 +345,11 @@ class DriftSessionRepository implements SessionRepository {
       final exerciseRow = await _requireSessionExerciseRow(sessionExerciseId);
       _requireUnfinished(exerciseRow);
 
-      final lockedPos = await _maxLockedPosition(exerciseRow.sessionId);
-      final newPosition = lockedPos + _gap;
+      final lockedPos = await _maxLockedPositionExcluding(
+        exerciseRow.sessionId,
+        excludeId: sessionExerciseId,
+      );
+      final newPosition = lockedPos + 1;
 
       final exerciseUpdatedAt = _nextUpdatedAt(
         previousUpdatedAt: msToUtc(exerciseRow.updatedAtMs),
@@ -351,6 +364,12 @@ class DriftSessionRepository implements SessionRepository {
           position: Value(newPosition),
           updatedAtMs: Value(utcToMs(exerciseUpdatedAt)),
         ),
+      );
+
+      await _renumberUnfinishedAfterLock(
+        sessionId: exerciseRow.sessionId,
+        lockedPosition: newPosition,
+        excludeId: sessionExerciseId,
       );
 
       final sessionRow = await _requireSessionRow(exerciseRow.sessionId);
@@ -386,8 +405,11 @@ class DriftSessionRepository implements SessionRepository {
       );
       final substituteJson = CanonicalJson.encode(substitute.toJson());
 
-      final lockedPos = await _maxLockedPosition(exerciseRow.sessionId);
-      final newPosition = lockedPos + _gap;
+      final lockedPos = await _maxLockedPositionExcluding(
+        exerciseRow.sessionId,
+        excludeId: sessionExerciseId,
+      );
+      final newPosition = lockedPos + 1;
 
       final exerciseUpdatedAt = _nextUpdatedAt(
         previousUpdatedAt: msToUtc(exerciseRow.updatedAtMs),
@@ -403,6 +425,12 @@ class DriftSessionRepository implements SessionRepository {
           position: Value(newPosition),
           updatedAtMs: Value(utcToMs(exerciseUpdatedAt)),
         ),
+      );
+
+      await _renumberUnfinishedAfterLock(
+        sessionId: exerciseRow.sessionId,
+        lockedPosition: newPosition,
+        excludeId: sessionExerciseId,
       );
 
       final sessionRow = await _requireSessionRow(exerciseRow.sessionId);
@@ -655,6 +683,57 @@ class DriftSessionRepository implements SessionRepository {
               ..orderBy([(t) => OrderingTerm.desc(t.position)]))
             .get();
     return lockedExercises.isEmpty ? 0 : lockedExercises.first.position;
+  }
+
+  Future<int> _maxLockedPositionExcluding(
+    String sessionId, {
+    required String excludeId,
+  }) async {
+    final lockedExercises =
+        await (_db.select(_db.sessionExercises)
+              ..where(
+                (t) =>
+                    t.sessionId.equals(sessionId) &
+                    t.stateDiscriminator.isNotIn(['unfinished']) &
+                    t.id.isNotValue(excludeId),
+              )
+              ..orderBy([(t) => OrderingTerm.desc(t.position)]))
+            .get();
+    return lockedExercises.isEmpty ? 0 : lockedExercises.first.position;
+  }
+
+  Future<void> _renumberUnfinishedAfterLock({
+    required String sessionId,
+    required int lockedPosition,
+    required String excludeId,
+  }) async {
+    final unfinished =
+        await (_db.select(_db.sessionExercises)
+              ..where(
+                (t) =>
+                    t.sessionId.equals(sessionId) &
+                    t.stateDiscriminator.equals('unfinished') &
+                    t.id.isNotValue(excludeId),
+              )
+              ..orderBy([(t) => OrderingTerm.asc(t.position)]))
+            .get();
+
+    for (var j = 0; j < unfinished.length; j++) {
+      final row = unfinished[j];
+      final newPos = lockedPosition + (j + 1) * _gap;
+      final updatedAt = _nextUpdatedAt(
+        previousUpdatedAt: msToUtc(row.updatedAtMs),
+        createdAt: msToUtc(row.createdAtMs),
+      );
+      await (_db.update(
+        _db.sessionExercises,
+      )..where((t) => t.id.equals(row.id))).write(
+        SessionExercisesCompanion(
+          position: Value(newPos),
+          updatedAtMs: Value(utcToMs(updatedAt)),
+        ),
+      );
+    }
   }
 
   domain.WorkoutDay _parseSnapshotWorkoutDay(Session sessionRow) {
