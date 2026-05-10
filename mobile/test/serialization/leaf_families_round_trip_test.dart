@@ -69,7 +69,7 @@ void main() {
 
     test('Exercise with null plannedRestSeconds round-trips through JSON', () {
       final t0 = DateTime.utc(2024, 1, 15, 10, 0, 0);
-      final mt = const MeasurementType.repBased();
+      const mt = MeasurementType.repBased();
       final set = WorkoutSet(
         id: '55555555-5555-4555-8555-555555555555',
         exerciseId: '44444444-4444-4444-8444-444444444444',
@@ -103,7 +103,7 @@ void main() {
       'Exercise with non-null plannedRestSeconds round-trips through JSON',
       () {
         final t0 = DateTime.utc(2024, 1, 15, 10, 0, 0);
-        final mt = const MeasurementType.repBased();
+        const mt = MeasurementType.repBased();
         final set = WorkoutSet(
           id: '55555555-5555-4555-8555-555555555555',
           exerciseId: '44444444-4444-4444-8444-444444444444',

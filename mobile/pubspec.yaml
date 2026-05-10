@@ -30,6 +30,7 @@ dev_dependencies:
   freezed: ^3.2.5
   json_serializable: ^6.13.2
   drift_dev: ^2.33.0
+  sqlite3: ^3.3.1
 
 flutter:
   uses-material-design: true

@@ -270,8 +270,8 @@ Conventions:
     - _Requirements: R11 AC3, R11 AC4, R14 AC6_
     - _Design: §14.5_
 
-- [ ] 13. Final checkpoint — program-management spec complete
-  - [ ] 13.1 Run the full CI sequence locally (`bash tool/check_offline_imports.sh`, `dart run build_runner build --force-jit`, `flutter analyze`, `flutter test`) and confirm every task above is checked off. Ensure all tests pass, ask the user if questions arise.
+- [x] 13. Final checkpoint — program-management spec complete
+  - [x] 13.1 Run the full CI sequence locally (`bash tool/check_offline_imports.sh`, `dart run build_runner build --force-jit`, `flutter analyze`, `flutter test`) and confirm every task above is checked off. Ensure all tests pass, ask the user if questions arise.
     - _Requirements: R14 AC6_
     - _Design: §14.5_
 
