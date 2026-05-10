@@ -54,7 +54,7 @@ void main() {
                   exerciseId: plannedExerciseId,
                   position: 0,
                   measurementType: const MeasurementType.repBased(),
-                  plannedValues: PlannedSetValues.repBased(
+                  plannedValues: const PlannedSetValues.repBased(
                     weightKg: 60.0,
                     reps: 8,
                   ),
@@ -111,7 +111,10 @@ void main() {
   late SessionNote sessionNoteRow;
   late ExtraWorkItem extraWorkRow;
 
-  final actualJson = ActualSetValues.repBased(weightKg: 60.0, reps: 8).toJson();
+  final actualJson = const ActualSetValues.repBased(
+    weightKg: 60.0,
+    reps: 8,
+  ).toJson();
   final actualPayload = CanonicalJson.encode(actualJson);
 
   setUp(() {

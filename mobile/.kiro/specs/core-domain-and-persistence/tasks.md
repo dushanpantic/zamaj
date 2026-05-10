@@ -118,8 +118,8 @@ Conventions used throughout:
   - [x] 12.5 Implement `reorderUnfinished` rejecting any id whose persisted state is not `unfinished` with `OrderingError(sessionExerciseId, currentState)`; otherwise renumber as `maxLockedPos + (i + 1) * G` with `G = 1024` inside a transaction (Reqs 7.2, 7.3, 7.5; Design §6.4)
   - [x] 12.6 Implement `endSession`, `addSessionNote`, `addExtraWork` respecting timestamp monotonicity (Reqs 4.1, 4.5, 4.6, 8.3, 8.4; Design §6.3, §6.5)
 
-- [ ] 13. Checkpoint — repositories complete
-  - [ ] 13.1 Run `dart run build_runner build --delete-conflicting-outputs`, `flutter analyze`, and `flutter test`; confirm the full existing suite is green before moving to repository-level PBT. Ensure all tests pass, ask the user if questions arise. (Design §10.1)
+- [x] 13. Checkpoint — repositories complete
+  - [x] 13.1 Run `dart run build_runner build --delete-conflicting-outputs`, `flutter analyze`, and `flutter test`; confirm the full existing suite is green before moving to repository-level PBT. Ensure all tests pass, ask the user if questions arise. (Design §10.1)
 
 - [ ] 14. Add repository-level test support
   - [ ] 14.1 Extend `test/support/generators.dart` with `anyProgramRepoOpSequence` (mix of create/update/delete/reorder template ops), `anySessionRepoOpSequence` (biased toward state transitions), `anyCorruption(Map<String, dynamic>)`, and `RegressingClock` fake — all plain Dart using `dart:math` `Random`, no third-party PBT library (Design §10.4)

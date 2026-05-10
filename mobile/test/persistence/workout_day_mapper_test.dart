@@ -21,13 +21,13 @@ void main() {
   final measurementJson = const MeasurementType.repBased().toJson();
   final measurementPayload = CanonicalJson.encode(measurementJson);
 
-  final plannedJson = PlannedSetValues.repBased(
+  final plannedJson = const PlannedSetValues.repBased(
     weightKg: 60.0,
     reps: 8,
   ).toJson();
   final plannedPayload = CanonicalJson.encode(plannedJson);
 
-  final workoutDayRow = const WorkoutDay(
+  const workoutDayRow = WorkoutDay(
     id: workoutDayId,
     programId: programId,
     name: 'Push Day',
