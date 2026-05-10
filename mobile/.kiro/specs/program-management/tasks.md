@@ -80,16 +80,16 @@ Conventions:
     - _Requirements: R6 AC5, R6 AC6_
     - _Design: §7.2_
 
-- [ ] 3. Extend the `ProgramRepository` contract
-  - [ ] 3.1 Add the optional `plannedRestSeconds` named parameter to `ProgramRepository.createExercise` in `lib/modules/domain/repositories/program_repository.dart`; implement the new parameter in `DriftProgramRepository`
+- [x] 3. Extend the `ProgramRepository` contract
+  - [x] 3.1 Add the optional `plannedRestSeconds` named parameter to `ProgramRepository.createExercise` in `lib/modules/domain/repositories/program_repository.dart`; implement the new parameter in `DriftProgramRepository`
     - _Requirements: R6 AC5, R10 AC1 (applies via §6.2), R12 AC1_
     - _Design: §7.4_
 
-  - [ ] 3.2 Define `ProgramAggregate` and its nested freezed value types (`WorkoutDayAggregate`, `ExerciseGroupAggregate`, `ExerciseAggregate`, `WorkoutSetAggregate`) in `lib/modules/program_management/models/program_aggregate.dart`; expose them via the module barrel
+  - [x] 3.2 Define `ProgramAggregate` and its nested freezed value types (`WorkoutDayAggregate`, `ExerciseGroupAggregate`, `ExerciseAggregate`, `WorkoutSetAggregate`) in `lib/modules/program_management/models/program_aggregate.dart`; expose them via the module barrel
     - _Requirements: R9 AC3, R9 AC7_
     - _Design: §8_
 
-  - [ ] 3.3 Add the abstract method `Future<Program> saveProgramAggregate(ProgramAggregate aggregate)` to `ProgramRepository`; implement it in `DriftProgramRepository` inside a single `transaction` block that inserts rows in dependency order (Program → WorkoutDay → ExerciseGroup → Exercise → WorkoutSet) and rolls back on any exception; the implementation must never touch any `Sessions*` table
+  - [x] 3.3 Add the abstract method `Future<Program> saveProgramAggregate(ProgramAggregate aggregate)` to `ProgramRepository`; implement it in `DriftProgramRepository` inside a single `transaction` block that inserts rows in dependency order (Program → WorkoutDay → ExerciseGroup → Exercise → WorkoutSet) and rolls back on any exception; the implementation must never touch any `Sessions*` table
     - _Requirements: R9 AC3, R9 AC7, R11 AC1, R11 AC2_
     - _Design: §8_
 

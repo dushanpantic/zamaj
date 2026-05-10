@@ -11,6 +11,7 @@ import 'package:zamaj/modules/domain/models/exercise_metadata.dart';
 import 'package:zamaj/modules/domain/models/measurement_type.dart';
 import 'package:zamaj/modules/domain/models/planned_set_values.dart';
 import 'package:zamaj/modules/domain/models/program.dart' as domain;
+import 'package:zamaj/modules/domain/models/program_aggregate.dart';
 import 'package:zamaj/modules/domain/models/workout_day.dart' as domain;
 import 'package:zamaj/modules/domain/models/workout_set.dart' as domain;
 import 'package:zamaj/modules/domain/repositories/program_repository.dart';
@@ -435,6 +436,7 @@ class DriftProgramRepository implements ProgramRepository {
     required String name,
     required MeasurementType measurementType,
     ExerciseMetadata metadata = ExerciseMetadata.empty,
+    int? plannedRestSeconds,
   }) async {
     return _db.transaction(() async {
       final groupRow = await (_db.select(
@@ -464,6 +466,7 @@ class DriftProgramRepository implements ProgramRepository {
               measurementTypePayloadJson: CanonicalJson.encode(measurementJson),
               notes: Value(metadata.notes),
               videoUrl: Value(metadata.videoUrl),
+              plannedRestSeconds: Value(plannedRestSeconds),
               createdAtMs: utcToMs(now),
               updatedAtMs: utcToMs(now),
               schemaVersion: SchemaVersions.domain,
@@ -648,6 +651,116 @@ class DriftProgramRepository implements ProgramRepository {
               ..where((t) => t.id.equals(orderedSetIds[i])))
             .write(WorkoutSetsCompanion(position: Value(i)));
       }
+    });
+  }
+
+  @override
+  Future<domain.Program> saveProgramAggregate(
+    ProgramAggregate aggregate,
+  ) async {
+    return _db.transaction(() async {
+      await _db
+          .into(_db.programs)
+          .insert(
+            ProgramsCompanion.insert(
+              id: aggregate.id,
+              name: aggregate.name,
+              createdAtMs: utcToMs(aggregate.createdAt),
+              updatedAtMs: utcToMs(aggregate.updatedAt),
+              schemaVersion: SchemaVersions.domain,
+            ),
+          );
+
+      for (final day in aggregate.workoutDays) {
+        await _db
+            .into(_db.workoutDays)
+            .insert(
+              WorkoutDaysCompanion.insert(
+                id: day.id,
+                programId: day.programId,
+                name: day.name,
+                createdAtMs: utcToMs(aggregate.createdAt),
+                updatedAtMs: utcToMs(aggregate.updatedAt),
+                schemaVersion: SchemaVersions.domain,
+              ),
+            );
+
+        await _db
+            .into(_db.programWorkoutDays)
+            .insert(
+              ProgramWorkoutDaysCompanion.insert(
+                programId: day.programId,
+                workoutDayId: day.id,
+                position: day.position,
+              ),
+            );
+
+        for (final group in day.groups) {
+          final kindJson = group.kind.toJson();
+          await _db
+              .into(_db.exerciseGroups)
+              .insert(
+                ExerciseGroupsCompanion.insert(
+                  id: group.id,
+                  workoutDayId: group.workoutDayId,
+                  position: group.position,
+                  kindDiscriminator: kindJson['type'] as String,
+                  kindPayloadJson: CanonicalJson.encode(kindJson),
+                  createdAtMs: utcToMs(aggregate.createdAt),
+                  updatedAtMs: utcToMs(aggregate.updatedAt),
+                  schemaVersion: SchemaVersions.domain,
+                ),
+              );
+
+          for (final exercise in group.exercises) {
+            final measurementJson = exercise.measurementType.toJson();
+            await _db
+                .into(_db.exercises)
+                .insert(
+                  ExercisesCompanion.insert(
+                    id: exercise.id,
+                    exerciseGroupId: exercise.groupId,
+                    position: exercise.position,
+                    name: exercise.name,
+                    measurementTypeDiscriminator:
+                        measurementJson['type'] as String,
+                    measurementTypePayloadJson: CanonicalJson.encode(
+                      measurementJson,
+                    ),
+                    notes: Value(exercise.metadata.notes),
+                    videoUrl: Value(exercise.metadata.videoUrl),
+                    plannedRestSeconds: Value(exercise.plannedRestSeconds),
+                    createdAtMs: utcToMs(aggregate.createdAt),
+                    updatedAtMs: utcToMs(aggregate.updatedAt),
+                    schemaVersion: SchemaVersions.domain,
+                  ),
+                );
+
+            for (final set in exercise.sets) {
+              final plannedJson = set.values.toJson();
+              await _db
+                  .into(_db.workoutSets)
+                  .insert(
+                    WorkoutSetsCompanion.insert(
+                      id: set.id,
+                      exerciseId: set.exerciseId,
+                      position: set.position,
+                      plannedValuesDiscriminator: plannedJson['type'] as String,
+                      plannedValuesPayloadJson: CanonicalJson.encode(
+                        plannedJson,
+                      ),
+                      createdAtMs: utcToMs(aggregate.createdAt),
+                      updatedAtMs: utcToMs(aggregate.updatedAt),
+                      schemaVersion: SchemaVersions.domain,
+                    ),
+                  );
+            }
+          }
+        }
+      }
+
+      final program = await getProgram(aggregate.id);
+      return program!;
     });
   }
 

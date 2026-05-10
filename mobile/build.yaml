@@ -5,6 +5,7 @@ targets:
         generate_for:
           include:
             - lib/modules/domain/models/**.dart
+            - lib/modules/program_management/models/**.dart
       json_serializable:
         generate_for:
           include:

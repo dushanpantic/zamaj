@@ -11,6 +11,7 @@ import '../models/exercise_metadata.dart';
 import '../models/measurement_type.dart';
 import '../models/planned_set_values.dart';
 import '../models/program.dart';
+import '../models/program_aggregate.dart';
 import '../models/workout_day.dart';
 import '../models/workout_set.dart';
 
@@ -51,6 +52,7 @@ abstract class ProgramRepository {
     required String name,
     required MeasurementType measurementType,
     ExerciseMetadata metadata = ExerciseMetadata.empty,
+    int? plannedRestSeconds,
   });
   Future<Exercise> updateExercise(Exercise exercise);
   Future<void> deleteExercise(String exerciseId);
@@ -66,4 +68,6 @@ abstract class ProgramRepository {
   Future<WorkoutSet> updateSet(WorkoutSet set);
   Future<void> deleteSet(String setId);
   Future<void> reorderSets(String exerciseId, List<String> orderedSetIds);
+
+  Future<Program> saveProgramAggregate(ProgramAggregate aggregate);
 }

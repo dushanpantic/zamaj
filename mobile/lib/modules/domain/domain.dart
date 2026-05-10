@@ -13,6 +13,7 @@ export 'models/extra_work.dart';
 export 'models/measurement_type.dart';
 export 'models/planned_set_values.dart';
 export 'models/program.dart';
+export 'models/program_aggregate.dart';
 export 'models/session.dart';
 export 'models/session_exercise.dart';
 export 'models/session_note.dart';
