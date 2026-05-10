@@ -247,8 +247,8 @@ Conventions:
     - _Requirements: R9 AC1, R9 AC2, R9 AC3, R9 AC4, R9 AC5, R9 AC6, R9 AC7_
     - _Design: §2.2_
 
-- [ ] 10. Wire bootstrap and app composition root
-  - [ ] 10.1 Create `lib/bootstrap.dart` that calls `WidgetsFlutterBinding.ensureInitialized()`, opens `AppDatabase`, constructs `DriftProgramRepository` and `DriftSessionRepository` with an `AppClock`, and runs `MainApp`; create `lib/app.dart` that wires `MultiRepositoryProvider` with `ProgramRepository`, `SessionRepository`, `ExternalLinkLauncher`, a `MaterialApp` using `AppTheme.light()` / `AppTheme.dark()` / `ThemeMode.dark`, and `ProgramManagementRouter.onGenerateRoute` with `initialRoute: ProgramManagementRoutes.programList`; update `lib/main.dart` to call `bootstrap()`
+- [x] 10. Wire bootstrap and app composition root
+  - [x] 10.1 Create `lib/bootstrap.dart` that calls `WidgetsFlutterBinding.ensureInitialized()`, opens `AppDatabase`, constructs `DriftProgramRepository` and `DriftSessionRepository` with an `AppClock`, and runs `MainApp`; create `lib/app.dart` that wires `MultiRepositoryProvider` with `ProgramRepository`, `SessionRepository`, `ExternalLinkLauncher`, a `MaterialApp` using `AppTheme.light()` / `AppTheme.dark()` / `ThemeMode.dark`, and `ProgramManagementRouter.onGenerateRoute` with `initialRoute: ProgramManagementRoutes.programList`; update `lib/main.dart` to call `bootstrap()`
     - _Requirements: R12 AC3, R13 AC4, R14 AC1_
     - _Design: §1.3, §2.1_
 
