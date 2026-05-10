@@ -210,6 +210,26 @@ void main() {
       expect(_encode(exercise.toJson()), equals(_golden('exercise')));
     });
 
+    test('Exercise with plannedRestSeconds', () {
+      final exerciseWithRest = Exercise(
+        id: exerciseId,
+        exerciseGroupId: exerciseGroupId,
+        position: 0,
+        name: 'Bench Press',
+        measurementType: const MeasurementType.repBased(),
+        metadata: metadata,
+        plannedRestSeconds: 90,
+        sets: [workoutSet],
+        createdAt: t0,
+        updatedAt: t0,
+        schemaVersion: 1,
+      );
+      expect(
+        _encode(exerciseWithRest.toJson()),
+        equals(_golden('exercise_with_rest')),
+      );
+    });
+
     test('ExerciseGroup', () {
       expect(
         _encode(exerciseGroup.toJson()),

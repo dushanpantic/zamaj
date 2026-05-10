@@ -72,6 +72,20 @@ void main() {
     schemaVersion: 1,
   );
 
+  final exerciseWithRest = Exercise(
+    id: exerciseId,
+    exerciseGroupId: exerciseGroupId,
+    position: 0,
+    name: 'Bench Press',
+    measurementType: const MeasurementType.repBased(),
+    metadata: metadata,
+    plannedRestSeconds: 90,
+    sets: [workoutSet],
+    createdAt: t0,
+    updatedAt: t0,
+    schemaVersion: 1,
+  );
+
   final exerciseGroup = ExerciseGroup(
     id: exerciseGroupId,
     workoutDayId: workoutDayId,
@@ -179,6 +193,7 @@ void main() {
   writeGolden('exercise_metadata', metadata.toJson());
   writeGolden('workout_set', workoutSet.toJson());
   writeGolden('exercise', exercise.toJson());
+  writeGolden('exercise_with_rest', exerciseWithRest.toJson());
   writeGolden('exercise_group', exerciseGroup.toJson());
   writeGolden('workout_day', workoutDay.toJson());
   writeGolden('program', program.toJson());

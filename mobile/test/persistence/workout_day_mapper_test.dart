@@ -141,6 +141,61 @@ void main() {
     expect(companion.schemaVersion.value, equals(exerciseRow.schemaVersion));
   });
 
+  test('exerciseToRow round-trips plannedRestSeconds when null', () {
+    final rowWithNullRest = Exercise(
+      id: exerciseId,
+      exerciseGroupId: groupId,
+      position: 0,
+      name: 'Bench Press',
+      measurementTypeDiscriminator: measurementJson['type'] as String,
+      measurementTypePayloadJson: measurementPayload,
+      notes: null,
+      videoUrl: null,
+      plannedRestSeconds: null,
+      createdAtMs: 1700000004000,
+      updatedAtMs: 1700000005000,
+      schemaVersion: 1,
+    );
+
+    final domain = mapper.toDomain(
+      workoutDayRow,
+      [groupRow],
+      [rowWithNullRest],
+      [setRow],
+    );
+    final companion = mapper.exerciseToRow(
+      domain.exerciseGroups.first.exercises.first,
+    );
+
+    expect(companion.plannedRestSeconds.value, isNull);
+  });
+
+  test('exerciseToRow round-trips plannedRestSeconds when 90', () {
+    final rowWithRest = Exercise(
+      id: exerciseId,
+      exerciseGroupId: groupId,
+      position: 0,
+      name: 'Bench Press',
+      measurementTypeDiscriminator: measurementJson['type'] as String,
+      measurementTypePayloadJson: measurementPayload,
+      notes: null,
+      videoUrl: null,
+      plannedRestSeconds: 90,
+      createdAtMs: 1700000004000,
+      updatedAtMs: 1700000005000,
+      schemaVersion: 1,
+    );
+
+    final domain = mapper.toDomain(workoutDayRow, [groupRow], [rowWithRest], [
+      setRow,
+    ]);
+    final companion = mapper.exerciseToRow(
+      domain.exerciseGroups.first.exercises.first,
+    );
+
+    expect(companion.plannedRestSeconds.value, equals(90));
+  });
+
   test('setToRow round-trips all fields', () {
     final domain = mapper.toDomain(workoutDayRow, [groupRow], [exerciseRow], [
       setRow,

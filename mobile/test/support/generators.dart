@@ -169,6 +169,7 @@ Exercise anyExercise(Random rng) {
     name: _anyString(rng, maxLen: 40),
     measurementType: mt,
     metadata: anyExerciseMetadata(rng),
+    plannedRestSeconds: rng.nextBool() ? rng.nextInt(3601) : null,
     sets: List.generate(setCount, (i) {
       final s = anyWorkoutSet(rng, mt);
       return WorkoutSet(

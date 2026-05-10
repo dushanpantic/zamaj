@@ -48,7 +48,7 @@ Conventions:
     - _Requirements: R6 AC2, R6 AC3, R6 AC5, R6 AC6_
     - _Design: §7.1_
 
-  - [ ]* 2.2 Extend `test/domain/exercise_group_construction_test.dart` (or add `test/domain/exercise_planned_rest_test.dart`) with example-based tests that construction accepts `null`, `0`, `3600`, and rejects `-1`, `3601` with the documented `invariant` code
+  - [x] 2.2 Extend `test/domain/exercise_group_construction_test.dart` (or add `test/domain/exercise_planned_rest_test.dart`) with example-based tests that construction accepts `null`, `0`, `3600`, and rejects `-1`, `3601` with the documented `invariant` code
     - _Requirements: R6 AC2, R6 AC3_
     - _Design: §7.1_
 
@@ -68,15 +68,15 @@ Conventions:
     - _Requirements: R6 AC5, R6 AC6_
     - _Design: §7.2_
 
-  - [ ]* 2.7 Write `test/integration/exercise_planned_rest_migration_test.dart` seeding a v1 schema with an exercise row, running the upgrade, and asserting every pre-existing row is preserved and `planned_rest_seconds` is `NULL` on each migrated row
+  - [x] 2.7 Write `test/integration/exercise_planned_rest_migration_test.dart` seeding a v1 schema with an exercise row, running the upgrade, and asserting every pre-existing row is preserved and `planned_rest_seconds` is `NULL` on each migrated row
     - _Requirements: R6 AC6_
     - _Design: §7.3, §14.4_
 
-  - [ ]* 2.8 Extend `test/serialization/leaf_families_round_trip_test.dart` / aggregate round-trip test to cover `Exercise` with and without `plannedRestSeconds`; regenerate the `Exercise` golden and add a second golden with a non-null rest
+  - [x] 2.8 Extend `test/serialization/leaf_families_round_trip_test.dart` / aggregate round-trip test to cover `Exercise` with and without `plannedRestSeconds`; regenerate the `Exercise` golden and add a second golden with a non-null rest
     - _Requirements: R6 AC5, R11 AC3, R11 AC4_
     - _Design: §7.5, §7.6_
 
-  - [ ]* 2.9 Extend mapper round-trip unit tests so `toRow(toDomain(row)) == row` holds with `plannedRestSeconds = NULL` and with `plannedRestSeconds = 90`
+  - [x] 2.9 Extend mapper round-trip unit tests so `toRow(toDomain(row)) == row` holds with `plannedRestSeconds = NULL` and with `plannedRestSeconds = 90`
     - _Requirements: R6 AC5, R6 AC6_
     - _Design: §7.2_
 
