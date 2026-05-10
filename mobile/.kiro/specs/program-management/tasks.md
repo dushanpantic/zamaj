@@ -101,8 +101,8 @@ Conventions:
     - _Requirements: R6 AC2, R6 AC3, R6 AC5_
     - _Design: §7.4_
 
-- [ ] 4. Implement pure-Dart services
-  - [ ] 4.1 Implement `lib/modules/program_management/services/program_validation.dart` with static validators (`validateProgramName` 1..100 for edit / 1..120 for create, `validateExerciseName` 1..80, `validateWorkoutDayName` 1..100, `validateRepBasedSet` weight 0..1000 at 0.5 kg, reps 0..999, `validateTimeBasedSet` 0..3600, `validatePlannedRest` 0..3600 nullable, `validateVideoUrl` http/https only 0..2048, `validateNotes` 0..2000, `validateSetCount` 1..20) returning sealed freezed `Valid` / `Invalid(reason)` unions
+- [x] 4. Implement pure-Dart services
+  - [x] 4.1 Implement `lib/modules/program_management/services/program_validation.dart` with static validators (`validateProgramName` 1..100 for edit / 1..120 for create, `validateExerciseName` 1..80, `validateWorkoutDayName` 1..100, `validateRepBasedSet` weight 0..1000 at 0.5 kg, reps 0..999, `validateTimeBasedSet` 0..3600, `validatePlannedRest` 0..3600 nullable, `validateVideoUrl` http/https only 0..2048, `validateNotes` 0..2000, `validateSetCount` 1..20) returning sealed freezed `Valid` / `Invalid(reason)` unions
     - _Requirements: R2 AC2, R3 AC4, R3 AC5, R4 AC2, R5 AC3, R5 AC4, R5 AC8, R5 AC10, R6 AC2, R6 AC3, R7 AC1, R7 AC2, R7 AC3, R7 AC4, R15 AC3, R15 AC4, R15 AC5, R15 AC6_
     - _Design: §10, §10.1_
 
@@ -110,7 +110,7 @@ Conventions:
     - _Requirements: R2 AC2, R3 AC5, R5 AC10, R6 AC3, R7 AC4, R15 AC3, R15 AC4, R15 AC5, R15 AC6_
     - _Design: §10.1_
 
-  - [ ] 4.3 Implement `lib/modules/program_management/services/domain_error_presenter.dart` as an `abstract final` class with a single `present(DomainError)` returning `PresentedMessage(title, body)`; every branch embeds `invariant` / `field` / `entityId` verbatim as required by R15 AC1
+  - [x] 4.3 Implement `lib/modules/program_management/services/domain_error_presenter.dart` as an `abstract final` class with a single `present(DomainError)` returning `PresentedMessage(title, body)`; every branch embeds `invariant` / `field` / `entityId` verbatim as required by R15 AC1
     - _Requirements: R15 AC1_
     - _Design: §11_
 
@@ -118,7 +118,7 @@ Conventions:
     - _Requirements: R15 AC1_
     - _Design: §11_
 
-  - [ ] 4.5 Implement `lib/modules/program_management/services/external_link_launcher.dart` declaring the `abstract interface class ExternalLinkLauncher` with `Future<ExternalLinkResult> launch(Uri url)` and the sealed `ExternalLinkResult { ExternalLinkOpened, ExternalLinkFailure(reason) }` family; the file must not import `package:url_launcher/...`
+  - [x] 4.5 Implement `lib/modules/program_management/services/external_link_launcher.dart` declaring the `abstract interface class ExternalLinkLauncher` with `Future<ExternalLinkResult> launch(Uri url)` and the sealed `ExternalLinkResult { ExternalLinkOpened, ExternalLinkFailure(reason) }` family; the file must not import `package:url_launcher/...`
     - _Requirements: R7 AC5, R7 AC6, R7 AC8, R12 AC3, R13 AC4_
     - _Design: §9, §13.1_
 
