@@ -218,32 +218,32 @@ Conventions:
     - _Requirements: R9 AC1, R9 AC2, R9 AC3, R9 AC4, R9 AC5, R9 AC6, R9 AC7, R11 AC1, R11 AC2_
     - _Design: §3.6, §3.7_
 
-- [ ] 9. Implement screens and navigation wiring
-  - [ ] 9.1 Implement `lib/modules/program_management/navigation/program_management_routes.dart` with the six route-name constants, and `program_management_router.dart` exposing `ProgramManagementRouter.onGenerateRoute` that instantiates each screen with its `BlocProvider`; each provider pulls `ProgramRepository` / `SessionRepository` / `ExternalLinkLauncher` from `context.read<...>()`
+- [x] 9. Implement screens and navigation wiring
+  - [x] 9.1 Implement `lib/modules/program_management/navigation/program_management_routes.dart` with the six route-name constants, and `program_management_router.dart` exposing `ProgramManagementRouter.onGenerateRoute` that instantiates each screen with its `BlocProvider`; each provider pulls `ProgramRepository` / `SessionRepository` / `ExternalLinkLauncher` from `context.read<...>()`
     - _Requirements: R12 AC3, R14 AC2_
     - _Design: §1.3, §2.1, §2.3_
 
-  - [ ] 9.2 Implement `lib/modules/program_management/screens/program_list_screen.dart` consuming `ProgramListBloc`, rendering `ProgramListTile`, zero-state with "create empty" and "import from text" CTAs, delete confirmation dialog, error-with-retry surface; all colors/spacing/typography via `Theme.of(context).appColors` and `AppSpacing.*`
+  - [x] 9.2 Implement `lib/modules/program_management/screens/program_list_screen.dart` consuming `ProgramListBloc`, rendering `ProgramListTile`, zero-state with "create empty" and "import from text" CTAs, delete confirmation dialog, error-with-retry surface; all colors/spacing/typography via `Theme.of(context).appColors` and `AppSpacing.*`
     - _Requirements: R1 AC1, R1 AC3, R1 AC4, R1 AC5, R1 AC7, R1 AC8, R1 AC9_
     - _Design: §2.2_
 
-  - [ ] 9.3 Implement `lib/modules/program_management/screens/program_editor_screen.dart` covering create-mode and edit-mode, `AppBar` inline-editable program name, `ReorderableListView` of workout days, add/rename/delete/reorder gestures, save button gated by validation
+  - [x] 9.3 Implement `lib/modules/program_management/screens/program_editor_screen.dart` covering create-mode and edit-mode, `AppBar` inline-editable program name, `ReorderableListView` of workout days, add/rename/delete/reorder gestures, save button gated by validation
     - _Requirements: R2 AC1, R2 AC2, R2 AC6, R3 AC1, R3 AC3, R3 AC4, R3 AC5, R3 AC6, R3 AC7, R3 AC8, R3 AC9, R3 AC10_
     - _Design: §2.2, §15 decision 2_
 
-  - [ ] 9.4 Implement `lib/modules/program_management/screens/workout_day_editor_screen.dart` with group cards (Single / Superset), add-group / add-exercise-to-group / delete / reorder affordances, inline cardinality error banner, and navigation to `ExerciseEditorScreen`
+  - [x] 9.4 Implement `lib/modules/program_management/screens/workout_day_editor_screen.dart` with group cards (Single / Superset), add-group / add-exercise-to-group / delete / reorder affordances, inline cardinality error banner, and navigation to `ExerciseEditorScreen`
     - _Requirements: R4 AC1, R4 AC2, R4 AC3, R4 AC4, R4 AC5, R4 AC6, R4 AC7_
     - _Design: §2.2_
 
-  - [ ] 9.5 Implement `lib/modules/program_management/screens/exercise_editor_screen.dart` with name field, `MeasurementTypeSelector`, `PlannedSetRow` list (rep-based fields or time-based field depending on measurement type), planned-rest field, notes / video-URL fields, video-URL tap that invokes `ExternalLinkLauncher.launch`, and a measurement-type-change confirmation dialog
+  - [x] 9.5 Implement `lib/modules/program_management/screens/exercise_editor_screen.dart` with name field, `MeasurementTypeSelector`, `PlannedSetRow` list (rep-based fields or time-based field depending on measurement type), planned-rest field, notes / video-URL fields, video-URL tap that invokes `ExternalLinkLauncher.launch`, and a measurement-type-change confirmation dialog
     - _Requirements: R5 AC1, R5 AC2, R5 AC3, R5 AC4, R5 AC5, R5 AC6, R5 AC7, R5 AC8, R5 AC9, R5 AC10, R5 AC11, R6 AC1, R6 AC2, R6 AC3, R6 AC4, R7 AC1, R7 AC2, R7 AC3, R7 AC4, R7 AC5, R7 AC6, R7 AC7_
     - _Design: §2.2_
 
-  - [ ] 9.6 Implement `lib/modules/program_management/screens/plan_import_screen.dart` with a multi-line `PlanTextInput` capped at 100 000 code units, a parse button enabled only at length ≥ 1, and a `PlanParseErrorBanner` that highlights the offending line based on 1-based line/column while preserving the user's raw text
+  - [x] 9.6 Implement `lib/modules/program_management/screens/plan_import_screen.dart` with a multi-line `PlanTextInput` capped at 100 000 code units, a parse button enabled only at length ≥ 1, and a `PlanParseErrorBanner` that highlights the offending line based on 1-based line/column while preserving the user's raw text
     - _Requirements: R8 AC1, R8 AC2, R8 AC3, R15 AC2_
     - _Design: §2.2, §11_
 
-  - [ ] 9.7 Implement `lib/modules/program_management/screens/plan_preview_screen.dart` rendering the same structure as `ProgramEditorScreen` over a `PlanPreviewBloc`, inlining warnings beside the affected element, exposing save and discard actions, and routing save success to `ProgramListScreen`
+  - [x] 9.7 Implement `lib/modules/program_management/screens/plan_preview_screen.dart` rendering the same structure as `ProgramEditorScreen` over a `PlanPreviewBloc`, inlining warnings beside the affected element, exposing save and discard actions, and routing save success to `ProgramListScreen`
     - _Requirements: R9 AC1, R9 AC2, R9 AC3, R9 AC4, R9 AC5, R9 AC6, R9 AC7_
     - _Design: §2.2_
 

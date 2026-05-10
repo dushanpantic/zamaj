@@ -9,21 +9,15 @@ import 'plan_preview_event.dart';
 import 'plan_preview_state.dart';
 
 class PlanPreviewBloc extends Bloc<PlanPreviewEvent, PlanPreviewState> {
-  PlanPreviewBloc({
-    required AggregateSaver aggregateSaver,
-    required PlanDraftToAggregate planDraftToAggregate,
-  }) : _aggregateSaver = aggregateSaver,
-       _planDraftToAggregate = planDraftToAggregate,
-       super(const PlanPreviewInitial()) {
+  PlanPreviewBloc({required AggregateSaver aggregateSaver})
+    : _aggregateSaver = aggregateSaver,
+      super(const PlanPreviewInitial()) {
     on<PlanPreviewOpened>(_onOpened);
     on<PlanPreviewSavePressed>(_onSavePressed);
     on<PlanPreviewDiscardPressed>(_onDiscardPressed);
   }
 
   final AggregateSaver _aggregateSaver;
-
-  // ignore: unused_field
-  final PlanDraftToAggregate _planDraftToAggregate;
 
   void _onOpened(PlanPreviewOpened event, Emitter<PlanPreviewState> emit) {
     final draft = PlanDraftToAggregate.convert(
