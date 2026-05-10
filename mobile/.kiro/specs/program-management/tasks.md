@@ -127,24 +127,24 @@ Conventions:
     - _Requirements: R14 AC6_
     - _Design: §14.5_
 
-- [ ] 6. Implement the text-plan parser, pretty-printer, and their tests
-  - [ ] 6.1 Implement the parser output shape in `lib/modules/program_management/services/text_plan/plan_draft.dart` (`PlanDraft`, `PlanDraftWorkoutDay`, `PlanDraftGroup`, `PlanDraftExercise`, `PlanDraftSet`) as freezed value types per design §6
+- [x] 6. Implement the text-plan parser, pretty-printer, and their tests
+  - [x] 6.1 Implement the parser output shape in `lib/modules/program_management/services/text_plan/plan_draft.dart` (`PlanDraft`, `PlanDraftWorkoutDay`, `PlanDraftGroup`, `PlanDraftExercise`, `PlanDraftSet`) as freezed value types per design §6
     - _Requirements: R8 AC11, R9 AC1_
     - _Design: §6_
 
-  - [ ] 6.2 Implement `lib/modules/program_management/services/text_plan/plan_parse_error.dart` and `plan_parse_warning.dart` as freezed value types with the enums `PlanParseErrorCode` (`empty_input`, `unknown_line`, `missing_program_name`, `missing_workout_day`, `orphan_set_line`, `orphan_superset_marker`, `input_too_large`) and `PlanParseWarningCode` (`invalid_rest_token`, `unrecognized_trailing_token`)
+  - [x] 6.2 Implement `lib/modules/program_management/services/text_plan/plan_parse_error.dart` and `plan_parse_warning.dart` as freezed value types with the enums `PlanParseErrorCode` (`empty_input`, `unknown_line`, `missing_program_name`, `missing_workout_day`, `orphan_set_line`, `orphan_superset_marker`, `input_too_large`) and `PlanParseWarningCode` (`invalid_rest_token`, `unrecognized_trailing_token`)
     - _Requirements: R8 AC3, R8 AC7, R8 AC8, R8 AC9, R15 AC2_
     - _Design: §5.6_
 
-  - [ ] 6.3 Implement `lib/modules/program_management/services/text_plan/parse_result.dart` as a freezed sealed `ParseResult` with `success(PlanDraft draft, List<PlanParseWarning> warnings)` and `failure(PlanParseError error)` variants
+  - [x] 6.3 Implement `lib/modules/program_management/services/text_plan/parse_result.dart` as a freezed sealed `ParseResult` with `success(PlanDraft draft, List<PlanParseWarning> warnings)` and `failure(PlanParseError error)` variants
     - _Requirements: R8 AC2, R8 AC8, R8 AC9_
     - _Design: §5.1_
 
-  - [ ] 6.4 Implement `lib/modules/program_management/services/text_plan/text_plan_parser.dart` exposing `TextPlanParser.parse(String input) → ParseResult` implementing the classifier (day header, superset marker, sets-by-reps, exercise name, blank separator) with 1-based line/column error positions, empty-input check, size cap `[1, 100_000]`, whitespace/line-ending/case tolerance per §5.5, and rest-token extraction (1..3600, suffix `s` or `m`); file imports only `dart:core`, `package:freezed_annotation`, and `package:zamaj/modules/domain/domain.dart`
+  - [x] 6.4 Implement `lib/modules/program_management/services/text_plan/text_plan_parser.dart` exposing `TextPlanParser.parse(String input) → ParseResult` implementing the classifier (day header, superset marker, sets-by-reps, exercise name, blank separator) with 1-based line/column error positions, empty-input check, size cap `[1, 100_000]`, whitespace/line-ending/case tolerance per §5.5, and rest-token extraction (1..3600, suffix `s` or `m`); file imports only `dart:core`, `package:freezed_annotation`, and `package:zamaj/modules/domain/domain.dart`
     - _Requirements: R8 AC1, R8 AC2, R8 AC3, R8 AC4, R8 AC5, R8 AC6, R8 AC7, R8 AC8, R8 AC9, R8 AC10, R8 AC11, R13 AC2_
     - _Design: §5.2, §5.3, §5.4, §5.5, §5.6, §5.8_
 
-  - [ ] 6.5 Implement `lib/modules/program_management/services/text_plan/plan_pretty_printer.dart` exposing `PlanPrettyPrinter.print(PlanDraft draft) → String` that emits the canonical format defined in §5.7 (program name, day headers, superset markers, rep-based `<reps>x<count> <weight>kg`, time-based `<count>x<duration>s`, trailing `<rest>s`), deterministic, never referencing warnings; file imports only `dart:core` and the domain barrel
+  - [x] 6.5 Implement `lib/modules/program_management/services/text_plan/plan_pretty_printer.dart` exposing `PlanPrettyPrinter.print(PlanDraft draft) → String` that emits the canonical format defined in §5.7 (program name, day headers, superset markers, rep-based `<reps>x<count> <weight>kg`, time-based `<count>x<duration>s`, trailing `<rest>s`), deterministic, never referencing warnings; file imports only `dart:core` and the domain barrel
     - _Requirements: R10 AC1, R13 AC3_
     - _Design: §5.7, §5.8_
 
