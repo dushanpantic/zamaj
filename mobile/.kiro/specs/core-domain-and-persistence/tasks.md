@@ -97,11 +97,11 @@ Conventions used throughout:
   - [x] 9.4 Run `dart run build_runner build --delete-conflicting-outputs` to generate `app_database.g.dart`; commit the generated file per project convention and verify it compiles (Reqs 9.1; Design §5.1)
   - [x] 9.5 Add a unit test that opens an in-memory `AppDatabase` and asserts `PRAGMA foreign_keys` returns `1` (Req 9.6; Design §5.5)
 
-- [ ] 10. Implement the mapping layer
-  - [ ] 10.1 Implement `lib/modules/persistence/mappers/program_mapper.dart` and `workout_day_mapper.dart` converting between Drift `Programs`/`WorkoutDays`/`ExerciseGroups`/`Exercises`/`Sets` rows and their domain counterparts; discriminator+payload columns go through `CanonicalJson.encode` on write and `jsonDecode` + typed `fromJson` on read (Reqs 2.6, 3.6, 11.1; Design §5.1, §7.2)
-  - [ ] 10.2 Implement `lib/modules/persistence/mappers/session_mapper.dart` mapping `Sessions`, `SessionExercises`, `ExecutedSets`, `SessionNotes`, `ExtraWorkItems` rows; the session mapper reconstructs the typed `SessionSnapshot` by parsing `snapshotJson` and recomputing the hash, raising `DeserializationError(field: "sessionSnapshot")` on mismatch (Reqs 6.3, 11.1, 11.4; Design §4.8, §7.4)
-  - [ ] 10.3 Add `lib/modules/persistence/persistence.dart` barrel export and wire Drift millisecond ↔ UTC `DateTime` conversion utilities (Design §6.6)
-  - [ ] 10.4 Add mapper round-trip unit tests (one per mapper) confirming `toRow(toDomain(row)) == row` on representative fixtures (Design §7.1, §10.3)
+- [x] 10. Implement the mapping layer
+  - [x] 10.1 Implement `lib/modules/persistence/mappers/program_mapper.dart` and `workout_day_mapper.dart` converting between Drift `Programs`/`WorkoutDays`/`ExerciseGroups`/`Exercises`/`Sets` rows and their domain counterparts; discriminator+payload columns go through `CanonicalJson.encode` on write and `jsonDecode` + typed `fromJson` on read (Reqs 2.6, 3.6, 11.1; Design §5.1, §7.2)
+  - [x] 10.2 Implement `lib/modules/persistence/mappers/session_mapper.dart` mapping `Sessions`, `SessionExercises`, `ExecutedSets`, `SessionNotes`, `ExtraWorkItems` rows; the session mapper reconstructs the typed `SessionSnapshot` by parsing `snapshotJson` and recomputing the hash, raising `DeserializationError(field: "sessionSnapshot")` on mismatch (Reqs 6.3, 11.1, 11.4; Design §4.8, §7.4)
+  - [x] 10.3 Add `lib/modules/persistence/persistence.dart` barrel export and wire Drift millisecond ↔ UTC `DateTime` conversion utilities (Design §6.6)
+  - [x] 10.4 Add mapper round-trip unit tests (one per mapper) confirming `toRow(toDomain(row)) == row` on representative fixtures (Design §7.1, §10.3)
 
 - [ ] 11. Implement `DriftProgramRepository`
   - [ ] 11.1 Implement `lib/modules/persistence/repositories/drift_program_repository.dart`'s program-level CRUD (`createProgram`, `getProgram`, `listPrograms`, `updateProgram`, `deleteProgram`) with UUIDv4 generation via `package:uuid`, `SchemaVersions.domain` stamping, and transactional writes (Reqs 8.1, 8.2, 8.3, 8.5, 10.3, 10.5; Design §6.1, §6.7)
