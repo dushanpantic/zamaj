@@ -142,8 +142,8 @@ Conventions used throughout:
   - [x] 17.1 Add a GitHub-Actions-style workflow file (or equivalent task runner script referenced from `README.md`) that runs, in order, `bash tool/check_offline_imports.sh`, `dart run build_runner build --delete-conflicting-outputs`, `flutter analyze`, `flutter test` (Reqs 9.1, 11.1, 12.1, 12.2, 12.3; Design §2, §10.3)
   - [x] 17.2 Update `README.md` with a short "Core domain and persistence" section describing the module layout, how to run codegen, how to run the PBT suite, and how to invoke the import-allowlist script (Design §2, §3)
 
-- [ ] 18. Final checkpoint — spec complete
-  - [ ] 18.1 Run the full CI sequence locally (`bash tool/check_offline_imports.sh`, `dart run build_runner build --delete-conflicting-outputs`, `flutter analyze`, `flutter test`) and confirm every task above is checked off. Ensure all tests pass, ask the user if questions arise. (Design §10)
+- [x] 18. Final checkpoint — spec complete
+  - [x] 18.1 Run the full CI sequence locally (`bash tool/check_offline_imports.sh`, `dart run build_runner build --delete-conflicting-outputs`, `flutter analyze`, `flutter test`) and confirm every task above is checked off. Ensure all tests pass, ask the user if questions arise. (Design §10)
 
 ## Notes
 

@@ -1,5 +1,5 @@
+import 'package:drift/native.dart' show SqliteException;
 import 'package:flutter_test/flutter_test.dart';
-import 'package:sqlite3/sqlite3.dart' show SqliteException;
 import 'package:zamaj/modules/persistence/database/app_database.dart';
 
 import '../support/in_memory_app_database.dart';

@@ -39,8 +39,8 @@ void main() {
             name: 'Prog-$iteration',
           );
 
-          final kind = const ExerciseGroupKind.single();
-          final mt = const MeasurementType.repBased();
+          const kind = ExerciseGroupKind.single();
+          const mt = MeasurementType.repBased();
           final workoutDay = await programRepo.createWorkoutDay(
             programId: program.id,
             name: 'Day-$iteration',

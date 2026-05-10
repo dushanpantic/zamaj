@@ -22,9 +22,9 @@ import 'package:zamaj/modules/domain/errors.dart';
 import 'package:zamaj/modules/domain/models/exercise.dart' as domain;
 import 'package:zamaj/modules/domain/models/exercise_group_kind.dart';
 import 'package:zamaj/modules/domain/models/exercise_metadata.dart';
+import 'package:zamaj/modules/domain/models/exercise_state.dart';
 import 'package:zamaj/modules/domain/models/measurement_type.dart';
 import 'package:zamaj/modules/domain/models/session.dart' as domain;
-import 'package:zamaj/modules/domain/models/exercise_state.dart';
 import 'package:zamaj/modules/domain/models/session_exercise.dart' as domain;
 import 'package:zamaj/modules/domain/models/workout_set.dart' as domain;
 import 'package:zamaj/modules/persistence/database/app_database.dart'
