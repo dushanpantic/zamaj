@@ -12,6 +12,7 @@ targets:
         generate_for:
           include:
             - lib/modules/domain/models/**.dart
+            - lib/modules/program_management/models/**.dart
             - lib/modules/program_management/services/text_plan/**.dart
         options:
           explicit_to_json: true

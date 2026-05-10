@@ -168,28 +168,28 @@ Conventions:
     - _Requirements: R10 AC5_
     - _Design: §12.1_
 
-- [ ] 7. Implement editor draft models, aggregate conversion, and save orchestrator
-  - [ ] 7.1 Implement `lib/modules/program_management/models/program_editor_draft.dart` with freezed `ProgramDraft`, `WorkoutDayDraft`, `ExerciseGroupDraft` (kind derived from `exercises.length`), `ExerciseDraft`, `PlannedSetDraft`, and sealed `PlannedSetDraftValues { repBased(weightInput, repsInput), timeBased(durationInput) }` holding raw-text inputs per design §4
+- [x] 7. Implement editor draft models, aggregate conversion, and save orchestrator
+  - [x] 7.1 Implement `lib/modules/program_management/models/program_editor_draft.dart` with freezed `ProgramDraft`, `WorkoutDayDraft`, `ExerciseGroupDraft` (kind derived from `exercises.length`), `ExerciseDraft`, `PlannedSetDraft`, and sealed `PlannedSetDraftValues { repBased(weightInput, repsInput), timeBased(durationInput) }` holding raw-text inputs per design §4
     - _Requirements: R2 AC1, R2 AC6, R3 AC1, R4 AC2, R5 AC1, R5 AC3, R5 AC4, R5 AC8, R6 AC1, R7 AC1, R15 AC3, R15 AC4, R15 AC5, R15 AC6_
     - _Design: §4_
 
-  - [ ] 7.2 Implement `lib/modules/program_management/services/plan_draft_to_aggregate.dart` exposing `PlanDraftToAggregate.convert(PlanDraft draft, {required Uuid idGenerator, required AppClock clock}) → ProgramDraft` assigning fresh UUIDs to every draft identifier; pure, no I/O
+  - [x] 7.2 Implement `lib/modules/program_management/services/plan_draft_to_aggregate.dart` exposing `PlanDraftToAggregate.convert(PlanDraft draft, {required Uuid idGenerator, required AppClock clock}) → ProgramDraft` assigning fresh UUIDs to every draft identifier; pure, no I/O
     - _Requirements: R9 AC1, R9 AC2_
     - _Design: §6_
 
-  - [ ] 7.3 Implement `lib/modules/program_management/services/aggregate_saver.dart` exposing `AggregateSaver` that takes a `ProgramRepository`, turns a `ProgramDraft` into a `ProgramAggregate` via a pure helper on `ProgramDraft` (e.g. `ProgramDraft.toAggregate()`), and calls `programRepository.saveProgramAggregate(aggregate)`; on `DomainError` it surfaces the error without partial writes
+  - [x] 7.3 Implement `lib/modules/program_management/services/aggregate_saver.dart` exposing `AggregateSaver` that takes a `ProgramRepository`, turns a `ProgramDraft` into a `ProgramAggregate` via a pure helper on `ProgramDraft` (e.g. `ProgramDraft.toAggregate()`), and calls `programRepository.saveProgramAggregate(aggregate)`; on `DomainError` it surfaces the error without partial writes
     - _Requirements: R2 AC3, R2 AC4, R2 AC5, R2 AC6, R9 AC3, R9 AC5, R9 AC7_
     - _Design: §3.2, §8_
 
-  - [ ]* 7.4 Write `test/modules/program_management/services/aggregate_saver_test.dart` covering happy-path save, `DomainError` propagation, and that the source `ProgramDraft` is not mutated after save
+  - [x] 7.4 Write `test/modules/program_management/services/aggregate_saver_test.dart` covering happy-path save, `DomainError` propagation, and that the source `ProgramDraft` is not mutated after save
     - _Requirements: R2 AC4, R9 AC3, R9 AC5, R9 AC7_
     - _Design: §8_
 
-  - [ ]* 7.5 Write PBT `test/modules/program_management/services/aggregate_saver_idempotence_property_test.dart`. **Property 7: AggregateSaver idempotence.** Generate a `ProgramAggregate`, save it twice against an in-memory `AppDatabase`, assert the two persisted `Program` aggregates are equal under freezed `==` except for `id`, `createdAt`, `updatedAt`, and `schemaVersion`. ≥100 iterations. **Validates: Design §12.3.**
+  - [x] 7.5 Write PBT `test/modules/program_management/services/aggregate_saver_idempotence_property_test.dart`. **Property 7: AggregateSaver idempotence.** Generate a `ProgramAggregate`, save it twice against an in-memory `AppDatabase`, assert the two persisted `Program` aggregates are equal under freezed `==` except for `id`, `createdAt`, `updatedAt`, and `schemaVersion`. ≥100 iterations. **Validates: Design §12.3.**
     - _Requirements: R9 AC3_
     - _Design: §12.3_
 
-  - [ ]* 7.6 Write PBT `test/modules/program_management/text_plan/save_load_roundtrip_property_test.dart`. **Property 4: save → load → print → parse = parse.** Generate a `PlanDraft`, convert to `ProgramDraft`, save via `AggregateSaver` on an in-memory `AppDatabase`, load via `ProgramRepository`, strip persistence ids to rebuild a `PlanDraft`, pretty-print, re-parse, assert `==`. ≥100 iterations. **Validates: Requirement R10 AC4.**
+  - [x] 7.6 Write PBT `test/modules/program_management/text_plan/save_load_roundtrip_property_test.dart`. **Property 4: save → load → print → parse = parse.** Generate a `PlanDraft`, convert to `ProgramDraft`, save via `AggregateSaver` on an in-memory `AppDatabase`, load via `ProgramRepository`, strip persistence ids to rebuild a `PlanDraft`, pretty-print, re-parse, assert `==`. ≥100 iterations. **Validates: Requirement R10 AC4.**
     - _Requirements: R10 AC4_
     - _Design: §12.1_
 
