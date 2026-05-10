@@ -103,12 +103,12 @@ Conventions used throughout:
   - [x] 10.3 Add `lib/modules/persistence/persistence.dart` barrel export and wire Drift millisecond ↔ UTC `DateTime` conversion utilities (Design §6.6)
   - [x] 10.4 Add mapper round-trip unit tests (one per mapper) confirming `toRow(toDomain(row)) == row` on representative fixtures (Design §7.1, §10.3)
 
-- [ ] 11. Implement `DriftProgramRepository`
-  - [ ] 11.1 Implement `lib/modules/persistence/repositories/drift_program_repository.dart`'s program-level CRUD (`createProgram`, `getProgram`, `listPrograms`, `updateProgram`, `deleteProgram`) with UUIDv4 generation via `package:uuid`, `SchemaVersions.domain` stamping, and transactional writes (Reqs 8.1, 8.2, 8.3, 8.5, 10.3, 10.5; Design §6.1, §6.7)
-  - [ ] 11.2 Implement the shared `_nextUpdatedAt` timestamp helper per Design §6.5 (injected `AppClock`, monotonic non-decreasing, bounded below by `createdAt` and previous `updatedAt`) and route every repository write through it (Reqs 8.3, 8.4; Design §6.5)
-  - [ ] 11.3 Implement aggregate-load for workout days: `getWorkoutDay`, `listWorkoutDaysForProgram`, using the four-query `IN`-clause fan-out in Design §6.1; never return partial aggregates (Reqs 10.3, 10.6; Design §6.1)
-  - [ ] 11.4 Implement exercise-group / exercise / set CRUD and the four `reorder*` methods, assigning positions with the gap-based algorithm from Design §6.4 and re-validating aggregate invariants on the returned value (Reqs 1.3, 1.4, 1.5, 3.4, 13.1, 13.3; Design §6.2, §6.4)
-  - [ ] 11.5 Add complementary unit tests for edge cases: deleting a program cascades to every child row; reordering rejects unknown ids (Req 9.6; Design §6.4)
+- [x] 11. Implement `DriftProgramRepository`
+  - [x] 11.1 Implement `lib/modules/persistence/repositories/drift_program_repository.dart`'s program-level CRUD (`createProgram`, `getProgram`, `listPrograms`, `updateProgram`, `deleteProgram`) with UUIDv4 generation via `package:uuid`, `SchemaVersions.domain` stamping, and transactional writes (Reqs 8.1, 8.2, 8.3, 8.5, 10.3, 10.5; Design §6.1, §6.7)
+  - [x] 11.2 Implement the shared `_nextUpdatedAt` timestamp helper per Design §6.5 (injected `AppClock`, monotonic non-decreasing, bounded below by `createdAt` and previous `updatedAt`) and route every repository write through it (Reqs 8.3, 8.4; Design §6.5)
+  - [x] 11.3 Implement aggregate-load for workout days: `getWorkoutDay`, `listWorkoutDaysForProgram`, using the four-query `IN`-clause fan-out in Design §6.1; never return partial aggregates (Reqs 10.3, 10.6; Design §6.1)
+  - [x] 11.4 Implement exercise-group / exercise / set CRUD and the four `reorder*` methods, assigning positions with the gap-based algorithm from Design §6.4 and re-validating aggregate invariants on the returned value (Reqs 1.3, 1.4, 1.5, 3.4, 13.1, 13.3; Design §6.2, §6.4)
+  - [x] 11.5 Add complementary unit tests for edge cases: deleting a program cascades to every child row; reordering rejects unknown ids (Req 9.6; Design §6.4)
 
 - [ ] 12. Implement `DriftSessionRepository`
   - [ ] 12.1 Implement `startSession`: in one transaction, load the target `WorkoutDay` aggregate, canonicalize `workoutDay.toJson()` via `CanonicalJson.encode`, compute the sha256 hex, insert a `Sessions` row with `snapshotJson` + `snapshotHash`, and pre-seed one `SessionExercises` row per planned `Exercise` in snapshot order — flattening any superset `ExerciseGroup` into one `SessionExercise` per contained `Exercise` (Reqs 4.1, 4.2, 6.1, 6.2, 6.4, 10.4; Design §4.7, §4.8, §6.3, §12 resolved decision 5)
