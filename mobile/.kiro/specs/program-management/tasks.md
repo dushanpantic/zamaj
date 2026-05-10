@@ -193,28 +193,28 @@ Conventions:
     - _Requirements: R10 AC4_
     - _Design: §12.1_
 
-- [ ] 8. Implement BLoCs in dependency order
-  - [ ] 8.1 Implement `ProgramListBloc` under `lib/modules/program_management/bloc/program_list/` with sealed `ProgramListEvent` / `ProgramListState` families, the deterministic tie-break sort in §3.1, and delete-with-confirmation flow; receive `ProgramRepository` and `SessionRepository` via constructor injection
+- [x] 8. Implement BLoCs in dependency order
+  - [x] 8.1 Implement `ProgramListBloc` under `lib/modules/program_management/bloc/program_list/` with sealed `ProgramListEvent` / `ProgramListState` families, the deterministic tie-break sort in §3.1, and delete-with-confirmation flow; receive `ProgramRepository` and `SessionRepository` via constructor injection
     - _Requirements: R1 AC1, R1 AC2, R1 AC4, R1 AC5, R1 AC6, R1 AC7, R1 AC9, R1 AC10, R11 AC1, R11 AC5, R11 AC6, R12 AC3_
     - _Design: §3.1, §3.7_
 
-  - [ ] 8.2 Implement `ProgramEditorBloc` under `lib/modules/program_management/bloc/program_editor/` with create-mode and edit-mode flows: in-memory `ProgramDraft`, workout-day add/rename/delete/reorder, diff-based save on edit, single-shot atomic save on create via `AggregateSaver`, and typed validation states
+  - [x] 8.2 Implement `ProgramEditorBloc` under `lib/modules/program_management/bloc/program_editor/` with create-mode and edit-mode flows: in-memory `ProgramDraft`, workout-day add/rename/delete/reorder, diff-based save on edit, single-shot atomic save on create via `AggregateSaver`, and typed validation states
     - _Requirements: R2 AC1, R2 AC2, R2 AC3, R2 AC4, R2 AC5, R2 AC6, R3 AC1, R3 AC2, R3 AC3, R3 AC4, R3 AC5, R3 AC6, R3 AC7, R3 AC8, R3 AC9, R3 AC10, R11 AC1, R11 AC2, R15 AC1_
     - _Design: §3.2, §3.7_
 
-  - [ ] 8.3 Implement `WorkoutDayEditorBloc` under `lib/modules/program_management/bloc/workout_day_editor/` with explicit group-save, cardinality-invariant handling (`single` requires 1 exercise, `superset` requires ≥2), exercise add/remove/reorder, and typed `GroupValidationError` state for cardinality violations
+  - [x] 8.3 Implement `WorkoutDayEditorBloc` under `lib/modules/program_management/bloc/workout_day_editor/` with explicit group-save, cardinality-invariant handling (`single` requires 1 exercise, `superset` requires ≥2), exercise add/remove/reorder, and typed `GroupValidationError` state for cardinality violations
     - _Requirements: R4 AC1, R4 AC2, R4 AC3, R4 AC4, R4 AC5, R4 AC6, R4 AC7, R4 AC8, R11 AC1, R15 AC1_
     - _Design: §3.3, §3.7_
 
-  - [ ] 8.4 Implement `ExerciseEditorBloc` under `lib/modules/program_management/bloc/exercise_editor/` with measurement-type confirmation flow (reinitialize sets to zero-valued variant on confirm; preserve on cancel), planned-set count limit 1..20, planned-set field edits retaining raw text, planned-rest field, video-URL launch via `ExternalLinkLauncher`, and typed states for validation and launcher failure
+  - [x] 8.4 Implement `ExerciseEditorBloc` under `lib/modules/program_management/bloc/exercise_editor/` with measurement-type confirmation flow (reinitialize sets to zero-valued variant on confirm; preserve on cancel), planned-set count limit 1..20, planned-set field edits retaining raw text, planned-rest field, video-URL launch via `ExternalLinkLauncher`, and typed states for validation and launcher failure
     - _Requirements: R5 AC1, R5 AC2, R5 AC3, R5 AC4, R5 AC5, R5 AC6, R5 AC7, R5 AC8, R5 AC9, R5 AC10, R5 AC11, R6 AC1, R6 AC2, R6 AC3, R6 AC4, R6 AC5, R7 AC1, R7 AC2, R7 AC3, R7 AC4, R7 AC5, R7 AC6, R7 AC7, R7 AC8, R15 AC3, R15 AC4, R15 AC5, R15 AC6_
     - _Design: §3.4, §3.7_
 
-  - [ ] 8.5 Implement `PlanImportBloc` under `lib/modules/program_management/bloc/plan_import/` wrapping `TextPlanParser.parse`, emitting `Idle` / `Parsing` / `Failure(PlanParseError)` / `Success(PlanDraft, warnings)`, and retaining the user's raw text in every state
+  - [x] 8.5 Implement `PlanImportBloc` under `lib/modules/program_management/bloc/plan_import/` wrapping `TextPlanParser.parse`, emitting `Idle` / `Parsing` / `Failure(PlanParseError)` / `Success(PlanDraft, warnings)`, and retaining the user's raw text in every state
     - _Requirements: R8 AC1, R8 AC2, R8 AC3, R15 AC2_
     - _Design: §3.5, §3.7_
 
-  - [ ] 8.6 Implement `PlanPreviewBloc` under `lib/modules/program_management/bloc/plan_preview/` owning a `ProgramDraft` produced by `PlanDraftToAggregate`, delegating save to `AggregateSaver`, and emitting transactional failure states that preserve the user's edits
+  - [x] 8.6 Implement `PlanPreviewBloc` under `lib/modules/program_management/bloc/plan_preview/` owning a `ProgramDraft` produced by `PlanDraftToAggregate`, delegating save to `AggregateSaver`, and emitting transactional failure states that preserve the user's edits
     - _Requirements: R9 AC1, R9 AC2, R9 AC3, R9 AC4, R9 AC5, R9 AC6, R9 AC7, R11 AC1, R11 AC2_
     - _Design: §3.6, §3.7_
 
