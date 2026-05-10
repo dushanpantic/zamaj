@@ -376,9 +376,9 @@ class _WarningBadge extends StatelessWidget {
 
   String _warningMessage(PlanParseWarning warning) {
     return switch (warning.code) {
-      PlanParseWarningCode.invalid_rest_token =>
+      PlanParseWarningCode.invalidRestToken =>
         'Invalid rest value: "${warning.offendingToken}"',
-      PlanParseWarningCode.unrecognized_trailing_token =>
+      PlanParseWarningCode.unrecognizedTrailingToken =>
         'Unrecognized token: "${warning.offendingToken}"',
     };
   }

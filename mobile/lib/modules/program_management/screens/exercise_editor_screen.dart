@@ -15,7 +15,9 @@ import 'package:zamaj/modules/program_management/widgets/measurement_type_select
 import 'package:zamaj/modules/program_management/widgets/planned_set_row.dart';
 
 class ExerciseEditorScreen extends StatefulWidget {
-  const ExerciseEditorScreen({super.key});
+  const ExerciseEditorScreen({super.key, required this.args});
+
+  final ExerciseArgs args;
 
   @override
   State<ExerciseEditorScreen> createState() => _ExerciseEditorScreenState();
@@ -43,9 +45,8 @@ class _ExerciseEditorScreenState extends State<ExerciseEditorScreen> {
   void didChangeDependencies() {
     super.didChangeDependencies();
     if (!_controllersInitialized) {
-      final args = ModalRoute.of(context)!.settings.arguments as ExerciseArgs;
       context.read<ExerciseEditorBloc>().add(
-        ExerciseEditorOpened(exerciseId: args.exerciseId),
+        ExerciseEditorOpened(exerciseId: widget.args.exerciseId),
       );
       _controllersInitialized = true;
     }
@@ -134,8 +135,7 @@ class _ExerciseEditorScreenState extends State<ExerciseEditorScreen> {
         if (current is ExerciseEditorEditing &&
             current.pendingMeasurementChange != null &&
             (previous is! ExerciseEditorEditing ||
-                (previous as ExerciseEditorEditing).pendingMeasurementChange ==
-                    null)) {
+                previous.pendingMeasurementChange == null)) {
           return true;
         }
         return false;

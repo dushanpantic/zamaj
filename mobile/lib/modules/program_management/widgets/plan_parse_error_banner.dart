@@ -56,13 +56,13 @@ class PlanParseErrorBanner extends StatelessWidget {
 
   String _errorCodeLabel(PlanParseErrorCode code) {
     return switch (code) {
-      PlanParseErrorCode.empty_input => 'Empty input',
-      PlanParseErrorCode.unknown_line => 'Unknown line',
-      PlanParseErrorCode.missing_program_name => 'Missing program name',
-      PlanParseErrorCode.missing_workout_day => 'Missing workout day',
-      PlanParseErrorCode.orphan_set_line => 'Orphan set line',
-      PlanParseErrorCode.orphan_superset_marker => 'Orphan superset marker',
-      PlanParseErrorCode.input_too_large => 'Input too large',
+      PlanParseErrorCode.emptyInput => 'Empty input',
+      PlanParseErrorCode.unknownLine => 'Unknown line',
+      PlanParseErrorCode.missingProgramName => 'Missing program name',
+      PlanParseErrorCode.missingWorkoutDay => 'Missing workout day',
+      PlanParseErrorCode.orphanSetLine => 'Orphan set line',
+      PlanParseErrorCode.orphanSupersetMarker => 'Orphan superset marker',
+      PlanParseErrorCode.inputTooLarge => 'Input too large',
     };
   }
 }

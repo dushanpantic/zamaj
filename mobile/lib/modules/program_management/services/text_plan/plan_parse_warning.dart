@@ -3,7 +3,12 @@ import 'package:freezed_annotation/freezed_annotation.dart';
 part 'plan_parse_warning.freezed.dart';
 part 'plan_parse_warning.g.dart';
 
-enum PlanParseWarningCode { invalid_rest_token, unrecognized_trailing_token }
+enum PlanParseWarningCode {
+  @JsonValue('invalid_rest_token')
+  invalidRestToken,
+  @JsonValue('unrecognized_trailing_token')
+  unrecognizedTrailingToken,
+}
 
 @freezed
 abstract class PlanParseWarning with _$PlanParseWarning {

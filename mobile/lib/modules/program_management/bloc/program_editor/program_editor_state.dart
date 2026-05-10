@@ -15,7 +15,7 @@ final class ProgramDraftValidation extends Equatable {
   }) {
     final trimmed = name.trim();
     final maxLength = isCreateMode ? 120 : 100;
-    final isNameValid = trimmed.length >= 1 && trimmed.length <= maxLength;
+    final isNameValid = trimmed.isNotEmpty && trimmed.length <= maxLength;
     return ProgramDraftValidation(isNameValid: isNameValid);
   }
 

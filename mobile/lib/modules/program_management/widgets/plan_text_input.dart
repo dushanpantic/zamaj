@@ -28,6 +28,9 @@ class PlanTextInput extends StatelessWidget {
       maxLines: null,
       minLines: 8,
       keyboardType: TextInputType.multiline,
+      buildCounter:
+          (context, {required currentLength, required isFocused, maxLength}) =>
+              null,
       style: typography.body.copyWith(
         color: colors.onSurface,
         fontFamily: 'monospace',
@@ -36,13 +39,6 @@ class PlanTextInput extends StatelessWidget {
         hintText: 'Paste your plan text here…',
         hintStyle: typography.body.copyWith(color: colors.onSurfaceMuted),
         contentPadding: const EdgeInsets.all(AppSpacing.lg),
-        buildCounter:
-            (
-              context, {
-              required currentLength,
-              required isFocused,
-              maxLength,
-            }) => null,
       ),
     );
   }

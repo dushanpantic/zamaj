@@ -31,7 +31,6 @@ Map<String, dynamic> _$PlanParseWarningToJson(_PlanParseWarning instance) =>
     };
 
 const _$PlanParseWarningCodeEnumMap = {
-  PlanParseWarningCode.invalid_rest_token: 'invalid_rest_token',
-  PlanParseWarningCode.unrecognized_trailing_token:
-      'unrecognized_trailing_token',
+  PlanParseWarningCode.invalidRestToken: 'invalid_rest_token',
+  PlanParseWarningCode.unrecognizedTrailingToken: 'unrecognized_trailing_token',
 };

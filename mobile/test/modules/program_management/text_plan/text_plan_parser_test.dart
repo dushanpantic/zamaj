@@ -162,7 +162,7 @@ void main() {
 
       expect(result, isA<PlanParseFailure>());
       final failure = result as PlanParseFailure;
-      expect(failure.error.code, equals(PlanParseErrorCode.orphan_set_line));
+      expect(failure.error.code, equals(PlanParseErrorCode.orphanSetLine));
       expect(failure.error.line, equals(1));
       expect(failure.error.column, equals(1));
     });
@@ -175,7 +175,7 @@ void main() {
 
         expect(result, isA<PlanParseFailure>());
         final failure = result as PlanParseFailure;
-        expect(failure.error.code, equals(PlanParseErrorCode.orphan_set_line));
+        expect(failure.error.code, equals(PlanParseErrorCode.orphanSetLine));
         expect(failure.error.line, equals(2));
         expect(failure.error.column, equals(1));
       },
@@ -191,7 +191,7 @@ void main() {
 
         expect(result, isA<PlanParseFailure>());
         final failure = result as PlanParseFailure;
-        expect(failure.error.code, equals(PlanParseErrorCode.unknown_line));
+        expect(failure.error.code, equals(PlanParseErrorCode.unknownLine));
         expect(failure.error.line, equals(2));
         expect(failure.error.column, equals(1));
       },
@@ -204,7 +204,7 @@ void main() {
 
       expect(result, isA<PlanParseFailure>());
       final failure = result as PlanParseFailure;
-      expect(failure.error.code, equals(PlanParseErrorCode.empty_input));
+      expect(failure.error.code, equals(PlanParseErrorCode.emptyInput));
       expect(failure.error.line, equals(1));
       expect(failure.error.column, equals(1));
     });
@@ -214,7 +214,7 @@ void main() {
 
       expect(result, isA<PlanParseFailure>());
       final failure = result as PlanParseFailure;
-      expect(failure.error.code, equals(PlanParseErrorCode.empty_input));
+      expect(failure.error.code, equals(PlanParseErrorCode.emptyInput));
       expect(failure.error.line, equals(1));
       expect(failure.error.column, equals(1));
     });
@@ -224,7 +224,7 @@ void main() {
 
       expect(result, isA<PlanParseFailure>());
       final failure = result as PlanParseFailure;
-      expect(failure.error.code, equals(PlanParseErrorCode.empty_input));
+      expect(failure.error.code, equals(PlanParseErrorCode.emptyInput));
     });
   });
 
@@ -237,7 +237,7 @@ void main() {
 
         expect(result, isA<PlanParseFailure>());
         final failure = result as PlanParseFailure;
-        expect(failure.error.code, equals(PlanParseErrorCode.input_too_large));
+        expect(failure.error.code, equals(PlanParseErrorCode.inputTooLarge));
         expect(failure.error.line, equals(1));
         expect(failure.error.column, equals(1));
       },
@@ -253,7 +253,7 @@ void main() {
           isA<PlanParseFailure>().having(
             (f) => f.error.code,
             'code',
-            equals(PlanParseErrorCode.input_too_large),
+            equals(PlanParseErrorCode.inputTooLarge),
           ),
         ),
       );
@@ -321,7 +321,7 @@ void main() {
         expect(success.warnings, hasLength(1));
         expect(
           success.warnings.first.code,
-          equals(PlanParseWarningCode.invalid_rest_token),
+          equals(PlanParseWarningCode.invalidRestToken),
         );
 
         final exercise =
@@ -341,7 +341,7 @@ void main() {
         expect(success.warnings, hasLength(1));
         expect(
           success.warnings.first.code,
-          equals(PlanParseWarningCode.unrecognized_trailing_token),
+          equals(PlanParseWarningCode.unrecognizedTrailingToken),
         );
         expect(success.warnings.first.offendingToken, equals('???'));
       },

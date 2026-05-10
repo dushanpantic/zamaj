@@ -4,13 +4,20 @@ part 'plan_parse_error.freezed.dart';
 part 'plan_parse_error.g.dart';
 
 enum PlanParseErrorCode {
-  empty_input,
-  unknown_line,
-  missing_program_name,
-  missing_workout_day,
-  orphan_set_line,
-  orphan_superset_marker,
-  input_too_large,
+  @JsonValue('empty_input')
+  emptyInput,
+  @JsonValue('unknown_line')
+  unknownLine,
+  @JsonValue('missing_program_name')
+  missingProgramName,
+  @JsonValue('missing_workout_day')
+  missingWorkoutDay,
+  @JsonValue('orphan_set_line')
+  orphanSetLine,
+  @JsonValue('orphan_superset_marker')
+  orphanSupersetMarker,
+  @JsonValue('input_too_large')
+  inputTooLarge,
 }
 
 @freezed

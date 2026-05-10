@@ -257,16 +257,16 @@ Conventions:
     - _Requirements: R7 AC5, R7 AC8, R13 AC4_
     - _Design: §9, §13.3_
 
-- [ ] 12. Final CI integration
-  - [ ] 12.1 Re-verify `tool/check_offline_imports.sh` exits 0 on the full tree (including the new module and the `url_launcher` concrete impl); confirm the allowlist scan emits `<file>:<line>:<offending symbol>` for any hand-injected violation used as a smoke test
+- [x] 12. Final CI integration
+  - [x] 12.1 Re-verify `tool/check_offline_imports.sh` exits 0 on the full tree (including the new module and the `url_launcher` concrete impl); confirm the allowlist scan emits `<file>:<line>:<offending symbol>` for any hand-injected violation used as a smoke test
     - _Requirements: R12 AC5, R13 AC1, R13 AC2, R13 AC3_
     - _Design: §13.2_
 
-  - [ ] 12.2 Run `flutter analyze`; fix every error, warning, and lint violation in `lib/modules/program_management/` until the analyzer reports zero issues across the new module
+  - [x] 12.2 Run `flutter analyze`; fix every error, warning, and lint violation in `lib/modules/program_management/` until the analyzer reports zero issues across the new module
     - _Requirements: R14 AC4, R14 AC5, R14 AC6_
     - _Design: §14.5_
 
-  - [ ] 12.3 Run `flutter test`; confirm every suite (existing domain / persistence / repository / serialization / integration plus the new module suites and property tests) passes green
+  - [x] 12.3 Run `flutter test`; confirm every suite (existing domain / persistence / repository / serialization / integration plus the new module suites and property tests) passes green
     - _Requirements: R11 AC3, R11 AC4, R14 AC6_
     - _Design: §14.5_
 

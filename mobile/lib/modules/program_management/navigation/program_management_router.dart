@@ -77,12 +77,15 @@ abstract final class ProgramManagementRouter {
       ),
       ProgramManagementRoutes.planPreview => MaterialPageRoute<void>(
         settings: settings,
-        builder: (context) => BlocProvider(
-          create: (_) => PlanPreviewBloc(
-            aggregateSaver: AggregateSaver(context.read<ProgramRepository>()),
-          ),
-          child: const PlanPreviewScreen(),
-        ),
+        builder: (context) {
+          final args = settings.arguments! as PlanPreviewArgs;
+          return BlocProvider(
+            create: (_) => PlanPreviewBloc(
+              aggregateSaver: AggregateSaver(context.read<ProgramRepository>()),
+            ),
+            child: PlanPreviewScreen(args: args),
+          );
+        },
       ),
       _ => null,
     };

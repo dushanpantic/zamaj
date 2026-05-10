@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:zamaj/core/app_colors.dart';
 import 'package:zamaj/core/app_spacing.dart';
+import 'package:zamaj/modules/domain/domain.dart';
 import 'package:zamaj/modules/program_management/models/program_editor_draft.dart';
 
 class ExerciseTile extends StatelessWidget {

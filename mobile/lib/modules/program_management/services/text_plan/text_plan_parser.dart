@@ -10,7 +10,7 @@ abstract final class TextPlanParser {
         PlanParseError(
           line: 1,
           column: 1,
-          code: PlanParseErrorCode.input_too_large,
+          code: PlanParseErrorCode.inputTooLarge,
           message:
               'Input exceeds the maximum allowed size of 100,000 characters.',
         ),
@@ -22,7 +22,7 @@ abstract final class TextPlanParser {
         PlanParseError(
           line: 1,
           column: 1,
-          code: PlanParseErrorCode.empty_input,
+          code: PlanParseErrorCode.emptyInput,
           message: 'Input is empty or contains only whitespace.',
         ),
       );
@@ -91,7 +91,7 @@ ParseResult _parseLines(List<String> lines) {
             PlanParseError(
               line: lineNumber,
               column: col,
-              code: PlanParseErrorCode.orphan_superset_marker,
+              code: PlanParseErrorCode.orphanSupersetMarker,
               message:
                   'Superset marker found outside of a workout day on line $lineNumber.',
             ),
@@ -108,7 +108,7 @@ ParseResult _parseLines(List<String> lines) {
             PlanParseError(
               line: lineNumber,
               column: col,
-              code: PlanParseErrorCode.orphan_set_line,
+              code: PlanParseErrorCode.orphanSetLine,
               message:
                   'Planned-set line found outside of a workout day on line $lineNumber.',
             ),
@@ -120,7 +120,7 @@ ParseResult _parseLines(List<String> lines) {
             PlanParseError(
               line: lineNumber,
               column: col,
-              code: PlanParseErrorCode.orphan_set_line,
+              code: PlanParseErrorCode.orphanSetLine,
               message:
                   'Planned-set line found with no current exercise on line $lineNumber.',
             ),
@@ -140,7 +140,7 @@ ParseResult _parseLines(List<String> lines) {
             PlanParseError(
               line: lineNumber,
               column: col,
-              code: PlanParseErrorCode.missing_workout_day,
+              code: PlanParseErrorCode.missingWorkoutDay,
               message:
                   'Exercise name found outside of a workout day on line $lineNumber.',
             ),
@@ -164,7 +164,7 @@ ParseResult _parseLines(List<String> lines) {
           PlanParseError(
             line: lineNumber,
             column: col,
-            code: PlanParseErrorCode.unknown_line,
+            code: PlanParseErrorCode.unknownLine,
             message: 'Unrecognized line at line $lineNumber.',
           ),
         );
@@ -176,7 +176,7 @@ ParseResult _parseLines(List<String> lines) {
       PlanParseError(
         line: 1,
         column: 1,
-        code: PlanParseErrorCode.missing_program_name,
+        code: PlanParseErrorCode.missingProgramName,
         message: 'No program name found in the input.',
       ),
     );
@@ -187,7 +187,7 @@ ParseResult _parseLines(List<String> lines) {
       PlanParseError(
         line: 1,
         column: 1,
-        code: PlanParseErrorCode.missing_program_name,
+        code: PlanParseErrorCode.missingProgramName,
         message: 'No workout days found in the input.',
       ),
     );
@@ -429,7 +429,7 @@ _RestParseResult _parseRestTokens(
             PlanParseWarning(
               line: lineNumber,
               column: col,
-              code: PlanParseWarningCode.invalid_rest_token,
+              code: PlanParseWarningCode.invalidRestToken,
               offendingToken: token,
               exerciseDraftId: exerciseDraftId,
             ),
@@ -442,7 +442,7 @@ _RestParseResult _parseRestTokens(
           PlanParseWarning(
             line: lineNumber,
             column: col,
-            code: PlanParseWarningCode.invalid_rest_token,
+            code: PlanParseWarningCode.invalidRestToken,
             offendingToken: token,
             exerciseDraftId: exerciseDraftId,
           ),
@@ -454,7 +454,7 @@ _RestParseResult _parseRestTokens(
         PlanParseWarning(
           line: lineNumber,
           column: col,
-          code: PlanParseWarningCode.unrecognized_trailing_token,
+          code: PlanParseWarningCode.unrecognizedTrailingToken,
           offendingToken: token,
           exerciseDraftId: exerciseDraftId,
         ),

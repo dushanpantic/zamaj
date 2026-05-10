@@ -29,11 +29,11 @@ Map<String, dynamic> _$PlanParseErrorToJson(_PlanParseError instance) =>
     };
 
 const _$PlanParseErrorCodeEnumMap = {
-  PlanParseErrorCode.empty_input: 'empty_input',
-  PlanParseErrorCode.unknown_line: 'unknown_line',
-  PlanParseErrorCode.missing_program_name: 'missing_program_name',
-  PlanParseErrorCode.missing_workout_day: 'missing_workout_day',
-  PlanParseErrorCode.orphan_set_line: 'orphan_set_line',
-  PlanParseErrorCode.orphan_superset_marker: 'orphan_superset_marker',
-  PlanParseErrorCode.input_too_large: 'input_too_large',
+  PlanParseErrorCode.emptyInput: 'empty_input',
+  PlanParseErrorCode.unknownLine: 'unknown_line',
+  PlanParseErrorCode.missingProgramName: 'missing_program_name',
+  PlanParseErrorCode.missingWorkoutDay: 'missing_workout_day',
+  PlanParseErrorCode.orphanSetLine: 'orphan_set_line',
+  PlanParseErrorCode.orphanSupersetMarker: 'orphan_superset_marker',
+  PlanParseErrorCode.inputTooLarge: 'input_too_large',
 };
