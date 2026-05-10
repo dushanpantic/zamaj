@@ -252,8 +252,8 @@ Conventions:
     - _Requirements: R12 AC3, R13 AC4, R14 AC1_
     - _Design: §1.3, §2.1_
 
-- [ ] 11. Implement the `url_launcher`-backed `ExternalLinkLauncher`
-  - [ ] 11.1 Implement `lib/modules/program_management/services/url_launcher_external_link_launcher.dart` as the concrete `UrlLauncherExternalLinkLauncher implements ExternalLinkLauncher`, routing `youtube.com` / `youtu.be` / `m.youtube.com` / `www.youtube.com` through `LaunchMode.externalApplication` with fallback to the default browser, returning `ExternalLinkOpened` on success and `ExternalLinkFailure(reason)` on any failure; verify `check_offline_imports.sh` still passes (url_launcher is platform-channel-only)
+- [x] 11. Implement the `url_launcher`-backed `ExternalLinkLauncher`
+  - [x] 11.1 Implement `lib/modules/program_management/services/url_launcher_external_link_launcher.dart` as the concrete `UrlLauncherExternalLinkLauncher implements ExternalLinkLauncher`, routing `youtube.com` / `youtu.be` / `m.youtube.com` / `www.youtube.com` through `LaunchMode.externalApplication` with fallback to the default browser, returning `ExternalLinkOpened` on success and `ExternalLinkFailure(reason)` on any failure; verify `check_offline_imports.sh` still passes (url_launcher is platform-channel-only)
     - _Requirements: R7 AC5, R7 AC8, R13 AC4_
     - _Design: §9, §13.3_
 

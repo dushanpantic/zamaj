@@ -5,15 +5,7 @@ import 'package:zamaj/modules/domain/domain.dart';
 import 'package:zamaj/modules/program_management/navigation/program_management_router.dart';
 import 'package:zamaj/modules/program_management/navigation/program_management_routes.dart';
 import 'package:zamaj/modules/program_management/services/external_link_launcher.dart';
-
-// TODO(task-11.1): Replace with UrlLauncherExternalLinkLauncher once implemented.
-final class _StubExternalLinkLauncher implements ExternalLinkLauncher {
-  const _StubExternalLinkLauncher();
-
-  @override
-  Future<ExternalLinkResult> launch(Uri url) async =>
-      const ExternalLinkFailure('not implemented');
-}
+import 'package:zamaj/modules/program_management/services/url_launcher_external_link_launcher.dart';
 
 class MainApp extends StatelessWidget {
   const MainApp({
@@ -32,7 +24,7 @@ class MainApp extends StatelessWidget {
         RepositoryProvider<ProgramRepository>.value(value: programRepo),
         RepositoryProvider<SessionRepository>.value(value: sessionRepo),
         RepositoryProvider<ExternalLinkLauncher>(
-          create: (_) => const _StubExternalLinkLauncher(),
+          create: (_) => const UrlLauncherExternalLinkLauncher(),
         ),
       ],
       child: MaterialApp(
