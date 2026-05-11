@@ -2,6 +2,9 @@
 // Feature: session-flow-engine, Property 6: Set completion records correct values and timestamp
 // Feature: session-flow-engine, Property 7: Last set transitions exercise to completed
 // Feature: session-flow-engine, Property 8: Measurement type validation
+// Feature: session-flow-engine, Property 11: Skip transitions to skipped
+// Feature: session-flow-engine, Property 13: Replace sets correct state and preserves snapshot reference
+// Feature: session-flow-engine, Property 14: Reorder preserves completed positions and applies new order
 import 'dart:math';
 
 import 'package:clock/clock.dart';
@@ -327,6 +330,295 @@ void main() {
       }
     });
   });
+
+  // **Validates: Requirements 7.1, 7.2, 7.4**
+  group('Property 11: Skip transitions to skipped', () {
+    test('skipExercise transitions unfinished exercise to skipped '
+        'and cursor advances past it', () async {
+      const iterations = 100;
+      final masterSeed = Random().nextInt(1 << 32);
+
+      for (var i = 0; i < iterations; i++) {
+        final rng = Random(masterSeed + i);
+        final session = anyCursorableSession(rng);
+        final fakeClock = Clock.fixed(anyUtcDateTime(rng));
+        final repo = FakeSessionRepository(clock: fakeClock);
+        repo.seedSession(session);
+
+        final engine = SessionFlowEngine(repository: repo, clock: fakeClock);
+
+        final unfinished = session.sessionExercises
+            .where((e) => e.state is UnfinishedState)
+            .toList();
+        final target = unfinished[rng.nextInt(unfinished.length)];
+
+        final result = await engine.skipExercise(sessionExerciseId: target.id);
+
+        final updatedExercise = result.session.sessionExercises.firstWhere(
+          (e) => e.id == target.id,
+        );
+
+        expect(
+          updatedExercise.state,
+          equals(const ExerciseState.skipped()),
+          reason:
+              'iteration $i (seed ${masterSeed + i}): '
+              'exercise state must be skipped after skipExercise',
+        );
+
+        final cursor = result.cursor;
+        switch (cursor) {
+          case ActiveCursor(:final sessionExerciseId):
+            expect(
+              sessionExerciseId,
+              isNot(equals(target.id)),
+              reason:
+                  'iteration $i (seed ${masterSeed + i}): '
+                  'cursor must not point to the skipped exercise',
+            );
+            final cursorExercise = result.session.sessionExercises.firstWhere(
+              (e) => e.id == sessionExerciseId,
+            );
+            expect(
+              cursorExercise.state is UnfinishedState ||
+                  cursorExercise.state is ReplacedState,
+              isTrue,
+              reason:
+                  'iteration $i (seed ${masterSeed + i}): '
+                  'cursor must point to an unfinished or replaced exercise',
+            );
+          case CompletedCursor():
+            final hasUnfinishedRemaining = result.session.sessionExercises.any((
+              e,
+            ) {
+              if (e.id == target.id) return false;
+              if (e.state is! UnfinishedState && e.state is! ReplacedState) {
+                return false;
+              }
+              final plannedSetCount = _lookupPlannedSetCount(e, result.session);
+              return e.executedSets.length < plannedSetCount;
+            });
+            expect(
+              hasUnfinishedRemaining,
+              isFalse,
+              reason:
+                  'iteration $i (seed ${masterSeed + i}): '
+                  'cursor is completed but there are still exercises '
+                  'with sets remaining',
+            );
+        }
+      }
+    });
+  });
+
+  // **Validates: Requirements 8.1, 8.2**
+  group(
+    'Property 13: Replace sets correct state and preserves snapshot reference',
+    () {
+      test('replaceExercise transitions to replaced with provided substitute '
+          'and leaves plannedExerciseIdInSnapshot unchanged', () async {
+        const iterations = 100;
+        final masterSeed = Random().nextInt(1 << 32);
+
+        for (var i = 0; i < iterations; i++) {
+          final rng = Random(masterSeed + i);
+          final session = anyCursorableSession(rng);
+          final fakeClock = Clock.fixed(anyUtcDateTime(rng));
+          final repo = FakeSessionRepository(clock: fakeClock);
+          repo.seedSession(session);
+
+          final engine = SessionFlowEngine(repository: repo, clock: fakeClock);
+
+          final unfinished = session.sessionExercises
+              .where((e) => e.state is UnfinishedState)
+              .toList();
+          final target = unfinished[rng.nextInt(unfinished.length)];
+          final originalPlannedId = target.plannedExerciseIdInSnapshot;
+
+          final substituteName = 'substitute_${anyUuidV4(rng)}';
+          final substituteMt = anyMeasurementType(rng);
+          final substituteMetadata = rng.nextBool()
+              ? anyExerciseMetadata(rng)
+              : null;
+
+          final result = await engine.replaceExercise(
+            sessionExerciseId: target.id,
+            substituteName: substituteName,
+            substituteMeasurementType: substituteMt,
+            substituteMetadata: substituteMetadata,
+          );
+
+          final updated = result.session.sessionExercises.firstWhere(
+            (e) => e.id == target.id,
+          );
+
+          expect(
+            updated.state,
+            isA<ReplacedState>(),
+            reason:
+                'iteration $i (seed ${masterSeed + i}): '
+                'state must be ReplacedState after replaceExercise',
+          );
+
+          final replaced = updated.state as ReplacedState;
+          expect(
+            replaced.substitute.name,
+            equals(substituteName),
+            reason:
+                'iteration $i (seed ${masterSeed + i}): '
+                'substitute name must match the value passed in',
+          );
+          expect(
+            replaced.substitute.measurementType,
+            equals(substituteMt),
+            reason:
+                'iteration $i (seed ${masterSeed + i}): '
+                'substitute measurementType must match the value passed in',
+          );
+          expect(
+            replaced.substitute.metadata,
+            equals(substituteMetadata),
+            reason:
+                'iteration $i (seed ${masterSeed + i}): '
+                'substitute metadata must match the value passed in',
+          );
+
+          expect(
+            updated.plannedExerciseIdInSnapshot,
+            equals(originalPlannedId),
+            reason:
+                'iteration $i (seed ${masterSeed + i}): '
+                'plannedExerciseIdInSnapshot must remain unchanged',
+          );
+        }
+      });
+    },
+  );
+
+  // **Validates: Requirements 9.1, 9.4**
+  group(
+    'Property 14: Reorder preserves completed positions and applies new order',
+    () {
+      test(
+        'reorderUnfinished keeps locked exercises in their original relative '
+        'order and applies the new order to unfinished exercises',
+        () async {
+          const iterations = 100;
+          final masterSeed = Random().nextInt(1 << 32);
+
+          for (var i = 0; i < iterations; i++) {
+            final rng = Random(masterSeed + i);
+            final session = _anySessionForReorder(rng);
+            final fakeClock = Clock.fixed(anyUtcDateTime(rng));
+            final repo = FakeSessionRepository(clock: fakeClock);
+            repo.seedSession(session);
+
+            final engine = SessionFlowEngine(
+              repository: repo,
+              clock: fakeClock,
+            );
+
+            final originalSorted = List<SessionExercise>.of(
+              session.sessionExercises,
+            )..sort((a, b) => a.position.compareTo(b.position));
+
+            final originalLockedOrder = originalSorted
+                .where((e) => e.state is! UnfinishedState)
+                .map((e) => e.id)
+                .toList();
+
+            final unfinishedIds = originalSorted
+                .where((e) => e.state is UnfinishedState)
+                .map((e) => e.id)
+                .toList();
+
+            final shuffledUnfinished = [...unfinishedIds]..shuffle(rng);
+
+            final result = await engine.reorderUnfinished(
+              sessionId: session.id,
+              orderedUnfinishedIds: shuffledUnfinished,
+            );
+
+            final resultSorted = List<SessionExercise>.of(
+              result.session.sessionExercises,
+            )..sort((a, b) => a.position.compareTo(b.position));
+
+            final positions = resultSorted.map((e) => e.position).toList();
+            expect(
+              positions,
+              equals(List.generate(positions.length, (j) => j)),
+              reason:
+                  'iteration $i (seed ${masterSeed + i}): '
+                  'positions must be a dense 0..n-1 sequence',
+            );
+
+            final resultLockedOrder = resultSorted
+                .where((e) => e.state is! UnfinishedState)
+                .map((e) => e.id)
+                .toList();
+            expect(
+              resultLockedOrder,
+              equals(originalLockedOrder),
+              reason:
+                  'iteration $i (seed ${masterSeed + i}): '
+                  'locked exercises must keep their original relative order',
+            );
+
+            final resultUnfinishedOrder = resultSorted
+                .where((e) => e.state is UnfinishedState)
+                .map((e) => e.id)
+                .toList();
+            expect(
+              resultUnfinishedOrder,
+              equals(shuffledUnfinished),
+              reason:
+                  'iteration $i (seed ${masterSeed + i}): '
+                  'unfinished exercises must follow the specified new order',
+            );
+
+            final maxLockedPosition = resultSorted
+                .where((e) => e.state is! UnfinishedState)
+                .map((e) => e.position)
+                .fold<int>(-1, max);
+            final minUnfinishedPosition = resultSorted
+                .where((e) => e.state is UnfinishedState)
+                .map((e) => e.position)
+                .reduce(min);
+            expect(
+              minUnfinishedPosition,
+              greaterThan(maxLockedPosition),
+              reason:
+                  'iteration $i (seed ${masterSeed + i}): '
+                  'all unfinished exercises must be positioned after the '
+                  'locked exercises',
+            );
+          }
+        },
+      );
+    },
+  );
+}
+
+Session _anySessionForReorder(Random rng) {
+  final lockedCount = 1 + rng.nextInt(3);
+  final unfinishedCount = 2 + rng.nextInt(3);
+
+  final states = <ExerciseState>[
+    ...List.generate(lockedCount, (_) {
+      switch (rng.nextInt(3)) {
+        case 0:
+          return const ExerciseState.completed();
+        case 1:
+          return const ExerciseState.skipped();
+        default:
+          return ExerciseState.replaced(substitute: anySubstituteExercise(rng));
+      }
+    }),
+    ...List.generate(unfinishedCount, (_) => const ExerciseState.unfinished()),
+  ];
+  states.shuffle(rng);
+
+  return anySessionWithStates(rng, states: states);
 }
 
 Future<SessionState> Function()? _pickMutation(
@@ -400,6 +692,11 @@ Exercise _lookupPlannedExercise(
     }
   }
   throw StateError('Planned exercise not found');
+}
+
+int _lookupPlannedSetCount(SessionExercise exercise, Session session) {
+  final planned = _lookupPlannedExercise(exercise, session);
+  return planned.sets.length;
 }
 
 Session _anySessionOneSetFromCompletion(Random rng) {

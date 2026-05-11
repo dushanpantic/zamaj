@@ -141,20 +141,20 @@ Implement the pure-Dart `SessionFlowEngine` service with cursor-based navigation
     - **Property 10: Editing works regardless of exercise state**
     - **Validates: Requirements 6.2**
 
-- [ ] 10. Property-based tests: skip, replace, reorder
-  - [ ] 10.1 Write property test for skip transitions to skipped
+- [x] 10. Property-based tests: skip, replace, reorder
+  - [x] 10.1 Write property test for skip transitions to skipped
     - **Property 11: Skip transitions to skipped**
     - **Validates: Requirements 7.1, 7.2, 7.4**
 
-  - [ ] 10.2 Write property test for non-unfinished exercises reject structural mutations
+  - [x] 10.2 Write property test for non-unfinished exercises reject structural mutations
     - **Property 12: Non-unfinished exercises reject structural mutations**
     - **Validates: Requirements 7.3, 8.4, 9.2, 10.2, 11.2, 16.1, 16.2, 16.3**
 
-  - [ ] 10.3 Write property test for replace sets correct state and preserves snapshot reference
+  - [x] 10.3 Write property test for replace sets correct state and preserves snapshot reference
     - **Property 13: Replace sets correct state and preserves snapshot reference**
     - **Validates: Requirements 8.1, 8.2**
 
-  - [ ] 10.4 Write property test for reorder preserves completed positions and applies new order
+  - [x] 10.4 Write property test for reorder preserves completed positions and applies new order
     - **Property 14: Reorder preserves completed positions and applies new order**
     - **Validates: Requirements 9.1, 9.4**
 
