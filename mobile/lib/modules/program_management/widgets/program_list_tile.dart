@@ -23,7 +23,7 @@ class ProgramListTile extends StatelessWidget {
     final colors = Theme.of(context).appColors;
     const typography = AppTypography.standard;
 
-    return InkWell(
+    final tile = InkWell(
       onTap: isDeleting ? null : onTap,
       borderRadius: BorderRadius.circular(AppRadius.md),
       child: Container(
@@ -68,16 +68,31 @@ class ProgramListTile extends StatelessWidget {
                   strokeWidth: 2,
                   color: colors.primary,
                 ),
-              )
-            else
-              IconButton(
-                icon: Icon(Icons.delete_outline, color: colors.onSurfaceMuted),
-                onPressed: onDeleteRequested,
-                tooltip: 'Delete program',
               ),
           ],
         ),
       ),
+    );
+
+    if (isDeleting) return tile;
+
+    return Dismissible(
+      key: ValueKey(program.id),
+      direction: DismissDirection.endToStart,
+      confirmDismiss: (_) async {
+        onDeleteRequested();
+        return false;
+      },
+      background: Container(
+        alignment: Alignment.centerRight,
+        padding: const EdgeInsets.only(right: AppSpacing.lg),
+        decoration: BoxDecoration(
+          color: colors.error,
+          borderRadius: BorderRadius.circular(AppRadius.md),
+        ),
+        child: Icon(Icons.delete_outline, color: colors.onPrimary),
+      ),
+      child: tile,
     );
   }
 

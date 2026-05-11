@@ -54,18 +54,21 @@ class ExerciseEditorBloc
     }
     _baselineExercise = exercise;
     var draft = _exerciseToDraft(exercise);
+    if (draft.plannedRestSeconds == null) {
+      draft = draft.copyWith(plannedRestSeconds: 180);
+    }
     if (draft.sets.isEmpty) {
       draft = draft.copyWith(
         sets: [
           PlannedSetDraft(
             draftId: _uuid.v4(),
             persistedId: null,
-            values: _zeroValuedSet(draft.measurementType),
+            values: _emptySet(draft.measurementType),
           ),
         ],
       );
     }
-    _plannedRestInput = exercise.plannedRestSeconds?.toString();
+    _plannedRestInput = draft.plannedRestSeconds?.toString() ?? '180';
     final validation = _computeValidation(draft);
     emit(ExerciseEditorEditing(draft: draft, validation: validation));
   }
@@ -100,7 +103,7 @@ class ExerciseEditorBloc
     final pending = current.pendingMeasurementChange;
     if (pending == null) return;
     final reinitializedSets = current.draft.sets
-        .map((s) => s.copyWith(values: _zeroValuedSet(pending)))
+        .map((s) => s.copyWith(values: _emptySet(pending)))
         .toList();
     final updated = current.draft.copyWith(
       measurementType: pending,
@@ -194,7 +197,7 @@ class ExerciseEditorBloc
     final newSet = PlannedSetDraft(
       draftId: _uuid.v4(),
       persistedId: null,
-      values: _zeroValuedSet(current.draft.measurementType),
+      values: _emptySet(current.draft.measurementType),
     );
     final updated = current.draft.copyWith(
       sets: [...current.draft.sets, newSet],
@@ -424,14 +427,14 @@ class ExerciseEditorBloc
     );
   }
 
-  PlannedSetDraftValues _zeroValuedSet(MeasurementType type) {
+  PlannedSetDraftValues _emptySet(MeasurementType type) {
     return switch (type) {
       RepBasedMeasurement() => const PlannedSetDraftValues.repBased(
-        weightInput: '0',
-        repsInput: '0',
+        weightInput: '',
+        repsInput: '',
       ),
       TimeBasedMeasurement() => const PlannedSetDraftValues.timeBased(
-        durationInput: '0',
+        durationInput: '',
       ),
     };
   }

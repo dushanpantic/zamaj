@@ -7,43 +7,40 @@ class WorkoutDayListTile extends StatelessWidget {
     super.key,
     required this.name,
     this.onTap,
-    required this.onRename,
     required this.onDelete,
   });
 
   final String name;
   final VoidCallback? onTap;
-  final VoidCallback onRename;
   final VoidCallback onDelete;
 
   @override
   Widget build(BuildContext context) {
     final colors = Theme.of(context).appColors;
 
-    return ListTile(
-      contentPadding: const EdgeInsets.symmetric(
-        horizontal: AppSpacing.lg,
-        vertical: AppSpacing.xs,
+    return Dismissible(
+      key: key ?? ValueKey(name),
+      direction: DismissDirection.endToStart,
+      confirmDismiss: (_) async {
+        onDelete();
+        return false;
+      },
+      background: Container(
+        alignment: Alignment.centerRight,
+        padding: const EdgeInsets.only(right: AppSpacing.lg),
+        color: colors.error,
+        child: Icon(Icons.delete_outline, color: colors.onPrimary),
       ),
-      tileColor: colors.surface,
-      title: Text(name, style: TextStyle(color: colors.onSurface)),
-      trailing: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          IconButton(
-            icon: Icon(Icons.edit_outlined, color: colors.onSurfaceMuted),
-            tooltip: 'Rename',
-            onPressed: onRename,
-          ),
-          IconButton(
-            icon: Icon(Icons.delete_outline, color: colors.onSurfaceMuted),
-            tooltip: 'Delete',
-            onPressed: onDelete,
-          ),
-          Icon(Icons.drag_handle, color: colors.onSurfaceMuted),
-        ],
+      child: ListTile(
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: AppSpacing.lg,
+          vertical: AppSpacing.xs,
+        ),
+        tileColor: colors.surface,
+        title: Text(name, style: TextStyle(color: colors.onSurface)),
+        trailing: Icon(Icons.drag_handle, color: colors.onSurfaceMuted),
+        onTap: onTap,
       ),
-      onTap: onTap,
     );
   }
 }

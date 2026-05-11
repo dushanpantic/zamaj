@@ -127,95 +127,6 @@ class _ProgramEditorScreenState extends State<ProgramEditorScreen> {
     Navigator.of(dialogContext).pop();
   }
 
-  Future<void> _showRenameWorkoutDayDialog(
-    String draftId,
-    String currentName,
-  ) async {
-    final colors = Theme.of(context).appColors;
-    const typography = AppTypography.standard;
-    final nameController = TextEditingController(text: currentName);
-    String? errorText;
-
-    await showDialog<void>(
-      context: context,
-      builder: (dialogContext) => StatefulBuilder(
-        builder: (ctx, setDialogState) => AlertDialog(
-          backgroundColor: colors.surface,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(AppRadius.lg),
-            side: BorderSide(color: colors.outline),
-          ),
-          title: Text(
-            'Rename Workout Day',
-            style: typography.titleSmall.copyWith(color: colors.onSurface),
-          ),
-          content: TextField(
-            controller: nameController,
-            autofocus: true,
-            style: typography.body.copyWith(color: colors.onSurface),
-            decoration: InputDecoration(
-              hintText: 'Day name',
-              errorText: errorText,
-            ),
-            onSubmitted: (_) => _submitRenameDay(
-              dialogContext,
-              draftId,
-              nameController,
-              setDialogState,
-              (e) => errorText = e,
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(dialogContext).pop(),
-              child: Text(
-                'Cancel',
-                style: typography.label.copyWith(color: colors.onSurfaceMuted),
-              ),
-            ),
-            TextButton(
-              onPressed: () => _submitRenameDay(
-                dialogContext,
-                draftId,
-                nameController,
-                setDialogState,
-                (e) => errorText = e,
-              ),
-              child: Text(
-                'Rename',
-                style: typography.label.copyWith(color: colors.primary),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  void _submitRenameDay(
-    BuildContext dialogContext,
-    String draftId,
-    TextEditingController controller,
-    StateSetter setDialogState,
-    void Function(String?) setError,
-  ) {
-    final trimmed = controller.text.trim();
-    if (trimmed.isEmpty || trimmed.length > 100) {
-      setDialogState(
-        () => setError(
-          trimmed.isEmpty
-              ? 'Name cannot be empty'
-              : 'Name must be 100 characters or fewer',
-        ),
-      );
-      return;
-    }
-    context.read<ProgramEditorBloc>().add(
-      ProgramEditorWorkoutDayRenamed(draftId: draftId, name: trimmed),
-    );
-    Navigator.of(dialogContext).pop();
-  }
-
   @override
   Widget build(BuildContext context) {
     return BlocConsumer<ProgramEditorBloc, ProgramEditorState>(
@@ -453,7 +364,6 @@ class _ProgramEditorScreenState extends State<ProgramEditorScreen> {
                   arguments: WorkoutDayArgs(workoutDayId: day.persistedId!),
                 )
               : null,
-          onRename: () => _showRenameWorkoutDayDialog(day.draftId, day.name),
           onDelete: () => context.read<ProgramEditorBloc>().add(
             ProgramEditorWorkoutDayDeleteRequested(draftId: day.draftId),
           ),

@@ -430,66 +430,76 @@ class _FlatExerciseRow extends StatelessWidget {
               colors: colors,
             ),
           ),
-          child: Container(
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(AppRadius.sm),
-              border: isDropTarget
-                  ? Border.all(color: colors.primary, width: 2)
-                  : null,
-            ),
-            child: Material(
-              color: colors.surfaceVariant,
-              borderRadius: BorderRadius.circular(AppRadius.sm),
-              child: InkWell(
-                onTap: () {
-                  if (exercise.persistedId != null) {
-                    onNavigateToExercise(exercise.persistedId!);
-                  }
-                },
+          child: Dismissible(
+            key: ValueKey('dismiss_${exercise.draftId}'),
+            direction: DismissDirection.endToStart,
+            confirmDismiss: (_) async {
+              bloc.add(
+                ExerciseRemovedFromGroup(
+                  groupDraftId: group.draftId,
+                  exerciseDraftId: exercise.draftId,
+                ),
+              );
+              return false;
+            },
+            background: Container(
+              alignment: Alignment.centerRight,
+              padding: const EdgeInsets.only(right: AppSpacing.lg),
+              decoration: BoxDecoration(
+                color: colors.error,
                 borderRadius: BorderRadius.circular(AppRadius.sm),
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: AppSpacing.md,
-                    vertical: AppSpacing.sm,
-                  ),
-                  child: Row(
-                    children: [
-                      ReorderableDragStartListener(
-                        index: reorderIndex,
-                        child: Padding(
-                          padding: const EdgeInsets.only(right: AppSpacing.sm),
-                          child: Icon(
-                            Icons.drag_handle,
-                            color: colors.onSurfaceMuted,
-                            size: 20,
+              ),
+              child: Icon(
+                Icons.delete_outline,
+                color: colors.onPrimary,
+                size: 20,
+              ),
+            ),
+            child: Container(
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(AppRadius.sm),
+                border: isDropTarget
+                    ? Border.all(color: colors.primary, width: 2)
+                    : null,
+              ),
+              child: Material(
+                color: colors.surfaceVariant,
+                borderRadius: BorderRadius.circular(AppRadius.sm),
+                child: InkWell(
+                  onTap: () {
+                    if (exercise.persistedId != null) {
+                      onNavigateToExercise(exercise.persistedId!);
+                    }
+                  },
+                  borderRadius: BorderRadius.circular(AppRadius.sm),
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: AppSpacing.md,
+                      vertical: AppSpacing.sm,
+                    ),
+                    child: Row(
+                      children: [
+                        ReorderableDragStartListener(
+                          index: reorderIndex,
+                          child: Padding(
+                            padding: const EdgeInsets.only(
+                              right: AppSpacing.sm,
+                            ),
+                            child: Icon(
+                              Icons.drag_handle,
+                              color: colors.onSurfaceMuted,
+                              size: 20,
+                            ),
                           ),
                         ),
-                      ),
-                      Expanded(
-                        child: _ExerciseTileContent(
-                          exercise: exercise,
-                          colors: colors,
-                        ),
-                      ),
-                      IconButton(
-                        icon: Icon(
-                          Icons.delete_outline,
-                          color: colors.error,
-                          size: 20,
-                        ),
-                        onPressed: () => bloc.add(
-                          ExerciseRemovedFromGroup(
-                            groupDraftId: group.draftId,
-                            exerciseDraftId: exercise.draftId,
+                        Expanded(
+                          child: _ExerciseTileContent(
+                            exercise: exercise,
+                            colors: colors,
                           ),
                         ),
-                        padding: EdgeInsets.zero,
-                        constraints: const BoxConstraints(
-                          minWidth: AppSpacing.touchMin,
-                          minHeight: AppSpacing.touchMin,
-                        ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
                 ),
               ),
@@ -618,22 +628,6 @@ class _SupersetCard extends StatelessWidget {
                     minHeight: AppSpacing.touchMin,
                   ),
                 ),
-                IconButton(
-                  icon: Icon(
-                    Icons.delete_outline,
-                    color: colors.error,
-                    size: 20,
-                  ),
-                  onPressed: () => bloc.add(
-                    ExerciseGroupDeleted(groupDraftId: group.draftId),
-                  ),
-                  tooltip: 'Delete superset',
-                  padding: EdgeInsets.zero,
-                  constraints: const BoxConstraints(
-                    minWidth: AppSpacing.touchMin,
-                    minHeight: AppSpacing.touchMin,
-                  ),
-                ),
               ],
             ),
             const SizedBox(height: AppSpacing.sm),
@@ -705,61 +699,71 @@ class _SupersetCard extends StatelessWidget {
                               ? Border.all(color: colors.primary, width: 2)
                               : null,
                         ),
-                        child: Material(
-                          color: colors.surfaceVariant,
-                          borderRadius: BorderRadius.circular(AppRadius.sm),
-                          child: InkWell(
-                            onTap: () {
-                              if (exercise.persistedId != null) {
-                                onNavigateToExercise(exercise.persistedId!);
-                              }
-                            },
-                            borderRadius: BorderRadius.circular(AppRadius.sm),
-                            child: Padding(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: AppSpacing.md,
-                                vertical: AppSpacing.sm,
+                        child: Dismissible(
+                          key: ValueKey('dismiss_superset_${exercise.draftId}'),
+                          direction: DismissDirection.endToStart,
+                          confirmDismiss: (_) async {
+                            bloc.add(
+                              ExerciseRemovedFromGroup(
+                                groupDraftId: group.draftId,
+                                exerciseDraftId: exercise.draftId,
                               ),
-                              child: Row(
-                                children: [
-                                  ReorderableDragStartListener(
-                                    index: index,
-                                    child: Padding(
-                                      padding: const EdgeInsets.only(
-                                        right: AppSpacing.sm,
+                            );
+                            return false;
+                          },
+                          background: Container(
+                            alignment: Alignment.centerRight,
+                            padding: const EdgeInsets.only(
+                              right: AppSpacing.lg,
+                            ),
+                            decoration: BoxDecoration(
+                              color: colors.error,
+                              borderRadius: BorderRadius.circular(AppRadius.sm),
+                            ),
+                            child: Icon(
+                              Icons.delete_outline,
+                              color: colors.onPrimary,
+                              size: 20,
+                            ),
+                          ),
+                          child: Material(
+                            color: colors.surfaceVariant,
+                            borderRadius: BorderRadius.circular(AppRadius.sm),
+                            child: InkWell(
+                              onTap: () {
+                                if (exercise.persistedId != null) {
+                                  onNavigateToExercise(exercise.persistedId!);
+                                }
+                              },
+                              borderRadius: BorderRadius.circular(AppRadius.sm),
+                              child: Padding(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: AppSpacing.md,
+                                  vertical: AppSpacing.sm,
+                                ),
+                                child: Row(
+                                  children: [
+                                    ReorderableDragStartListener(
+                                      index: index,
+                                      child: Padding(
+                                        padding: const EdgeInsets.only(
+                                          right: AppSpacing.sm,
+                                        ),
+                                        child: Icon(
+                                          Icons.drag_handle,
+                                          color: colors.onSurfaceMuted,
+                                          size: 20,
+                                        ),
                                       ),
-                                      child: Icon(
-                                        Icons.drag_handle,
-                                        color: colors.onSurfaceMuted,
-                                        size: 20,
+                                    ),
+                                    Expanded(
+                                      child: _ExerciseTileContent(
+                                        exercise: exercise,
+                                        colors: colors,
                                       ),
                                     ),
-                                  ),
-                                  Expanded(
-                                    child: _ExerciseTileContent(
-                                      exercise: exercise,
-                                      colors: colors,
-                                    ),
-                                  ),
-                                  IconButton(
-                                    icon: Icon(
-                                      Icons.delete_outline,
-                                      color: colors.error,
-                                      size: 20,
-                                    ),
-                                    onPressed: () => bloc.add(
-                                      ExerciseRemovedFromGroup(
-                                        groupDraftId: group.draftId,
-                                        exerciseDraftId: exercise.draftId,
-                                      ),
-                                    ),
-                                    padding: EdgeInsets.zero,
-                                    constraints: const BoxConstraints(
-                                      minWidth: AppSpacing.touchMin,
-                                      minHeight: AppSpacing.touchMin,
-                                    ),
-                                  ),
-                                ],
+                                  ],
+                                ),
                               ),
                             ),
                           ),
