@@ -454,13 +454,19 @@ class WorkoutDayEditorBloc
             final exerciseDraft = group.exercises[j];
             if (exerciseDraft.persistedId == null ||
                 movedExerciseIds.contains(exerciseDraft.persistedId)) {
-              await _programRepository.createExercise(
+              final created = await _programRepository.createExercise(
                 exerciseGroupId: persistedGroupId,
                 name: exerciseDraft.name,
                 measurementType: exerciseDraft.measurementType,
                 metadata: exerciseDraft.metadata,
                 plannedRestSeconds: exerciseDraft.plannedRestSeconds,
               );
+              for (final setDraft in exerciseDraft.sets) {
+                await _programRepository.createSet(
+                  exerciseId: created.id,
+                  plannedValues: _draftValuesToPlanned(setDraft.values),
+                );
+              }
             }
           }
 
@@ -595,19 +601,46 @@ class WorkoutDayEditorBloc
     required int position,
   }) {
     final now = DateTime.now().toUtc();
+    final exerciseId = draft.persistedId ?? _uuid.v4();
     return Exercise(
-      id: draft.persistedId ?? _uuid.v4(),
+      id: exerciseId,
       exerciseGroupId: exerciseGroupId,
       position: position,
       name: draft.name,
       measurementType: draft.measurementType,
       metadata: draft.metadata,
       plannedRestSeconds: draft.plannedRestSeconds,
-      sets: const [],
+      sets: [
+        for (var i = 0; i < draft.sets.length; i++)
+          WorkoutSet(
+            id: draft.sets[i].persistedId ?? _uuid.v4(),
+            exerciseId: exerciseId,
+            position: i,
+            measurementType: draft.measurementType,
+            plannedValues: _draftValuesToPlanned(draft.sets[i].values),
+            createdAt: now,
+            updatedAt: now,
+            schemaVersion: SchemaVersions.domain,
+          ),
+      ],
       createdAt: now,
       updatedAt: now,
       schemaVersion: SchemaVersions.domain,
     );
+  }
+
+  static PlannedSetValues _draftValuesToPlanned(PlannedSetDraftValues values) {
+    return switch (values) {
+      PlannedSetDraftRepBased(:final weightInput, :final repsInput) =>
+        PlannedSetValues.repBased(
+          weightKg: double.tryParse(weightInput) ?? 0.0,
+          reps: int.tryParse(repsInput) ?? 0,
+        ),
+      PlannedSetDraftTimeBased(:final durationInput) =>
+        PlannedSetValues.timeBased(
+          durationSeconds: int.tryParse(durationInput) ?? 0,
+        ),
+    };
   }
 
   List<String> _liveGroupIdOrder(WorkoutDayDraft draft, WorkoutDay reloaded) {

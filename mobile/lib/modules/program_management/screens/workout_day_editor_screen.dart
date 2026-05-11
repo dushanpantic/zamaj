@@ -9,6 +9,7 @@ import 'package:zamaj/modules/program_management/bloc/workout_day_editor/workout
 import 'package:zamaj/modules/program_management/bloc/workout_day_editor/workout_day_editor_state.dart';
 import 'package:zamaj/modules/program_management/models/program_editor_draft.dart';
 import 'package:zamaj/modules/program_management/navigation/program_management_routes.dart';
+import 'package:zamaj/modules/program_management/widgets/confirmation_dialog.dart';
 
 class WorkoutDayEditorScreen extends StatefulWidget {
   const WorkoutDayEditorScreen({super.key, required this.args});
@@ -434,12 +435,22 @@ class _FlatExerciseRow extends StatelessWidget {
             key: ValueKey('dismiss_${exercise.draftId}'),
             direction: DismissDirection.endToStart,
             confirmDismiss: (_) async {
-              bloc.add(
-                ExerciseRemovedFromGroup(
-                  groupDraftId: group.draftId,
-                  exerciseDraftId: exercise.draftId,
-                ),
+              final confirmed = await ConfirmationDialog.show(
+                context: context,
+                title: 'Delete Exercise',
+                body:
+                    'Delete "${exercise.name.isEmpty ? 'Unnamed exercise' : exercise.name}"? This cannot be undone.',
+                confirmLabel: 'Delete',
+                isDestructive: true,
               );
+              if (confirmed == true) {
+                bloc.add(
+                  ExerciseRemovedFromGroup(
+                    groupDraftId: group.draftId,
+                    exerciseDraftId: exercise.draftId,
+                  ),
+                );
+              }
               return false;
             },
             background: Container(
@@ -703,12 +714,22 @@ class _SupersetCard extends StatelessWidget {
                           key: ValueKey('dismiss_superset_${exercise.draftId}'),
                           direction: DismissDirection.endToStart,
                           confirmDismiss: (_) async {
-                            bloc.add(
-                              ExerciseRemovedFromGroup(
-                                groupDraftId: group.draftId,
-                                exerciseDraftId: exercise.draftId,
-                              ),
+                            final confirmed = await ConfirmationDialog.show(
+                              context: context,
+                              title: 'Delete Exercise',
+                              body:
+                                  'Delete "${exercise.name.isEmpty ? 'Unnamed exercise' : exercise.name}"? This cannot be undone.',
+                              confirmLabel: 'Delete',
+                              isDestructive: true,
                             );
+                            if (confirmed == true) {
+                              bloc.add(
+                                ExerciseRemovedFromGroup(
+                                  groupDraftId: group.draftId,
+                                  exerciseDraftId: exercise.draftId,
+                                ),
+                              );
+                            }
                             return false;
                           },
                           background: Container(
@@ -774,40 +795,14 @@ class _SupersetCard extends StatelessWidget {
                 );
               },
             ),
-            const SizedBox(height: AppSpacing.sm),
-            TextButton.icon(
-              onPressed: () => _showAddToSupersetDialog(context, bloc),
-              icon: Icon(Icons.add, color: colors.primary, size: 18),
-              label: Text(
-                'Add exercise',
-                style: TextStyle(color: colors.primary, fontSize: 13),
-              ),
-              style: TextButton.styleFrom(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: AppSpacing.sm,
-                  vertical: AppSpacing.xs,
-                ),
-                minimumSize: const Size(0, AppSpacing.touchMin),
-              ),
-            ),
+
           ],
         ),
       ),
     );
   }
 
-  void _showAddToSupersetDialog(
-    BuildContext context,
-    WorkoutDayEditorBloc bloc,
-  ) {
-    showDialog<void>(
-      context: context,
-      builder: (_) => _AddExerciseDialog(
-        bloc: bloc,
-        groupDraftId: group.draftId,
-      ),
-    );
-  }
+
 }
 
 class _SaveErrorBanner extends StatelessWidget {
@@ -842,10 +837,9 @@ class _SaveErrorBanner extends StatelessWidget {
 }
 
 class _AddExerciseDialog extends StatefulWidget {
-  const _AddExerciseDialog({required this.bloc, this.groupDraftId});
+  const _AddExerciseDialog({required this.bloc});
 
   final WorkoutDayEditorBloc bloc;
-  final String? groupDraftId;
 
   @override
   State<_AddExerciseDialog> createState() => _AddExerciseDialogState();
@@ -863,16 +857,7 @@ class _AddExerciseDialogState extends State<_AddExerciseDialog> {
   void _submit() {
     final trimmed = _nameController.text.trim();
     if (trimmed.isEmpty) return;
-    if (widget.groupDraftId != null) {
-      widget.bloc.add(
-        ExerciseAddedToGroup(
-          groupDraftId: widget.groupDraftId!,
-          exerciseName: trimmed,
-        ),
-      );
-    } else {
-      widget.bloc.add(QuickExerciseAdded(exerciseName: trimmed));
-    }
+    widget.bloc.add(QuickExerciseAdded(exerciseName: trimmed));
     Navigator.of(context).pop();
   }
 
