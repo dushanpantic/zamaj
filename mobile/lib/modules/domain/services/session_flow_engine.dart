@@ -21,17 +21,15 @@ class SessionFlowEngine {
   SessionFlowEngine({
     required SessionRepository repository,
     required Clock clock,
-  })  : _repository = repository,
-        _clock = clock;
+  }) : _repository = repository,
+       _clock = clock;
 
   final SessionRepository _repository;
   final Clock _clock;
 
   /// Starts a new session from a workout day.
   Future<SessionState> startSession({required String workoutDayId}) async {
-    final session = await _repository.startSession(
-      workoutDayId: workoutDayId,
-    );
+    final session = await _repository.startSession(workoutDayId: workoutDayId);
     return _buildState(session);
   }
 
@@ -61,18 +59,13 @@ class SessionFlowEngine {
   }
 
   /// Skips an unfinished exercise, advancing the cursor past it.
-  Future<SessionState> skipExercise({
-    required String sessionExerciseId,
-  }) async {
-    final session = await _repository.getSessionByExerciseId(
-      sessionExerciseId,
-    );
+  Future<SessionState> skipExercise({required String sessionExerciseId}) async {
+    final session = await _repository.getSessionByExerciseId(sessionExerciseId);
     final exercise = session.sessionExercises.firstWhere(
       (SessionExercise e) => e.id == sessionExerciseId,
     );
     _assertUnfinished(exercise);
-    final updatedSession =
-        await _repository.skipExercise(sessionExerciseId);
+    final updatedSession = await _repository.skipExercise(sessionExerciseId);
     return _buildState(updatedSession);
   }
 
@@ -83,9 +76,7 @@ class SessionFlowEngine {
     required MeasurementType substituteMeasurementType,
     ExerciseMetadata? substituteMetadata,
   }) async {
-    final session = await _repository.getSessionByExerciseId(
-      sessionExerciseId,
-    );
+    final session = await _repository.getSessionByExerciseId(sessionExerciseId);
     final exercise = session.sessionExercises.firstWhere(
       (SessionExercise e) => e.id == sessionExerciseId,
     );
@@ -219,8 +210,7 @@ class SessionFlowEngine {
         }
 
         if (exercise.state is ReplacedState) {
-          final ReplacedState replacedState =
-              exercise.state as ReplacedState;
+          final ReplacedState replacedState = exercise.state as ReplacedState;
           if (replacedState.substitute.measurementType !=
               originalExercise.measurementType) {
             return _defaultZeroValues(effectiveMeasurementType);
@@ -241,7 +231,8 @@ class SessionFlowEngine {
       throw ValidationError(
         entityId: sessionId,
         invariant: 'extra_work_body_non_empty',
-        message: 'Extra work body must contain at least one non-whitespace character',
+        message:
+            'Extra work body must contain at least one non-whitespace character',
       );
     }
     final updatedSession = await _repository.addExtraWork(
@@ -260,7 +251,8 @@ class SessionFlowEngine {
       throw ValidationError(
         entityId: sessionId,
         invariant: 'session_note_body_non_empty',
-        message: 'Session note body must contain at least one non-whitespace character',
+        message:
+            'Session note body must contain at least one non-whitespace character',
       );
     }
     if (body.length > 5000) {
@@ -283,9 +275,7 @@ class SessionFlowEngine {
     required ActualSetValues actualValues,
     String? plannedSetIdInSnapshot,
   }) async {
-    final session = await _repository.getSessionByExerciseId(
-      sessionExerciseId,
-    );
+    final session = await _repository.getSessionByExerciseId(sessionExerciseId);
 
     if (session.endedAt != null) {
       throw ImmutabilityError(
@@ -339,10 +329,8 @@ class SessionFlowEngine {
 
     final exercise = session.sessionExercises.firstWhere(
       (e) => e.executedSets.any((s) => s.id == executedSetId),
-      orElse: () => throw NotFoundError(
-        entityType: 'ExecutedSet',
-        id: executedSetId,
-      ),
+      orElse: () =>
+          throw NotFoundError(entityType: 'ExecutedSet', id: executedSetId),
     );
 
     final effectiveMeasurementType = _effectiveMeasurementType(
@@ -504,10 +492,7 @@ class SessionFlowEngine {
     );
   }
 
-  int _lookupPlannedSetCount(
-    SessionExercise sessionExercise,
-    Session session,
-  ) {
+  int _lookupPlannedSetCount(SessionExercise sessionExercise, Session session) {
     final exercise = _lookupPlannedExercise(sessionExercise, session);
     return exercise.sets.length;
   }
@@ -531,19 +516,25 @@ class SessionFlowEngine {
 
   ActualSetValues _convertPlannedToActual(PlannedSetValues planned) {
     return switch (planned) {
-      PlannedRepBased(:final weightKg, :final reps) =>
-        ActualSetValues.repBased(weightKg: weightKg, reps: reps),
-      PlannedTimeBased(:final durationSeconds) =>
-        ActualSetValues.timeBased(durationSeconds: durationSeconds),
+      PlannedRepBased(:final weightKg, :final reps) => ActualSetValues.repBased(
+        weightKg: weightKg,
+        reps: reps,
+      ),
+      PlannedTimeBased(:final durationSeconds) => ActualSetValues.timeBased(
+        durationSeconds: durationSeconds,
+      ),
     };
   }
 
   ActualSetValues _defaultZeroValues(MeasurementType measurementType) {
     return switch (measurementType) {
-      RepBasedMeasurement() =>
-        const ActualSetValues.repBased(weightKg: 0, reps: 0),
-      TimeBasedMeasurement() =>
-        const ActualSetValues.timeBased(durationSeconds: 0),
+      RepBasedMeasurement() => const ActualSetValues.repBased(
+        weightKg: 0,
+        reps: 0,
+      ),
+      TimeBasedMeasurement() => const ActualSetValues.timeBased(
+        durationSeconds: 0,
+      ),
     };
   }
 

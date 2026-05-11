@@ -123,9 +123,7 @@ class DriftSessionRepository implements SessionRepository {
   }
 
   @override
-  Future<domain.Session> getSessionByExecutedSetId(
-    String executedSetId,
-  ) async {
+  Future<domain.Session> getSessionByExecutedSetId(String executedSetId) async {
     final setRow = await (_db.select(
       _db.executedSets,
     )..where((t) => t.id.equals(executedSetId))).getSingleOrNull();
