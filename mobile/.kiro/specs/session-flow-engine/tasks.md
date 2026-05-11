@@ -124,16 +124,16 @@ Implement the pure-Dart `SessionFlowEngine` service with cursor-based navigation
     - **Property 9: Ended session immutability**
     - **Validates: Requirements 2.4, 5.5, 5.6, 16.5**
 
-- [ ] 9. Property-based tests: set completion and editing
-  - [ ] 9.1 Write property test for set completion records correct values and timestamp
+- [x] 9. Property-based tests: set completion and editing
+  - [x] 9.1 Write property test for set completion records correct values and timestamp
     - **Property 6: Set completion records correct values and timestamp**
     - **Validates: Requirements 5.1, 18.2, 18.3, 18.4**
 
-  - [ ] 9.2 Write property test for last set transitions exercise to completed
+  - [x] 9.2 Write property test for last set transitions exercise to completed
     - **Property 7: Last set transitions exercise to completed**
     - **Validates: Requirements 5.3**
 
-  - [ ] 9.3 Write property test for measurement type validation
+  - [x] 9.3 Write property test for measurement type validation
     - **Property 8: Measurement type validation**
     - **Validates: Requirements 5.4, 6.3, 8.3**
 
