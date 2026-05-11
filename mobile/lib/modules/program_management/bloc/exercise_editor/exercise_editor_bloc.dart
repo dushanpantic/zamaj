@@ -213,8 +213,9 @@ class ExerciseEditorBloc
     final current = state;
     if (current is! ExerciseEditorEditing) return;
     if (current.draft.sets.length >= 20) return;
-    final sourceIndex = current.draft.sets
-        .indexWhere((s) => s.draftId == event.setDraftId);
+    final sourceIndex = current.draft.sets.indexWhere(
+      (s) => s.draftId == event.setDraftId,
+    );
     if (sourceIndex < 0) return;
     final source = current.draft.sets[sourceIndex];
     final duplicate = PlannedSetDraft(

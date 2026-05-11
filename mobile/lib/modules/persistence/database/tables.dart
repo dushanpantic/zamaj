@@ -131,6 +131,7 @@ class SessionExercises extends Table {
       text().withLength(min: 36, max: 36)();
   TextColumn get stateDiscriminator => text()();
   TextColumn get substitutePayloadJson => text().nullable()();
+  TextColumn get supersetTag => text().nullable()();
   IntColumn get createdAtMs => integer()();
   IntColumn get updatedAtMs => integer()();
   IntColumn get schemaVersion => integer()();

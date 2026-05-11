@@ -17,6 +17,7 @@ abstract class SessionExercise with _$SessionExercise {
     required String plannedExerciseIdInSnapshot,
     required ExerciseState state,
     required List<ExecutedSet> executedSets,
+    String? supersetTag,
     required DateTime createdAt,
     required DateTime updatedAt,
     required int schemaVersion,

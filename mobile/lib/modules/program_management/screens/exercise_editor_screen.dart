@@ -420,7 +420,7 @@ class _EditorBody extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: AppSpacing.sm),
-                  ReorderableListView(
+                ReorderableListView(
                   shrinkWrap: true,
                   physics: const NeverScrollableScrollPhysics(),
                   onReorder: (oldIndex, newIndex) {

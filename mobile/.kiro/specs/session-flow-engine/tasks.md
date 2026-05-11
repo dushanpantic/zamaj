@@ -6,26 +6,26 @@ Implement the pure-Dart `SessionFlowEngine` service with cursor-based navigation
 
 ## Tasks
 
-- [ ] 1. Create value objects and modify existing models
-  - [ ] 1.1 Create the `Cursor` sealed class
+- [x] 1. Create value objects and modify existing models
+  - [x] 1.1 Create the `Cursor` sealed class
     - Create `lib/modules/domain/services/cursor.dart` with a Freezed sealed class: `Cursor.active(sessionExerciseId, setIndex)` and `Cursor.completed()`
     - Use `@Freezed(unionKey: 'type')` matching existing sealed class patterns
     - Include `part` directives for `.freezed.dart` and `.g.dart`
     - _Requirements: 4.1, 4.2, 4.4_
 
-  - [ ] 1.2 Create the `SessionState` value object
+  - [x] 1.2 Create the `SessionState` value object
     - Create `lib/modules/domain/services/session_state.dart` with a Freezed class bundling `Session`, `Cursor`, and nullable `ActualSetValues? suggestedValues`
     - _Requirements: 4.5, 15.1_
 
-  - [ ] 1.3 Add `supersetTag` field to `SessionExercise`
+  - [x] 1.3 Add `supersetTag` field to `SessionExercise`
     - Add `String? supersetTag` to the `SessionExercise` Freezed model in `lib/modules/domain/models/session_exercise.dart`
     - _Requirements: 10.1, 11.1_
 
-  - [ ] 1.4 Add `supersetTag` column to `SessionExercises` Drift table
+  - [x] 1.4 Add `supersetTag` column to `SessionExercises` Drift table
     - Add `TextColumn get supersetTag => text().nullable()();` to the `SessionExercises` table in `lib/modules/persistence/database/tables.dart`
     - _Requirements: 10.1, 10.4_
 
-  - [ ] 1.5 Update `SessionMapper` to handle `supersetTag`
+  - [x] 1.5 Update `SessionMapper` to handle `supersetTag`
     - Map the `supersetTag` field in both `_exerciseToDomain` and `sessionExerciseToRow` methods in `lib/modules/persistence/mappers/session_mapper.dart`
     - _Requirements: 10.4, 11.4_
 

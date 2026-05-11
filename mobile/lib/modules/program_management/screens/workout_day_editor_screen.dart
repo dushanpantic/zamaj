@@ -232,18 +232,13 @@ class _EditingBody extends StatelessWidget {
       body: Column(
         children: [
           if (lastSaveError != null) _SaveErrorBanner(error: lastSaveError!),
-          Expanded(
-            child: _ExerciseList(draft: draft),
-          ),
+          Expanded(child: _ExerciseList(draft: draft)),
         ],
       ),
     );
   }
 
-  void _showAddExerciseDialog(
-    BuildContext context,
-    WorkoutDayEditorBloc bloc,
-  ) {
+  void _showAddExerciseDialog(BuildContext context, WorkoutDayEditorBloc bloc) {
     showDialog<void>(
       context: context,
       builder: (_) => _AddExerciseDialog(bloc: bloc),
@@ -339,8 +334,8 @@ class _ExerciseList extends StatelessWidget {
             reorderIndex: index,
             bloc: bloc,
             onNavigateToExercise: (id) {
-              final screenState = context.findAncestorStateOfType<
-                  _WorkoutDayEditorScreenState>();
+              final screenState = context
+                  .findAncestorStateOfType<_WorkoutDayEditorScreenState>();
               screenState?._navigateToExercise(id);
             },
           );
@@ -351,8 +346,8 @@ class _ExerciseList extends StatelessWidget {
           reorderIndex: index,
           bloc: bloc,
           onNavigateToExercise: (id) {
-            final screenState = context.findAncestorStateOfType<
-                _WorkoutDayEditorScreenState>();
+            final screenState = context
+                .findAncestorStateOfType<_WorkoutDayEditorScreenState>();
             screenState?._navigateToExercise(id);
           },
         );
@@ -418,18 +413,12 @@ class _FlatExerciseRow extends StatelessWidget {
             borderRadius: BorderRadius.circular(AppRadius.sm),
             child: SizedBox(
               width: MediaQuery.of(context).size.width - AppSpacing.lg * 2,
-              child: _ExerciseTileContent(
-                exercise: exercise,
-                colors: colors,
-              ),
+              child: _ExerciseTileContent(exercise: exercise, colors: colors),
             ),
           ),
           childWhenDragging: Opacity(
             opacity: 0.3,
-            child: _ExerciseTileContent(
-              exercise: exercise,
-              colors: colors,
-            ),
+            child: _ExerciseTileContent(exercise: exercise, colors: colors),
           ),
           child: Dismissible(
             key: ValueKey('dismiss_${exercise.draftId}'),
@@ -523,10 +512,7 @@ class _FlatExerciseRow extends StatelessWidget {
 }
 
 class _ExerciseTileContent extends StatelessWidget {
-  const _ExerciseTileContent({
-    required this.exercise,
-    required this.colors,
-  });
+  const _ExerciseTileContent({required this.exercise, required this.colors});
 
   final ExerciseDraft exercise;
   final AppColors colors;
@@ -629,9 +615,8 @@ class _SupersetCard extends StatelessWidget {
                     color: colors.onSurfaceMuted,
                     size: 20,
                   ),
-                  onPressed: () => bloc.add(
-                    SupersetUngrouped(groupDraftId: group.draftId),
-                  ),
+                  onPressed: () =>
+                      bloc.add(SupersetUngrouped(groupDraftId: group.draftId)),
                   tooltip: 'Ungroup superset',
                   padding: EdgeInsets.zero,
                   constraints: const BoxConstraints(
@@ -687,7 +672,8 @@ class _SupersetCard extends StatelessWidget {
                         elevation: 4,
                         borderRadius: BorderRadius.circular(AppRadius.sm),
                         child: SizedBox(
-                          width: MediaQuery.of(context).size.width -
+                          width:
+                              MediaQuery.of(context).size.width -
                               AppSpacing.lg * 4,
                           child: _ExerciseTileContent(
                             exercise: exercise,
@@ -795,14 +781,11 @@ class _SupersetCard extends StatelessWidget {
                 );
               },
             ),
-
           ],
         ),
       ),
     );
   }
-
-
 }
 
 class _SaveErrorBanner extends StatelessWidget {

@@ -147,6 +147,7 @@ class SessionMapper {
       plannedExerciseIdInSnapshot: row.plannedExerciseIdInSnapshot,
       state: state,
       executedSets: executedSets,
+      supersetTag: row.supersetTag,
       createdAt: DateTime.fromMillisecondsSinceEpoch(
         row.createdAtMs,
         isUtc: true,
@@ -244,6 +245,7 @@ class SessionMapper {
       plannedExerciseIdInSnapshot: Value(exercise.plannedExerciseIdInSnapshot),
       stateDiscriminator: Value(discriminator),
       substitutePayloadJson: Value(substituteJson),
+      supersetTag: Value(exercise.supersetTag),
       createdAtMs: Value(exercise.createdAt.millisecondsSinceEpoch),
       updatedAtMs: Value(exercise.updatedAt.millisecondsSinceEpoch),
       schemaVersion: Value(exercise.schemaVersion),

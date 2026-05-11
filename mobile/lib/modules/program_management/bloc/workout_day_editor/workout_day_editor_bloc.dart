@@ -130,12 +130,7 @@ class WorkoutDayEditorBloc
     final updated = current.draft.copyWith(
       groups: [...current.draft.groups, newGroup],
     );
-    emit(
-      current.copyWith(
-        draft: updated,
-        lastSaveError: () => null,
-      ),
-    );
+    emit(current.copyWith(draft: updated, lastSaveError: () => null));
     await _persist(emit, navigateToNewExercise: true);
   }
 
@@ -261,8 +256,9 @@ class WorkoutDayEditorBloc
 
     groups = groups.map((g) {
       if (g.draftId != event.targetGroupDraftId) return g;
-      final targetIndex = g.exercises
-          .indexWhere((e) => e.draftId == event.targetExerciseDraftId);
+      final targetIndex = g.exercises.indexWhere(
+        (e) => e.draftId == event.targetExerciseDraftId,
+      );
       final insertAt = targetIndex >= 0 ? targetIndex + 1 : g.exercises.length;
       final newExercises = List<ExerciseDraft>.from(g.exercises)
         ..insert(insertAt, sourceExercise!);
@@ -283,8 +279,9 @@ class WorkoutDayEditorBloc
     final current = state;
     if (current is! WorkoutDayEditorEditing) return;
 
-    final groupIndex = current.draft.groups
-        .indexWhere((g) => g.draftId == event.groupDraftId);
+    final groupIndex = current.draft.groups.indexWhere(
+      (g) => g.draftId == event.groupDraftId,
+    );
     if (groupIndex < 0) return;
     final group = current.draft.groups[groupIndex];
     if (group.exercises.length < 2) return;
@@ -471,16 +468,20 @@ class WorkoutDayEditorBloc
           }
 
           final desiredExerciseOrder = group.exercises
-              .where((e) =>
-                  e.persistedId != null &&
-                  !movedExerciseIds.contains(e.persistedId))
+              .where(
+                (e) =>
+                    e.persistedId != null &&
+                    !movedExerciseIds.contains(e.persistedId),
+              )
               .map((e) => e.persistedId!)
               .toList();
           final baselineExerciseOrder = baselineGroup.exercises
               .map((e) => e.id)
-              .where((id) =>
-                  draftPersistedExerciseIds.contains(id) &&
-                  !movedExerciseIds.contains(id))
+              .where(
+                (id) =>
+                    draftPersistedExerciseIds.contains(id) &&
+                    !movedExerciseIds.contains(id),
+              )
               .toList();
           if (desiredExerciseOrder.isNotEmpty &&
               !_listEquals(desiredExerciseOrder, baselineExerciseOrder)) {
