@@ -550,6 +550,82 @@ class DriftSessionRepository implements SessionRepository {
   }
 
   @override
+  Future<domain.Session> createSuperset({
+    required String sessionId,
+    required List<String> sessionExerciseIds,
+  }) async {
+    return _db.transaction(() async {
+      final tag = _uuid.v4();
+
+      for (final id in sessionExerciseIds) {
+        final exerciseRow = await _requireSessionExerciseRow(id);
+        final updatedAt = _nextUpdatedAt(
+          previousUpdatedAt: msToUtc(exerciseRow.updatedAtMs),
+          createdAt: msToUtc(exerciseRow.createdAtMs),
+        );
+        await (_db.update(
+          _db.sessionExercises,
+        )..where((t) => t.id.equals(id))).write(
+          SessionExercisesCompanion(
+            supersetTag: Value(tag),
+            updatedAtMs: Value(utcToMs(updatedAt)),
+          ),
+        );
+      }
+
+      final sessionRow = await _requireSessionRow(sessionId);
+      final sessionUpdatedAt = _nextUpdatedAt(
+        previousUpdatedAt: msToUtc(sessionRow.updatedAtMs),
+        createdAt: msToUtc(sessionRow.createdAtMs),
+      );
+      await (_db.update(
+        _db.sessions,
+      )..where((t) => t.id.equals(sessionId))).write(
+        SessionsCompanion(updatedAtMs: Value(utcToMs(sessionUpdatedAt))),
+      );
+
+      return _loadSession(sessionId);
+    });
+  }
+
+  @override
+  Future<domain.Session> removeSuperset({
+    required String sessionId,
+    required List<String> sessionExerciseIds,
+  }) async {
+    return _db.transaction(() async {
+      for (final id in sessionExerciseIds) {
+        final exerciseRow = await _requireSessionExerciseRow(id);
+        final updatedAt = _nextUpdatedAt(
+          previousUpdatedAt: msToUtc(exerciseRow.updatedAtMs),
+          createdAt: msToUtc(exerciseRow.createdAtMs),
+        );
+        await (_db.update(
+          _db.sessionExercises,
+        )..where((t) => t.id.equals(id))).write(
+          SessionExercisesCompanion(
+            supersetTag: const Value(null),
+            updatedAtMs: Value(utcToMs(updatedAt)),
+          ),
+        );
+      }
+
+      final sessionRow = await _requireSessionRow(sessionId);
+      final sessionUpdatedAt = _nextUpdatedAt(
+        previousUpdatedAt: msToUtc(sessionRow.updatedAtMs),
+        createdAt: msToUtc(sessionRow.createdAtMs),
+      );
+      await (_db.update(
+        _db.sessions,
+      )..where((t) => t.id.equals(sessionId))).write(
+        SessionsCompanion(updatedAtMs: Value(utcToMs(sessionUpdatedAt))),
+      );
+
+      return _loadSession(sessionId);
+    });
+  }
+
+  @override
   Future<domain.Session> addExtraWork({
     required String sessionId,
     required String body,

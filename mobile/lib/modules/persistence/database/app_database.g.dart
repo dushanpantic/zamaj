@@ -3685,6 +3685,17 @@ class $SessionExercisesTable extends SessionExercises
         type: DriftSqlType.string,
         requiredDuringInsert: false,
       );
+  static const VerificationMeta _supersetTagMeta = const VerificationMeta(
+    'supersetTag',
+  );
+  @override
+  late final GeneratedColumn<String> supersetTag = GeneratedColumn<String>(
+    'superset_tag',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
   static const VerificationMeta _createdAtMsMeta = const VerificationMeta(
     'createdAtMs',
   );
@@ -3726,6 +3737,7 @@ class $SessionExercisesTable extends SessionExercises
     plannedExerciseIdInSnapshot,
     stateDiscriminator,
     substitutePayloadJson,
+    supersetTag,
     createdAtMs,
     updatedAtMs,
     schemaVersion,
@@ -3791,6 +3803,15 @@ class $SessionExercisesTable extends SessionExercises
         substitutePayloadJson.isAcceptableOrUnknown(
           data['substitute_payload_json']!,
           _substitutePayloadJsonMeta,
+        ),
+      );
+    }
+    if (data.containsKey('superset_tag')) {
+      context.handle(
+        _supersetTagMeta,
+        supersetTag.isAcceptableOrUnknown(
+          data['superset_tag']!,
+          _supersetTagMeta,
         ),
       );
     }
@@ -3864,6 +3885,10 @@ class $SessionExercisesTable extends SessionExercises
         DriftSqlType.string,
         data['${effectivePrefix}substitute_payload_json'],
       ),
+      supersetTag: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}superset_tag'],
+      ),
       createdAtMs: attachedDatabase.typeMapping.read(
         DriftSqlType.int,
         data['${effectivePrefix}created_at_ms'],
@@ -3892,6 +3917,7 @@ class SessionExercise extends DataClass implements Insertable<SessionExercise> {
   final String plannedExerciseIdInSnapshot;
   final String stateDiscriminator;
   final String? substitutePayloadJson;
+  final String? supersetTag;
   final int createdAtMs;
   final int updatedAtMs;
   final int schemaVersion;
@@ -3902,6 +3928,7 @@ class SessionExercise extends DataClass implements Insertable<SessionExercise> {
     required this.plannedExerciseIdInSnapshot,
     required this.stateDiscriminator,
     this.substitutePayloadJson,
+    this.supersetTag,
     required this.createdAtMs,
     required this.updatedAtMs,
     required this.schemaVersion,
@@ -3919,6 +3946,9 @@ class SessionExercise extends DataClass implements Insertable<SessionExercise> {
     if (!nullToAbsent || substitutePayloadJson != null) {
       map['substitute_payload_json'] = Variable<String>(substitutePayloadJson);
     }
+    if (!nullToAbsent || supersetTag != null) {
+      map['superset_tag'] = Variable<String>(supersetTag);
+    }
     map['created_at_ms'] = Variable<int>(createdAtMs);
     map['updated_at_ms'] = Variable<int>(updatedAtMs);
     map['schema_version'] = Variable<int>(schemaVersion);
@@ -3935,6 +3965,9 @@ class SessionExercise extends DataClass implements Insertable<SessionExercise> {
       substitutePayloadJson: substitutePayloadJson == null && nullToAbsent
           ? const Value.absent()
           : Value(substitutePayloadJson),
+      supersetTag: supersetTag == null && nullToAbsent
+          ? const Value.absent()
+          : Value(supersetTag),
       createdAtMs: Value(createdAtMs),
       updatedAtMs: Value(updatedAtMs),
       schemaVersion: Value(schemaVersion),
@@ -3959,6 +3992,7 @@ class SessionExercise extends DataClass implements Insertable<SessionExercise> {
       substitutePayloadJson: serializer.fromJson<String?>(
         json['substitutePayloadJson'],
       ),
+      supersetTag: serializer.fromJson<String?>(json['supersetTag']),
       createdAtMs: serializer.fromJson<int>(json['createdAtMs']),
       updatedAtMs: serializer.fromJson<int>(json['updatedAtMs']),
       schemaVersion: serializer.fromJson<int>(json['schemaVersion']),
@@ -3978,6 +4012,7 @@ class SessionExercise extends DataClass implements Insertable<SessionExercise> {
       'substitutePayloadJson': serializer.toJson<String?>(
         substitutePayloadJson,
       ),
+      'supersetTag': serializer.toJson<String?>(supersetTag),
       'createdAtMs': serializer.toJson<int>(createdAtMs),
       'updatedAtMs': serializer.toJson<int>(updatedAtMs),
       'schemaVersion': serializer.toJson<int>(schemaVersion),
@@ -3991,6 +4026,7 @@ class SessionExercise extends DataClass implements Insertable<SessionExercise> {
     String? plannedExerciseIdInSnapshot,
     String? stateDiscriminator,
     Value<String?> substitutePayloadJson = const Value.absent(),
+    Value<String?> supersetTag = const Value.absent(),
     int? createdAtMs,
     int? updatedAtMs,
     int? schemaVersion,
@@ -4004,6 +4040,7 @@ class SessionExercise extends DataClass implements Insertable<SessionExercise> {
     substitutePayloadJson: substitutePayloadJson.present
         ? substitutePayloadJson.value
         : this.substitutePayloadJson,
+    supersetTag: supersetTag.present ? supersetTag.value : this.supersetTag,
     createdAtMs: createdAtMs ?? this.createdAtMs,
     updatedAtMs: updatedAtMs ?? this.updatedAtMs,
     schemaVersion: schemaVersion ?? this.schemaVersion,
@@ -4022,6 +4059,9 @@ class SessionExercise extends DataClass implements Insertable<SessionExercise> {
       substitutePayloadJson: data.substitutePayloadJson.present
           ? data.substitutePayloadJson.value
           : this.substitutePayloadJson,
+      supersetTag: data.supersetTag.present
+          ? data.supersetTag.value
+          : this.supersetTag,
       createdAtMs: data.createdAtMs.present
           ? data.createdAtMs.value
           : this.createdAtMs,
@@ -4043,6 +4083,7 @@ class SessionExercise extends DataClass implements Insertable<SessionExercise> {
           ..write('plannedExerciseIdInSnapshot: $plannedExerciseIdInSnapshot, ')
           ..write('stateDiscriminator: $stateDiscriminator, ')
           ..write('substitutePayloadJson: $substitutePayloadJson, ')
+          ..write('supersetTag: $supersetTag, ')
           ..write('createdAtMs: $createdAtMs, ')
           ..write('updatedAtMs: $updatedAtMs, ')
           ..write('schemaVersion: $schemaVersion')
@@ -4058,6 +4099,7 @@ class SessionExercise extends DataClass implements Insertable<SessionExercise> {
     plannedExerciseIdInSnapshot,
     stateDiscriminator,
     substitutePayloadJson,
+    supersetTag,
     createdAtMs,
     updatedAtMs,
     schemaVersion,
@@ -4073,6 +4115,7 @@ class SessionExercise extends DataClass implements Insertable<SessionExercise> {
               this.plannedExerciseIdInSnapshot &&
           other.stateDiscriminator == this.stateDiscriminator &&
           other.substitutePayloadJson == this.substitutePayloadJson &&
+          other.supersetTag == this.supersetTag &&
           other.createdAtMs == this.createdAtMs &&
           other.updatedAtMs == this.updatedAtMs &&
           other.schemaVersion == this.schemaVersion);
@@ -4085,6 +4128,7 @@ class SessionExercisesCompanion extends UpdateCompanion<SessionExercise> {
   final Value<String> plannedExerciseIdInSnapshot;
   final Value<String> stateDiscriminator;
   final Value<String?> substitutePayloadJson;
+  final Value<String?> supersetTag;
   final Value<int> createdAtMs;
   final Value<int> updatedAtMs;
   final Value<int> schemaVersion;
@@ -4096,6 +4140,7 @@ class SessionExercisesCompanion extends UpdateCompanion<SessionExercise> {
     this.plannedExerciseIdInSnapshot = const Value.absent(),
     this.stateDiscriminator = const Value.absent(),
     this.substitutePayloadJson = const Value.absent(),
+    this.supersetTag = const Value.absent(),
     this.createdAtMs = const Value.absent(),
     this.updatedAtMs = const Value.absent(),
     this.schemaVersion = const Value.absent(),
@@ -4108,6 +4153,7 @@ class SessionExercisesCompanion extends UpdateCompanion<SessionExercise> {
     required String plannedExerciseIdInSnapshot,
     required String stateDiscriminator,
     this.substitutePayloadJson = const Value.absent(),
+    this.supersetTag = const Value.absent(),
     required int createdAtMs,
     required int updatedAtMs,
     required int schemaVersion,
@@ -4127,6 +4173,7 @@ class SessionExercisesCompanion extends UpdateCompanion<SessionExercise> {
     Expression<String>? plannedExerciseIdInSnapshot,
     Expression<String>? stateDiscriminator,
     Expression<String>? substitutePayloadJson,
+    Expression<String>? supersetTag,
     Expression<int>? createdAtMs,
     Expression<int>? updatedAtMs,
     Expression<int>? schemaVersion,
@@ -4141,6 +4188,7 @@ class SessionExercisesCompanion extends UpdateCompanion<SessionExercise> {
       if (stateDiscriminator != null) 'state_discriminator': stateDiscriminator,
       if (substitutePayloadJson != null)
         'substitute_payload_json': substitutePayloadJson,
+      if (supersetTag != null) 'superset_tag': supersetTag,
       if (createdAtMs != null) 'created_at_ms': createdAtMs,
       if (updatedAtMs != null) 'updated_at_ms': updatedAtMs,
       if (schemaVersion != null) 'schema_version': schemaVersion,
@@ -4155,6 +4203,7 @@ class SessionExercisesCompanion extends UpdateCompanion<SessionExercise> {
     Value<String>? plannedExerciseIdInSnapshot,
     Value<String>? stateDiscriminator,
     Value<String?>? substitutePayloadJson,
+    Value<String?>? supersetTag,
     Value<int>? createdAtMs,
     Value<int>? updatedAtMs,
     Value<int>? schemaVersion,
@@ -4169,6 +4218,7 @@ class SessionExercisesCompanion extends UpdateCompanion<SessionExercise> {
       stateDiscriminator: stateDiscriminator ?? this.stateDiscriminator,
       substitutePayloadJson:
           substitutePayloadJson ?? this.substitutePayloadJson,
+      supersetTag: supersetTag ?? this.supersetTag,
       createdAtMs: createdAtMs ?? this.createdAtMs,
       updatedAtMs: updatedAtMs ?? this.updatedAtMs,
       schemaVersion: schemaVersion ?? this.schemaVersion,
@@ -4201,6 +4251,9 @@ class SessionExercisesCompanion extends UpdateCompanion<SessionExercise> {
         substitutePayloadJson.value,
       );
     }
+    if (supersetTag.present) {
+      map['superset_tag'] = Variable<String>(supersetTag.value);
+    }
     if (createdAtMs.present) {
       map['created_at_ms'] = Variable<int>(createdAtMs.value);
     }
@@ -4225,6 +4278,7 @@ class SessionExercisesCompanion extends UpdateCompanion<SessionExercise> {
           ..write('plannedExerciseIdInSnapshot: $plannedExerciseIdInSnapshot, ')
           ..write('stateDiscriminator: $stateDiscriminator, ')
           ..write('substitutePayloadJson: $substitutePayloadJson, ')
+          ..write('supersetTag: $supersetTag, ')
           ..write('createdAtMs: $createdAtMs, ')
           ..write('updatedAtMs: $updatedAtMs, ')
           ..write('schemaVersion: $schemaVersion, ')
@@ -9421,6 +9475,7 @@ typedef $$SessionExercisesTableCreateCompanionBuilder =
       required String plannedExerciseIdInSnapshot,
       required String stateDiscriminator,
       Value<String?> substitutePayloadJson,
+      Value<String?> supersetTag,
       required int createdAtMs,
       required int updatedAtMs,
       required int schemaVersion,
@@ -9434,6 +9489,7 @@ typedef $$SessionExercisesTableUpdateCompanionBuilder =
       Value<String> plannedExerciseIdInSnapshot,
       Value<String> stateDiscriminator,
       Value<String?> substitutePayloadJson,
+      Value<String?> supersetTag,
       Value<int> createdAtMs,
       Value<int> updatedAtMs,
       Value<int> schemaVersion,
@@ -9521,6 +9577,11 @@ class $$SessionExercisesTableFilterComposer
 
   ColumnFilters<String> get substitutePayloadJson => $composableBuilder(
     column: $table.substitutePayloadJson,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get supersetTag => $composableBuilder(
+    column: $table.supersetTag,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -9622,6 +9683,11 @@ class $$SessionExercisesTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<String> get supersetTag => $composableBuilder(
+    column: $table.supersetTag,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<int> get createdAtMs => $composableBuilder(
     column: $table.createdAtMs,
     builder: (column) => ColumnOrderings(column),
@@ -9688,6 +9754,11 @@ class $$SessionExercisesTableAnnotationComposer
 
   GeneratedColumn<String> get substitutePayloadJson => $composableBuilder(
     column: $table.substitutePayloadJson,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get supersetTag => $composableBuilder(
+    column: $table.supersetTag,
     builder: (column) => column,
   );
 
@@ -9792,6 +9863,7 @@ class $$SessionExercisesTableTableManager
                     const Value.absent(),
                 Value<String> stateDiscriminator = const Value.absent(),
                 Value<String?> substitutePayloadJson = const Value.absent(),
+                Value<String?> supersetTag = const Value.absent(),
                 Value<int> createdAtMs = const Value.absent(),
                 Value<int> updatedAtMs = const Value.absent(),
                 Value<int> schemaVersion = const Value.absent(),
@@ -9803,6 +9875,7 @@ class $$SessionExercisesTableTableManager
                 plannedExerciseIdInSnapshot: plannedExerciseIdInSnapshot,
                 stateDiscriminator: stateDiscriminator,
                 substitutePayloadJson: substitutePayloadJson,
+                supersetTag: supersetTag,
                 createdAtMs: createdAtMs,
                 updatedAtMs: updatedAtMs,
                 schemaVersion: schemaVersion,
@@ -9816,6 +9889,7 @@ class $$SessionExercisesTableTableManager
                 required String plannedExerciseIdInSnapshot,
                 required String stateDiscriminator,
                 Value<String?> substitutePayloadJson = const Value.absent(),
+                Value<String?> supersetTag = const Value.absent(),
                 required int createdAtMs,
                 required int updatedAtMs,
                 required int schemaVersion,
@@ -9827,6 +9901,7 @@ class $$SessionExercisesTableTableManager
                 plannedExerciseIdInSnapshot: plannedExerciseIdInSnapshot,
                 stateDiscriminator: stateDiscriminator,
                 substitutePayloadJson: substitutePayloadJson,
+                supersetTag: supersetTag,
                 createdAtMs: createdAtMs,
                 updatedAtMs: updatedAtMs,
                 schemaVersion: schemaVersion,

@@ -4,7 +4,6 @@ import 'package:zamaj/modules/domain/models/session.dart';
 import 'package:zamaj/modules/domain/services/cursor.dart';
 
 part 'session_state.freezed.dart';
-part 'session_state.g.dart';
 
 @freezed
 abstract class SessionState with _$SessionState {

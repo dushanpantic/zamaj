@@ -15,7 +15,7 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$SessionExercise {
 
- String get id; String get sessionId; int get position; String get plannedExerciseIdInSnapshot; ExerciseState get state; List<ExecutedSet> get executedSets; DateTime get createdAt; DateTime get updatedAt; int get schemaVersion;
+ String get id; String get sessionId; int get position; String get plannedExerciseIdInSnapshot; ExerciseState get state; List<ExecutedSet> get executedSets; String? get supersetTag; DateTime get createdAt; DateTime get updatedAt; int get schemaVersion;
 /// Create a copy of SessionExercise
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -28,16 +28,16 @@ $SessionExerciseCopyWith<SessionExercise> get copyWith => _$SessionExerciseCopyW
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is SessionExercise&&(identical(other.id, id) || other.id == id)&&(identical(other.sessionId, sessionId) || other.sessionId == sessionId)&&(identical(other.position, position) || other.position == position)&&(identical(other.plannedExerciseIdInSnapshot, plannedExerciseIdInSnapshot) || other.plannedExerciseIdInSnapshot == plannedExerciseIdInSnapshot)&&(identical(other.state, state) || other.state == state)&&const DeepCollectionEquality().equals(other.executedSets, executedSets)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt)&&(identical(other.updatedAt, updatedAt) || other.updatedAt == updatedAt)&&(identical(other.schemaVersion, schemaVersion) || other.schemaVersion == schemaVersion));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is SessionExercise&&(identical(other.id, id) || other.id == id)&&(identical(other.sessionId, sessionId) || other.sessionId == sessionId)&&(identical(other.position, position) || other.position == position)&&(identical(other.plannedExerciseIdInSnapshot, plannedExerciseIdInSnapshot) || other.plannedExerciseIdInSnapshot == plannedExerciseIdInSnapshot)&&(identical(other.state, state) || other.state == state)&&const DeepCollectionEquality().equals(other.executedSets, executedSets)&&(identical(other.supersetTag, supersetTag) || other.supersetTag == supersetTag)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt)&&(identical(other.updatedAt, updatedAt) || other.updatedAt == updatedAt)&&(identical(other.schemaVersion, schemaVersion) || other.schemaVersion == schemaVersion));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,id,sessionId,position,plannedExerciseIdInSnapshot,state,const DeepCollectionEquality().hash(executedSets),createdAt,updatedAt,schemaVersion);
+int get hashCode => Object.hash(runtimeType,id,sessionId,position,plannedExerciseIdInSnapshot,state,const DeepCollectionEquality().hash(executedSets),supersetTag,createdAt,updatedAt,schemaVersion);
 
 @override
 String toString() {
-  return 'SessionExercise(id: $id, sessionId: $sessionId, position: $position, plannedExerciseIdInSnapshot: $plannedExerciseIdInSnapshot, state: $state, executedSets: $executedSets, createdAt: $createdAt, updatedAt: $updatedAt, schemaVersion: $schemaVersion)';
+  return 'SessionExercise(id: $id, sessionId: $sessionId, position: $position, plannedExerciseIdInSnapshot: $plannedExerciseIdInSnapshot, state: $state, executedSets: $executedSets, supersetTag: $supersetTag, createdAt: $createdAt, updatedAt: $updatedAt, schemaVersion: $schemaVersion)';
 }
 
 
@@ -48,7 +48,7 @@ abstract mixin class $SessionExerciseCopyWith<$Res>  {
   factory $SessionExerciseCopyWith(SessionExercise value, $Res Function(SessionExercise) _then) = _$SessionExerciseCopyWithImpl;
 @useResult
 $Res call({
- String id, String sessionId, int position, String plannedExerciseIdInSnapshot, ExerciseState state, List<ExecutedSet> executedSets, DateTime createdAt, DateTime updatedAt, int schemaVersion
+ String id, String sessionId, int position, String plannedExerciseIdInSnapshot, ExerciseState state, List<ExecutedSet> executedSets, String? supersetTag, DateTime createdAt, DateTime updatedAt, int schemaVersion
 });
 
 
@@ -65,7 +65,7 @@ class _$SessionExerciseCopyWithImpl<$Res>
 
 /// Create a copy of SessionExercise
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? sessionId = null,Object? position = null,Object? plannedExerciseIdInSnapshot = null,Object? state = null,Object? executedSets = null,Object? createdAt = null,Object? updatedAt = null,Object? schemaVersion = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? sessionId = null,Object? position = null,Object? plannedExerciseIdInSnapshot = null,Object? state = null,Object? executedSets = null,Object? supersetTag = freezed,Object? createdAt = null,Object? updatedAt = null,Object? schemaVersion = null,}) {
   return _then(_self.copyWith(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as String,sessionId: null == sessionId ? _self.sessionId : sessionId // ignore: cast_nullable_to_non_nullable
@@ -73,7 +73,8 @@ as String,position: null == position ? _self.position : position // ignore: cast
 as int,plannedExerciseIdInSnapshot: null == plannedExerciseIdInSnapshot ? _self.plannedExerciseIdInSnapshot : plannedExerciseIdInSnapshot // ignore: cast_nullable_to_non_nullable
 as String,state: null == state ? _self.state : state // ignore: cast_nullable_to_non_nullable
 as ExerciseState,executedSets: null == executedSets ? _self.executedSets : executedSets // ignore: cast_nullable_to_non_nullable
-as List<ExecutedSet>,createdAt: null == createdAt ? _self.createdAt : createdAt // ignore: cast_nullable_to_non_nullable
+as List<ExecutedSet>,supersetTag: freezed == supersetTag ? _self.supersetTag : supersetTag // ignore: cast_nullable_to_non_nullable
+as String?,createdAt: null == createdAt ? _self.createdAt : createdAt // ignore: cast_nullable_to_non_nullable
 as DateTime,updatedAt: null == updatedAt ? _self.updatedAt : updatedAt // ignore: cast_nullable_to_non_nullable
 as DateTime,schemaVersion: null == schemaVersion ? _self.schemaVersion : schemaVersion // ignore: cast_nullable_to_non_nullable
 as int,
@@ -170,10 +171,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id,  String sessionId,  int position,  String plannedExerciseIdInSnapshot,  ExerciseState state,  List<ExecutedSet> executedSets,  DateTime createdAt,  DateTime updatedAt,  int schemaVersion)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id,  String sessionId,  int position,  String plannedExerciseIdInSnapshot,  ExerciseState state,  List<ExecutedSet> executedSets,  String? supersetTag,  DateTime createdAt,  DateTime updatedAt,  int schemaVersion)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _SessionExercise() when $default != null:
-return $default(_that.id,_that.sessionId,_that.position,_that.plannedExerciseIdInSnapshot,_that.state,_that.executedSets,_that.createdAt,_that.updatedAt,_that.schemaVersion);case _:
+return $default(_that.id,_that.sessionId,_that.position,_that.plannedExerciseIdInSnapshot,_that.state,_that.executedSets,_that.supersetTag,_that.createdAt,_that.updatedAt,_that.schemaVersion);case _:
   return orElse();
 
 }
@@ -191,10 +192,10 @@ return $default(_that.id,_that.sessionId,_that.position,_that.plannedExerciseIdI
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id,  String sessionId,  int position,  String plannedExerciseIdInSnapshot,  ExerciseState state,  List<ExecutedSet> executedSets,  DateTime createdAt,  DateTime updatedAt,  int schemaVersion)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id,  String sessionId,  int position,  String plannedExerciseIdInSnapshot,  ExerciseState state,  List<ExecutedSet> executedSets,  String? supersetTag,  DateTime createdAt,  DateTime updatedAt,  int schemaVersion)  $default,) {final _that = this;
 switch (_that) {
 case _SessionExercise():
-return $default(_that.id,_that.sessionId,_that.position,_that.plannedExerciseIdInSnapshot,_that.state,_that.executedSets,_that.createdAt,_that.updatedAt,_that.schemaVersion);case _:
+return $default(_that.id,_that.sessionId,_that.position,_that.plannedExerciseIdInSnapshot,_that.state,_that.executedSets,_that.supersetTag,_that.createdAt,_that.updatedAt,_that.schemaVersion);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -211,10 +212,10 @@ return $default(_that.id,_that.sessionId,_that.position,_that.plannedExerciseIdI
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id,  String sessionId,  int position,  String plannedExerciseIdInSnapshot,  ExerciseState state,  List<ExecutedSet> executedSets,  DateTime createdAt,  DateTime updatedAt,  int schemaVersion)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id,  String sessionId,  int position,  String plannedExerciseIdInSnapshot,  ExerciseState state,  List<ExecutedSet> executedSets,  String? supersetTag,  DateTime createdAt,  DateTime updatedAt,  int schemaVersion)?  $default,) {final _that = this;
 switch (_that) {
 case _SessionExercise() when $default != null:
-return $default(_that.id,_that.sessionId,_that.position,_that.plannedExerciseIdInSnapshot,_that.state,_that.executedSets,_that.createdAt,_that.updatedAt,_that.schemaVersion);case _:
+return $default(_that.id,_that.sessionId,_that.position,_that.plannedExerciseIdInSnapshot,_that.state,_that.executedSets,_that.supersetTag,_that.createdAt,_that.updatedAt,_that.schemaVersion);case _:
   return null;
 
 }
@@ -226,7 +227,7 @@ return $default(_that.id,_that.sessionId,_that.position,_that.plannedExerciseIdI
 @JsonSerializable()
 
 class _SessionExercise extends SessionExercise {
-  const _SessionExercise({required this.id, required this.sessionId, required this.position, required this.plannedExerciseIdInSnapshot, required this.state, required final  List<ExecutedSet> executedSets, required this.createdAt, required this.updatedAt, required this.schemaVersion}): _executedSets = executedSets,super._();
+  const _SessionExercise({required this.id, required this.sessionId, required this.position, required this.plannedExerciseIdInSnapshot, required this.state, required final  List<ExecutedSet> executedSets, this.supersetTag, required this.createdAt, required this.updatedAt, required this.schemaVersion}): _executedSets = executedSets,super._();
   factory _SessionExercise.fromJson(Map<String, dynamic> json) => _$SessionExerciseFromJson(json);
 
 @override final  String id;
@@ -241,6 +242,7 @@ class _SessionExercise extends SessionExercise {
   return EqualUnmodifiableListView(_executedSets);
 }
 
+@override final  String? supersetTag;
 @override final  DateTime createdAt;
 @override final  DateTime updatedAt;
 @override final  int schemaVersion;
@@ -258,16 +260,16 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _SessionExercise&&(identical(other.id, id) || other.id == id)&&(identical(other.sessionId, sessionId) || other.sessionId == sessionId)&&(identical(other.position, position) || other.position == position)&&(identical(other.plannedExerciseIdInSnapshot, plannedExerciseIdInSnapshot) || other.plannedExerciseIdInSnapshot == plannedExerciseIdInSnapshot)&&(identical(other.state, state) || other.state == state)&&const DeepCollectionEquality().equals(other._executedSets, _executedSets)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt)&&(identical(other.updatedAt, updatedAt) || other.updatedAt == updatedAt)&&(identical(other.schemaVersion, schemaVersion) || other.schemaVersion == schemaVersion));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _SessionExercise&&(identical(other.id, id) || other.id == id)&&(identical(other.sessionId, sessionId) || other.sessionId == sessionId)&&(identical(other.position, position) || other.position == position)&&(identical(other.plannedExerciseIdInSnapshot, plannedExerciseIdInSnapshot) || other.plannedExerciseIdInSnapshot == plannedExerciseIdInSnapshot)&&(identical(other.state, state) || other.state == state)&&const DeepCollectionEquality().equals(other._executedSets, _executedSets)&&(identical(other.supersetTag, supersetTag) || other.supersetTag == supersetTag)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt)&&(identical(other.updatedAt, updatedAt) || other.updatedAt == updatedAt)&&(identical(other.schemaVersion, schemaVersion) || other.schemaVersion == schemaVersion));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,id,sessionId,position,plannedExerciseIdInSnapshot,state,const DeepCollectionEquality().hash(_executedSets),createdAt,updatedAt,schemaVersion);
+int get hashCode => Object.hash(runtimeType,id,sessionId,position,plannedExerciseIdInSnapshot,state,const DeepCollectionEquality().hash(_executedSets),supersetTag,createdAt,updatedAt,schemaVersion);
 
 @override
 String toString() {
-  return 'SessionExercise(id: $id, sessionId: $sessionId, position: $position, plannedExerciseIdInSnapshot: $plannedExerciseIdInSnapshot, state: $state, executedSets: $executedSets, createdAt: $createdAt, updatedAt: $updatedAt, schemaVersion: $schemaVersion)';
+  return 'SessionExercise(id: $id, sessionId: $sessionId, position: $position, plannedExerciseIdInSnapshot: $plannedExerciseIdInSnapshot, state: $state, executedSets: $executedSets, supersetTag: $supersetTag, createdAt: $createdAt, updatedAt: $updatedAt, schemaVersion: $schemaVersion)';
 }
 
 
@@ -278,7 +280,7 @@ abstract mixin class _$SessionExerciseCopyWith<$Res> implements $SessionExercise
   factory _$SessionExerciseCopyWith(_SessionExercise value, $Res Function(_SessionExercise) _then) = __$SessionExerciseCopyWithImpl;
 @override @useResult
 $Res call({
- String id, String sessionId, int position, String plannedExerciseIdInSnapshot, ExerciseState state, List<ExecutedSet> executedSets, DateTime createdAt, DateTime updatedAt, int schemaVersion
+ String id, String sessionId, int position, String plannedExerciseIdInSnapshot, ExerciseState state, List<ExecutedSet> executedSets, String? supersetTag, DateTime createdAt, DateTime updatedAt, int schemaVersion
 });
 
 
@@ -295,7 +297,7 @@ class __$SessionExerciseCopyWithImpl<$Res>
 
 /// Create a copy of SessionExercise
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? sessionId = null,Object? position = null,Object? plannedExerciseIdInSnapshot = null,Object? state = null,Object? executedSets = null,Object? createdAt = null,Object? updatedAt = null,Object? schemaVersion = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? sessionId = null,Object? position = null,Object? plannedExerciseIdInSnapshot = null,Object? state = null,Object? executedSets = null,Object? supersetTag = freezed,Object? createdAt = null,Object? updatedAt = null,Object? schemaVersion = null,}) {
   return _then(_SessionExercise(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as String,sessionId: null == sessionId ? _self.sessionId : sessionId // ignore: cast_nullable_to_non_nullable
@@ -303,7 +305,8 @@ as String,position: null == position ? _self.position : position // ignore: cast
 as int,plannedExerciseIdInSnapshot: null == plannedExerciseIdInSnapshot ? _self.plannedExerciseIdInSnapshot : plannedExerciseIdInSnapshot // ignore: cast_nullable_to_non_nullable
 as String,state: null == state ? _self.state : state // ignore: cast_nullable_to_non_nullable
 as ExerciseState,executedSets: null == executedSets ? _self._executedSets : executedSets // ignore: cast_nullable_to_non_nullable
-as List<ExecutedSet>,createdAt: null == createdAt ? _self.createdAt : createdAt // ignore: cast_nullable_to_non_nullable
+as List<ExecutedSet>,supersetTag: freezed == supersetTag ? _self.supersetTag : supersetTag // ignore: cast_nullable_to_non_nullable
+as String?,createdAt: null == createdAt ? _self.createdAt : createdAt // ignore: cast_nullable_to_non_nullable
 as DateTime,updatedAt: null == updatedAt ? _self.updatedAt : updatedAt // ignore: cast_nullable_to_non_nullable
 as DateTime,schemaVersion: null == schemaVersion ? _self.schemaVersion : schemaVersion // ignore: cast_nullable_to_non_nullable
 as int,

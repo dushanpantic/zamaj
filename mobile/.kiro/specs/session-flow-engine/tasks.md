@@ -29,14 +29,14 @@ Implement the pure-Dart `SessionFlowEngine` service with cursor-based navigation
     - Map the `supersetTag` field in both `_exerciseToDomain` and `sessionExerciseToRow` methods in `lib/modules/persistence/mappers/session_mapper.dart`
     - _Requirements: 10.4, 11.4_
 
-- [ ] 2. Extend the SessionRepository contract
-  - [ ] 2.1 Add `createSuperset` and `removeSuperset` to `SessionRepository`
+- [x] 2. Extend the SessionRepository contract
+  - [x] 2.1 Add `createSuperset` and `removeSuperset` to `SessionRepository`
     - Add two new abstract methods to `lib/modules/domain/repositories/session_repository.dart`:
       - `Future<Session> createSuperset({required String sessionId, required List<String> sessionExerciseIds})`
       - `Future<Session> removeSuperset({required String sessionId, required List<String> sessionExerciseIds})`
     - _Requirements: 10.4, 11.4_
 
-- [ ] 3. Run code generation and verify compilation
+- [x] 3. Run code generation and verify compilation
   - Ensure all tests pass, ask the user if questions arise.
 
 - [ ] 4. Implement the SessionFlowEngine

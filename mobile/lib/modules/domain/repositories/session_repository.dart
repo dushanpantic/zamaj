@@ -56,4 +56,14 @@ abstract class SessionRepository {
     required String sessionId,
     required String body,
   });
+
+  Future<Session> createSuperset({
+    required String sessionId,
+    required List<String> sessionExerciseIds,
+  });
+
+  Future<Session> removeSuperset({
+    required String sessionId,
+    required List<String> sessionExerciseIds,
+  });
 }

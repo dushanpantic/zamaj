@@ -5,6 +5,7 @@ targets:
         generate_for:
           include:
             - lib/modules/domain/models/**.dart
+            - lib/modules/domain/services/**.dart
             - lib/modules/program_management/models/**.dart
             - lib/modules/program_management/services/text_plan/**.dart
             - lib/modules/program_management/services/text_plan/**.dart
@@ -12,6 +13,7 @@ targets:
         generate_for:
           include:
             - lib/modules/domain/models/**.dart
+            - lib/modules/domain/services/**.dart
             - lib/modules/program_management/models/**.dart
             - lib/modules/program_management/services/text_plan/**.dart
         options:
