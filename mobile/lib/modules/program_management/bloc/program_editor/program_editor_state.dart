@@ -55,12 +55,14 @@ final class ProgramEditorEditing extends ProgramEditorState {
     required this.draft,
     required this.isCreateMode,
     required this.validation,
+    this.isSaving = false,
     this.deletionCandidateDraftId,
     this.lastSaveError,
   });
 
   final ProgramDraft draft;
   final bool isCreateMode;
+  final bool isSaving;
   final String? deletionCandidateDraftId;
   final ProgramDraftValidation validation;
   final DomainError? lastSaveError;
@@ -68,6 +70,7 @@ final class ProgramEditorEditing extends ProgramEditorState {
   ProgramEditorEditing copyWith({
     ProgramDraft? draft,
     bool? isCreateMode,
+    bool? isSaving,
     ProgramDraftValidation? validation,
     String? Function()? deletionCandidateDraftId,
     DomainError? Function()? lastSaveError,
@@ -75,6 +78,7 @@ final class ProgramEditorEditing extends ProgramEditorState {
     return ProgramEditorEditing(
       draft: draft ?? this.draft,
       isCreateMode: isCreateMode ?? this.isCreateMode,
+      isSaving: isSaving ?? this.isSaving,
       validation: validation ?? this.validation,
       deletionCandidateDraftId: deletionCandidateDraftId != null
           ? deletionCandidateDraftId()
@@ -89,26 +93,9 @@ final class ProgramEditorEditing extends ProgramEditorState {
   List<Object?> get props => [
     draft,
     isCreateMode,
+    isSaving,
     deletionCandidateDraftId,
     validation,
     lastSaveError,
   ];
-}
-
-final class ProgramEditorSaving extends ProgramEditorState {
-  const ProgramEditorSaving({required this.draft});
-
-  final ProgramDraft draft;
-
-  @override
-  List<Object?> get props => [draft];
-}
-
-final class ProgramEditorSaved extends ProgramEditorState {
-  const ProgramEditorSaved({required this.programId});
-
-  final String programId;
-
-  @override
-  List<Object?> get props => [programId];
 }

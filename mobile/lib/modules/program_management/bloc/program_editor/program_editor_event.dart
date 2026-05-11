@@ -77,10 +77,3 @@ final class ProgramEditorWorkoutDaysReordered extends ProgramEditorEvent {
   @override
   List<Object?> get props => [orderedDraftIds];
 }
-
-final class ProgramEditorSavePressed extends ProgramEditorEvent {
-  const ProgramEditorSavePressed();
-
-  @override
-  List<Object?> get props => [];
-}

@@ -6,13 +6,13 @@ class WorkoutDayListTile extends StatelessWidget {
   const WorkoutDayListTile({
     super.key,
     required this.name,
-    required this.onTap,
+    this.onTap,
     required this.onRename,
     required this.onDelete,
   });
 
   final String name;
-  final VoidCallback onTap;
+  final VoidCallback? onTap;
   final VoidCallback onRename;
   final VoidCallback onDelete;
 

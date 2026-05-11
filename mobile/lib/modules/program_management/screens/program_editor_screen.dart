@@ -24,7 +24,6 @@ class ProgramEditorScreen extends StatefulWidget {
 class _ProgramEditorScreenState extends State<ProgramEditorScreen> {
   late final TextEditingController _nameController;
   bool _nameControllerSynced = false;
-  bool _wasSaving = false;
   String? _shownDeletionCandidate;
 
   @override
@@ -221,16 +220,7 @@ class _ProgramEditorScreenState extends State<ProgramEditorScreen> {
   Widget build(BuildContext context) {
     return BlocConsumer<ProgramEditorBloc, ProgramEditorState>(
       listener: (context, state) {
-        if (state is ProgramEditorSaved) {
-          Navigator.of(context).pop();
-        }
         if (state is ProgramEditorEditing) {
-          if (_wasSaving) {
-            _wasSaving = false;
-            ScaffoldMessenger.of(
-              context,
-            ).showSnackBar(const SnackBar(content: Text('Saved')));
-          }
           if (!_nameControllerSynced) {
             _syncNameController(state.draft.name);
             _nameControllerSynced = true;
@@ -247,9 +237,6 @@ class _ProgramEditorScreenState extends State<ProgramEditorScreen> {
           } else if (candidate == null) {
             _shownDeletionCandidate = null;
           }
-        }
-        if (state is ProgramEditorSaving) {
-          _wasSaving = true;
         }
       },
       builder: (context, state) => _buildScaffold(context, state),
@@ -316,32 +303,10 @@ class _ProgramEditorScreenState extends State<ProgramEditorScreen> {
           ),
         ),
       ),
-      ProgramEditorSaving(:final draft) => Scaffold(
-        appBar: _buildAppBar(
-          context,
-          name: draft.name,
-          canSave: false,
-          isCreateMode: false,
-        ),
-        body: Stack(
-          children: [
-            _buildWorkoutDayList(context, draft.workoutDays, null),
-            const Positioned.fill(
-              child: ColoredBox(
-                color: Colors.black38,
-                child: Center(child: CircularProgressIndicator()),
-              ),
-            ),
-          ],
-        ),
-      ),
-      ProgramEditorSaved() => const Scaffold(
-        body: Center(child: CircularProgressIndicator()),
-      ),
       ProgramEditorEditing(
         :final draft,
         :final isCreateMode,
-        :final validation,
+        :final isSaving,
         :final lastSaveError,
         :final deletionCandidateDraftId,
       ) =>
@@ -349,7 +314,7 @@ class _ProgramEditorScreenState extends State<ProgramEditorScreen> {
           appBar: _buildAppBar(
             context,
             name: draft.name,
-            canSave: validation.canSave,
+            isSaving: isSaving,
             isCreateMode: isCreateMode,
           ),
           floatingActionButton: FloatingActionButton(
@@ -379,7 +344,7 @@ class _ProgramEditorScreenState extends State<ProgramEditorScreen> {
   PreferredSizeWidget _buildAppBar(
     BuildContext context, {
     required String name,
-    required bool canSave,
+    required bool isSaving,
     required bool isCreateMode,
   }) {
     final colors = Theme.of(context).appColors;
@@ -409,23 +374,20 @@ class _ProgramEditorScreenState extends State<ProgramEditorScreen> {
         ),
       ),
       actions: [
-        Padding(
-          padding: const EdgeInsets.only(right: AppSpacing.sm),
-          child: TextButton(
-            onPressed: canSave
-                ? () => context.read<ProgramEditorBloc>().add(
-                    const ProgramEditorSavePressed(),
-                  )
-                : null,
-            child: Text(
-              'Save',
-              style: typography.label.copyWith(
-                color: canSave ? colors.primary : colors.onSurfaceMuted,
-                fontWeight: FontWeight.w600,
+        if (isSaving)
+          Padding(
+            padding: const EdgeInsets.only(right: AppSpacing.md),
+            child: Center(
+              child: SizedBox(
+                width: 16,
+                height: 16,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2,
+                  color: colors.onSurfaceMuted,
+                ),
               ),
             ),
           ),
-        ),
       ],
     );
   }
@@ -490,15 +452,7 @@ class _ProgramEditorScreenState extends State<ProgramEditorScreen> {
                   ProgramManagementRoutes.workoutDay,
                   arguments: WorkoutDayArgs(workoutDayId: day.persistedId!),
                 )
-              : () {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text(
-                        'Save the program before editing this day.',
-                      ),
-                    ),
-                  );
-                },
+              : null,
           onRename: () => _showRenameWorkoutDayDialog(day.draftId, day.name),
           onDelete: () => context.read<ProgramEditorBloc>().add(
             ProgramEditorWorkoutDayDeleteRequested(draftId: day.draftId),
