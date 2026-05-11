@@ -386,6 +386,7 @@ class _EditorBody extends StatelessWidget {
               children: [
                 TextField(
                   controller: nameController,
+                  autofocus: true,
                   style: typography.body.copyWith(color: colors.onSurface),
                   decoration: InputDecoration(
                     labelText: 'Exercise name',
@@ -455,6 +456,11 @@ class _EditorBody extends StatelessWidget {
                         ),
                         onDelete: () => bloc.add(
                           PlannedSetDeleted(setDraftId: draft.sets[i].draftId),
+                        ),
+                        onDuplicate: () => bloc.add(
+                          PlannedSetDuplicated(
+                            setDraftId: draft.sets[i].draftId,
+                          ),
                         ),
                       ),
                   ],

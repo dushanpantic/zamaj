@@ -87,6 +87,15 @@ final class PlannedSetAdded extends ExerciseEditorEvent {
   List<Object?> get props => [];
 }
 
+final class PlannedSetDuplicated extends ExerciseEditorEvent {
+  const PlannedSetDuplicated({required this.setDraftId});
+
+  final String setDraftId;
+
+  @override
+  List<Object?> get props => [setDraftId];
+}
+
 final class PlannedSetDeleted extends ExerciseEditorEvent {
   const PlannedSetDeleted({required this.setDraftId});
 

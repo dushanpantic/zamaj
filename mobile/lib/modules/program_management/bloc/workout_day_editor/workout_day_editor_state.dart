@@ -49,21 +49,25 @@ final class WorkoutDayEditorEditing extends WorkoutDayEditorState {
   const WorkoutDayEditorEditing({
     required this.draft,
     required this.validation,
+    this.isSaving = false,
     this.lastSaveError,
   });
 
   final WorkoutDayDraft draft;
   final WorkoutDayDraftValidation validation;
+  final bool isSaving;
   final DomainError? lastSaveError;
 
   WorkoutDayEditorEditing copyWith({
     WorkoutDayDraft? draft,
     WorkoutDayDraftValidation? validation,
+    bool? isSaving,
     DomainError? Function()? lastSaveError,
   }) {
     return WorkoutDayEditorEditing(
       draft: draft ?? this.draft,
       validation: validation ?? this.validation,
+      isSaving: isSaving ?? this.isSaving,
       lastSaveError: lastSaveError != null
           ? lastSaveError()
           : this.lastSaveError,
@@ -71,38 +75,20 @@ final class WorkoutDayEditorEditing extends WorkoutDayEditorState {
   }
 
   @override
-  List<Object?> get props => [draft, validation, lastSaveError];
+  List<Object?> get props => [draft, validation, isSaving, lastSaveError];
 }
 
-final class WorkoutDayEditorGroupValidationError extends WorkoutDayEditorState {
-  const WorkoutDayEditorGroupValidationError({
+final class WorkoutDayEditorExerciseCreated extends WorkoutDayEditorState {
+  const WorkoutDayEditorExerciseCreated({
     required this.draft,
-    required this.groupDraftId,
-    required this.invariant,
+    required this.validation,
+    required this.exerciseId,
   });
 
   final WorkoutDayDraft draft;
-  final String groupDraftId;
-  final String invariant;
+  final WorkoutDayDraftValidation validation;
+  final String exerciseId;
 
   @override
-  List<Object?> get props => [draft, groupDraftId, invariant];
-}
-
-final class WorkoutDayEditorSaving extends WorkoutDayEditorState {
-  const WorkoutDayEditorSaving({required this.draft});
-
-  final WorkoutDayDraft draft;
-
-  @override
-  List<Object?> get props => [draft];
-}
-
-final class WorkoutDayEditorSaved extends WorkoutDayEditorState {
-  const WorkoutDayEditorSaved({required this.workoutDayId});
-
-  final String workoutDayId;
-
-  @override
-  List<Object?> get props => [workoutDayId];
+  List<Object?> get props => [draft, validation, exerciseId];
 }

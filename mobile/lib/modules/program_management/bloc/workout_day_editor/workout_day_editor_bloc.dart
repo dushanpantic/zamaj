@@ -13,21 +13,23 @@ class WorkoutDayEditorBloc
     : _programRepository = programRepository,
       super(const WorkoutDayEditorInitial()) {
     on<WorkoutDayEditorOpened>(_onOpened);
+    on<WorkoutDayEditorRefreshed>(_onRefreshed);
     on<WorkoutDayNameChanged>(_onNameChanged);
-    on<ExerciseGroupAdded>(_onGroupAdded);
+    on<QuickExerciseAdded>(_onQuickExerciseAdded);
     on<ExerciseGroupDeleted>(_onGroupDeleted);
     on<ExerciseGroupsReordered>(_onGroupsReordered);
-    on<ExerciseAddedToGroup>(_onExerciseAdded);
+    on<ExerciseAddedToGroup>(_onExerciseAddedToGroup);
     on<ExerciseRemovedFromGroup>(_onExerciseRemoved);
     on<ExerciseReorderedWithinGroup>(_onExerciseReordered);
-    on<WorkoutDayExercisePressed>(_onExercisePressed);
-    on<WorkoutDaySavePressed>(_onDaySave);
+    on<ExerciseDraggedOntoExercise>(_onExerciseDraggedOnto);
+    on<SupersetUngrouped>(_onSupersetUngrouped);
   }
 
   final ProgramRepository _programRepository;
   static const _uuid = Uuid();
 
   WorkoutDay? _baseline;
+  String? _persistedDayId;
 
   Future<void> _onOpened(
     WorkoutDayEditorOpened event,
@@ -43,6 +45,7 @@ class WorkoutDayEditorBloc
         return;
       }
       _baseline = workoutDay;
+      _persistedDayId = workoutDay.id;
       final draft = _draftFromWorkoutDay(workoutDay);
       emit(
         WorkoutDayEditorEditing(
@@ -66,6 +69,27 @@ class WorkoutDayEditorBloc
     }
   }
 
+  Future<void> _onRefreshed(
+    WorkoutDayEditorRefreshed event,
+    Emitter<WorkoutDayEditorState> emit,
+  ) async {
+    final dayId = _persistedDayId;
+    if (dayId == null) return;
+    final workoutDay = await _programRepository.getWorkoutDay(dayId);
+    if (workoutDay == null) {
+      emit(WorkoutDayEditorNotFound(workoutDayId: dayId));
+      return;
+    }
+    _baseline = workoutDay;
+    final draft = _draftFromWorkoutDay(workoutDay);
+    emit(
+      WorkoutDayEditorEditing(
+        draft: draft,
+        validation: WorkoutDayDraftValidation.of(draft),
+      ),
+    );
+  }
+
   Future<void> _onNameChanged(
     WorkoutDayNameChanged event,
     Emitter<WorkoutDayEditorState> emit,
@@ -80,23 +104,39 @@ class WorkoutDayEditorBloc
         lastSaveError: () => null,
       ),
     );
+    await _persist(emit);
   }
 
-  Future<void> _onGroupAdded(
-    ExerciseGroupAdded event,
+  Future<void> _onQuickExerciseAdded(
+    QuickExerciseAdded event,
     Emitter<WorkoutDayEditorState> emit,
   ) async {
     final current = state;
     if (current is! WorkoutDayEditorEditing) return;
+    final newExercise = ExerciseDraft(
+      draftId: _uuid.v4(),
+      persistedId: null,
+      name: event.exerciseName,
+      measurementType: const MeasurementType.repBased(),
+      metadata: ExerciseMetadata.empty,
+      plannedRestSeconds: null,
+      sets: const [],
+    );
     final newGroup = ExerciseGroupDraft(
       draftId: _uuid.v4(),
       persistedId: null,
-      exercises: const [],
+      exercises: [newExercise],
     );
     final updated = current.draft.copyWith(
       groups: [...current.draft.groups, newGroup],
     );
-    emit(current.copyWith(draft: updated, lastSaveError: () => null));
+    emit(
+      current.copyWith(
+        draft: updated,
+        lastSaveError: () => null,
+      ),
+    );
+    await _persist(emit, navigateToNewExercise: true);
   }
 
   Future<void> _onGroupDeleted(
@@ -111,6 +151,7 @@ class WorkoutDayEditorBloc
           .toList(),
     );
     emit(current.copyWith(draft: updated, lastSaveError: () => null));
+    await _persist(emit);
   }
 
   Future<void> _onGroupsReordered(
@@ -126,9 +167,10 @@ class WorkoutDayEditorBloc
         .toList();
     final updated = current.draft.copyWith(groups: reordered);
     emit(current.copyWith(draft: updated, lastSaveError: () => null));
+    await _persist(emit);
   }
 
-  Future<void> _onExerciseAdded(
+  Future<void> _onExerciseAddedToGroup(
     ExerciseAddedToGroup event,
     Emitter<WorkoutDayEditorState> emit,
   ) async {
@@ -138,7 +180,7 @@ class WorkoutDayEditorBloc
       draftId: _uuid.v4(),
       persistedId: null,
       name: event.exerciseName,
-      measurementType: event.measurementType,
+      measurementType: const MeasurementType.repBased(),
       metadata: ExerciseMetadata.empty,
       plannedRestSeconds: null,
       sets: const [],
@@ -150,6 +192,7 @@ class WorkoutDayEditorBloc
       }).toList(),
     );
     emit(current.copyWith(draft: updated, lastSaveError: () => null));
+    await _persist(emit, navigateToNewExercise: true);
   }
 
   Future<void> _onExerciseRemoved(
@@ -158,17 +201,18 @@ class WorkoutDayEditorBloc
   ) async {
     final current = state;
     if (current is! WorkoutDayEditorEditing) return;
-    final updated = current.draft.copyWith(
-      groups: current.draft.groups.map((g) {
-        if (g.draftId != event.groupDraftId) return g;
-        return g.copyWith(
-          exercises: g.exercises
-              .where((e) => e.draftId != event.exerciseDraftId)
-              .toList(),
-        );
-      }).toList(),
-    );
+    var groups = current.draft.groups.map((g) {
+      if (g.draftId != event.groupDraftId) return g;
+      return g.copyWith(
+        exercises: g.exercises
+            .where((e) => e.draftId != event.exerciseDraftId)
+            .toList(),
+      );
+    }).toList();
+    groups = groups.where((g) => g.exercises.isNotEmpty).toList();
+    final updated = current.draft.copyWith(groups: groups);
     emit(current.copyWith(draft: updated, lastSaveError: () => null));
+    await _persist(emit);
   }
 
   Future<void> _onExerciseReordered(
@@ -189,40 +233,95 @@ class WorkoutDayEditorBloc
       }).toList(),
     );
     emit(current.copyWith(draft: updated, lastSaveError: () => null));
+    await _persist(emit);
   }
 
-  Future<void> _onExercisePressed(
-    WorkoutDayExercisePressed event,
-    Emitter<WorkoutDayEditorState> emit,
-  ) async {}
-
-  Future<void> _onDaySave(
-    WorkoutDaySavePressed event,
+  Future<void> _onExerciseDraggedOnto(
+    ExerciseDraggedOntoExercise event,
     Emitter<WorkoutDayEditorState> emit,
   ) async {
     final current = state;
     if (current is! WorkoutDayEditorEditing) return;
-    if (!current.validation.isNameValid) return;
+    if (event.sourceGroupDraftId == event.targetGroupDraftId) return;
 
-    final baseline = _baseline;
-    final persistedId = current.draft.persistedId;
-    if (baseline == null || persistedId == null) return;
+    ExerciseDraft? sourceExercise;
+    var groups = current.draft.groups.map((g) {
+      if (g.draftId != event.sourceGroupDraftId) return g;
+      sourceExercise = g.exercises
+          .where((e) => e.draftId == event.sourceExerciseDraftId)
+          .firstOrNull;
+      return g.copyWith(
+        exercises: g.exercises
+            .where((e) => e.draftId != event.sourceExerciseDraftId)
+            .toList(),
+      );
+    }).toList();
 
-    for (final group in current.draft.groups) {
-      final invariant = _cardinalityInvariant(group);
-      if (invariant != null) {
-        emit(
-          WorkoutDayEditorGroupValidationError(
-            draft: current.draft,
-            groupDraftId: group.draftId,
-            invariant: invariant,
-          ),
-        );
-        return;
-      }
+    if (sourceExercise == null) return;
+
+    groups = groups.map((g) {
+      if (g.draftId != event.targetGroupDraftId) return g;
+      final targetIndex = g.exercises
+          .indexWhere((e) => e.draftId == event.targetExerciseDraftId);
+      final insertAt = targetIndex >= 0 ? targetIndex + 1 : g.exercises.length;
+      final newExercises = List<ExerciseDraft>.from(g.exercises)
+        ..insert(insertAt, sourceExercise!);
+      return g.copyWith(exercises: newExercises);
+    }).toList();
+
+    groups = groups.where((g) => g.exercises.isNotEmpty).toList();
+
+    final updated = current.draft.copyWith(groups: groups);
+    emit(current.copyWith(draft: updated, lastSaveError: () => null));
+    await _persist(emit);
+  }
+
+  Future<void> _onSupersetUngrouped(
+    SupersetUngrouped event,
+    Emitter<WorkoutDayEditorState> emit,
+  ) async {
+    final current = state;
+    if (current is! WorkoutDayEditorEditing) return;
+
+    final groupIndex = current.draft.groups
+        .indexWhere((g) => g.draftId == event.groupDraftId);
+    if (groupIndex < 0) return;
+    final group = current.draft.groups[groupIndex];
+    if (group.exercises.length < 2) return;
+
+    final newGroups = List<ExerciseGroupDraft>.from(current.draft.groups);
+    newGroups.removeAt(groupIndex);
+
+    for (var i = 0; i < group.exercises.length; i++) {
+      final exercise = group.exercises[i];
+      newGroups.insert(
+        groupIndex + i,
+        ExerciseGroupDraft(
+          draftId: _uuid.v4(),
+          persistedId: null,
+          exercises: [exercise],
+        ),
+      );
     }
 
-    emit(WorkoutDayEditorSaving(draft: current.draft));
+    final updated = current.draft.copyWith(groups: newGroups);
+    emit(current.copyWith(draft: updated, lastSaveError: () => null));
+    await _persist(emit);
+  }
+
+  Future<void> _persist(
+    Emitter<WorkoutDayEditorState> emit, {
+    bool navigateToNewExercise = false,
+  }) async {
+    final current = state;
+    if (current is! WorkoutDayEditorEditing) return;
+
+    final baseline = _baseline;
+    final persistedId = _persistedDayId;
+    if (baseline == null || persistedId == null) return;
+    if (!current.validation.isNameValid) return;
+
+    emit(current.copyWith(isSaving: true));
 
     try {
       if (baseline.name.trim() != current.draft.name.trim()) {
@@ -239,10 +338,52 @@ class WorkoutDayEditorBloc
           .map((g) => g.persistedId!)
           .toSet();
 
+      final baselineExerciseGroupOwnership = <String, String>{};
+      for (final g in baseline.exerciseGroups) {
+        for (final e in g.exercises) {
+          baselineExerciseGroupOwnership[e.id] = g.id;
+        }
+      }
+
+      final draftExerciseGroupOwnership = <String, String>{};
+      for (final g in current.draft.groups) {
+        if (g.persistedId == null) continue;
+        for (final e in g.exercises) {
+          if (e.persistedId != null) {
+            draftExerciseGroupOwnership[e.persistedId!] = g.persistedId!;
+          }
+        }
+      }
+
+      final movedExerciseIds = <String>{};
+      for (final entry in draftExerciseGroupOwnership.entries) {
+        final exerciseId = entry.key;
+        final newGroupId = entry.value;
+        final oldGroupId = baselineExerciseGroupOwnership[exerciseId];
+        if (oldGroupId != null && oldGroupId != newGroupId) {
+          movedExerciseIds.add(exerciseId);
+        }
+      }
+
       for (final baselineGroupId in baselineGroupsById.keys) {
         if (!draftPersistedGroupIds.contains(baselineGroupId)) {
           await _programRepository.deleteExerciseGroup(baselineGroupId);
         }
+      }
+
+      final survivingGroupIds = current.draft.groups
+          .where((g) => g.persistedId != null)
+          .map((g) => g.persistedId!)
+          .toList();
+      if (survivingGroupIds.isNotEmpty) {
+        await _programRepository.reorderExerciseGroups(
+          persistedId,
+          survivingGroupIds,
+        );
+      }
+
+      for (final exerciseId in movedExerciseIds) {
+        await _programRepository.deleteExercise(exerciseId);
       }
 
       for (var i = 0; i < current.draft.groups.length; i++) {
@@ -275,7 +416,8 @@ class WorkoutDayEditorBloc
               .toSet();
 
           for (final baselineExerciseId in baselineExercisesById.keys) {
-            if (!draftPersistedExerciseIds.contains(baselineExerciseId)) {
+            if (!draftPersistedExerciseIds.contains(baselineExerciseId) &&
+                !movedExerciseIds.contains(baselineExerciseId)) {
               await _programRepository.deleteExercise(baselineExerciseId);
             }
           }
@@ -283,7 +425,8 @@ class WorkoutDayEditorBloc
           for (var j = 0; j < group.exercises.length; j++) {
             final exerciseDraft = group.exercises[j];
             final persistedExerciseId = exerciseDraft.persistedId;
-            if (persistedExerciseId != null) {
+            if (persistedExerciseId != null &&
+                !movedExerciseIds.contains(persistedExerciseId)) {
               final baselineExercise =
                   baselineExercisesById[persistedExerciseId];
               if (baselineExercise == null) continue;
@@ -309,7 +452,8 @@ class WorkoutDayEditorBloc
 
           for (var j = 0; j < group.exercises.length; j++) {
             final exerciseDraft = group.exercises[j];
-            if (exerciseDraft.persistedId == null) {
+            if (exerciseDraft.persistedId == null ||
+                movedExerciseIds.contains(exerciseDraft.persistedId)) {
               await _programRepository.createExercise(
                 exerciseGroupId: persistedGroupId,
                 name: exerciseDraft.name,
@@ -321,12 +465,16 @@ class WorkoutDayEditorBloc
           }
 
           final desiredExerciseOrder = group.exercises
-              .where((e) => e.persistedId != null)
+              .where((e) =>
+                  e.persistedId != null &&
+                  !movedExerciseIds.contains(e.persistedId))
               .map((e) => e.persistedId!)
               .toList();
           final baselineExerciseOrder = baselineGroup.exercises
               .map((e) => e.id)
-              .where(draftPersistedExerciseIds.contains)
+              .where((id) =>
+                  draftPersistedExerciseIds.contains(id) &&
+                  !movedExerciseIds.contains(id))
               .toList();
           if (desiredExerciseOrder.isNotEmpty &&
               !_listEquals(desiredExerciseOrder, baselineExerciseOrder)) {
@@ -385,31 +533,26 @@ class WorkoutDayEditorBloc
       }
       _baseline = finalDay;
       final newDraft = _draftFromWorkoutDay(finalDay);
+
+      if (navigateToNewExercise) {
+        final newExerciseId = _findNewExerciseId(finalDay);
+        if (newExerciseId != null) {
+          emit(
+            WorkoutDayEditorExerciseCreated(
+              draft: newDraft,
+              validation: WorkoutDayDraftValidation.of(newDraft),
+              exerciseId: newExerciseId,
+            ),
+          );
+        }
+      }
+
       emit(
         WorkoutDayEditorEditing(
           draft: newDraft,
           validation: WorkoutDayDraftValidation.of(newDraft),
         ),
       );
-    } on ValidationError catch (e) {
-      if (e.invariant == 'single_requires_exactly_one_exercise' ||
-          e.invariant == 'superset_requires_at_least_two_exercises') {
-        emit(
-          WorkoutDayEditorGroupValidationError(
-            draft: current.draft,
-            groupDraftId: current.draft.groups.first.draftId,
-            invariant: e.invariant,
-          ),
-        );
-      } else {
-        emit(
-          WorkoutDayEditorEditing(
-            draft: current.draft,
-            validation: WorkoutDayDraftValidation.of(current.draft),
-            lastSaveError: e,
-          ),
-        );
-      }
     } on DomainError catch (e) {
       emit(
         WorkoutDayEditorEditing(
@@ -421,8 +564,28 @@ class WorkoutDayEditorBloc
     }
   }
 
-  String? _cardinalityInvariant(ExerciseGroupDraft group) {
-    if (group.exercises.isEmpty) return 'empty_group';
+  String? _findNewExerciseId(WorkoutDay day) {
+    final baselineExerciseIds = <String>{};
+    if (_baseline != null) {
+      for (final g in _baseline!.exerciseGroups) {
+        for (final e in g.exercises) {
+          baselineExerciseIds.add(e.id);
+        }
+      }
+    }
+    for (final g in day.exerciseGroups) {
+      for (final e in g.exercises) {
+        if (!baselineExerciseIds.contains(e.id)) {
+          return e.id;
+        }
+      }
+    }
+    if (day.exerciseGroups.isNotEmpty) {
+      final lastGroup = day.exerciseGroups.last;
+      if (lastGroup.exercises.isNotEmpty) {
+        return lastGroup.exercises.last.id;
+      }
+    }
     return null;
   }
 

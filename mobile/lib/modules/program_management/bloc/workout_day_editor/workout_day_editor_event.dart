@@ -1,5 +1,4 @@
 import 'package:equatable/equatable.dart';
-import 'package:zamaj/modules/domain/domain.dart';
 
 sealed class WorkoutDayEditorEvent extends Equatable {
   const WorkoutDayEditorEvent();
@@ -14,6 +13,13 @@ final class WorkoutDayEditorOpened extends WorkoutDayEditorEvent {
   List<Object?> get props => [workoutDayId];
 }
 
+final class WorkoutDayEditorRefreshed extends WorkoutDayEditorEvent {
+  const WorkoutDayEditorRefreshed();
+
+  @override
+  List<Object?> get props => [];
+}
+
 final class WorkoutDayNameChanged extends WorkoutDayEditorEvent {
   const WorkoutDayNameChanged({required this.name});
 
@@ -23,11 +29,13 @@ final class WorkoutDayNameChanged extends WorkoutDayEditorEvent {
   List<Object?> get props => [name];
 }
 
-final class ExerciseGroupAdded extends WorkoutDayEditorEvent {
-  const ExerciseGroupAdded();
+final class QuickExerciseAdded extends WorkoutDayEditorEvent {
+  const QuickExerciseAdded({required this.exerciseName});
+
+  final String exerciseName;
 
   @override
-  List<Object?> get props => [];
+  List<Object?> get props => [exerciseName];
 }
 
 final class ExerciseGroupDeleted extends WorkoutDayEditorEvent {
@@ -52,15 +60,13 @@ final class ExerciseAddedToGroup extends WorkoutDayEditorEvent {
   const ExerciseAddedToGroup({
     required this.groupDraftId,
     required this.exerciseName,
-    required this.measurementType,
   });
 
   final String groupDraftId;
   final String exerciseName;
-  final MeasurementType measurementType;
 
   @override
-  List<Object?> get props => [groupDraftId, exerciseName, measurementType];
+  List<Object?> get props => [groupDraftId, exerciseName];
 }
 
 final class ExerciseRemovedFromGroup extends WorkoutDayEditorEvent {
@@ -89,18 +95,33 @@ final class ExerciseReorderedWithinGroup extends WorkoutDayEditorEvent {
   List<Object?> get props => [groupDraftId, orderedExerciseDraftIds];
 }
 
-final class WorkoutDayExercisePressed extends WorkoutDayEditorEvent {
-  const WorkoutDayExercisePressed({required this.exerciseDraftId});
+final class ExerciseDraggedOntoExercise extends WorkoutDayEditorEvent {
+  const ExerciseDraggedOntoExercise({
+    required this.sourceGroupDraftId,
+    required this.sourceExerciseDraftId,
+    required this.targetGroupDraftId,
+    required this.targetExerciseDraftId,
+  });
 
-  final String exerciseDraftId;
+  final String sourceGroupDraftId;
+  final String sourceExerciseDraftId;
+  final String targetGroupDraftId;
+  final String targetExerciseDraftId;
 
   @override
-  List<Object?> get props => [exerciseDraftId];
+  List<Object?> get props => [
+    sourceGroupDraftId,
+    sourceExerciseDraftId,
+    targetGroupDraftId,
+    targetExerciseDraftId,
+  ];
 }
 
-final class WorkoutDaySavePressed extends WorkoutDayEditorEvent {
-  const WorkoutDaySavePressed();
+final class SupersetUngrouped extends WorkoutDayEditorEvent {
+  const SupersetUngrouped({required this.groupDraftId});
+
+  final String groupDraftId;
 
   @override
-  List<Object?> get props => [];
+  List<Object?> get props => [groupDraftId];
 }

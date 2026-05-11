@@ -26,6 +26,7 @@ class ExerciseEditorBloc
     on<ExerciseVideoUrlActivated>(_onVideoUrlActivated);
     on<ExercisePlannedRestChanged>(_onPlannedRestChanged);
     on<PlannedSetAdded>(_onPlannedSetAdded);
+    on<PlannedSetDuplicated>(_onPlannedSetDuplicated);
     on<PlannedSetDeleted>(_onPlannedSetDeleted);
     on<PlannedSetReordered>(_onPlannedSetReordered);
     on<PlannedSetWeightChanged>(_onPlannedSetWeightChanged);
@@ -52,7 +53,18 @@ class ExerciseEditorBloc
       return;
     }
     _baselineExercise = exercise;
-    final draft = _exerciseToDraft(exercise);
+    var draft = _exerciseToDraft(exercise);
+    if (draft.sets.isEmpty) {
+      draft = draft.copyWith(
+        sets: [
+          PlannedSetDraft(
+            draftId: _uuid.v4(),
+            persistedId: null,
+            values: _zeroValuedSet(draft.measurementType),
+          ),
+        ],
+      );
+    }
     _plannedRestInput = exercise.plannedRestSeconds?.toString();
     final validation = _computeValidation(draft);
     emit(ExerciseEditorEditing(draft: draft, validation: validation));
@@ -187,6 +199,29 @@ class ExerciseEditorBloc
     final updated = current.draft.copyWith(
       sets: [...current.draft.sets, newSet],
     );
+    final validation = _computeValidation(updated);
+    emit(current.copyWith(draft: updated, validation: validation));
+  }
+
+  Future<void> _onPlannedSetDuplicated(
+    PlannedSetDuplicated event,
+    Emitter<ExerciseEditorState> emit,
+  ) async {
+    final current = state;
+    if (current is! ExerciseEditorEditing) return;
+    if (current.draft.sets.length >= 20) return;
+    final sourceIndex = current.draft.sets
+        .indexWhere((s) => s.draftId == event.setDraftId);
+    if (sourceIndex < 0) return;
+    final source = current.draft.sets[sourceIndex];
+    final duplicate = PlannedSetDraft(
+      draftId: _uuid.v4(),
+      persistedId: null,
+      values: source.values,
+    );
+    final newSets = List<PlannedSetDraft>.from(current.draft.sets)
+      ..insert(sourceIndex + 1, duplicate);
+    final updated = current.draft.copyWith(sets: newSets);
     final validation = _computeValidation(updated);
     emit(current.copyWith(draft: updated, validation: validation));
   }
