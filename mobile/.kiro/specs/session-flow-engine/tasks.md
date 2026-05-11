@@ -162,12 +162,12 @@ Implement the pure-Dart `SessionFlowEngine` service with cursor-based navigation
     - **Property 15: Reorder requires exact permutation of all unfinished IDs**
     - **Validates: Requirements 9.3**
 
-- [ ] 11. Property-based tests: superset operations
-  - [ ] 11.1 Write property test for superset creation assigns shared tag
+- [x] 11. Property-based tests: superset operations
+  - [x] 11.1 Write property test for superset creation assigns shared tag
     - **Property 16: Superset creation assigns shared tag and consecutive positions**
     - **Validates: Requirements 10.1, 10.5**
 
-  - [ ] 11.2 Write property test for superset removal clears tags
+  - [x] 11.2 Write property test for superset removal clears tags
     - **Property 17: Superset removal clears tags preserving relative order**
     - **Validates: Requirements 11.1, 11.5**
 
