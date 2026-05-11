@@ -39,8 +39,8 @@ Implement the pure-Dart `SessionFlowEngine` service with cursor-based navigation
 - [x] 3. Run code generation and verify compilation
   - Ensure all tests pass, ask the user if questions arise.
 
-- [ ] 4. Implement the SessionFlowEngine
-  - [ ] 4.1 Create the engine class with constructor and helper methods
+- [x] 4. Implement the SessionFlowEngine
+  - [x] 4.1 Create the engine class with constructor and helper methods
     - Create `lib/modules/domain/services/session_flow_engine.dart`
     - Constructor accepts `SessionRepository` and `Clock` (from `package:clock`)
     - Implement `computeCursor(Session)`: iterate exercises by position, find first unfinished/replaced with sets remaining
@@ -49,29 +49,29 @@ Implement the pure-Dart `SessionFlowEngine` service with cursor-based navigation
     - Implement private helper `_buildState(Session)` that bundles session + cursor + suggestion
     - _Requirements: 4.1, 4.2, 4.3, 4.4, 14.1, 14.2, 14.3, 15.1, 15.2, 15.3, 15.4, 18.1, 18.2_
 
-  - [ ] 4.2 Implement session lifecycle methods
+  - [x] 4.2 Implement session lifecycle methods
     - `startSession({required String workoutDayId})`: delegate to repo, compute cursor, return SessionState
     - `resumeSession({required String sessionId})`: load from repo, compute cursor, return SessionState
     - `endSession({required String sessionId})`: validate not already ended, delegate to repo, return SessionState
     - _Requirements: 1.1, 1.2, 1.3, 1.4, 2.1, 2.2, 2.3, 2.4, 3.1, 3.2, 3.3, 3.4, 3.5_
 
-  - [ ] 4.3 Implement set completion and editing
+  - [x] 4.3 Implement set completion and editing
     - `completeSet(...)`: validate session not ended, cursor not terminal, measurement type match; delegate to repo; return SessionState
     - `updateExecutedSet(...)`: validate measurement type match; delegate to repo; return SessionState
     - _Requirements: 5.1, 5.2, 5.3, 5.4, 5.5, 5.6, 6.1, 6.2, 6.3, 6.4_
 
-  - [ ] 4.4 Implement skip, replace, and reorder
+  - [x] 4.4 Implement skip, replace, and reorder
     - `skipExercise(...)`: validate exercise is unfinished; delegate to repo; return SessionState
     - `replaceExercise(...)`: validate exercise is unfinished; delegate to repo; return SessionState
     - `reorderUnfinished(...)`: validate all IDs are unfinished and list is exact permutation; delegate to repo; return SessionState
     - _Requirements: 7.1, 7.2, 7.3, 7.4, 8.1, 8.2, 8.3, 8.4, 8.5, 9.1, 9.2, 9.3, 9.4_
 
-  - [ ] 4.5 Implement superset creation and removal
+  - [x] 4.5 Implement superset creation and removal
     - `createSuperset(...)`: validate ≥2 IDs, all unfinished; delegate to repo; return SessionState
     - `removeSuperset(...)`: validate all share same supersetTag, all unfinished; delegate to repo; return SessionState
     - _Requirements: 10.1, 10.2, 10.3, 10.4, 10.5, 11.1, 11.2, 11.3, 11.4, 11.5_
 
-  - [ ] 4.6 Implement extra work and notes
+  - [x] 4.6 Implement extra work and notes
     - `addExtraWork(...)`: validate body is non-whitespace; delegate to repo; return SessionState
     - `addSessionNote(...)`: validate body is non-whitespace and ≤5000 chars; delegate to repo; return SessionState
     - _Requirements: 12.1, 12.2, 12.3, 13.1, 13.2, 13.3_

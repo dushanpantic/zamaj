@@ -115,6 +115,30 @@ class DriftSessionRepository implements SessionRepository {
   }
 
   @override
+  Future<domain.Session> getSessionByExerciseId(
+    String sessionExerciseId,
+  ) async {
+    final exerciseRow = await _requireSessionExerciseRow(sessionExerciseId);
+    return _loadSession(exerciseRow.sessionId);
+  }
+
+  @override
+  Future<domain.Session> getSessionByExecutedSetId(
+    String executedSetId,
+  ) async {
+    final setRow = await (_db.select(
+      _db.executedSets,
+    )..where((t) => t.id.equals(executedSetId))).getSingleOrNull();
+    if (setRow == null) {
+      throw NotFoundError(entityType: 'ExecutedSet', id: executedSetId);
+    }
+    final exerciseRow = await _requireSessionExerciseRow(
+      setRow.sessionExerciseId,
+    );
+    return _loadSession(exerciseRow.sessionId);
+  }
+
+  @override
   Future<List<domain.Session>> listSessionsForWorkoutDay(
     String workoutDayId,
   ) async {

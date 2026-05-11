@@ -16,6 +16,8 @@ abstract class SessionRepository {
   Future<Session> startSession({required String workoutDayId});
 
   Future<Session?> getSession(String sessionId);
+  Future<Session> getSessionByExerciseId(String sessionExerciseId);
+  Future<Session> getSessionByExecutedSetId(String executedSetId);
   Future<List<Session>> listSessionsForWorkoutDay(String workoutDayId);
 
   Future<Session> endSession(String sessionId);
