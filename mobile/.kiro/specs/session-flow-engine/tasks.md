@@ -188,8 +188,8 @@ Implement the pure-Dart `SessionFlowEngine` service with cursor-based navigation
     - **Property 22: Value suggestion correctness**
     - **Validates: Requirements 15.1, 15.2, 15.3, 15.4**
 
-- [ ] 13. Unit tests for edge cases
-  - [ ] 13.1 Write unit tests for edge cases and specific examples
+- [x] 13. Unit tests for edge cases
+  - [x] 13.1 Write unit tests for edge cases and specific examples
     - Test empty workout day (0 exercises) → cursor is immediately completed
     - Test single exercise with 1 planned set → complete it → exercise transitions to completed → cursor completed
     - Test NotFoundError for missing session/exercise/set IDs
