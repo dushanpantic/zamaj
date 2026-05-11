@@ -25,7 +25,6 @@ abstract final class ProgramManagementRouter {
         builder: (context) => BlocProvider(
           create: (_) => ProgramListBloc(
             programRepository: context.read<ProgramRepository>(),
-            sessionRepository: context.read<SessionRepository>(),
           ),
           child: const ProgramListScreen(),
         ),

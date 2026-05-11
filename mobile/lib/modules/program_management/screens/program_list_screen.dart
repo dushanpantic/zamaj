@@ -82,10 +82,20 @@ class _ProgramListScreenState extends State<ProgramListScreen> {
         backgroundColor: colors.background,
         foregroundColor: colors.onBackground,
         elevation: 0,
+        actions: [
+          IconButton(
+            onPressed: _navigateToImport,
+            icon: const Icon(Icons.content_paste_outlined),
+            tooltip: 'Import from text',
+          ),
+        ],
       ),
-      floatingActionButton: _ProgramListFab(
-        onCreateEmpty: () => _navigateToEditor(),
-        onImport: _navigateToImport,
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: () => _navigateToEditor(),
+        backgroundColor: colors.primary,
+        foregroundColor: colors.onPrimary,
+        icon: const Icon(Icons.add),
+        label: const Text('New program'),
       ),
       body: BlocBuilder<ProgramListBloc, ProgramListState>(
         builder: (context, state) {
@@ -277,43 +287,6 @@ class _ProgramList extends StatelessWidget {
           isDeleting: program.id == deletionCandidateId,
         );
       },
-    );
-  }
-}
-
-class _ProgramListFab extends StatelessWidget {
-  const _ProgramListFab({required this.onCreateEmpty, required this.onImport});
-
-  final VoidCallback onCreateEmpty;
-  final VoidCallback onImport;
-
-  @override
-  Widget build(BuildContext context) {
-    final colors = Theme.of(context).appColors;
-    const typography = AppTypography.standard;
-
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      crossAxisAlignment: CrossAxisAlignment.end,
-      children: [
-        FloatingActionButton.extended(
-          heroTag: 'fab_import',
-          onPressed: onImport,
-          backgroundColor: colors.surfaceVariant,
-          foregroundColor: colors.onSurface,
-          icon: const Icon(Icons.content_paste_outlined),
-          label: Text('Import', style: typography.label),
-        ),
-        const SizedBox(height: AppSpacing.sm),
-        FloatingActionButton.extended(
-          heroTag: 'fab_create',
-          onPressed: onCreateEmpty,
-          backgroundColor: colors.primary,
-          foregroundColor: colors.onPrimary,
-          icon: const Icon(Icons.add),
-          label: Text('New program', style: typography.label),
-        ),
-      ],
     );
   }
 }

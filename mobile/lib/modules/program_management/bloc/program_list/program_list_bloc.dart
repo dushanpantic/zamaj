@@ -5,12 +5,9 @@ import 'program_list_event.dart';
 import 'program_list_state.dart';
 
 class ProgramListBloc extends Bloc<ProgramListEvent, ProgramListState> {
-  ProgramListBloc({
-    required ProgramRepository programRepository,
-    required SessionRepository sessionRepository,
-  }) : _programRepository = programRepository,
-       _sessionRepository = sessionRepository,
-       super(const ProgramListInitial()) {
+  ProgramListBloc({required ProgramRepository programRepository})
+    : _programRepository = programRepository,
+      super(const ProgramListInitial()) {
     on<ProgramListRequested>(_onRequested);
     on<ProgramListDeleteRequested>(_onDeleteRequested);
     on<ProgramListDeleteConfirmed>(_onDeleteConfirmed);
@@ -19,9 +16,6 @@ class ProgramListBloc extends Bloc<ProgramListEvent, ProgramListState> {
   }
 
   final ProgramRepository _programRepository;
-
-  // ignore: unused_field
-  final SessionRepository _sessionRepository;
 
   Future<void> _onRequested(
     ProgramListRequested event,
