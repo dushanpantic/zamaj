@@ -94,20 +94,20 @@ Implement the pure-Dart `SessionFlowEngine` service with cursor-based navigation
     - `anyWhitespaceString(Random rng)`: generates strings of only whitespace characters
     - _Requirements: 18.4_
 
-- [ ] 7. Property-based tests: cursor and completion
-  - [ ] 7.1 Write property test for fresh session structure
+- [x] 7. Property-based tests: cursor and completion
+  - [x] 7.1 Write property test for fresh session structure
     - **Property 1: Fresh session structure**
     - **Validates: Requirements 1.2, 1.3**
 
-  - [ ] 7.2 Write property test for cursor computation correctness
+  - [x] 7.2 Write property test for cursor computation correctness
     - **Property 2: Cursor computation correctness**
     - **Validates: Requirements 2.2, 4.1, 4.2, 4.3, 4.4**
 
-  - [ ] 7.3 Write property test for cursor consistency after mutations
+  - [x] 7.3 Write property test for cursor consistency after mutations
     - **Property 3: Cursor consistency after mutations**
     - **Validates: Requirements 4.5, 8.5**
 
-  - [ ] 7.4 Write property test for session completion query
+  - [x] 7.4 Write property test for session completion query
     - **Property 21: Session completion query**
     - **Validates: Requirements 14.1, 14.2, 14.3**
 
