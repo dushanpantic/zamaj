@@ -111,16 +111,16 @@ Implement the pure-Dart `SessionFlowEngine` service with cursor-based navigation
     - **Property 21: Session completion query**
     - **Validates: Requirements 14.1, 14.2, 14.3**
 
-- [ ] 8. Property-based tests: lifecycle and immutability
-  - [ ] 8.1 Write property test for end session on active session
+- [x] 8. Property-based tests: lifecycle and immutability
+  - [x] 8.1 Write property test for end session on active session
     - **Property 4: End session on active session**
     - **Validates: Requirements 3.1, 3.2, 3.3**
 
-  - [ ] 8.2 Write property test for double-end immutability
+  - [x] 8.2 Write property test for double-end immutability
     - **Property 5: Double-end immutability**
     - **Validates: Requirements 3.4, 16.4**
 
-  - [ ] 8.3 Write property test for ended session immutability
+  - [x] 8.3 Write property test for ended session immutability
     - **Property 9: Ended session immutability**
     - **Validates: Requirements 2.4, 5.5, 5.6, 16.5**
 
