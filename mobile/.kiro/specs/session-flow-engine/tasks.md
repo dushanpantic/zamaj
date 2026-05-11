@@ -137,7 +137,7 @@ Implement the pure-Dart `SessionFlowEngine` service with cursor-based navigation
     - **Property 8: Measurement type validation**
     - **Validates: Requirements 5.4, 6.3, 8.3**
 
-  - [ ]* 9.4 Write property test for editing works regardless of exercise state
+  - [x]* 9.4 Write property test for editing works regardless of exercise state
     - **Property 10: Editing works regardless of exercise state**
     - **Validates: Requirements 6.2**
 
@@ -158,7 +158,7 @@ Implement the pure-Dart `SessionFlowEngine` service with cursor-based navigation
     - **Property 14: Reorder preserves completed positions and applies new order**
     - **Validates: Requirements 9.1, 9.4**
 
-  - [ ]* 10.5 Write property test for reorder requires exact permutation
+  - [x]* 10.5 Write property test for reorder requires exact permutation
     - **Property 15: Reorder requires exact permutation of all unfinished IDs**
     - **Validates: Requirements 9.3**
 
@@ -171,16 +171,16 @@ Implement the pure-Dart `SessionFlowEngine` service with cursor-based navigation
     - **Property 17: Superset removal clears tags preserving relative order**
     - **Validates: Requirements 11.1, 11.5**
 
-  - [ ]* 11.3 Write property test for superset removal requires same group
+  - [x]* 11.3 Write property test for superset removal requires same group
     - **Property 18: Superset removal requires same group**
     - **Validates: Requirements 11.3**
 
 - [ ] 12. Property-based tests: extra work, notes, and value suggestion
-  - [ ]* 12.1 Write property test for valid text body persists
+  - [x]* 12.1 Write property test for valid text body persists
     - **Property 19: Valid text body persists**
     - **Validates: Requirements 12.1, 13.1**
 
-  - [ ]* 12.2 Write property test for whitespace-only body rejected
+  - [x]* 12.2 Write property test for whitespace-only body rejected
     - **Property 20: Whitespace-only body rejected**
     - **Validates: Requirements 12.2, 13.2**
 

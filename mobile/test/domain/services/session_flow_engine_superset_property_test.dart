@@ -1,9 +1,11 @@
 // Feature: session-flow-engine, Property 16: Superset creation assigns shared tag and consecutive positions
 // Feature: session-flow-engine, Property 17: Superset removal clears tags preserving relative order
+// Feature: session-flow-engine, Property 18: Superset removal requires same group
 import 'dart:math';
 
 import 'package:clock/clock.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:zamaj/modules/domain/errors.dart';
 import 'package:zamaj/modules/domain/models/exercise_state.dart';
 import 'package:zamaj/modules/domain/models/session.dart';
 import 'package:zamaj/modules/domain/services/session_flow_engine.dart';
@@ -178,6 +180,58 @@ void main() {
       });
     },
   );
+
+  // **Validates: Requirements 11.3**
+  group('Property 18: Superset removal requires same group', () {
+    test('removeSuperset with exercises from different supersetTags throws '
+        'ValidationError', () async {
+      const iterations = 100;
+      final masterSeed = Random().nextInt(1 << 32);
+
+      for (var i = 0; i < iterations; i++) {
+        final rng = Random(masterSeed + i);
+        final session = _anySessionWithTwoUnfinishedSupersets(rng);
+        final fakeClock = Clock.fixed(anyUtcDateTime(rng));
+        final repo = FakeSessionRepository(clock: fakeClock);
+        repo.seedSession(session);
+
+        final engine = SessionFlowEngine(repository: repo, clock: fakeClock);
+
+        final tagsToIds = <String, List<String>>{};
+        for (final e in session.sessionExercises) {
+          final tag = e.supersetTag;
+          if (tag == null) continue;
+          (tagsToIds[tag] ??= []).add(e.id);
+        }
+
+        final tagList = tagsToIds.keys.toList();
+        final firstTag = tagList[0];
+        final secondTag = tagList[1];
+        final mixedIds = [
+          tagsToIds[firstTag]!.first,
+          tagsToIds[secondTag]!.first,
+        ]..shuffle(rng);
+
+        expect(
+          () => engine.removeSuperset(
+            sessionId: session.id,
+            sessionExerciseIds: mixedIds,
+          ),
+          throwsA(
+            isA<ValidationError>().having(
+              (e) => e.invariant,
+              'invariant',
+              'superset_same_group',
+            ),
+          ),
+          reason:
+              'iteration $i (seed ${masterSeed + i}): '
+              'removeSuperset with ids spanning two different supersetTags '
+              'must throw ValidationError(superset_same_group)',
+        );
+      }
+    });
+  });
 }
 
 Session _anySessionForSupersetCreation(Random rng) {
@@ -239,6 +293,51 @@ Session _anySessionWithUnfinishedSuperset(Random rng) {
   final updatedExercises = session.sessionExercises.map((e) {
     if (taggedIds.contains(e.id)) {
       return e.copyWith(supersetTag: tag);
+    }
+    return e;
+  }).toList();
+
+  return session.copyWith(sessionExercises: updatedExercises);
+}
+
+Session _anySessionWithTwoUnfinishedSupersets(Random rng) {
+  final firstGroupSize = 2 + rng.nextInt(2);
+  final secondGroupSize = 2 + rng.nextInt(2);
+  final extraUnfinished = rng.nextInt(2);
+
+  final states = List.generate(
+    firstGroupSize + secondGroupSize + extraUnfinished,
+    (_) => const ExerciseState.unfinished(),
+  );
+
+  final session = anySessionWithStates(rng, states: states);
+
+  final unfinished =
+      session.sessionExercises.where((e) => e.state is UnfinishedState).toList()
+        ..shuffle(rng);
+
+  final firstTag = anyUuidV4(rng);
+  String secondTag;
+  do {
+    secondTag = anyUuidV4(rng);
+  } while (secondTag == firstTag);
+
+  final firstGroupIds = unfinished
+      .take(firstGroupSize)
+      .map((e) => e.id)
+      .toSet();
+  final secondGroupIds = unfinished
+      .skip(firstGroupSize)
+      .take(secondGroupSize)
+      .map((e) => e.id)
+      .toSet();
+
+  final updatedExercises = session.sessionExercises.map((e) {
+    if (firstGroupIds.contains(e.id)) {
+      return e.copyWith(supersetTag: firstTag);
+    }
+    if (secondGroupIds.contains(e.id)) {
+      return e.copyWith(supersetTag: secondTag);
     }
     return e;
   }).toList();

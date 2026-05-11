@@ -2,9 +2,11 @@
 // Feature: session-flow-engine, Property 6: Set completion records correct values and timestamp
 // Feature: session-flow-engine, Property 7: Last set transitions exercise to completed
 // Feature: session-flow-engine, Property 8: Measurement type validation
+// Feature: session-flow-engine, Property 10: Editing works regardless of exercise state
 // Feature: session-flow-engine, Property 11: Skip transitions to skipped
 // Feature: session-flow-engine, Property 13: Replace sets correct state and preserves snapshot reference
 // Feature: session-flow-engine, Property 14: Reorder preserves completed positions and applies new order
+// Feature: session-flow-engine, Property 15: Reorder requires exact permutation of all unfinished IDs
 import 'dart:math';
 
 import 'package:clock/clock.dart';
@@ -597,6 +599,185 @@ void main() {
       );
     },
   );
+
+  // **Validates: Requirements 6.2**
+  group('Property 10: Editing works regardless of exercise state', () {
+    test('updateExecutedSet succeeds for completed, skipped, and replaced '
+        'exercises and persists the new actualValues', () async {
+      const iterations = 100;
+      final masterSeed = Random().nextInt(1 << 32);
+
+      for (var i = 0; i < iterations; i++) {
+        final rng = Random(masterSeed + i);
+        final session = _anySessionWithExecutedSets(rng);
+        final fakeClock = Clock.fixed(anyUtcDateTime(rng));
+        final repo = FakeSessionRepository(clock: fakeClock);
+        repo.seedSession(session);
+
+        final engine = SessionFlowEngine(repository: repo, clock: fakeClock);
+
+        final exercisesWithSets = session.sessionExercises
+            .where((e) => e.executedSets.isNotEmpty)
+            .toList();
+        if (exercisesWithSets.isEmpty) continue;
+
+        final targetExercise =
+            exercisesWithSets[rng.nextInt(exercisesWithSets.length)];
+        final targetSet = targetExercise
+            .executedSets[rng.nextInt(targetExercise.executedSets.length)];
+
+        final planned = _lookupPlannedExercise(targetExercise, session);
+        final effectiveMt = switch (targetExercise.state) {
+          ReplacedState(:final substitute) => substitute.measurementType,
+          _ => planned.measurementType,
+        };
+        final newValues = anyActualSetValuesForMeasurement(rng, effectiveMt);
+
+        final result = await engine.updateExecutedSet(
+          executedSetId: targetSet.id,
+          actualValues: newValues,
+        );
+
+        final updatedExercise = result.session.sessionExercises.firstWhere(
+          (e) => e.id == targetExercise.id,
+        );
+        final updatedSet = updatedExercise.executedSets.firstWhere(
+          (s) => s.id == targetSet.id,
+        );
+
+        expect(
+          updatedSet.actualValues,
+          equals(newValues),
+          reason:
+              'iteration $i (seed ${masterSeed + i}): '
+              'updateExecutedSet must persist the new actualValues regardless '
+              'of the parent exercise state '
+              '(${targetExercise.state.runtimeType})',
+        );
+
+        expect(
+          updatedExercise.state,
+          equals(targetExercise.state),
+          reason:
+              'iteration $i (seed ${masterSeed + i}): '
+              'updateExecutedSet must not change the parent exercise state',
+        );
+      }
+    });
+  });
+
+  // **Validates: Requirements 9.3**
+  group(
+    'Property 15: Reorder requires exact permutation of all unfinished IDs',
+    () {
+      test('reorderUnfinished with fewer ids than unfinished throws '
+          'ValidationError', () async {
+        const iterations = 100;
+        final masterSeed = Random().nextInt(1 << 32);
+
+        for (var i = 0; i < iterations; i++) {
+          final rng = Random(masterSeed + i);
+          final session = _anySessionWithAtLeastTwoUnfinished(rng);
+          final fakeClock = Clock.fixed(anyUtcDateTime(rng));
+          final repo = FakeSessionRepository(clock: fakeClock);
+          repo.seedSession(session);
+
+          final engine = SessionFlowEngine(repository: repo, clock: fakeClock);
+
+          final unfinishedIds = session.sessionExercises
+              .where((e) => e.state is UnfinishedState)
+              .map((e) => e.id)
+              .toList();
+
+          final dropIndex = rng.nextInt(unfinishedIds.length);
+          final truncated = [...unfinishedIds]..removeAt(dropIndex);
+          truncated.shuffle(rng);
+
+          expect(
+            () => engine.reorderUnfinished(
+              sessionId: session.id,
+              orderedUnfinishedIds: truncated,
+            ),
+            throwsA(
+              isA<ValidationError>().having(
+                (e) => e.invariant,
+                'invariant',
+                'exact_permutation',
+              ),
+            ),
+            reason:
+                'iteration $i (seed ${masterSeed + i}): '
+                'reorderUnfinished with a list missing an unfinished id '
+                'must throw ValidationError(exact_permutation)',
+          );
+        }
+      });
+
+      test('reorderUnfinished with duplicate unfinished ids throws '
+          'ValidationError', () async {
+        const iterations = 100;
+        final masterSeed = Random().nextInt(1 << 32);
+
+        for (var i = 0; i < iterations; i++) {
+          final rng = Random(masterSeed + i);
+          final session = _anySessionWithAtLeastTwoUnfinished(rng);
+          final fakeClock = Clock.fixed(anyUtcDateTime(rng));
+          final repo = FakeSessionRepository(clock: fakeClock);
+          repo.seedSession(session);
+
+          final engine = SessionFlowEngine(repository: repo, clock: fakeClock);
+
+          final unfinishedIds = session.sessionExercises
+              .where((e) => e.state is UnfinishedState)
+              .map((e) => e.id)
+              .toList();
+
+          final duplicated = unfinishedIds[rng.nextInt(unfinishedIds.length)];
+          final withDuplicate = [...unfinishedIds, duplicated]..shuffle(rng);
+
+          expect(
+            () => engine.reorderUnfinished(
+              sessionId: session.id,
+              orderedUnfinishedIds: withDuplicate,
+            ),
+            throwsA(
+              isA<ValidationError>().having(
+                (e) => e.invariant,
+                'invariant',
+                'exact_permutation',
+              ),
+            ),
+            reason:
+                'iteration $i (seed ${masterSeed + i}): '
+                'reorderUnfinished with a duplicate unfinished id '
+                'must throw ValidationError(exact_permutation)',
+          );
+        }
+      });
+    },
+  );
+}
+
+Session _anySessionWithAtLeastTwoUnfinished(Random rng) {
+  final unfinishedCount = 2 + rng.nextInt(3);
+  final lockedCount = rng.nextInt(3);
+
+  final states = <ExerciseState>[
+    ...List.generate(unfinishedCount, (_) => const ExerciseState.unfinished()),
+    ...List.generate(lockedCount, (_) {
+      switch (rng.nextInt(3)) {
+        case 0:
+          return const ExerciseState.completed();
+        case 1:
+          return const ExerciseState.skipped();
+        default:
+          return ExerciseState.replaced(substitute: anySubstituteExercise(rng));
+      }
+    }),
+  ];
+  states.shuffle(rng);
+
+  return anySessionWithStates(rng, states: states);
 }
 
 Session _anySessionForReorder(Random rng) {
