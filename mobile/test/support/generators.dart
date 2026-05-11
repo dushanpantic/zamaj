@@ -872,3 +872,356 @@ class RegressingClock extends AppClock {
     return t.isUtc ? t : t.toUtc();
   }
 }
+
+// ---------------------------------------------------------------------------
+// Engine-specific generators — consistent snapshot ↔ exercise mapping
+// ---------------------------------------------------------------------------
+
+Session anySessionForEngine(Random rng) {
+  final workoutDay = _anyWorkoutDayForEngine(rng);
+  final snapshot = SessionSnapshot.capture(
+    workoutDay: workoutDay,
+    capturedAt: anyUtcDateTime(rng),
+    schemaVersion: 1,
+  );
+
+  final allExercises = _flattenExercises(workoutDay);
+  final sessionId = anyUuidV4(rng);
+
+  final sessionExercises = List.generate(allExercises.length, (i) {
+    final planned = allExercises[i];
+    final mt = planned.measurementType;
+    final plannedSetCount = planned.sets.length;
+    final state = anyExerciseState(rng);
+    final executedSetCount = _executedSetCountForState(
+      rng,
+      state,
+      plannedSetCount,
+    );
+
+    return SessionExercise(
+      id: anyUuidV4(rng),
+      sessionId: sessionId,
+      position: i,
+      plannedExerciseIdInSnapshot: planned.id,
+      state: state,
+      executedSets: List.generate(executedSetCount, (j) {
+        final effectiveMt = switch (state) {
+          ReplacedState(:final substitute) => substitute.measurementType,
+          _ => mt,
+        };
+        return ExecutedSet(
+          id: anyUuidV4(rng),
+          sessionExerciseId: anyUuidV4(rng),
+          position: j,
+          measurementType: effectiveMt,
+          actualValues: anyActualSetValuesForMeasurement(rng, effectiveMt),
+          plannedSetIdInSnapshot: j < planned.sets.length
+              ? planned.sets[j].id
+              : null,
+          completedAt: anyUtcDateTime(rng),
+          createdAt: anyUtcDateTime(rng),
+          updatedAt: anyUtcDateTime(rng),
+          schemaVersion: 1,
+        );
+      }),
+      createdAt: anyUtcDateTime(rng),
+      updatedAt: anyUtcDateTime(rng),
+      schemaVersion: 1,
+    );
+  });
+
+  return Session(
+    id: sessionId,
+    workoutDayId: workoutDay.id,
+    snapshot: snapshot,
+    sessionExercises: sessionExercises,
+    notes: [],
+    extraWork: [],
+    startedAt: anyUtcDateTime(rng),
+    endedAt: null,
+    createdAt: anyUtcDateTime(rng),
+    updatedAt: anyUtcDateTime(rng),
+    schemaVersion: 1,
+  );
+}
+
+Session anySessionWithStates(
+  Random rng, {
+  required List<ExerciseState> states,
+}) {
+  assert(states.isNotEmpty);
+  final exerciseCount = states.length;
+  final workoutDay = _anyWorkoutDayWithExerciseCount(rng, exerciseCount);
+  final snapshot = SessionSnapshot.capture(
+    workoutDay: workoutDay,
+    capturedAt: anyUtcDateTime(rng),
+    schemaVersion: 1,
+  );
+
+  final allExercises = _flattenExercises(workoutDay);
+  final sessionId = anyUuidV4(rng);
+
+  final sessionExercises = List.generate(exerciseCount, (i) {
+    final planned = allExercises[i];
+    final mt = planned.measurementType;
+    final plannedSetCount = planned.sets.length;
+    final state = states[i];
+    final executedSetCount = _executedSetCountForState(
+      rng,
+      state,
+      plannedSetCount,
+    );
+
+    return SessionExercise(
+      id: anyUuidV4(rng),
+      sessionId: sessionId,
+      position: i,
+      plannedExerciseIdInSnapshot: planned.id,
+      state: state,
+      executedSets: List.generate(executedSetCount, (j) {
+        final effectiveMt = switch (state) {
+          ReplacedState(:final substitute) => substitute.measurementType,
+          _ => mt,
+        };
+        return ExecutedSet(
+          id: anyUuidV4(rng),
+          sessionExerciseId: anyUuidV4(rng),
+          position: j,
+          measurementType: effectiveMt,
+          actualValues: anyActualSetValuesForMeasurement(rng, effectiveMt),
+          plannedSetIdInSnapshot: j < planned.sets.length
+              ? planned.sets[j].id
+              : null,
+          completedAt: anyUtcDateTime(rng),
+          createdAt: anyUtcDateTime(rng),
+          updatedAt: anyUtcDateTime(rng),
+          schemaVersion: 1,
+        );
+      }),
+      createdAt: anyUtcDateTime(rng),
+      updatedAt: anyUtcDateTime(rng),
+      schemaVersion: 1,
+    );
+  });
+
+  return Session(
+    id: sessionId,
+    workoutDayId: workoutDay.id,
+    snapshot: snapshot,
+    sessionExercises: sessionExercises,
+    notes: [],
+    extraWork: [],
+    startedAt: anyUtcDateTime(rng),
+    endedAt: null,
+    createdAt: anyUtcDateTime(rng),
+    updatedAt: anyUtcDateTime(rng),
+    schemaVersion: 1,
+  );
+}
+
+Session anyCursorableSession(Random rng) {
+  final exerciseCount = 1 + rng.nextInt(5);
+  final unfinishedIndex = rng.nextInt(exerciseCount);
+
+  final states = List.generate(exerciseCount, (i) {
+    if (i == unfinishedIndex) return const ExerciseState.unfinished();
+    if (i < unfinishedIndex) {
+      switch (rng.nextInt(3)) {
+        case 0:
+          return const ExerciseState.completed();
+        case 1:
+          return const ExerciseState.skipped();
+        default:
+          return ExerciseState.replaced(substitute: anySubstituteExercise(rng));
+      }
+    }
+    return anyExerciseState(rng);
+  });
+
+  final workoutDay = _anyWorkoutDayWithExerciseCount(rng, exerciseCount);
+  final snapshot = SessionSnapshot.capture(
+    workoutDay: workoutDay,
+    capturedAt: anyUtcDateTime(rng),
+    schemaVersion: 1,
+  );
+
+  final allExercises = _flattenExercises(workoutDay);
+  final sessionId = anyUuidV4(rng);
+
+  final sessionExercises = List.generate(exerciseCount, (i) {
+    final planned = allExercises[i];
+    final mt = planned.measurementType;
+    final plannedSetCount = planned.sets.length;
+    final state = states[i];
+
+    final int executedSetCount;
+    if (i == unfinishedIndex) {
+      executedSetCount = rng.nextInt(plannedSetCount);
+    } else {
+      executedSetCount = _executedSetCountForState(rng, state, plannedSetCount);
+    }
+
+    return SessionExercise(
+      id: anyUuidV4(rng),
+      sessionId: sessionId,
+      position: i,
+      plannedExerciseIdInSnapshot: planned.id,
+      state: state,
+      executedSets: List.generate(executedSetCount, (j) {
+        final effectiveMt = switch (state) {
+          ReplacedState(:final substitute) => substitute.measurementType,
+          _ => mt,
+        };
+        return ExecutedSet(
+          id: anyUuidV4(rng),
+          sessionExerciseId: anyUuidV4(rng),
+          position: j,
+          measurementType: effectiveMt,
+          actualValues: anyActualSetValuesForMeasurement(rng, effectiveMt),
+          plannedSetIdInSnapshot: j < planned.sets.length
+              ? planned.sets[j].id
+              : null,
+          completedAt: anyUtcDateTime(rng),
+          createdAt: anyUtcDateTime(rng),
+          updatedAt: anyUtcDateTime(rng),
+          schemaVersion: 1,
+        );
+      }),
+      createdAt: anyUtcDateTime(rng),
+      updatedAt: anyUtcDateTime(rng),
+      schemaVersion: 1,
+    );
+  });
+
+  return Session(
+    id: sessionId,
+    workoutDayId: workoutDay.id,
+    snapshot: snapshot,
+    sessionExercises: sessionExercises,
+    notes: [],
+    extraWork: [],
+    startedAt: anyUtcDateTime(rng),
+    endedAt: null,
+    createdAt: anyUtcDateTime(rng),
+    updatedAt: anyUtcDateTime(rng),
+    schemaVersion: 1,
+  );
+}
+
+Session anyEndedSession(Random rng) {
+  final session = anySessionForEngine(rng);
+  return session.copyWith(endedAt: anyUtcDateTime(rng));
+}
+
+String anyWhitespaceString(Random rng) {
+  const whitespace = [0x20, 0x09, 0x0A, 0x0D, 0x0B, 0x0C];
+  final len = 1 + rng.nextInt(20);
+  return String.fromCharCodes(
+    List.generate(len, (_) => whitespace[rng.nextInt(whitespace.length)]),
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Engine generator helpers
+// ---------------------------------------------------------------------------
+
+WorkoutDay _anyWorkoutDayForEngine(Random rng) {
+  final exerciseCount = 1 + rng.nextInt(5);
+  return _anyWorkoutDayWithExerciseCount(rng, exerciseCount);
+}
+
+WorkoutDay _anyWorkoutDayWithExerciseCount(Random rng, int exerciseCount) {
+  assert(exerciseCount >= 1);
+  final workoutDayId = anyUuidV4(rng);
+  final groups = <ExerciseGroup>[];
+  var remaining = exerciseCount;
+  var groupPosition = 0;
+
+  while (remaining > 0) {
+    final ExerciseGroupKind kind;
+    final int groupExerciseCount;
+
+    if (remaining >= 2 && rng.nextInt(3) == 0) {
+      kind = const ExerciseGroupKind.superset();
+      groupExerciseCount = min(2 + rng.nextInt(2), remaining);
+    } else {
+      kind = const ExerciseGroupKind.single();
+      groupExerciseCount = 1;
+    }
+
+    final groupId = anyUuidV4(rng);
+    final exercises = List.generate(groupExerciseCount, (i) {
+      final mt = anyMeasurementType(rng);
+      final setCount = 1 + rng.nextInt(5);
+      final exerciseId = anyUuidV4(rng);
+      return Exercise(
+        id: exerciseId,
+        exerciseGroupId: groupId,
+        position: i,
+        name: _anyString(rng, maxLen: 40),
+        measurementType: mt,
+        metadata: anyExerciseMetadata(rng),
+        plannedRestSeconds: rng.nextBool() ? rng.nextInt(301) : null,
+        sets: List.generate(setCount, (j) {
+          return WorkoutSet(
+            id: anyUuidV4(rng),
+            exerciseId: exerciseId,
+            position: j,
+            measurementType: mt,
+            plannedValues: anyPlannedSetValuesForMeasurement(rng, mt),
+            createdAt: anyUtcDateTime(rng),
+            updatedAt: anyUtcDateTime(rng),
+            schemaVersion: 1,
+          );
+        }),
+        createdAt: anyUtcDateTime(rng),
+        updatedAt: anyUtcDateTime(rng),
+        schemaVersion: 1,
+      );
+    });
+
+    groups.add(
+      ExerciseGroup(
+        id: groupId,
+        workoutDayId: workoutDayId,
+        position: groupPosition,
+        kind: kind,
+        exercises: exercises,
+        createdAt: anyUtcDateTime(rng),
+        updatedAt: anyUtcDateTime(rng),
+        schemaVersion: 1,
+      ),
+    );
+
+    remaining -= groupExerciseCount;
+    groupPosition++;
+  }
+
+  return WorkoutDay(
+    id: workoutDayId,
+    programId: anyUuidV4(rng),
+    name: _anyString(rng, maxLen: 40),
+    exerciseGroups: groups,
+    createdAt: anyUtcDateTime(rng),
+    updatedAt: anyUtcDateTime(rng),
+    schemaVersion: 1,
+  );
+}
+
+List<Exercise> _flattenExercises(WorkoutDay workoutDay) {
+  return [for (final group in workoutDay.exerciseGroups) ...group.exercises];
+}
+
+int _executedSetCountForState(
+  Random rng,
+  ExerciseState state,
+  int plannedSetCount,
+) {
+  return switch (state) {
+    CompletedState() => plannedSetCount,
+    SkippedState() => rng.nextInt(plannedSetCount + 1),
+    ReplacedState() => rng.nextInt(plannedSetCount + 1),
+    UnfinishedState() => rng.nextInt(plannedSetCount),
+  };
+}

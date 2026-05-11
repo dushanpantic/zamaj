@@ -76,17 +76,17 @@ Implement the pure-Dart `SessionFlowEngine` service with cursor-based navigation
     - `addSessionNote(...)`: validate body is non-whitespace and ≤5000 chars; delegate to repo; return SessionState
     - _Requirements: 12.1, 12.2, 12.3, 13.1, 13.2, 13.3_
 
-- [ ] 5. Checkpoint - Ensure all tests pass
+- [x] 5. Checkpoint - Ensure all tests pass
   - Ensure all tests pass, ask the user if questions arise.
 
-- [ ] 6. Create test infrastructure
-  - [ ] 6.1 Create `FakeSessionRepository` for engine tests
+- [x] 6. Create test infrastructure
+  - [x] 6.1 Create `FakeSessionRepository` for engine tests
     - Create `test/support/fake_session_repository.dart` implementing `SessionRepository` with in-memory storage
     - Must correctly apply mutations (completeSet, skip, replace, reorder, createSuperset, removeSuperset, addExtraWork, addSessionNote, endSession)
     - Must return fully hydrated `Session` after each mutation
     - _Requirements: 17.1, 17.2, 17.3_
 
-  - [ ] 6.2 Extend `test/support/generators.dart` with engine-specific generators
+  - [x] 6.2 Extend `test/support/generators.dart` with engine-specific generators
     - `anySessionForEngine(Random rng)`: generates a Session with consistent snapshot ↔ exercise mapping (exercises reference real planned exercises in the snapshot)
     - `anySessionWithStates(Random rng, {required List<ExerciseState> states})`: generates a session with exercises in specified states, consistent with snapshot
     - `anyCursorableSession(Random rng)`: generates a session with at least one unfinished exercise with sets remaining
