@@ -143,8 +143,8 @@ Conventions:
     - _Requirements: R18 AC4_
     - _Design: §3.2_
 
-- [ ] 3. Pure-Dart services
-  - [ ] 3.1 Implement `PlannedSummaryFormatter`
+- [x] 3. Pure-Dart services
+  - [x] 3.1 Implement `PlannedSummaryFormatter`
     (`services/planned_summary_formatter.dart`) as an
     `abstract final class` with `static String summarize(Exercise
     plannedExercise)` per design §6: handle empty sets, all-equal
@@ -153,7 +153,7 @@ Conventions:
     - _Requirements: R13 AC1_
     - _Design: §6_
 
-  - [ ] 3.2 Write
+  - [x] 3.2 Write
     `test/modules/workout_overview/services/planned_summary_formatter_test.dart`
     covering: empty sets list returns "0 sets"; one rep-based set
     returns "<kg>kg 1×<reps>"; multiple rep-based sets all equal
@@ -164,7 +164,7 @@ Conventions:
     - _Requirements: R13 AC1_
     - _Design: §6_
 
-  - [ ] 3.3 Implement `ExerciseViewModelAssembler`
+  - [x] 3.3 Implement `ExerciseViewModelAssembler`
     (`services/exercise_view_model_assembler.dart`) as an
     `abstract final class` with `static
     List<SupersetGroupViewModel> assemble(SessionState
@@ -175,7 +175,7 @@ Conventions:
     - _Requirements: R1 AC2, R2 AC6, R3 AC2, R13 AC4, R14 AC3_
     - _Design: §5_
 
-  - [ ] 3.4 Write
+  - [x] 3.4 Write
     `test/modules/workout_overview/services/exercise_view_model_assembler_test.dart`
     covering: one standalone unfinished exercise → cursor target on
     set 0 with isCursorTarget true; mixed standalone + superset →
@@ -187,7 +187,7 @@ Conventions:
     - _Requirements: R1 AC2, R2 AC5, R2 AC6, R3 AC2, R5 AC1, R13 AC4_
     - _Design: §5_
 
-  - [ ] 3.5 Implement `DropResolver`
+  - [x] 3.5 Implement `DropResolver`
     (`services/drop_resolver.dart`) as an `abstract final class`
     with `static DropIntent resolve({sessionId, groups, draggedId,
     target})` per design §7.1: handle the noop branches first
@@ -197,7 +197,7 @@ Conventions:
     - _Requirements: R4, R5_
     - _Design: §7_
 
-  - [ ] 3.6 Write
+  - [x] 3.6 Write
     `test/modules/workout_overview/services/drop_resolver_test.dart`
     covering each branch from §7.1 with a small hand-crafted
     `groups` argument: drop outside → noop; drop on self → noop;
@@ -209,7 +209,7 @@ Conventions:
     - _Requirements: R4, R5 AC1–AC4_
     - _Design: §7.1_
 
-  - [ ] 3.7 Write
+  - [x] 3.7 Write
     `test/modules/workout_overview/services/assembler_determinism_property_test.dart`:
     generate ≥100 random `SessionState` values via
     `anySessionStateForOverview` (extend
@@ -218,7 +218,7 @@ Conventions:
     - _Requirements: R5 (engine determinism reused)_
     - _Design: §5.3, §13.2_
 
-  - [ ] 3.8 Write
+  - [x] 3.8 Write
     `test/modules/workout_overview/services/assembler_order_property_test.dart`:
     generate ≥100 random `SessionState` values; assert flattening
     `groups[*].exercises[*].sessionExercise` equals
@@ -226,21 +226,21 @@ Conventions:
     - _Requirements: R1 AC2_
     - _Design: §5.1, §13.2_
 
-  - [ ] 3.9 Write
+  - [x] 3.9 Write
     `test/modules/workout_overview/services/assembler_count_property_test.dart`:
     generate ≥100 random `SessionState` values; assert flattened
     exercise count equals `session.sessionExercises.length`
     - _Requirements: R1 AC2_
     - _Design: §5.1, §13.2_
 
-  - [ ] 3.10 Write
+  - [x] 3.10 Write
     `test/modules/workout_overview/services/drop_resolver_self_property_test.dart`:
     generate ≥100 random `(groups, draggedId)` pairs; assert
     `resolve(target: ontoExercise(draggedId))` returns `Noop`
     - _Requirements: R5 AC2_
     - _Design: §7.1_
 
-  - [ ] 3.11 Write
+  - [x] 3.11 Write
     `test/modules/workout_overview/services/drop_resolver_same_position_property_test.dart`:
     generate ≥100 random `(groups, draggedId)` pairs where
     `draggedId` is unfinished; locate its current unfinished index

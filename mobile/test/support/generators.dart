@@ -20,6 +20,8 @@ import 'package:zamaj/modules/domain/models/session_snapshot.dart';
 import 'package:zamaj/modules/domain/models/substitute_exercise.dart';
 import 'package:zamaj/modules/domain/models/workout_day.dart';
 import 'package:zamaj/modules/domain/models/workout_set.dart';
+import 'package:zamaj/modules/domain/services/cursor.dart';
+import 'package:zamaj/modules/domain/services/session_state.dart';
 
 String anyUuidV4(Random rng) {
   final bytes = List<int>.generate(16, (_) => rng.nextInt(256));
@@ -1112,6 +1114,46 @@ Session anyCursorableSession(Random rng) {
 Session anyEndedSession(Random rng) {
   final session = anySessionForEngine(rng);
   return session.copyWith(endedAt: anyUtcDateTime(rng));
+}
+
+SessionState anySessionStateForOverview(Random rng) {
+  final session = anySessionForEngine(rng);
+  return SessionState(session: session, cursor: _cursorForSession(session));
+}
+
+Cursor _cursorForSession(Session session) {
+  final sorted = List<SessionExercise>.of(session.sessionExercises)
+    ..sort((a, b) => a.position.compareTo(b.position));
+  for (final ex in sorted) {
+    final state = ex.state;
+    if (state is UnfinishedState || state is ReplacedState) {
+      final planned = _findPlannedExerciseInSnapshot(ex, session);
+      if (ex.executedSets.length < planned.sets.length) {
+        return Cursor.active(
+          sessionExerciseId: ex.id,
+          setIndex: ex.executedSets.length,
+        );
+      }
+    }
+  }
+  return const Cursor.completed();
+}
+
+Exercise _findPlannedExerciseInSnapshot(
+  SessionExercise sessionExercise,
+  Session session,
+) {
+  for (final group in session.snapshot.workoutDay.exerciseGroups) {
+    for (final exercise in group.exercises) {
+      if (exercise.id == sessionExercise.plannedExerciseIdInSnapshot) {
+        return exercise;
+      }
+    }
+  }
+  throw StateError(
+    'Planned exercise ${sessionExercise.plannedExerciseIdInSnapshot} '
+    'not found in session ${session.id}',
+  );
 }
 
 String anyWhitespaceString(Random rng) {
