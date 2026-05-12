@@ -88,15 +88,15 @@ Conventions:
     - _Requirements: R16 AC4_
     - _Design: §2.3_
 
-- [ ] 2. Pure-Dart value types and models
-  - [ ] 2.1 Define `WorkoutOverviewArgs`
+- [x] 2. Pure-Dart value types and models
+  - [x] 2.1 Define `WorkoutOverviewArgs`
     (`models/workout_overview_args.dart`) as a freezed class with a
     required `String sessionId`; add `part` directives and run
     `dart run build_runner build --force-jit`
     - _Requirements: R1 AC1, R17 AC1, R17 AC3_
     - _Design: §1.2, §2.2_
 
-  - [ ] 2.2 Define `SetRowViewModel`
+  - [x] 2.2 Define `SetRowViewModel`
     (`models/set_row_view_model.dart`) as a freezed class with
     required `int position`, nullable `PlannedSetValues plannedValues`,
     nullable `ExecutedSet executedSet`, and required
@@ -104,7 +104,7 @@ Conventions:
     - _Requirements: R3 AC2, R13 AC4_
     - _Design: §3.2, §5.2_
 
-  - [ ] 2.3 Define `ExerciseViewModel`
+  - [x] 2.3 Define `ExerciseViewModel`
     (`models/exercise_view_model.dart`) as a freezed class with
     required `SessionExercise sessionExercise`, required
     `Exercise plannedExerciseInSnapshot`, required
@@ -115,14 +115,14 @@ Conventions:
     - _Requirements: R2, R3, R13_
     - _Design: §3.2, §5.1_
 
-  - [ ] 2.4 Define `SupersetGroupViewModel`
+  - [x] 2.4 Define `SupersetGroupViewModel`
     (`models/superset_group_view_model.dart`) as a freezed class with
     nullable `String supersetTag` and required
     `List<ExerciseViewModel> exercises`; regenerate
     - _Requirements: R1 AC2, R6_
     - _Design: §3.2, §5.1_
 
-  - [ ] 2.5 Define `DropTarget` and `DropIntent`
+  - [x] 2.5 Define `DropTarget` and `DropIntent`
     (`models/drop_intent.dart`) as freezed sealed unions per the
     design pseudocode: `DropTarget.beforeIndex(int)`,
     `DropTarget.ontoExercise(String)`, `DropTarget.outside()`;
@@ -132,11 +132,14 @@ Conventions:
     - _Requirements: R4, R5_
     - _Design: §7_
 
-  - [ ] 2.6 Define the `MutationKind` enum in
+  - [x] 2.6 Define the `MutationKind` enum in
     `bloc/workout_overview_state.dart` (or a sibling file)
     enumerating every kind named in the design §3.2 mutation table:
     `reorder`, `createSuperset`, `removeSuperset`, `skip`, `replace`,
     `logSet`, `editSet`, `addNote`, `addExtraWork`, `endSession`
+    - Implemented as a sibling file `models/mutation_kind.dart` so
+      it can be imported by the BLoC (when added in Task 5) and any
+      view layer without dragging the BLoC file in.
     - _Requirements: R18 AC4_
     - _Design: §3.2_
 

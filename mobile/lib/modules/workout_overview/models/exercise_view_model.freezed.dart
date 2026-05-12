@@ -1,0 +1,349 @@
+// GENERATED CODE - DO NOT MODIFY BY HAND
+// coverage:ignore-file
+// ignore_for_file: type=lint
+// ignore_for_file: unused_element, deprecated_member_use, deprecated_member_use_from_same_package, use_function_type_syntax_for_parameters, unnecessary_const, avoid_init_to_null, invalid_override_different_default_values_named, prefer_expression_function_bodies, annotate_overrides, invalid_annotation_target, unnecessary_question_mark
+
+part of 'exercise_view_model.dart';
+
+// **************************************************************************
+// FreezedGenerator
+// **************************************************************************
+
+// dart format off
+T _$identity<T>(T value) => value;
+/// @nodoc
+mixin _$ExerciseViewModel {
+
+ SessionExercise get sessionExercise; Exercise get plannedExerciseInSnapshot; String get plannedSummary; List<SetRowViewModel> get setRows; bool get isCursorTarget; int? get cursorSetIndex; MeasurementType get effectiveMeasurementType;
+/// Create a copy of ExerciseViewModel
+/// with the given fields replaced by the non-null parameter values.
+@JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+$ExerciseViewModelCopyWith<ExerciseViewModel> get copyWith => _$ExerciseViewModelCopyWithImpl<ExerciseViewModel>(this as ExerciseViewModel, _$identity);
+
+
+
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is ExerciseViewModel&&(identical(other.sessionExercise, sessionExercise) || other.sessionExercise == sessionExercise)&&(identical(other.plannedExerciseInSnapshot, plannedExerciseInSnapshot) || other.plannedExerciseInSnapshot == plannedExerciseInSnapshot)&&(identical(other.plannedSummary, plannedSummary) || other.plannedSummary == plannedSummary)&&const DeepCollectionEquality().equals(other.setRows, setRows)&&(identical(other.isCursorTarget, isCursorTarget) || other.isCursorTarget == isCursorTarget)&&(identical(other.cursorSetIndex, cursorSetIndex) || other.cursorSetIndex == cursorSetIndex)&&(identical(other.effectiveMeasurementType, effectiveMeasurementType) || other.effectiveMeasurementType == effectiveMeasurementType));
+}
+
+
+@override
+int get hashCode => Object.hash(runtimeType,sessionExercise,plannedExerciseInSnapshot,plannedSummary,const DeepCollectionEquality().hash(setRows),isCursorTarget,cursorSetIndex,effectiveMeasurementType);
+
+@override
+String toString() {
+  return 'ExerciseViewModel(sessionExercise: $sessionExercise, plannedExerciseInSnapshot: $plannedExerciseInSnapshot, plannedSummary: $plannedSummary, setRows: $setRows, isCursorTarget: $isCursorTarget, cursorSetIndex: $cursorSetIndex, effectiveMeasurementType: $effectiveMeasurementType)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class $ExerciseViewModelCopyWith<$Res>  {
+  factory $ExerciseViewModelCopyWith(ExerciseViewModel value, $Res Function(ExerciseViewModel) _then) = _$ExerciseViewModelCopyWithImpl;
+@useResult
+$Res call({
+ SessionExercise sessionExercise, Exercise plannedExerciseInSnapshot, String plannedSummary, List<SetRowViewModel> setRows, bool isCursorTarget, int? cursorSetIndex, MeasurementType effectiveMeasurementType
+});
+
+
+$SessionExerciseCopyWith<$Res> get sessionExercise;$ExerciseCopyWith<$Res> get plannedExerciseInSnapshot;$MeasurementTypeCopyWith<$Res> get effectiveMeasurementType;
+
+}
+/// @nodoc
+class _$ExerciseViewModelCopyWithImpl<$Res>
+    implements $ExerciseViewModelCopyWith<$Res> {
+  _$ExerciseViewModelCopyWithImpl(this._self, this._then);
+
+  final ExerciseViewModel _self;
+  final $Res Function(ExerciseViewModel) _then;
+
+/// Create a copy of ExerciseViewModel
+/// with the given fields replaced by the non-null parameter values.
+@pragma('vm:prefer-inline') @override $Res call({Object? sessionExercise = null,Object? plannedExerciseInSnapshot = null,Object? plannedSummary = null,Object? setRows = null,Object? isCursorTarget = null,Object? cursorSetIndex = freezed,Object? effectiveMeasurementType = null,}) {
+  return _then(_self.copyWith(
+sessionExercise: null == sessionExercise ? _self.sessionExercise : sessionExercise // ignore: cast_nullable_to_non_nullable
+as SessionExercise,plannedExerciseInSnapshot: null == plannedExerciseInSnapshot ? _self.plannedExerciseInSnapshot : plannedExerciseInSnapshot // ignore: cast_nullable_to_non_nullable
+as Exercise,plannedSummary: null == plannedSummary ? _self.plannedSummary : plannedSummary // ignore: cast_nullable_to_non_nullable
+as String,setRows: null == setRows ? _self.setRows : setRows // ignore: cast_nullable_to_non_nullable
+as List<SetRowViewModel>,isCursorTarget: null == isCursorTarget ? _self.isCursorTarget : isCursorTarget // ignore: cast_nullable_to_non_nullable
+as bool,cursorSetIndex: freezed == cursorSetIndex ? _self.cursorSetIndex : cursorSetIndex // ignore: cast_nullable_to_non_nullable
+as int?,effectiveMeasurementType: null == effectiveMeasurementType ? _self.effectiveMeasurementType : effectiveMeasurementType // ignore: cast_nullable_to_non_nullable
+as MeasurementType,
+  ));
+}
+/// Create a copy of ExerciseViewModel
+/// with the given fields replaced by the non-null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$SessionExerciseCopyWith<$Res> get sessionExercise {
+  
+  return $SessionExerciseCopyWith<$Res>(_self.sessionExercise, (value) {
+    return _then(_self.copyWith(sessionExercise: value));
+  });
+}/// Create a copy of ExerciseViewModel
+/// with the given fields replaced by the non-null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$ExerciseCopyWith<$Res> get plannedExerciseInSnapshot {
+  
+  return $ExerciseCopyWith<$Res>(_self.plannedExerciseInSnapshot, (value) {
+    return _then(_self.copyWith(plannedExerciseInSnapshot: value));
+  });
+}/// Create a copy of ExerciseViewModel
+/// with the given fields replaced by the non-null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$MeasurementTypeCopyWith<$Res> get effectiveMeasurementType {
+  
+  return $MeasurementTypeCopyWith<$Res>(_self.effectiveMeasurementType, (value) {
+    return _then(_self.copyWith(effectiveMeasurementType: value));
+  });
+}
+}
+
+
+/// Adds pattern-matching-related methods to [ExerciseViewModel].
+extension ExerciseViewModelPatterns on ExerciseViewModel {
+/// A variant of `map` that fallback to returning `orElse`.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case _:
+///     return orElse();
+/// }
+/// ```
+
+@optionalTypeArgs TResult maybeMap<TResult extends Object?>(TResult Function( _ExerciseViewModel value)?  $default,{required TResult orElse(),}){
+final _that = this;
+switch (_that) {
+case _ExerciseViewModel() when $default != null:
+return $default(_that);case _:
+  return orElse();
+
+}
+}
+/// A `switch`-like method, using callbacks.
+///
+/// Callbacks receives the raw object, upcasted.
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case final Subclass2 value:
+///     return ...;
+/// }
+/// ```
+
+@optionalTypeArgs TResult map<TResult extends Object?>(TResult Function( _ExerciseViewModel value)  $default,){
+final _that = this;
+switch (_that) {
+case _ExerciseViewModel():
+return $default(_that);case _:
+  throw StateError('Unexpected subclass');
+
+}
+}
+/// A variant of `map` that fallback to returning `null`.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case _:
+///     return null;
+/// }
+/// ```
+
+@optionalTypeArgs TResult? mapOrNull<TResult extends Object?>(TResult? Function( _ExerciseViewModel value)?  $default,){
+final _that = this;
+switch (_that) {
+case _ExerciseViewModel() when $default != null:
+return $default(_that);case _:
+  return null;
+
+}
+}
+/// A variant of `when` that fallback to an `orElse` callback.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case _:
+///     return orElse();
+/// }
+/// ```
+
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( SessionExercise sessionExercise,  Exercise plannedExerciseInSnapshot,  String plannedSummary,  List<SetRowViewModel> setRows,  bool isCursorTarget,  int? cursorSetIndex,  MeasurementType effectiveMeasurementType)?  $default,{required TResult orElse(),}) {final _that = this;
+switch (_that) {
+case _ExerciseViewModel() when $default != null:
+return $default(_that.sessionExercise,_that.plannedExerciseInSnapshot,_that.plannedSummary,_that.setRows,_that.isCursorTarget,_that.cursorSetIndex,_that.effectiveMeasurementType);case _:
+  return orElse();
+
+}
+}
+/// A `switch`-like method, using callbacks.
+///
+/// As opposed to `map`, this offers destructuring.
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case Subclass2(:final field2):
+///     return ...;
+/// }
+/// ```
+
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( SessionExercise sessionExercise,  Exercise plannedExerciseInSnapshot,  String plannedSummary,  List<SetRowViewModel> setRows,  bool isCursorTarget,  int? cursorSetIndex,  MeasurementType effectiveMeasurementType)  $default,) {final _that = this;
+switch (_that) {
+case _ExerciseViewModel():
+return $default(_that.sessionExercise,_that.plannedExerciseInSnapshot,_that.plannedSummary,_that.setRows,_that.isCursorTarget,_that.cursorSetIndex,_that.effectiveMeasurementType);case _:
+  throw StateError('Unexpected subclass');
+
+}
+}
+/// A variant of `when` that fallback to returning `null`
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case _:
+///     return null;
+/// }
+/// ```
+
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( SessionExercise sessionExercise,  Exercise plannedExerciseInSnapshot,  String plannedSummary,  List<SetRowViewModel> setRows,  bool isCursorTarget,  int? cursorSetIndex,  MeasurementType effectiveMeasurementType)?  $default,) {final _that = this;
+switch (_that) {
+case _ExerciseViewModel() when $default != null:
+return $default(_that.sessionExercise,_that.plannedExerciseInSnapshot,_that.plannedSummary,_that.setRows,_that.isCursorTarget,_that.cursorSetIndex,_that.effectiveMeasurementType);case _:
+  return null;
+
+}
+}
+
+}
+
+/// @nodoc
+
+
+class _ExerciseViewModel implements ExerciseViewModel {
+  const _ExerciseViewModel({required this.sessionExercise, required this.plannedExerciseInSnapshot, required this.plannedSummary, required final  List<SetRowViewModel> setRows, required this.isCursorTarget, required this.cursorSetIndex, required this.effectiveMeasurementType}): _setRows = setRows;
+  
+
+@override final  SessionExercise sessionExercise;
+@override final  Exercise plannedExerciseInSnapshot;
+@override final  String plannedSummary;
+ final  List<SetRowViewModel> _setRows;
+@override List<SetRowViewModel> get setRows {
+  if (_setRows is EqualUnmodifiableListView) return _setRows;
+  // ignore: implicit_dynamic_type
+  return EqualUnmodifiableListView(_setRows);
+}
+
+@override final  bool isCursorTarget;
+@override final  int? cursorSetIndex;
+@override final  MeasurementType effectiveMeasurementType;
+
+/// Create a copy of ExerciseViewModel
+/// with the given fields replaced by the non-null parameter values.
+@override @JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+_$ExerciseViewModelCopyWith<_ExerciseViewModel> get copyWith => __$ExerciseViewModelCopyWithImpl<_ExerciseViewModel>(this, _$identity);
+
+
+
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _ExerciseViewModel&&(identical(other.sessionExercise, sessionExercise) || other.sessionExercise == sessionExercise)&&(identical(other.plannedExerciseInSnapshot, plannedExerciseInSnapshot) || other.plannedExerciseInSnapshot == plannedExerciseInSnapshot)&&(identical(other.plannedSummary, plannedSummary) || other.plannedSummary == plannedSummary)&&const DeepCollectionEquality().equals(other._setRows, _setRows)&&(identical(other.isCursorTarget, isCursorTarget) || other.isCursorTarget == isCursorTarget)&&(identical(other.cursorSetIndex, cursorSetIndex) || other.cursorSetIndex == cursorSetIndex)&&(identical(other.effectiveMeasurementType, effectiveMeasurementType) || other.effectiveMeasurementType == effectiveMeasurementType));
+}
+
+
+@override
+int get hashCode => Object.hash(runtimeType,sessionExercise,plannedExerciseInSnapshot,plannedSummary,const DeepCollectionEquality().hash(_setRows),isCursorTarget,cursorSetIndex,effectiveMeasurementType);
+
+@override
+String toString() {
+  return 'ExerciseViewModel(sessionExercise: $sessionExercise, plannedExerciseInSnapshot: $plannedExerciseInSnapshot, plannedSummary: $plannedSummary, setRows: $setRows, isCursorTarget: $isCursorTarget, cursorSetIndex: $cursorSetIndex, effectiveMeasurementType: $effectiveMeasurementType)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class _$ExerciseViewModelCopyWith<$Res> implements $ExerciseViewModelCopyWith<$Res> {
+  factory _$ExerciseViewModelCopyWith(_ExerciseViewModel value, $Res Function(_ExerciseViewModel) _then) = __$ExerciseViewModelCopyWithImpl;
+@override @useResult
+$Res call({
+ SessionExercise sessionExercise, Exercise plannedExerciseInSnapshot, String plannedSummary, List<SetRowViewModel> setRows, bool isCursorTarget, int? cursorSetIndex, MeasurementType effectiveMeasurementType
+});
+
+
+@override $SessionExerciseCopyWith<$Res> get sessionExercise;@override $ExerciseCopyWith<$Res> get plannedExerciseInSnapshot;@override $MeasurementTypeCopyWith<$Res> get effectiveMeasurementType;
+
+}
+/// @nodoc
+class __$ExerciseViewModelCopyWithImpl<$Res>
+    implements _$ExerciseViewModelCopyWith<$Res> {
+  __$ExerciseViewModelCopyWithImpl(this._self, this._then);
+
+  final _ExerciseViewModel _self;
+  final $Res Function(_ExerciseViewModel) _then;
+
+/// Create a copy of ExerciseViewModel
+/// with the given fields replaced by the non-null parameter values.
+@override @pragma('vm:prefer-inline') $Res call({Object? sessionExercise = null,Object? plannedExerciseInSnapshot = null,Object? plannedSummary = null,Object? setRows = null,Object? isCursorTarget = null,Object? cursorSetIndex = freezed,Object? effectiveMeasurementType = null,}) {
+  return _then(_ExerciseViewModel(
+sessionExercise: null == sessionExercise ? _self.sessionExercise : sessionExercise // ignore: cast_nullable_to_non_nullable
+as SessionExercise,plannedExerciseInSnapshot: null == plannedExerciseInSnapshot ? _self.plannedExerciseInSnapshot : plannedExerciseInSnapshot // ignore: cast_nullable_to_non_nullable
+as Exercise,plannedSummary: null == plannedSummary ? _self.plannedSummary : plannedSummary // ignore: cast_nullable_to_non_nullable
+as String,setRows: null == setRows ? _self._setRows : setRows // ignore: cast_nullable_to_non_nullable
+as List<SetRowViewModel>,isCursorTarget: null == isCursorTarget ? _self.isCursorTarget : isCursorTarget // ignore: cast_nullable_to_non_nullable
+as bool,cursorSetIndex: freezed == cursorSetIndex ? _self.cursorSetIndex : cursorSetIndex // ignore: cast_nullable_to_non_nullable
+as int?,effectiveMeasurementType: null == effectiveMeasurementType ? _self.effectiveMeasurementType : effectiveMeasurementType // ignore: cast_nullable_to_non_nullable
+as MeasurementType,
+  ));
+}
+
+/// Create a copy of ExerciseViewModel
+/// with the given fields replaced by the non-null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$SessionExerciseCopyWith<$Res> get sessionExercise {
+  
+  return $SessionExerciseCopyWith<$Res>(_self.sessionExercise, (value) {
+    return _then(_self.copyWith(sessionExercise: value));
+  });
+}/// Create a copy of ExerciseViewModel
+/// with the given fields replaced by the non-null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$ExerciseCopyWith<$Res> get plannedExerciseInSnapshot {
+  
+  return $ExerciseCopyWith<$Res>(_self.plannedExerciseInSnapshot, (value) {
+    return _then(_self.copyWith(plannedExerciseInSnapshot: value));
+  });
+}/// Create a copy of ExerciseViewModel
+/// with the given fields replaced by the non-null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$MeasurementTypeCopyWith<$Res> get effectiveMeasurementType {
+  
+  return $MeasurementTypeCopyWith<$Res>(_self.effectiveMeasurementType, (value) {
+    return _then(_self.copyWith(effectiveMeasurementType: value));
+  });
+}
+}
+
+// dart format on
