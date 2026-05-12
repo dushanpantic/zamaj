@@ -30,7 +30,7 @@ void main() {
         final fixedTime = anyUtcDateTime(rng);
         final fakeClock = Clock.fixed(fixedTime);
         final repo = FakeSessionRepository(clock: fakeClock);
-        final engine = SessionFlowEngine(repository: repo, clock: fakeClock);
+        final engine = SessionFlowEngine(repository: repo);
 
         final exerciseCount = 1 + rng.nextInt(5);
         final states = List.generate(exerciseCount, (_) {
@@ -80,7 +80,7 @@ void main() {
         final fixedTime = anyUtcDateTime(rng);
         final fakeClock = Clock.fixed(fixedTime);
         final repo = FakeSessionRepository(clock: fakeClock);
-        final engine = SessionFlowEngine(repository: repo, clock: fakeClock);
+        final engine = SessionFlowEngine(repository: repo);
 
         final exerciseCount = 1 + rng.nextInt(5);
         final states = List.generate(
@@ -119,7 +119,7 @@ void main() {
           final repo = FakeSessionRepository(clock: fakeClock);
           repo.seedSession(session);
 
-          final engine = SessionFlowEngine(repository: repo, clock: fakeClock);
+          final engine = SessionFlowEngine(repository: repo);
 
           expect(
             () => engine.endSession(sessionId: session.id),
@@ -153,7 +153,7 @@ void main() {
         final repo = FakeSessionRepository(clock: fakeClock);
         repo.seedSession(session);
 
-        final engine = SessionFlowEngine(repository: repo, clock: fakeClock);
+        final engine = SessionFlowEngine(repository: repo);
 
         final exercise = session.sessionExercises.first;
         final planned = _lookupPlannedExercise(exercise, session);
@@ -190,7 +190,7 @@ void main() {
           final repo = FakeSessionRepository(clock: fakeClock);
           repo.seedSession(activeSession);
 
-          final engine = SessionFlowEngine(repository: repo, clock: fakeClock);
+          final engine = SessionFlowEngine(repository: repo);
           final cursor = engine.computeCursor(activeSession);
 
           expect(

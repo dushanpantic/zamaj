@@ -17,10 +17,7 @@ Future<void> bootstrap() async {
     programRepository: programRepo,
     clock: clock,
   );
-  final sessionFlowEngine = SessionFlowEngine(
-    repository: sessionRepo,
-    clock: clock,
-  );
+  final sessionFlowEngine = SessionFlowEngine(repository: sessionRepo);
   runApp(
     MainApp(
       programRepo: programRepo,

@@ -32,10 +32,7 @@ void main() {
             final repo = FakeSessionRepository(clock: fakeClock);
             repo.seedSession(session);
 
-            final engine = SessionFlowEngine(
-              repository: repo,
-              clock: fakeClock,
-            );
+            final engine = SessionFlowEngine(repository: repo);
 
             final unfinished = session.sessionExercises
                 .where((e) => e.state is UnfinishedState)
@@ -129,7 +126,7 @@ void main() {
           final repo = FakeSessionRepository(clock: fakeClock);
           repo.seedSession(session);
 
-          final engine = SessionFlowEngine(repository: repo, clock: fakeClock);
+          final engine = SessionFlowEngine(repository: repo);
 
           final taggedExercises = session.sessionExercises
               .where((e) => e.supersetTag != null)
@@ -195,7 +192,7 @@ void main() {
         final repo = FakeSessionRepository(clock: fakeClock);
         repo.seedSession(session);
 
-        final engine = SessionFlowEngine(repository: repo, clock: fakeClock);
+        final engine = SessionFlowEngine(repository: repo);
 
         final tagsToIds = <String, List<String>>{};
         for (final e in session.sessionExercises) {

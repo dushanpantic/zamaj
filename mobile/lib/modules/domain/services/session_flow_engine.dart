@@ -1,4 +1,3 @@
-import 'package:clock/clock.dart';
 import 'package:zamaj/modules/domain/errors.dart';
 import 'package:zamaj/modules/domain/models/actual_set_values.dart';
 import 'package:zamaj/modules/domain/models/exercise.dart';
@@ -18,14 +17,10 @@ import 'package:zamaj/modules/domain/services/session_state.dart';
 /// Every mutation round-trips through the [SessionRepository], recomputes the
 /// [Cursor], and returns a fresh [SessionState] to the caller.
 class SessionFlowEngine {
-  SessionFlowEngine({
-    required SessionRepository repository,
-    required Clock clock,
-  }) : _repository = repository,
-       _clock = clock;
+  SessionFlowEngine({required SessionRepository repository})
+    : _repository = repository;
 
   final SessionRepository _repository;
-  final Clock _clock;
 
   /// Starts a new session from a workout day.
   Future<SessionState> startSession({required String workoutDayId}) async {

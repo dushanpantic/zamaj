@@ -30,10 +30,7 @@ void main() {
             final repo = FakeSessionRepository(clock: fakeClock);
             repo.seedSession(session);
 
-            final engine = SessionFlowEngine(
-              repository: repo,
-              clock: fakeClock,
-            );
+            final engine = SessionFlowEngine(repository: repo);
 
             final target = _pickNonUnfinishedExercise(rng, session);
 
@@ -68,10 +65,7 @@ void main() {
             final repo = FakeSessionRepository(clock: fakeClock);
             repo.seedSession(session);
 
-            final engine = SessionFlowEngine(
-              repository: repo,
-              clock: fakeClock,
-            );
+            final engine = SessionFlowEngine(repository: repo);
 
             final target = _pickNonUnfinishedExercise(rng, session);
 
@@ -110,10 +104,7 @@ void main() {
             final repo = FakeSessionRepository(clock: fakeClock);
             repo.seedSession(session);
 
-            final engine = SessionFlowEngine(
-              repository: repo,
-              clock: fakeClock,
-            );
+            final engine = SessionFlowEngine(repository: repo);
 
             final nonUnfinished = session.sessionExercises
                 .where((e) => e.state is! UnfinishedState)
@@ -164,10 +155,7 @@ void main() {
             final repo = FakeSessionRepository(clock: fakeClock);
             repo.seedSession(session);
 
-            final engine = SessionFlowEngine(
-              repository: repo,
-              clock: fakeClock,
-            );
+            final engine = SessionFlowEngine(repository: repo);
 
             final nonUnfinished = session.sessionExercises
                 .where((e) => e.state is! UnfinishedState)
@@ -224,10 +212,7 @@ void main() {
             final repo = FakeSessionRepository(clock: fakeClock);
             repo.seedSession(session);
 
-            final engine = SessionFlowEngine(
-              repository: repo,
-              clock: fakeClock,
-            );
+            final engine = SessionFlowEngine(repository: repo);
 
             final target = session.sessionExercises.firstWhere(
               (e) => e.state is! UnfinishedState && e.supersetTag != null,
@@ -265,7 +250,6 @@ void main() {
 Session _anySessionWithNonUnfinishedExercise(Random rng) {
   final nonUnfinishedCount = 1 + rng.nextInt(3);
   final unfinishedCount = rng.nextInt(3);
-  final totalCount = nonUnfinishedCount + unfinishedCount;
 
   final states = <ExerciseState>[
     ...List.generate(nonUnfinishedCount, (_) => _anyNonUnfinishedState(rng)),

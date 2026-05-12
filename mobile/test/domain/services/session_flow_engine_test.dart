@@ -23,7 +23,7 @@ void main() {
 
   ({FakeSessionRepository repo, SessionFlowEngine engine}) setup() {
     final repo = FakeSessionRepository(clock: fakeClock);
-    final engine = SessionFlowEngine(repository: repo, clock: fakeClock);
+    final engine = SessionFlowEngine(repository: repo);
     return (repo: repo, engine: engine);
   }
 

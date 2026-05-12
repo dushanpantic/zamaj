@@ -46,7 +46,7 @@ void main() {
         final repo = FakeSessionRepository(clock: fakeClock);
         repo.seedSession(session);
 
-        final engine = SessionFlowEngine(repository: repo, clock: fakeClock);
+        final engine = SessionFlowEngine(repository: repo);
 
         final mutation = _pickMutation(rng, session, engine);
         if (mutation == null) continue;
@@ -86,7 +86,7 @@ void main() {
         final repo = FakeSessionRepository(clock: fakeClock);
         repo.seedSession(session);
 
-        final engine = SessionFlowEngine(repository: repo, clock: fakeClock);
+        final engine = SessionFlowEngine(repository: repo);
         final cursor = engine.computeCursor(session);
 
         if (cursor is! ActiveCursor) continue;
@@ -157,7 +157,7 @@ void main() {
           final repo = FakeSessionRepository(clock: fakeClock);
           repo.seedSession(session);
 
-          final engine = SessionFlowEngine(repository: repo, clock: fakeClock);
+          final engine = SessionFlowEngine(repository: repo);
 
           final targetExercise = session.sessionExercises.firstWhere(
             (e) => e.state is UnfinishedState,
@@ -211,7 +211,7 @@ void main() {
         final repo = FakeSessionRepository(clock: fakeClock);
         repo.seedSession(session);
 
-        final engine = SessionFlowEngine(repository: repo, clock: fakeClock);
+        final engine = SessionFlowEngine(repository: repo);
         final cursor = engine.computeCursor(session);
 
         if (cursor is! ActiveCursor) continue;
@@ -255,7 +255,7 @@ void main() {
           final repo = FakeSessionRepository(clock: fakeClock);
           repo.seedSession(session);
 
-          final engine = SessionFlowEngine(repository: repo, clock: fakeClock);
+          final engine = SessionFlowEngine(repository: repo);
 
           final exerciseWithSets = session.sessionExercises
               .where((e) => e.executedSets.isNotEmpty)
@@ -303,7 +303,7 @@ void main() {
         final repo = FakeSessionRepository(clock: fakeClock);
         repo.seedSession(session);
 
-        final engine = SessionFlowEngine(repository: repo, clock: fakeClock);
+        final engine = SessionFlowEngine(repository: repo);
         final cursor = engine.computeCursor(session);
 
         if (cursor is! ActiveCursor) continue;
@@ -347,7 +347,7 @@ void main() {
         final repo = FakeSessionRepository(clock: fakeClock);
         repo.seedSession(session);
 
-        final engine = SessionFlowEngine(repository: repo, clock: fakeClock);
+        final engine = SessionFlowEngine(repository: repo);
 
         final unfinished = session.sessionExercises
             .where((e) => e.state is UnfinishedState)
@@ -429,7 +429,7 @@ void main() {
           final repo = FakeSessionRepository(clock: fakeClock);
           repo.seedSession(session);
 
-          final engine = SessionFlowEngine(repository: repo, clock: fakeClock);
+          final engine = SessionFlowEngine(repository: repo);
 
           final unfinished = session.sessionExercises
               .where((e) => e.state is UnfinishedState)
@@ -515,10 +515,7 @@ void main() {
             final repo = FakeSessionRepository(clock: fakeClock);
             repo.seedSession(session);
 
-            final engine = SessionFlowEngine(
-              repository: repo,
-              clock: fakeClock,
-            );
+            final engine = SessionFlowEngine(repository: repo);
 
             final originalSorted = List<SessionExercise>.of(
               session.sessionExercises,
@@ -614,7 +611,7 @@ void main() {
         final repo = FakeSessionRepository(clock: fakeClock);
         repo.seedSession(session);
 
-        final engine = SessionFlowEngine(repository: repo, clock: fakeClock);
+        final engine = SessionFlowEngine(repository: repo);
 
         final exercisesWithSets = session.sessionExercises
             .where((e) => e.executedSets.isNotEmpty)
@@ -682,7 +679,7 @@ void main() {
           final repo = FakeSessionRepository(clock: fakeClock);
           repo.seedSession(session);
 
-          final engine = SessionFlowEngine(repository: repo, clock: fakeClock);
+          final engine = SessionFlowEngine(repository: repo);
 
           final unfinishedIds = session.sessionExercises
               .where((e) => e.state is UnfinishedState)
@@ -725,7 +722,7 @@ void main() {
           final repo = FakeSessionRepository(clock: fakeClock);
           repo.seedSession(session);
 
-          final engine = SessionFlowEngine(repository: repo, clock: fakeClock);
+          final engine = SessionFlowEngine(repository: repo);
 
           final unfinishedIds = session.sessionExercises
               .where((e) => e.state is UnfinishedState)

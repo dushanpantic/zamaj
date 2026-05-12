@@ -26,7 +26,7 @@ void main() {
     setUp(() {
       final fakeClock = Clock.fixed(DateTime.utc(2024));
       final repo = FakeSessionRepository(clock: fakeClock);
-      engine = SessionFlowEngine(repository: repo, clock: fakeClock);
+      engine = SessionFlowEngine(repository: repo);
     });
 
     test(

@@ -5,7 +5,8 @@
       "Bash(bash tool/check_offline_imports.sh)",
       "Bash(dart run *)",
       "Bash(mkdir -p /Users/dusanpantic/Projects/github.com/dushanpantic/zamaj/mobile/.kiro/specs/workout-overview-screen)",
-      "Bash(flutter pub *)"
+      "Bash(flutter pub *)",
+      "mcp__dart__analyze_files"
     ],
     "additionalDirectories": [
       "/Users/dusanpantic/Projects/github.com/dushanpantic/zamaj/mobile/.kiro/specs"

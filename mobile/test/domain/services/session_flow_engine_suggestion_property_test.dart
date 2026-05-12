@@ -26,7 +26,7 @@ void main() {
           final repo = FakeSessionRepository(clock: fakeClock);
           repo.seedSession(session);
 
-          final engine = SessionFlowEngine(repository: repo, clock: fakeClock);
+          final engine = SessionFlowEngine(repository: repo);
           final body = _anyNonWhitespaceText(rng, maxLen: 200);
 
           final result = await engine.addExtraWork(
@@ -64,7 +64,7 @@ void main() {
         final repo = FakeSessionRepository(clock: fakeClock);
         repo.seedSession(session);
 
-        final engine = SessionFlowEngine(repository: repo, clock: fakeClock);
+        final engine = SessionFlowEngine(repository: repo);
         final body = _anyNonWhitespaceText(rng, maxLen: 5000);
 
         final result = await engine.addSessionNote(
@@ -104,7 +104,7 @@ void main() {
         final repo = FakeSessionRepository(clock: fakeClock);
         repo.seedSession(session);
 
-        final engine = SessionFlowEngine(repository: repo, clock: fakeClock);
+        final engine = SessionFlowEngine(repository: repo);
         final body = _anyEmptyOrWhitespaceString(rng);
 
         expect(
@@ -145,7 +145,7 @@ void main() {
         final repo = FakeSessionRepository(clock: fakeClock);
         repo.seedSession(session);
 
-        final engine = SessionFlowEngine(repository: repo, clock: fakeClock);
+        final engine = SessionFlowEngine(repository: repo);
         final body = _anyEmptyOrWhitespaceString(rng);
 
         expect(

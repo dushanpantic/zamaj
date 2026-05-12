@@ -249,12 +249,22 @@ Conventions:
     - _Requirements: R4 (no-op same-position semantics)_
     - _Design: §7.1_
 
-- [ ] 4. Checkpoint — services + tests
-  - [ ] 4.1 Run `dart run build_runner build --force-jit`,
+- [x] 4. Checkpoint — services + tests
+  - [x] 4.1 Run `dart run build_runner build --force-jit`,
     `flutter analyze`, and `flutter test
     test/modules/workout_overview/services/` and ensure zero
     analyzer warnings and zero test failures; ask the user if
     questions arise
+    - build_runner: 0 outputs written (everything up to date).
+    - flutter test (workout_overview/services): 32/32 passing.
+    - flutter analyze: 0 warnings/errors in this spec's code. Two
+      pre-existing warnings remain in the session-flow-engine spec
+      (unused `_clock` field in
+      `lib/modules/domain/services/session_flow_engine.dart:28` and
+      unused `totalCount` local in
+      `test/domain/services/session_flow_engine_ordering_property_test.dart:268`).
+      User opted to leave them; they will likely be picked up by
+      the rest-timer or focus-mode spec when clock usage returns.
 
 - [ ] 5. BLoC: events, states, and load algorithm
   - [ ] 5.1 Create `bloc/workout_overview_event.dart` with the

@@ -22,7 +22,7 @@ void main() {
       final rng = Random(7742);
       final clock = Clock.fixed(DateTime.utc(2024));
       final repo = FakeSessionRepository(clock: clock);
-      final engine = SessionFlowEngine(repository: repo, clock: clock);
+      final engine = SessionFlowEngine(repository: repo);
 
       for (var i = 0; i < iterations; i++) {
         final session = anySessionForEngine(rng);
@@ -42,7 +42,7 @@ void main() {
     final rng = Random(8853);
     final clock = Clock.fixed(DateTime.utc(2024));
     final repo = FakeSessionRepository(clock: clock);
-    final engine = SessionFlowEngine(repository: repo, clock: clock);
+    final engine = SessionFlowEngine(repository: repo);
 
     for (var i = 0; i < iterations; i++) {
       final exerciseCount = 1 + rng.nextInt(5);
@@ -77,7 +77,7 @@ void main() {
     final rng = Random(3319);
     final clock = Clock.fixed(DateTime.utc(2024));
     final repo = FakeSessionRepository(clock: clock);
-    final engine = SessionFlowEngine(repository: repo, clock: clock);
+    final engine = SessionFlowEngine(repository: repo);
 
     for (var i = 0; i < iterations; i++) {
       final session = anyCursorableSession(rng);
@@ -107,7 +107,7 @@ void main() {
       final rng = Random(5501);
       final clock = Clock.fixed(DateTime.utc(2024));
       final repo = FakeSessionRepository(clock: clock);
-      final engine = SessionFlowEngine(repository: repo, clock: clock);
+      final engine = SessionFlowEngine(repository: repo);
 
       for (var i = 0; i < iterations; i++) {
         final session = anyCursorableSession(rng);
