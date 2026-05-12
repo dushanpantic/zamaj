@@ -45,9 +45,12 @@ if [ "$found" -ne 0 ]; then
   exit 1
 fi
 
-# --- program_management superset check ---
+# --- UI module superset check (program_management, workout_day_picker) ---
 
-PM_DIR="lib/modules/program_management"
+PM_DIRS=(
+  "lib/modules/program_management"
+  "lib/modules/workout_day_picker"
+)
 
 PM_NETWORKING_PATTERNS=(
   "import 'dart:io'"
@@ -100,7 +103,11 @@ emit_violation() {
   pm_found=1
 }
 
-if [ -d "$PM_DIR" ]; then
+for PM_DIR in "${PM_DIRS[@]}"; do
+  if [ ! -d "$PM_DIR" ]; then
+    continue
+  fi
+
   # Check networking import patterns
   for pattern in "${PM_NETWORKING_PATTERNS[@]}"; do
     while IFS=: read -r file line _rest; do
@@ -152,11 +159,11 @@ if [ -d "$PM_DIR" ]; then
       --exclude="*.freezed.dart" --exclude="*.g.dart" \
       -w "$symbol" "$PM_DIR" 2>/dev/null || true)
   done
-fi
+done
 
 if [ "$pm_found" -ne 0 ]; then
   echo ""
-  echo "ERROR: program_management offline-first isolation violated. Remove the symbols listed above."
+  echo "ERROR: UI module offline-first isolation violated. Remove the symbols listed above."
   exit 1
 fi
 

@@ -43,28 +43,28 @@ Conventions:
 
 ## Tasks
 
-- [ ] 1. Module scaffold and offline guard
-  - [ ] 1.1 Create the module folder scaffolding:
+- [x] 1. Module scaffold and offline guard
+  - [x] 1.1 Create the module folder scaffolding:
     `lib/modules/workout_day_picker/{bloc,screens,widgets,services,models,navigation}/`
     and an empty barrel file
     `lib/modules/workout_day_picker/workout_day_picker.dart`
     - _Requirements: R13 AC1, R13 AC2_
     - _Design: §1.2_
 
-  - [ ] 1.2 Extend `tool/check_offline_imports.sh` to additionally
+  - [x] 1.2 Extend `tool/check_offline_imports.sh` to additionally
     scan `lib/modules/workout_day_picker/` against the existing
     forbidden list (no new patterns); emit `<file>:<line>:<offending
     symbol>` on violations and exit non-zero
     - _Requirements: R11 AC1, R11 AC2, R12 AC5_
     - _Design: §12.1, §12.2_
 
-  - [ ] 1.3 Create the shared route-name file
+  - [x] 1.3 Create the shared route-name file
     `lib/navigation/session_routes.dart` with
     `abstract final class SessionRoutes { static const active = '/session-active'; }`
     - _Requirements: R6 AC6_
     - _Design: §2.1_
 
-  - [ ] 1.4 Create
+  - [x] 1.4 Create
     `lib/modules/workout_day_picker/navigation/workout_day_picker_routes.dart`
     with `abstract final class WorkoutDayPickerRoutes { static const picker = '/workout-day-picker'; }`
     - _Requirements: R6 AC5_
