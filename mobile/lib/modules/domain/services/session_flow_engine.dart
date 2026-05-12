@@ -110,9 +110,9 @@ class SessionFlowEngine {
         }
         throw OrderingError(
           sessionExerciseId: id,
-          currentState: exercise.state.runtimeType.toString(),
+          currentState: exercise.state.discriminator,
           message:
-              'Cannot reorder exercise $id: state is ${exercise.state.runtimeType}',
+              'Cannot reorder exercise $id: state is ${exercise.state.discriminator}',
         );
       }
     }
@@ -373,9 +373,9 @@ class SessionFlowEngine {
       if (exercise.state is! UnfinishedState) {
         throw OrderingError(
           sessionExerciseId: id,
-          currentState: exercise.state.runtimeType.toString(),
+          currentState: exercise.state.discriminator,
           message:
-              'Cannot add exercise $id to superset: state is ${exercise.state.runtimeType}',
+              'Cannot add exercise $id to superset: state is ${exercise.state.discriminator}',
         );
       }
     }
@@ -407,9 +407,9 @@ class SessionFlowEngine {
       if (exercise.state is! UnfinishedState) {
         throw OrderingError(
           sessionExerciseId: id,
-          currentState: exercise.state.runtimeType.toString(),
+          currentState: exercise.state.discriminator,
           message:
-              'Cannot remove exercise $id from superset: state is ${exercise.state.runtimeType}',
+              'Cannot remove exercise $id from superset: state is ${exercise.state.discriminator}',
         );
       }
       if (exercise.supersetTag == null) {
@@ -567,9 +567,9 @@ class SessionFlowEngine {
     if (exercise.state is! UnfinishedState) {
       throw OrderingError(
         sessionExerciseId: exercise.id,
-        currentState: exercise.state.runtimeType.toString(),
+        currentState: exercise.state.discriminator,
         message:
-            'Exercise ${exercise.id} must be unfinished but is ${exercise.state.runtimeType}',
+            'Exercise ${exercise.id} must be unfinished but is ${exercise.state.discriminator}',
       );
     }
   }

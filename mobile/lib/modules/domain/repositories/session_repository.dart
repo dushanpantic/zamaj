@@ -4,10 +4,10 @@
 /// types appear in any public signature (Req 10.2).
 library;
 
-import '../models/actual_set_values.dart';
-import '../models/exercise_metadata.dart';
-import '../models/measurement_type.dart';
-import '../models/session.dart';
+import 'package:zamaj/modules/domain/models/actual_set_values.dart';
+import 'package:zamaj/modules/domain/models/exercise_metadata.dart';
+import 'package:zamaj/modules/domain/models/measurement_type.dart';
+import 'package:zamaj/modules/domain/models/session.dart';
 
 abstract class SessionRepository {
   /// Starts a new session for [workoutDayId], capturing an immutable snapshot

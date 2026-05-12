@@ -1,8 +1,7 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:zamaj/core/deserialization.dart';
-
-import 'exercise_metadata.dart';
-import 'measurement_type.dart';
+import 'package:zamaj/modules/domain/models/exercise_metadata.dart';
+import 'package:zamaj/modules/domain/models/measurement_type.dart';
 
 part 'substitute_exercise.freezed.dart';
 part 'substitute_exercise.g.dart';

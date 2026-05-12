@@ -4,16 +4,16 @@
 /// types appear in any public signature (Req 10.1).
 library;
 
-import '../models/exercise.dart';
-import '../models/exercise_group.dart';
-import '../models/exercise_group_kind.dart';
-import '../models/exercise_metadata.dart';
-import '../models/measurement_type.dart';
-import '../models/planned_set_values.dart';
-import '../models/program.dart';
-import '../models/program_aggregate.dart';
-import '../models/workout_day.dart';
-import '../models/workout_set.dart';
+import 'package:zamaj/modules/domain/models/exercise.dart';
+import 'package:zamaj/modules/domain/models/exercise_group.dart';
+import 'package:zamaj/modules/domain/models/exercise_group_kind.dart';
+import 'package:zamaj/modules/domain/models/exercise_metadata.dart';
+import 'package:zamaj/modules/domain/models/measurement_type.dart';
+import 'package:zamaj/modules/domain/models/planned_set_values.dart';
+import 'package:zamaj/modules/domain/models/program.dart';
+import 'package:zamaj/modules/domain/models/program_aggregate.dart';
+import 'package:zamaj/modules/domain/models/workout_day.dart';
+import 'package:zamaj/modules/domain/models/workout_set.dart';
 
 abstract class ProgramRepository {
   Future<Program> createProgram({required String name});

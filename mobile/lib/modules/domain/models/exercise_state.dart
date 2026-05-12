@@ -1,7 +1,6 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:zamaj/core/deserialization.dart';
-
-import 'substitute_exercise.dart';
+import 'package:zamaj/modules/domain/models/substitute_exercise.dart';
 
 part 'exercise_state.freezed.dart';
 part 'exercise_state.g.dart';
@@ -21,4 +20,15 @@ sealed class ExerciseState with _$ExerciseState {
         json,
         'ExerciseState',
       );
+}
+
+extension ExerciseStateDiscriminator on ExerciseState {
+  /// Stable, persistence-compatible discriminator. Matches the JSON union key
+  /// and the `stateDiscriminator` column used by the Drift session schema.
+  String get discriminator => switch (this) {
+    UnfinishedState() => 'unfinished',
+    CompletedState() => 'completed',
+    SkippedState() => 'skipped',
+    ReplacedState() => 'replaced',
+  };
 }
