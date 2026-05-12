@@ -282,16 +282,16 @@ Conventions:
     - _Requirements: R10 AC2 (transient banner dismissal), R14 AC1_
     - _Design: §3.3_
 
-- [ ] 6. Checkpoint — BLoC compiles
-  - [ ] 6.1 Run `dart run build_runner build --force-jit`,
+- [x] 6. Checkpoint — BLoC compiles
+  - [x] 6.1 Run `dart run build_runner build --force-jit`,
     `flutter analyze`, and the existing
     `flutter test test/modules/workout_day_picker/services/` to
     confirm the new BLoC compiles and the existing service tests
     still pass; ensure zero analyzer warnings and zero test failures;
     ask the user if questions arise
 
-- [ ] 7. Widgets and screen
-  - [ ] 7.1 Build `widgets/start_resume_action_button.dart`: takes
+- [x] 7. Widgets and screen
+  - [x] 7.1 Build `widgets/start_resume_action_button.dart`: takes
     `{required bool isResume, required bool busy, required bool
     enabled, required VoidCallback onPressed}`; renders an outlined
     button labelled `START` or `RESUME`; renders a centred spinner
@@ -299,14 +299,14 @@ Conventions:
     - _Requirements: R3 AC8, R3 AC9, R4 AC2, R5 AC2, R10 AC5_
     - _Design: §8_
 
-  - [ ] 7.2 Build `widgets/day_tile_history_labels.dart`: takes
+  - [x] 7.2 Build `widgets/day_tile_history_labels.dart`: takes
     `{required DayHistorySummary summary, required DateTime
     referenceNow}`; renders the three label lines per R3 AC1–AC7
     using `RelativeDateFormatter.format` and the literal `×` character
     - _Requirements: R3 AC1, R3 AC2, R3 AC3, R3 AC4, R3 AC5, R3 AC6, R3 AC7_
     - _Design: §8_
 
-  - [ ] 7.3 Build `widgets/day_tile.dart`: takes `DayViewModel`,
+  - [x] 7.3 Build `widgets/day_tile.dart`: takes `DayViewModel`,
     `referenceNow`, `launchInFlightWorkoutDayId`, and three
     callbacks (`onStartPressed`, `onResumePressed`,
     `onRetryPressed`); switches on `DayTileStatus` to render the
@@ -315,7 +315,7 @@ Conventions:
     - _Requirements: R1 AC2, R2 AC8, R3 AC8, R3 AC9, R10 AC3_
     - _Design: §8_
 
-  - [ ] 7.4 Build the three state widgets:
+  - [x] 7.4 Build the three state widgets:
     `widgets/workout_day_picker_loading_view.dart`,
     `widgets/workout_day_picker_empty_view.dart` (with the "Edit
     program" affordance), and
@@ -324,7 +324,7 @@ Conventions:
     - _Requirements: R1 AC4, R1 AC5, R10 AC1, R10 AC2, R10 AC4, R14 AC1_
     - _Design: §10_
 
-  - [ ] 7.5 Build `screens/workout_day_picker_screen.dart`:
+  - [x] 7.5 Build `screens/workout_day_picker_screen.dart`:
     `BlocProvider<WorkoutDayPickerBloc>` instantiated with the
     repositories and engine read from `RepositoryProvider`s;
     `AppBar` with the loaded program name (or "Loading…") and a
@@ -340,7 +340,7 @@ Conventions:
     - _Requirements: R1 AC1, R1 AC3, R1 AC4, R1 AC5, R1 AC6, R4 AC3, R5 AC3, R6 AC2, R6 AC3, R6 AC4, R10, R14 AC1_
     - _Design: §2.4, §10_
 
-  - [ ] 7.6 Add the public barrel exports to
+  - [x] 7.6 Add the public barrel exports to
     `workout_day_picker.dart`: `bloc/bloc.dart`,
     `models/day_history_summary.dart`,
     `models/day_view_model.dart`,
