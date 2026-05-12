@@ -2,7 +2,8 @@
   "permissions": {
     "allow": [
       "mcp__dart__run_tests",
-      "Bash(bash tool/check_offline_imports.sh)"
+      "Bash(bash tool/check_offline_imports.sh)",
+      "Bash(dart run *)"
     ]
   }
 }

@@ -70,29 +70,29 @@ Conventions:
     - _Requirements: R6 AC5_
     - _Design: §2.1_
 
-- [ ] 2. Pure-Dart value types and models
-  - [ ] 2.1 Define `WorkoutDayPickerArgs`
+- [x] 2. Pure-Dart value types and models
+  - [x] 2.1 Define `WorkoutDayPickerArgs`
     (`models/workout_day_picker_args.dart`) as a freezed class with a
     required `String programId`; add `part` directives and run
     `dart run build_runner build --force-jit`
     - _Requirements: R1 AC1, R6 AC1_
     - _Design: §1.2_
 
-  - [ ] 2.2 Define `DayHistorySummary`
+  - [x] 2.2 Define `DayHistorySummary`
     (`models/day_history_summary.dart`) as a freezed class with
     required `DateTime? lastCompleted`, `int totalCompletedCount`,
     `int thisWeekCount`, and `String? activeSessionId`; regenerate
     - _Requirements: R2 AC3, R2 AC4, R2 AC5, R2 AC6, R2 AC7_
     - _Design: §5_
 
-  - [ ] 2.3 Define `DayTileStatus` (`models/day_view_model.dart`) as
+  - [x] 2.3 Define `DayTileStatus` (`models/day_view_model.dart`) as
     a freezed sealed union with variants `loading`,
     `loaded(DayHistorySummary summary)`, and `failure(DomainError
     error)`; use `@Freezed(unionKey: 'type')`
     - _Requirements: R2 AC8, R10 AC3_
     - _Design: §3.2_
 
-  - [ ] 2.4 Define `DayViewModel` (`models/day_view_model.dart`) as
+  - [x] 2.4 Define `DayViewModel` (`models/day_view_model.dart`) as
     a freezed class bundling required `WorkoutDay workoutDay` and
     required `DayTileStatus status`; regenerate
     - _Requirements: R1 AC2_

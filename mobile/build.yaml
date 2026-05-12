@@ -9,6 +9,8 @@ targets:
             - lib/modules/program_management/models/**.dart
             - lib/modules/program_management/services/text_plan/**.dart
             - lib/modules/program_management/services/text_plan/**.dart
+            - lib/modules/workout_day_picker/models/**.dart
+            - lib/modules/workout_day_picker/services/**.dart
       json_serializable:
         generate_for:
           include:
