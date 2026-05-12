@@ -213,33 +213,6 @@ Implement the pure-Dart `SessionFlowEngine` service with cursor-based navigation
 - Generated files (`*.freezed.dart`, `*.g.dart`) must be regenerated after tasks 1.1–1.5 via `dart run build_runner build --force-jit`
 - All test files go under `test/domain/services/` matching the source layout
 
-## Model Selection Guide
-
-**Run with Sonnet** (mechanical scaffolding, boilerplate, simple delegation):
-- 1.1, 1.2, 1.3, 1.4, 1.5 — adding fields, columns, mapper lines
-- 2.1 — adding abstract methods to a contract
-- 3 — running codegen
-- 4.6 — extra work and notes (trivial validation + delegation)
-- 5 — checkpoint
-- 12.1*, 12.2* — trivial validation property tests
-- 14 — final checkpoint
-
-**Run with Opus** (complex logic, invariants, state machines, test infrastructure):
-- 4.1 — cursor computation, value suggestion, completion query algorithms
-- 4.2 — session lifecycle with precondition checks
-- 4.3 — set completion with state transitions and type validation
-- 4.4 — skip/replace/reorder with ordering invariants
-- 4.5 — superset creation/removal with tag logic
-- 6.1 — FakeSessionRepository (must faithfully simulate all mutations)
-- 6.2 — generators (must produce consistent snapshot↔exercise mappings)
-- 7.1–7.4 — cursor and completion property tests
-- 8.1–8.3 — lifecycle and immutability property tests
-- 9.1–9.3 — set completion property tests
-- 10.1–10.4 — skip/replace/reorder property tests
-- 11.1–11.2 — superset property tests
-- 12.3 — value suggestion property test
-- 13.1 — unit tests (concrete walkthrough scenarios)
-
 ## Task Dependency Graph
 
 ```json

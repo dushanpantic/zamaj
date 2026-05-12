@@ -411,41 +411,6 @@ Conventions:
   is replaced wholesale by the `workout-overview-screen` spec
   without touching this module.
 
-## Model Selection Guide
-
-**Run with Sonnet** (mechanical scaffolding, boilerplate, simple
-delegation):
-
-- 1.1, 1.3, 1.4 — folder layout and route-name files
-- 1.2 — extending the existing offline-imports script with one
-  additional scan path (no new patterns)
-- 2.1–2.4 — adding freezed classes and unions
-- 3.1, 3.3 — translating the design pseudocode for the window and
-  the formatter into Dart
-- 5.1–5.3 — declaring events, states, and the BLoC barrel
-- 5.11 — trivial transient-error reducer
-- 6.1 — checkpoint run
-- 7.1, 7.2, 7.4 — building stateless widgets that take props and
-  render labels/buttons
-- 7.6 — exporting from the barrel
-- 8.1, 8.2, 8.3 — wiring the route table
-- 9.1 — running the check sequence
-
-**Run with Opus** (state machines, concurrency, property tests):
-
-- 3.6 — `SessionHistorySummarizer` (tie-break and stat
-  computation in one pass; must be order-independent)
-- 3.2 — `CurrentWeekWindow` tests including DST cases
-- 3.5, 3.8–3.11 — property tests (generator design and shrinking
-  matter more than the test bodies)
-- 5.4 — BLoC scaffolding with the `StreamController` lifecycle
-- 5.5 — `Opened` handler (parallel per-day loads with per-future
-  error containment is easy to get wrong)
-- 5.9, 5.10 — `Start`/`Resume` handlers (concurrency guards plus
-  `NotFoundError` reload path)
-- 7.3, 7.5 — `DayTile` and the screen wiring (`BlocListener`
-  for the navigation-intents stream)
-
 ## Task Dependency Graph
 
 ```json
