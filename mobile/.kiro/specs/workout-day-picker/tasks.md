@@ -185,14 +185,14 @@ Conventions:
     - _Requirements: R9 AC6_
     - _Design: §11.2_
 
-- [ ] 4. Checkpoint — services + tests
-  - [ ] 4.1 Run `dart run build_runner build --force-jit`,
+- [x] 4. Checkpoint — services + tests
+  - [x] 4.1 Run `dart run build_runner build --force-jit`,
     `flutter analyze`, and `flutter test test/modules/workout_day_picker/services/`
     and ensure zero analyzer warnings and zero test failures; ask
     the user if questions arise
 
-- [ ] 5. BLoC: events, states, and load algorithm
-  - [ ] 5.1 Create `bloc/workout_day_picker_event.dart` with the
+- [x] 5. BLoC: events, states, and load algorithm
+  - [x] 5.1 Create `bloc/workout_day_picker_event.dart` with the
     sealed `WorkoutDayPickerEvent` family per design §3.1
     (`Opened`, `RefreshRequested`, `ReturnedFromSession`,
     `ScreenRetryRequested`, `TileRetryRequested(workoutDayId)`,
@@ -202,21 +202,21 @@ Conventions:
     - _Requirements: R1 AC1, R2 AC8, R4 AC1, R5 AC1, R6 AC3, R6 AC4, R10 AC2, R10 AC3, R14 AC2, R14 AC3_
     - _Design: §3.1_
 
-  - [ ] 5.2 Create `bloc/workout_day_picker_state.dart` with the
+  - [x] 5.2 Create `bloc/workout_day_picker_state.dart` with the
     sealed `WorkoutDayPickerState` family per design §3.2
     (`Initial`, `Loading(programId)`, `ProgramNotFound(programId)`,
     `ScreenFailure({programId, error})`, `Loaded({...})`)
     - _Requirements: R1 AC1, R1 AC3, R1 AC5, R1 AC6, R10 AC1, R10 AC2_
     - _Design: §3.2_
 
-  - [ ] 5.3 Create `bloc/bloc.dart` barrel that re-exports
+  - [x] 5.3 Create `bloc/bloc.dart` barrel that re-exports
     `workout_day_picker_bloc.dart`,
     `workout_day_picker_event.dart`, and
     `workout_day_picker_state.dart`
     - _Requirements: R13 AC1, R13 AC2_
     - _Design: §1.2_
 
-  - [ ] 5.4 Implement `WorkoutDayPickerBloc`
+  - [x] 5.4 Implement `WorkoutDayPickerBloc`
     (`bloc/workout_day_picker_bloc.dart`) with constructor-injected
     `ProgramRepository`, `SessionRepository`, `SessionFlowEngine`,
     and `Clock`; private fields for the navigation-intent
@@ -225,7 +225,7 @@ Conventions:
     - _Requirements: R12 AC3_
     - _Design: §1.3, §3.5_
 
-  - [ ] 5.5 Implement the `on<WorkoutDayPickerOpened>` handler
+  - [x] 5.5 Implement the `on<WorkoutDayPickerOpened>` handler
     following design §4.1: capture `now = clock.now()`, compute
     window, load Program, branch to `ProgramNotFound` when null,
     fetch workout-day list, kick off per-day session-list loads in
@@ -234,26 +234,26 @@ Conventions:
     - _Requirements: R1 AC1, R1 AC3, R1 AC4, R1 AC5, R1 AC6, R2 AC1, R2 AC2, R2 AC8, R8 AC6_
     - _Design: §4.1_
 
-  - [ ] 5.6 Implement
+  - [x] 5.6 Implement
     `on<WorkoutDayPickerScreenRetryRequested>` re-running the
     `Opened` algorithm with the `programId` from the current state
     - _Requirements: R10 AC2, R14 AC2_
     - _Design: §3.3_
 
-  - [ ] 5.7 Implement `on<WorkoutDayPickerTileRetryRequested>` per
+  - [x] 5.7 Implement `on<WorkoutDayPickerTileRetryRequested>` per
     design §4.2: emit `Loaded` with the target tile set to
     `loading`, await `listSessionsForWorkoutDay`, emit `Loaded`
     with the tile updated to `loaded` or `failure`
     - _Requirements: R2 AC8, R10 AC3, R14 AC3_
     - _Design: §4.2_
 
-  - [ ] 5.8 Implement `on<WorkoutDayPickerRefreshRequested>` and
+  - [x] 5.8 Implement `on<WorkoutDayPickerRefreshRequested>` and
     `on<WorkoutDayPickerReturnedFromSession>` as full reloads
     (same algorithm as `Opened`, same `programId`)
     - _Requirements: R6 AC3, R6 AC4_
     - _Design: §4.3_
 
-  - [ ] 5.9 Implement `on<WorkoutDayPickerStartPressed>`: short-circuit
+  - [x] 5.9 Implement `on<WorkoutDayPickerStartPressed>`: short-circuit
     when `launchInFlightWorkoutDayId != null`; otherwise emit
     `Loaded` with the field set, call
     `sessionFlowEngine.startSession(workoutDayId: ...)`, on
@@ -264,7 +264,7 @@ Conventions:
     - _Requirements: R4 AC1, R4 AC2, R4 AC3, R4 AC4, R4 AC5, R10 AC5_
     - _Design: §3.3, §3.5_
 
-  - [ ] 5.10 Implement `on<WorkoutDayPickerResumePressed>`:
+  - [x] 5.10 Implement `on<WorkoutDayPickerResumePressed>`:
     short-circuit when `launchInFlightWorkoutDayId != null`;
     otherwise emit `Loaded` with the field set, call
     `sessionFlowEngine.resumeSession(sessionId: ...)`, on success
@@ -276,7 +276,7 @@ Conventions:
     - _Requirements: R5 AC1, R5 AC2, R5 AC3, R5 AC4, R5 AC5, R5 AC6, R10 AC5, R14 AC4_
     - _Design: §3.3, §3.5_
 
-  - [ ] 5.11 Implement `on<WorkoutDayPickerErrorDismissed>`:
+  - [x] 5.11 Implement `on<WorkoutDayPickerErrorDismissed>`:
     when state is `Loaded` and `lastTransientError != null`, emit
     `Loaded` with `lastTransientError: null`
     - _Requirements: R10 AC2 (transient banner dismissal), R14 AC1_

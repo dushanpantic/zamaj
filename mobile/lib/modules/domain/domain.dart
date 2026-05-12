@@ -23,3 +23,6 @@ export 'models/workout_day.dart';
 export 'models/workout_set.dart';
 export 'repositories/program_repository.dart';
 export 'repositories/session_repository.dart';
+export 'services/cursor.dart';
+export 'services/session_flow_engine.dart';
+export 'services/session_state.dart';
