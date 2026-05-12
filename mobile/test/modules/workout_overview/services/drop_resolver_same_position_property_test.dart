@@ -27,7 +27,8 @@ void main() {
       final unfinishedIds = <String>[
         for (final g in groups)
           for (final ex in g.exercises)
-            if (ex.sessionExercise.state is UnfinishedState) ex.sessionExercise.id,
+            if (ex.sessionExercise.state is UnfinishedState)
+              ex.sessionExercise.id,
       ];
       if (unfinishedIds.isEmpty) continue;
 
@@ -50,7 +51,8 @@ void main() {
       expect(
         atCurrent,
         isA<NoopIntent>(),
-        reason: 'iteration $i: drop at current index '
+        reason:
+            'iteration $i: drop at current index '
             '(unfinished=${unfinishedIds.length}, dragged=$draggedId)',
       );
       expect(
@@ -64,7 +66,8 @@ void main() {
     expect(
       exercised,
       greaterThan(50),
-      reason: 'expected most iterations to exercise the property; got $exercised',
+      reason:
+          'expected most iterations to exercise the property; got $exercised',
     );
   });
 }

@@ -17,9 +17,7 @@ void main() {
     test('single rep-based set returns "<kg>kg 1×<reps>"', () {
       final exercise = _exercise(
         measurementType: const MeasurementType.repBased(),
-        sets: [
-          _repSet(0, weightKg: 100, reps: 8),
-        ],
+        sets: [_repSet(0, weightKg: 100, reps: 8)],
       );
       expect(PlannedSummaryFormatter.summarize(exercise), '100kg 1×8');
     });
@@ -139,7 +137,11 @@ Exercise _exercise({
   );
 }
 
-WorkoutSet _repSet(int position, {required double weightKg, required int reps}) {
+WorkoutSet _repSet(
+  int position, {
+  required double weightKg,
+  required int reps,
+}) {
   final now = DateTime.utc(2025);
   return WorkoutSet(
     id: 'ws-$position',

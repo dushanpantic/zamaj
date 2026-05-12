@@ -10,14 +10,16 @@ import '../../../support/generators.dart';
 void main() {
   const iterations = 100;
 
-  test('assemble is deterministic across two invocations on the same input',
-      () {
-    final rng = Random(42);
-    for (var i = 0; i < iterations; i++) {
-      final state = anySessionStateForOverview(rng);
-      final first = ExerciseViewModelAssembler.assemble(state);
-      final second = ExerciseViewModelAssembler.assemble(state);
-      expect(second, equals(first), reason: 'iteration $i');
-    }
-  });
+  test(
+    'assemble is deterministic across two invocations on the same input',
+    () {
+      final rng = Random(42);
+      for (var i = 0; i < iterations; i++) {
+        final state = anySessionStateForOverview(rng);
+        final first = ExerciseViewModelAssembler.assemble(state);
+        final second = ExerciseViewModelAssembler.assemble(state);
+        expect(second, equals(first), reason: 'iteration $i');
+      }
+    },
+  );
 }

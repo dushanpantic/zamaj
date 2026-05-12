@@ -35,7 +35,8 @@ void main() {
       expect(
         file.existsSync(),
         isTrue,
-        reason: 'Expected $relativePath to exist (cwd: ${Directory.current.path})',
+        reason:
+            'Expected $relativePath to exist (cwd: ${Directory.current.path})',
       );
 
       final imports = _extractImportTargets(file.readAsStringSync());

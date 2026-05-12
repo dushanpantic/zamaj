@@ -11,6 +11,59 @@ robustness, performance and small idiomatic improvements — not a redesign.
 
 ---
 
+## Verdict & disposition (after second-pass verification)
+
+The review was independently verified against the codebase. Most findings are
+correct, a handful were pushed back on. The "High-impact + indexes + N+1 +
+batch reorder" scope was applied.
+
+### Fixed
+
+| # | Item | What was done |
+|---|------|---------------|
+| 1 | Position bug (`existing.length` UNIQUE collision) | Replaced with `MAX(position) + 1` helpers in `createWorkoutDay`, `createExerciseGroup`, `createExercise`, `createSet` |
+| 2 | Missing indexes | Added `@TableIndex` on `WorkoutDays.programId`, `Sessions.workoutDayId`, `SessionExercises(sessionId, stateDiscriminator)`, `SessionNotes.sessionId`; bumped `SchemaVersions.drift` 2→3 with migration step |
+| 3 | N+1 reads | Rewrote `listPrograms`, `listWorkoutDaysForProgram`, `listSessionsForWorkoutDay` to a fixed handful of queries each with in-memory grouping |
+| 4 | Reorder 2×N round-trips | All four `reorder*` methods wrapped in `_db.batch(...)`. Replaced the `+1000` parking offset with negative temporary positions |
+| 5 | `DriftSessionRepository` depends on concrete program repo | Typed parameter as `ProgramRepository` (the abstract interface) |
+| 8 | `_nextUpdatedAt` duplication | Extracted to `TimestampOracle` in `database/timestamp_oracle.dart`; both repos use it |
+| 10 | Barrel missing `drift_session_repository.dart` | Added export |
+| 12 | `endSession` non-idempotent | Throws `ImmutabilityError` if `endedAtMs != null` |
+
+Regression tests added:
+
+- `test/repository/create_after_delete_test.dart` (4 cases — one per create method).
+- `test/repository/end_session_idempotency_test.dart`.
+
+The v1→v2 migration test fixture (`test/integration/exercise_planned_rest_migration_test.dart`) was extended to include all v1 tables — the previous fixture was incomplete and would have masked any cross-table v3 migration step.
+
+### Deferred (correct, lower priority)
+
+| # | Item |
+|---|------|
+| 6 | Snapshot hashed up to 3× per read |
+| 11 | `as Map<String, dynamic>` throws `TypeError`, not `DeserializationError` |
+| 14 | O(N·M) `.where()` filters in mappers |
+
+### Pushed back on (declined)
+
+| # | Item | Reason |
+|---|------|--------|
+| 7 | "Drop discriminator + JSON-payload duplication" | Intentional design. The session repo's `stateDiscriminator.isNotIn(['unfinished'])` filter and the new composite index `(sessionId, stateDiscriminator)` both rely on it. Removing it would degrade query performance and remove the discriminator-only fast path in `_reconstructState` |
+| 9 | "Migrate `…AtMs` → Drift native `DateTime`" | Invasive cross-cutting refactor with real data-migration risk for shipped users. Lots of churn for a readability win |
+| 13 | "Move `_validateActualValues` to domain" | The reviewer assumes a coupling between `ActualSetValues` and `MeasurementType` that doesn't exist in the domain today. Adding it is itself a domain change, not a repository cleanup |
+| — | "Remove `tables.dart`/`migrations.dart` from barrel" | Tests legitimately consume them; "leaks internals" framing is overstated for a single-app codebase |
+| — | "`WorkoutDays.programId` is redundant" | Used by `WorkoutDayMapper.toDomain`. Removing requires a domain-shape change, not just a column drop |
+| — | "Class is static-only namespace; consider `abstract final class`" on `AppMigrations` | Applied as a small ride-along |
+
+### Verification
+
+- `flutter analyze` — no issues
+- `flutter test` — 412 tests pass
+- `tool/check_offline_imports.sh` — OK
+
+---
+
 ## TL;DR — Top items, in order of impact
 
 | # | Item | Severity |

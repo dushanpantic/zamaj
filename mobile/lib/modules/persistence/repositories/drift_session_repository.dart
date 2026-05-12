@@ -12,41 +12,31 @@ import 'package:zamaj/modules/domain/models/measurement_type.dart';
 import 'package:zamaj/modules/domain/models/session.dart' as domain;
 import 'package:zamaj/modules/domain/models/substitute_exercise.dart';
 import 'package:zamaj/modules/domain/models/workout_day.dart' as domain;
+import 'package:zamaj/modules/domain/repositories/program_repository.dart';
 import 'package:zamaj/modules/domain/repositories/session_repository.dart';
 import 'package:zamaj/modules/persistence/database/app_database.dart';
 import 'package:zamaj/modules/persistence/database/datetime_utils.dart';
+import 'package:zamaj/modules/persistence/database/timestamp_oracle.dart';
 import 'package:zamaj/modules/persistence/mappers/session_mapper.dart';
-import 'package:zamaj/modules/persistence/repositories/drift_program_repository.dart';
 
 class DriftSessionRepository implements SessionRepository {
   DriftSessionRepository({
     required AppDatabase db,
-    required DriftProgramRepository programRepository,
+    required ProgramRepository programRepository,
     Clock clock = const Clock(),
   }) : _db = db,
        _programRepository = programRepository,
-       _clock = clock;
+       _clock = clock,
+       _timestamps = TimestampOracle(clock);
 
   final AppDatabase _db;
-  final DriftProgramRepository _programRepository;
+  final ProgramRepository _programRepository;
   final Clock _clock;
+  final TimestampOracle _timestamps;
   final _uuid = const Uuid();
   final _mapper = SessionMapper();
 
   static const _gap = 1024;
-
-  DateTime _nextUpdatedAt({
-    required DateTime? previousUpdatedAt,
-    required DateTime createdAt,
-  }) {
-    final now = _clock.now().toUtc();
-    final flooredByPrevious = previousUpdatedAt == null
-        ? now
-        : (now.isAfter(previousUpdatedAt)
-              ? now
-              : previousUpdatedAt.add(const Duration(milliseconds: 1)));
-    return flooredByPrevious.isAfter(createdAt) ? flooredByPrevious : createdAt;
-  }
 
   @override
   Future<domain.Session> startSession({required String workoutDayId}) async {
@@ -140,21 +130,81 @@ class DriftSessionRepository implements SessionRepository {
   Future<List<domain.Session>> listSessionsForWorkoutDay(
     String workoutDayId,
   ) async {
-    final rows = await (_db.select(
+    final sessionRows = await (_db.select(
       _db.sessions,
     )..where((t) => t.workoutDayId.equals(workoutDayId))).get();
-    final result = <domain.Session>[];
-    for (final row in rows) {
-      result.add(await _buildSession(row));
+    if (sessionRows.isEmpty) return const [];
+
+    final sessionIds = sessionRows.map((r) => r.id).toList();
+
+    final exerciseRows =
+        await (_db.select(_db.sessionExercises)
+              ..where((t) => t.sessionId.isIn(sessionIds))
+              ..orderBy([(t) => OrderingTerm.asc(t.position)]))
+            .get();
+    final exerciseIds = exerciseRows.map((e) => e.id).toList();
+
+    final setRows = exerciseIds.isEmpty
+        ? <ExecutedSet>[]
+        : await (_db.select(_db.executedSets)
+                ..where((t) => t.sessionExerciseId.isIn(exerciseIds))
+                ..orderBy([(t) => OrderingTerm.asc(t.position)]))
+              .get();
+
+    final noteRows = await (_db.select(
+      _db.sessionNotes,
+    )..where((t) => t.sessionId.isIn(sessionIds))).get();
+
+    final extraWorkRows =
+        await (_db.select(_db.extraWorkItems)
+              ..where((t) => t.sessionId.isIn(sessionIds))
+              ..orderBy([(t) => OrderingTerm.asc(t.position)]))
+            .get();
+
+    final exercisesBySession = <String, List<SessionExercise>>{};
+    for (final e in exerciseRows) {
+      (exercisesBySession[e.sessionId] ??= []).add(e);
     }
-    return result;
+    final setsByExercise = <String, List<ExecutedSet>>{};
+    for (final s in setRows) {
+      (setsByExercise[s.sessionExerciseId] ??= []).add(s);
+    }
+    final notesBySession = <String, List<SessionNote>>{};
+    for (final n in noteRows) {
+      (notesBySession[n.sessionId] ??= []).add(n);
+    }
+    final extrasBySession = <String, List<ExtraWorkItem>>{};
+    for (final x in extraWorkRows) {
+      (extrasBySession[x.sessionId] ??= []).add(x);
+    }
+
+    return [
+      for (final row in sessionRows)
+        () {
+          final exercises =
+              exercisesBySession[row.id] ?? const <SessionExercise>[];
+          return _mapper.toDomain(
+            row,
+            exercises,
+            [for (final e in exercises) ...?setsByExercise[e.id]],
+            notesBySession[row.id] ?? const <SessionNote>[],
+            extrasBySession[row.id] ?? const <ExtraWorkItem>[],
+          );
+        }(),
+    ];
   }
 
   @override
   Future<domain.Session> endSession(String sessionId) async {
     return _db.transaction(() async {
       final row = await _requireSessionRow(sessionId);
-      final updatedAt = _nextUpdatedAt(
+      if (row.endedAtMs != null) {
+        throw ImmutabilityError(
+          sessionId: sessionId,
+          message: 'Session $sessionId is already ended',
+        );
+      }
+      final updatedAt = _timestamps.nextUpdatedAt(
         previousUpdatedAt: msToUtc(row.updatedAtMs),
         createdAt: msToUtc(row.createdAtMs),
       );
@@ -237,7 +287,7 @@ class DriftSessionRepository implements SessionRepository {
       );
       final completedSetCount = existingSets.length + 1;
 
-      final exerciseUpdatedAt = _nextUpdatedAt(
+      final exerciseUpdatedAt = _timestamps.nextUpdatedAt(
         previousUpdatedAt: msToUtc(exerciseRow.updatedAtMs),
         createdAt: msToUtc(exerciseRow.createdAtMs),
       );
@@ -275,7 +325,7 @@ class DriftSessionRepository implements SessionRepository {
         );
       }
 
-      final sessionUpdatedAt = _nextUpdatedAt(
+      final sessionUpdatedAt = _timestamps.nextUpdatedAt(
         previousUpdatedAt: msToUtc(sessionRow.updatedAtMs),
         createdAt: msToUtc(sessionRow.createdAtMs),
       );
@@ -320,7 +370,7 @@ class DriftSessionRepository implements SessionRepository {
       final actualJson = actualValues.toJson();
       final actualDiscriminator = actualJson['type'] as String;
 
-      final setUpdatedAt = _nextUpdatedAt(
+      final setUpdatedAt = _timestamps.nextUpdatedAt(
         previousUpdatedAt: msToUtc(setRow.updatedAtMs),
         createdAt: msToUtc(setRow.createdAtMs),
       );
@@ -335,7 +385,7 @@ class DriftSessionRepository implements SessionRepository {
         ),
       );
 
-      final exerciseUpdatedAt = _nextUpdatedAt(
+      final exerciseUpdatedAt = _timestamps.nextUpdatedAt(
         previousUpdatedAt: msToUtc(exerciseRow.updatedAtMs),
         createdAt: msToUtc(exerciseRow.createdAtMs),
       );
@@ -347,7 +397,7 @@ class DriftSessionRepository implements SessionRepository {
         ),
       );
 
-      final sessionUpdatedAt = _nextUpdatedAt(
+      final sessionUpdatedAt = _timestamps.nextUpdatedAt(
         previousUpdatedAt: msToUtc(sessionRow.updatedAtMs),
         createdAt: msToUtc(sessionRow.createdAtMs),
       );
@@ -373,7 +423,7 @@ class DriftSessionRepository implements SessionRepository {
       );
       final newPosition = lockedPos + 1;
 
-      final exerciseUpdatedAt = _nextUpdatedAt(
+      final exerciseUpdatedAt = _timestamps.nextUpdatedAt(
         previousUpdatedAt: msToUtc(exerciseRow.updatedAtMs),
         createdAt: msToUtc(exerciseRow.createdAtMs),
       );
@@ -395,7 +445,7 @@ class DriftSessionRepository implements SessionRepository {
       );
 
       final sessionRow = await _requireSessionRow(exerciseRow.sessionId);
-      final sessionUpdatedAt = _nextUpdatedAt(
+      final sessionUpdatedAt = _timestamps.nextUpdatedAt(
         previousUpdatedAt: msToUtc(sessionRow.updatedAtMs),
         createdAt: msToUtc(sessionRow.createdAtMs),
       );
@@ -433,7 +483,7 @@ class DriftSessionRepository implements SessionRepository {
       );
       final newPosition = lockedPos + 1;
 
-      final exerciseUpdatedAt = _nextUpdatedAt(
+      final exerciseUpdatedAt = _timestamps.nextUpdatedAt(
         previousUpdatedAt: msToUtc(exerciseRow.updatedAtMs),
         createdAt: msToUtc(exerciseRow.createdAtMs),
       );
@@ -456,7 +506,7 @@ class DriftSessionRepository implements SessionRepository {
       );
 
       final sessionRow = await _requireSessionRow(exerciseRow.sessionId);
-      final sessionUpdatedAt = _nextUpdatedAt(
+      final sessionUpdatedAt = _timestamps.nextUpdatedAt(
         previousUpdatedAt: msToUtc(sessionRow.updatedAtMs),
         createdAt: msToUtc(sessionRow.createdAtMs),
       );
@@ -503,7 +553,7 @@ class DriftSessionRepository implements SessionRepository {
         final id = orderedUnfinishedIds[i];
         final exercise = exerciseById[id]!;
         final newPosition = lockedPos + (i + 1) * _gap;
-        final updatedAt = _nextUpdatedAt(
+        final updatedAt = _timestamps.nextUpdatedAt(
           previousUpdatedAt: msToUtc(exercise.updatedAtMs),
           createdAt: msToUtc(exercise.createdAtMs),
         );
@@ -518,7 +568,7 @@ class DriftSessionRepository implements SessionRepository {
       }
 
       final sessionRow = await _requireSessionRow(sessionId);
-      final sessionUpdatedAt = _nextUpdatedAt(
+      final sessionUpdatedAt = _timestamps.nextUpdatedAt(
         previousUpdatedAt: msToUtc(sessionRow.updatedAtMs),
         createdAt: msToUtc(sessionRow.createdAtMs),
       );
@@ -557,7 +607,7 @@ class DriftSessionRepository implements SessionRepository {
             ),
           );
 
-      final sessionUpdatedAt = _nextUpdatedAt(
+      final sessionUpdatedAt = _timestamps.nextUpdatedAt(
         previousUpdatedAt: msToUtc(sessionRow.updatedAtMs),
         createdAt: msToUtc(sessionRow.createdAtMs),
       );
@@ -581,7 +631,7 @@ class DriftSessionRepository implements SessionRepository {
 
       for (final id in sessionExerciseIds) {
         final exerciseRow = await _requireSessionExerciseRow(id);
-        final updatedAt = _nextUpdatedAt(
+        final updatedAt = _timestamps.nextUpdatedAt(
           previousUpdatedAt: msToUtc(exerciseRow.updatedAtMs),
           createdAt: msToUtc(exerciseRow.createdAtMs),
         );
@@ -596,7 +646,7 @@ class DriftSessionRepository implements SessionRepository {
       }
 
       final sessionRow = await _requireSessionRow(sessionId);
-      final sessionUpdatedAt = _nextUpdatedAt(
+      final sessionUpdatedAt = _timestamps.nextUpdatedAt(
         previousUpdatedAt: msToUtc(sessionRow.updatedAtMs),
         createdAt: msToUtc(sessionRow.createdAtMs),
       );
@@ -618,7 +668,7 @@ class DriftSessionRepository implements SessionRepository {
     return _db.transaction(() async {
       for (final id in sessionExerciseIds) {
         final exerciseRow = await _requireSessionExerciseRow(id);
-        final updatedAt = _nextUpdatedAt(
+        final updatedAt = _timestamps.nextUpdatedAt(
           previousUpdatedAt: msToUtc(exerciseRow.updatedAtMs),
           createdAt: msToUtc(exerciseRow.createdAtMs),
         );
@@ -633,7 +683,7 @@ class DriftSessionRepository implements SessionRepository {
       }
 
       final sessionRow = await _requireSessionRow(sessionId);
-      final sessionUpdatedAt = _nextUpdatedAt(
+      final sessionUpdatedAt = _timestamps.nextUpdatedAt(
         previousUpdatedAt: msToUtc(sessionRow.updatedAtMs),
         createdAt: msToUtc(sessionRow.createdAtMs),
       );
@@ -682,7 +732,7 @@ class DriftSessionRepository implements SessionRepository {
             ),
           );
 
-      final sessionUpdatedAt = _nextUpdatedAt(
+      final sessionUpdatedAt = _timestamps.nextUpdatedAt(
         previousUpdatedAt: msToUtc(sessionRow.updatedAtMs),
         createdAt: msToUtc(sessionRow.createdAtMs),
       );
@@ -819,7 +869,7 @@ class DriftSessionRepository implements SessionRepository {
     for (var j = 0; j < unfinished.length; j++) {
       final row = unfinished[j];
       final newPos = lockedPosition + (j + 1) * _gap;
-      final updatedAt = _nextUpdatedAt(
+      final updatedAt = _timestamps.nextUpdatedAt(
         previousUpdatedAt: msToUtc(row.updatedAtMs),
         createdAt: msToUtc(row.createdAtMs),
       );

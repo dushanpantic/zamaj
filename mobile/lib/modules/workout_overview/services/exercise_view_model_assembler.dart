@@ -56,9 +56,8 @@ abstract final class ExerciseViewModelAssembler {
         effectiveMeasurementType: effectiveMt,
       );
 
-      final tagMatches = hasCurrent &&
-          ex.supersetTag != null &&
-          ex.supersetTag == currentTag;
+      final tagMatches =
+          hasCurrent && ex.supersetTag != null && ex.supersetTag == currentTag;
       if (tagMatches) {
         buffer.add(vm);
       } else {
@@ -87,7 +86,8 @@ abstract final class ExerciseViewModelAssembler {
 
     for (var i = 0; i < plannedSets.length; i++) {
       final executed = i < executedSets.length ? executedSets[i] : null;
-      final isNextLogTarget = cursor is ActiveCursor &&
+      final isNextLogTarget =
+          cursor is ActiveCursor &&
           cursor.sessionExerciseId == sessionExercise.id &&
           cursor.setIndex == i;
       rows.add(
@@ -131,4 +131,3 @@ abstract final class ExerciseViewModelAssembler {
     );
   }
 }
-

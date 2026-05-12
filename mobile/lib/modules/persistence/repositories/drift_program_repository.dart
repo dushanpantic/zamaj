@@ -17,32 +17,22 @@ import 'package:zamaj/modules/domain/models/workout_set.dart' as domain;
 import 'package:zamaj/modules/domain/repositories/program_repository.dart';
 import 'package:zamaj/modules/persistence/database/app_database.dart';
 import 'package:zamaj/modules/persistence/database/datetime_utils.dart';
+import 'package:zamaj/modules/persistence/database/timestamp_oracle.dart';
 import 'package:zamaj/modules/persistence/mappers/program_mapper.dart';
 import 'package:zamaj/modules/persistence/mappers/workout_day_mapper.dart';
 
 class DriftProgramRepository implements ProgramRepository {
   DriftProgramRepository({required AppDatabase db, Clock clock = const Clock()})
     : _db = db,
-      _clock = clock;
+      _clock = clock,
+      _timestamps = TimestampOracle(clock);
 
   final AppDatabase _db;
   final Clock _clock;
+  final TimestampOracle _timestamps;
   final _uuid = const Uuid();
   final _programMapper = ProgramMapper();
   final _workoutDayMapper = WorkoutDayMapper();
-
-  DateTime _nextUpdatedAt({
-    required DateTime? previousUpdatedAt,
-    required DateTime createdAt,
-  }) {
-    final now = _clock.now().toUtc();
-    final flooredByPrevious = previousUpdatedAt == null
-        ? now
-        : (now.isAfter(previousUpdatedAt)
-              ? now
-              : previousUpdatedAt.add(const Duration(milliseconds: 1)));
-    return flooredByPrevious.isAfter(createdAt) ? flooredByPrevious : createdAt;
-  }
 
   @override
   Future<domain.Program> createProgram({required String name}) async {
@@ -80,12 +70,20 @@ class DriftProgramRepository implements ProgramRepository {
   @override
   Future<List<domain.Program>> listPrograms() async {
     final rows = await _db.select(_db.programs).get();
-    final result = <domain.Program>[];
-    for (final row in rows) {
-      final dayIds = await _getWorkoutDayIdsForProgram(row.id);
-      result.add(_programMapper.toDomain(row, dayIds));
+    final links =
+        await (_db.select(_db.programWorkoutDays)..orderBy([
+              (t) => OrderingTerm.asc(t.programId),
+              (t) => OrderingTerm.asc(t.position),
+            ]))
+            .get();
+    final dayIdsByProgram = <String, List<String>>{};
+    for (final link in links) {
+      (dayIdsByProgram[link.programId] ??= []).add(link.workoutDayId);
     }
-    return result;
+    return [
+      for (final row in rows)
+        _programMapper.toDomain(row, dayIdsByProgram[row.id] ?? const []),
+    ];
   }
 
   @override
@@ -97,7 +95,7 @@ class DriftProgramRepository implements ProgramRepository {
       if (existing == null) {
         throw NotFoundError(entityType: 'Program', id: program.id);
       }
-      final updatedAt = _nextUpdatedAt(
+      final updatedAt = _timestamps.nextUpdatedAt(
         previousUpdatedAt: msToUtc(existing.updatedAtMs),
         createdAt: msToUtc(existing.createdAtMs),
       );
@@ -151,8 +149,7 @@ class DriftProgramRepository implements ProgramRepository {
             ),
           );
 
-      final existingDayIds = await _getWorkoutDayIdsForProgram(programId);
-      final newPosition = existingDayIds.length;
+      final newPosition = await _nextPositionForProgramWorkoutDays(programId);
       await _db
           .into(_db.programWorkoutDays)
           .insert(
@@ -163,7 +160,7 @@ class DriftProgramRepository implements ProgramRepository {
             ),
           );
 
-      final updatedAt = _nextUpdatedAt(
+      final updatedAt = _timestamps.nextUpdatedAt(
         previousUpdatedAt: msToUtc(programRow.updatedAtMs),
         createdAt: msToUtc(programRow.createdAtMs),
       );
@@ -193,12 +190,50 @@ class DriftProgramRepository implements ProgramRepository {
     String programId,
   ) async {
     final dayIds = await _getWorkoutDayIdsForProgram(programId);
-    final result = <domain.WorkoutDay>[];
-    for (final id in dayIds) {
-      final day = await _loadWorkoutDay(id);
-      if (day != null) result.add(day);
+    if (dayIds.isEmpty) return const [];
+
+    final dayRows = await (_db.select(
+      _db.workoutDays,
+    )..where((t) => t.id.isIn(dayIds))).get();
+    final dayRowById = {for (final r in dayRows) r.id: r};
+
+    final groupRows =
+        await (_db.select(_db.exerciseGroups)
+              ..where((t) => t.workoutDayId.isIn(dayIds))
+              ..orderBy([(t) => OrderingTerm.asc(t.position)]))
+            .get();
+    final groupIds = groupRows.map((g) => g.id).toList();
+
+    final exerciseRows = groupIds.isEmpty
+        ? <Exercise>[]
+        : await (_db.select(_db.exercises)
+                ..where((t) => t.exerciseGroupId.isIn(groupIds))
+                ..orderBy([(t) => OrderingTerm.asc(t.position)]))
+              .get();
+    final exerciseIds = exerciseRows.map((e) => e.id).toList();
+
+    final setRows = exerciseIds.isEmpty
+        ? <WorkoutSet>[]
+        : await (_db.select(_db.workoutSets)
+                ..where((t) => t.exerciseId.isIn(exerciseIds))
+                ..orderBy([(t) => OrderingTerm.asc(t.position)]))
+              .get();
+
+    final groupsByDay = <String, List<ExerciseGroup>>{};
+    for (final g in groupRows) {
+      (groupsByDay[g.workoutDayId] ??= []).add(g);
     }
-    return result;
+
+    return [
+      for (final id in dayIds)
+        if (dayRowById[id] case final dayRow?)
+          _workoutDayMapper.toDomain(
+            dayRow,
+            groupsByDay[id] ?? const [],
+            exerciseRows,
+            setRows,
+          ),
+    ];
   }
 
   @override
@@ -212,7 +247,7 @@ class DriftProgramRepository implements ProgramRepository {
       if (existing == null) {
         throw NotFoundError(entityType: 'WorkoutDay', id: workoutDay.id);
       }
-      final updatedAt = _nextUpdatedAt(
+      final updatedAt = _timestamps.nextUpdatedAt(
         previousUpdatedAt: msToUtc(existing.updatedAtMs),
         createdAt: msToUtc(existing.createdAtMs),
       );
@@ -256,23 +291,26 @@ class DriftProgramRepository implements ProgramRepository {
           throw NotFoundError(entityType: 'WorkoutDay', id: dayId);
         }
       }
-      final offset = orderedWorkoutDayIds.length + 1000;
-      for (var i = 0; i < orderedWorkoutDayIds.length; i++) {
-        await (_db.update(_db.programWorkoutDays)..where(
-              (t) =>
-                  t.programId.equals(programId) &
-                  t.workoutDayId.equals(orderedWorkoutDayIds[i]),
-            ))
-            .write(ProgramWorkoutDaysCompanion(position: Value(offset + i)));
-      }
-      for (var i = 0; i < orderedWorkoutDayIds.length; i++) {
-        await (_db.update(_db.programWorkoutDays)..where(
-              (t) =>
-                  t.programId.equals(programId) &
-                  t.workoutDayId.equals(orderedWorkoutDayIds[i]),
-            ))
-            .write(ProgramWorkoutDaysCompanion(position: Value(i)));
-      }
+      await _db.batch((b) {
+        for (var i = 0; i < orderedWorkoutDayIds.length; i++) {
+          b.update(
+            _db.programWorkoutDays,
+            ProgramWorkoutDaysCompanion(position: Value(-(i + 1))),
+            where: (t) =>
+                t.programId.equals(programId) &
+                t.workoutDayId.equals(orderedWorkoutDayIds[i]),
+          );
+        }
+        for (var i = 0; i < orderedWorkoutDayIds.length; i++) {
+          b.update(
+            _db.programWorkoutDays,
+            ProgramWorkoutDaysCompanion(position: Value(i)),
+            where: (t) =>
+                t.programId.equals(programId) &
+                t.workoutDayId.equals(orderedWorkoutDayIds[i]),
+          );
+        }
+      });
     });
   }
 
@@ -290,10 +328,7 @@ class DriftProgramRepository implements ProgramRepository {
         throw NotFoundError(entityType: 'WorkoutDay', id: workoutDayId);
       }
 
-      final existingGroups = await (_db.select(
-        _db.exerciseGroups,
-      )..where((t) => t.workoutDayId.equals(workoutDayId))).get();
-      final position = existingGroups.length;
+      final position = await _nextPositionForExerciseGroups(workoutDayId);
 
       final groupId = _uuid.v4();
       final now = _clock.now().toUtc();
@@ -372,7 +407,7 @@ class DriftProgramRepository implements ProgramRepository {
       if (existing == null) {
         throw NotFoundError(entityType: 'ExerciseGroup', id: group.id);
       }
-      final updatedAt = _nextUpdatedAt(
+      final updatedAt = _timestamps.nextUpdatedAt(
         previousUpdatedAt: msToUtc(existing.updatedAtMs),
         createdAt: msToUtc(existing.createdAtMs),
       );
@@ -416,17 +451,22 @@ class DriftProgramRepository implements ProgramRepository {
           throw NotFoundError(entityType: 'ExerciseGroup', id: groupId);
         }
       }
-      final offset = orderedGroupIds.length + 1000;
-      for (var i = 0; i < orderedGroupIds.length; i++) {
-        await (_db.update(_db.exerciseGroups)
-              ..where((t) => t.id.equals(orderedGroupIds[i])))
-            .write(ExerciseGroupsCompanion(position: Value(offset + i)));
-      }
-      for (var i = 0; i < orderedGroupIds.length; i++) {
-        await (_db.update(_db.exerciseGroups)
-              ..where((t) => t.id.equals(orderedGroupIds[i])))
-            .write(ExerciseGroupsCompanion(position: Value(i)));
-      }
+      await _db.batch((b) {
+        for (var i = 0; i < orderedGroupIds.length; i++) {
+          b.update(
+            _db.exerciseGroups,
+            ExerciseGroupsCompanion(position: Value(-(i + 1))),
+            where: (t) => t.id.equals(orderedGroupIds[i]),
+          );
+        }
+        for (var i = 0; i < orderedGroupIds.length; i++) {
+          b.update(
+            _db.exerciseGroups,
+            ExerciseGroupsCompanion(position: Value(i)),
+            where: (t) => t.id.equals(orderedGroupIds[i]),
+          );
+        }
+      });
     });
   }
 
@@ -446,10 +486,7 @@ class DriftProgramRepository implements ProgramRepository {
         throw NotFoundError(entityType: 'ExerciseGroup', id: exerciseGroupId);
       }
 
-      final existingExercises = await (_db.select(
-        _db.exercises,
-      )..where((t) => t.exerciseGroupId.equals(exerciseGroupId))).get();
-      final position = existingExercises.length;
+      final position = await _nextPositionForExercises(exerciseGroupId);
 
       final id = _uuid.v4();
       final now = _clock.now().toUtc();
@@ -495,7 +532,7 @@ class DriftProgramRepository implements ProgramRepository {
       if (existing == null) {
         throw NotFoundError(entityType: 'Exercise', id: exercise.id);
       }
-      final updatedAt = _nextUpdatedAt(
+      final updatedAt = _timestamps.nextUpdatedAt(
         previousUpdatedAt: msToUtc(existing.updatedAtMs),
         createdAt: msToUtc(existing.createdAtMs),
       );
@@ -569,7 +606,7 @@ class DriftProgramRepository implements ProgramRepository {
               ),
             );
       } else {
-        final setUpdatedAt = _nextUpdatedAt(
+        final setUpdatedAt = _timestamps.nextUpdatedAt(
           previousUpdatedAt: msToUtc(existing.updatedAtMs),
           createdAt: msToUtc(existing.createdAtMs),
         );
@@ -619,17 +656,22 @@ class DriftProgramRepository implements ProgramRepository {
           throw NotFoundError(entityType: 'Exercise', id: exerciseId);
         }
       }
-      final offset = orderedExerciseIds.length + 1000;
-      for (var i = 0; i < orderedExerciseIds.length; i++) {
-        await (_db.update(_db.exercises)
-              ..where((t) => t.id.equals(orderedExerciseIds[i])))
-            .write(ExercisesCompanion(position: Value(offset + i)));
-      }
-      for (var i = 0; i < orderedExerciseIds.length; i++) {
-        await (_db.update(_db.exercises)
-              ..where((t) => t.id.equals(orderedExerciseIds[i])))
-            .write(ExercisesCompanion(position: Value(i)));
-      }
+      await _db.batch((b) {
+        for (var i = 0; i < orderedExerciseIds.length; i++) {
+          b.update(
+            _db.exercises,
+            ExercisesCompanion(position: Value(-(i + 1))),
+            where: (t) => t.id.equals(orderedExerciseIds[i]),
+          );
+        }
+        for (var i = 0; i < orderedExerciseIds.length; i++) {
+          b.update(
+            _db.exercises,
+            ExercisesCompanion(position: Value(i)),
+            where: (t) => t.id.equals(orderedExerciseIds[i]),
+          );
+        }
+      });
     });
   }
 
@@ -646,10 +688,7 @@ class DriftProgramRepository implements ProgramRepository {
         throw NotFoundError(entityType: 'Exercise', id: exerciseId);
       }
 
-      final existingSets = await (_db.select(
-        _db.workoutSets,
-      )..where((t) => t.exerciseId.equals(exerciseId))).get();
-      final position = existingSets.length;
+      final position = await _nextPositionForSets(exerciseId);
 
       final id = _uuid.v4();
       final now = _clock.now().toUtc();
@@ -682,7 +721,7 @@ class DriftProgramRepository implements ProgramRepository {
       if (existing == null) {
         throw NotFoundError(entityType: 'WorkoutSet', id: set.id);
       }
-      final updatedAt = _nextUpdatedAt(
+      final updatedAt = _timestamps.nextUpdatedAt(
         previousUpdatedAt: msToUtc(existing.updatedAtMs),
         createdAt: msToUtc(existing.createdAtMs),
       );
@@ -722,17 +761,22 @@ class DriftProgramRepository implements ProgramRepository {
           throw NotFoundError(entityType: 'WorkoutSet', id: setId);
         }
       }
-      final offset = orderedSetIds.length + 1000;
-      for (var i = 0; i < orderedSetIds.length; i++) {
-        await (_db.update(_db.workoutSets)
-              ..where((t) => t.id.equals(orderedSetIds[i])))
-            .write(WorkoutSetsCompanion(position: Value(offset + i)));
-      }
-      for (var i = 0; i < orderedSetIds.length; i++) {
-        await (_db.update(_db.workoutSets)
-              ..where((t) => t.id.equals(orderedSetIds[i])))
-            .write(WorkoutSetsCompanion(position: Value(i)));
-      }
+      await _db.batch((b) {
+        for (var i = 0; i < orderedSetIds.length; i++) {
+          b.update(
+            _db.workoutSets,
+            WorkoutSetsCompanion(position: Value(-(i + 1))),
+            where: (t) => t.id.equals(orderedSetIds[i]),
+          );
+        }
+        for (var i = 0; i < orderedSetIds.length; i++) {
+          b.update(
+            _db.workoutSets,
+            WorkoutSetsCompanion(position: Value(i)),
+            where: (t) => t.id.equals(orderedSetIds[i]),
+          );
+        }
+      });
     });
   }
 
@@ -853,6 +897,46 @@ class DriftProgramRepository implements ProgramRepository {
               ..orderBy([(t) => OrderingTerm.asc(t.position)]))
             .get();
     return rows.map((r) => r.workoutDayId).toList();
+  }
+
+  Future<int> _nextPositionForProgramWorkoutDays(String programId) async {
+    final maxExpr = _db.programWorkoutDays.position.max();
+    final row =
+        await (_db.selectOnly(_db.programWorkoutDays)
+              ..addColumns([maxExpr])
+              ..where(_db.programWorkoutDays.programId.equals(programId)))
+            .getSingle();
+    return (row.read(maxExpr) ?? -1) + 1;
+  }
+
+  Future<int> _nextPositionForExerciseGroups(String workoutDayId) async {
+    final maxExpr = _db.exerciseGroups.position.max();
+    final row =
+        await (_db.selectOnly(_db.exerciseGroups)
+              ..addColumns([maxExpr])
+              ..where(_db.exerciseGroups.workoutDayId.equals(workoutDayId)))
+            .getSingle();
+    return (row.read(maxExpr) ?? -1) + 1;
+  }
+
+  Future<int> _nextPositionForExercises(String exerciseGroupId) async {
+    final maxExpr = _db.exercises.position.max();
+    final row =
+        await (_db.selectOnly(_db.exercises)
+              ..addColumns([maxExpr])
+              ..where(_db.exercises.exerciseGroupId.equals(exerciseGroupId)))
+            .getSingle();
+    return (row.read(maxExpr) ?? -1) + 1;
+  }
+
+  Future<int> _nextPositionForSets(String exerciseId) async {
+    final maxExpr = _db.workoutSets.position.max();
+    final row =
+        await (_db.selectOnly(_db.workoutSets)
+              ..addColumns([maxExpr])
+              ..where(_db.workoutSets.exerciseId.equals(exerciseId)))
+            .getSingle();
+    return (row.read(maxExpr) ?? -1) + 1;
   }
 
   Future<domain.WorkoutDay?> _loadWorkoutDay(String workoutDayId) async {

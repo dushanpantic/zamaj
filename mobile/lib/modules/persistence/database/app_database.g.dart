@@ -5987,6 +5987,22 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   late final $ExecutedSetsTable executedSets = $ExecutedSetsTable(this);
   late final $SessionNotesTable sessionNotes = $SessionNotesTable(this);
   late final $ExtraWorkItemsTable extraWorkItems = $ExtraWorkItemsTable(this);
+  late final Index workoutDaysProgramId = Index(
+    'workout_days_program_id',
+    'CREATE INDEX workout_days_program_id ON workout_days (program_id)',
+  );
+  late final Index sessionsWorkoutDayId = Index(
+    'sessions_workout_day_id',
+    'CREATE INDEX sessions_workout_day_id ON sessions (workout_day_id)',
+  );
+  late final Index sessionExercisesSessionState = Index(
+    'session_exercises_session_state',
+    'CREATE INDEX session_exercises_session_state ON session_exercises (session_id, state_discriminator)',
+  );
+  late final Index sessionNotesSessionId = Index(
+    'session_notes_session_id',
+    'CREATE INDEX session_notes_session_id ON session_notes (session_id)',
+  );
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
@@ -6003,6 +6019,10 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     executedSets,
     sessionNotes,
     extraWorkItems,
+    workoutDaysProgramId,
+    sessionsWorkoutDayId,
+    sessionExercisesSessionState,
+    sessionNotesSessionId,
   ];
   @override
   StreamQueryUpdateRules get streamUpdateRules => const StreamQueryUpdateRules([

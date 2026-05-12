@@ -8,3 +8,4 @@ export 'mappers/program_mapper.dart';
 export 'mappers/session_mapper.dart';
 export 'mappers/workout_day_mapper.dart';
 export 'repositories/drift_program_repository.dart';
+export 'repositories/drift_session_repository.dart';

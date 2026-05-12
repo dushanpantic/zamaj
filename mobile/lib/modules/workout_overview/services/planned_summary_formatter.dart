@@ -19,6 +19,7 @@ abstract final class PlannedSummaryFormatter {
     };
   }
 
-  static String _fmtKg(double kg) =>
-      kg == kg.truncateToDouble() ? kg.toStringAsFixed(0) : kg.toStringAsFixed(1);
+  static String _fmtKg(double kg) => kg == kg.truncateToDouble()
+      ? kg.toStringAsFixed(0)
+      : kg.toStringAsFixed(1);
 }

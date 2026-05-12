@@ -68,20 +68,14 @@ void main() {
 
       expect(groups, hasLength(3));
       expect(groups[0].supersetTag, isNull);
-      expect(
-        groups[0].exercises.map((e) => e.sessionExercise.id),
-        ['se-a'],
-      );
+      expect(groups[0].exercises.map((e) => e.sessionExercise.id), ['se-a']);
       expect(groups[1].supersetTag, 'tag-x');
-      expect(
-        groups[1].exercises.map((e) => e.sessionExercise.id),
-        ['se-b', 'se-c'],
-      );
+      expect(groups[1].exercises.map((e) => e.sessionExercise.id), [
+        'se-b',
+        'se-c',
+      ]);
       expect(groups[2].supersetTag, isNull);
-      expect(
-        groups[2].exercises.map((e) => e.sessionExercise.id),
-        ['se-d'],
-      );
+      expect(groups[2].exercises.map((e) => e.sessionExercise.id), ['se-d']);
     });
 
     test('replaced exercise → effectiveMeasurementType = substitute\'s', () {
@@ -112,7 +106,12 @@ void main() {
         const MeasurementType.timeBased(),
       );
       expect(
-        groups.single.exercises.single.plannedExerciseInSnapshot.measurementType,
+        groups
+            .single
+            .exercises
+            .single
+            .plannedExerciseInSnapshot
+            .measurementType,
         const MeasurementType.repBased(),
       );
     });
@@ -173,35 +172,32 @@ void main() {
       }
     });
 
-    test(
-      'extra executed sets beyond planned count produce trailing rows '
-      'with null plannedValues',
-      () {
-        final session = _sessionFromGroups([
-          _standalone(
-            'a',
-            state: const ExerciseState.completed(),
-            plannedSetCount: 2,
-            executedSetCount: 4,
-          ),
-        ]);
-        final state = SessionState(
-          session: session,
-          cursor: const Cursor.completed(),
-        );
+    test('extra executed sets beyond planned count produce trailing rows '
+        'with null plannedValues', () {
+      final session = _sessionFromGroups([
+        _standalone(
+          'a',
+          state: const ExerciseState.completed(),
+          plannedSetCount: 2,
+          executedSetCount: 4,
+        ),
+      ]);
+      final state = SessionState(
+        session: session,
+        cursor: const Cursor.completed(),
+      );
 
-        final groups = ExerciseViewModelAssembler.assemble(state);
-        final rows = groups.single.exercises.single.setRows;
+      final groups = ExerciseViewModelAssembler.assemble(state);
+      final rows = groups.single.exercises.single.setRows;
 
-        expect(rows, hasLength(4));
-        expect(rows[0].plannedValues, isNotNull);
-        expect(rows[1].plannedValues, isNotNull);
-        expect(rows[2].plannedValues, isNull);
-        expect(rows[3].plannedValues, isNull);
-        expect(rows[2].executedSet, isNotNull);
-        expect(rows[3].executedSet, isNotNull);
-      },
-    );
+      expect(rows, hasLength(4));
+      expect(rows[0].plannedValues, isNotNull);
+      expect(rows[1].plannedValues, isNotNull);
+      expect(rows[2].plannedValues, isNull);
+      expect(rows[3].plannedValues, isNull);
+      expect(rows[2].executedSet, isNotNull);
+      expect(rows[3].executedSet, isNotNull);
+    });
 
     test('non-consecutive same supersetTag exercises end up in separate '
         'groups (defensive)', () {
@@ -231,10 +227,9 @@ void main() {
         cursor: const Cursor.active(sessionExerciseId: 'se-a', setIndex: 0),
       );
 
-      final vm = ExerciseViewModelAssembler.assemble(state)
-          .single
-          .exercises
-          .single;
+      final vm = ExerciseViewModelAssembler.assemble(
+        state,
+      ).single.exercises.single;
       expect(vm.plannedSummary, '100kg 4×8');
     });
   });
@@ -271,15 +266,15 @@ _ExerciseSpec _standalone(
   int reps = 8,
   String? supersetTag,
 }) => _ExerciseSpec(
-      id: id,
-      state: state,
-      plannedSetCount: plannedSetCount,
-      executedSetCount: executedSetCount,
-      plannedMeasurement: plannedMeasurement,
-      weightKg: weightKg,
-      reps: reps,
-      supersetTag: supersetTag,
-    );
+  id: id,
+  state: state,
+  plannedSetCount: plannedSetCount,
+  executedSetCount: executedSetCount,
+  plannedMeasurement: plannedMeasurement,
+  weightKg: weightKg,
+  reps: reps,
+  supersetTag: supersetTag,
+);
 
 Session _sessionFromGroups(List<_ExerciseSpec> specs) {
   final now = DateTime.utc(2025);
@@ -306,12 +301,12 @@ Session _sessionFromGroups(List<_ExerciseSpec> specs) {
           measurementType: spec.plannedMeasurement,
           plannedValues: switch (spec.plannedMeasurement) {
             RepBasedMeasurement() => PlannedSetValues.repBased(
-                weightKg: spec.weightKg,
-                reps: spec.reps,
-              ),
+              weightKg: spec.weightKg,
+              reps: spec.reps,
+            ),
             TimeBasedMeasurement() => const PlannedSetValues.timeBased(
-                durationSeconds: 30,
-              ),
+              durationSeconds: 30,
+            ),
           },
           createdAt: now,
           updatedAt: now,
@@ -374,12 +369,12 @@ Session _sessionFromGroups(List<_ExerciseSpec> specs) {
             measurementType: effectiveMt,
             actualValues: switch (effectiveMt) {
               RepBasedMeasurement() => PlannedSetValues.repBased(
-                  weightKg: spec.weightKg,
-                  reps: spec.reps,
-                ).toActual(),
+                weightKg: spec.weightKg,
+                reps: spec.reps,
+              ).toActual(),
               TimeBasedMeasurement() => const ActualSetValues.timeBased(
-                  durationSeconds: 30,
-                ),
+                durationSeconds: 30,
+              ),
             },
             plannedSetIdInSnapshot: j < spec.plannedSetCount
                 ? 'ws-${spec.id}-$j'
@@ -414,9 +409,12 @@ Session _sessionFromGroups(List<_ExerciseSpec> specs) {
 
 extension on PlannedSetValues {
   ActualSetValues toActual() => switch (this) {
-        PlannedRepBased(:final weightKg, :final reps) =>
-          ActualSetValues.repBased(weightKg: weightKg, reps: reps),
-        PlannedTimeBased(:final durationSeconds) =>
-          ActualSetValues.timeBased(durationSeconds: durationSeconds),
-      };
+    PlannedRepBased(:final weightKg, :final reps) => ActualSetValues.repBased(
+      weightKg: weightKg,
+      reps: reps,
+    ),
+    PlannedTimeBased(:final durationSeconds) => ActualSetValues.timeBased(
+      durationSeconds: durationSeconds,
+    ),
+  };
 }

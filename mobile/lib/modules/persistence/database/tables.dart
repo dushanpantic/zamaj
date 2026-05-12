@@ -27,6 +27,7 @@ class ProgramWorkoutDays extends Table {
   ];
 }
 
+@TableIndex(name: 'workout_days_program_id', columns: {#programId})
 class WorkoutDays extends Table {
   TextColumn get id => text().withLength(min: 36, max: 36)();
   TextColumn get programId =>
@@ -107,6 +108,7 @@ class WorkoutSets extends Table {
   ];
 }
 
+@TableIndex(name: 'sessions_workout_day_id', columns: {#workoutDayId})
 class Sessions extends Table {
   TextColumn get id => text().withLength(min: 36, max: 36)();
   TextColumn get workoutDayId => text()();
@@ -122,6 +124,10 @@ class Sessions extends Table {
   Set<Column> get primaryKey => {id};
 }
 
+@TableIndex(
+  name: 'session_exercises_session_state',
+  columns: {#sessionId, #stateDiscriminator},
+)
 class SessionExercises extends Table {
   TextColumn get id => text().withLength(min: 36, max: 36)();
   TextColumn get sessionId =>
@@ -168,6 +174,7 @@ class ExecutedSets extends Table {
   ];
 }
 
+@TableIndex(name: 'session_notes_session_id', columns: {#sessionId})
 class SessionNotes extends Table {
   TextColumn get id => text().withLength(min: 36, max: 36)();
   TextColumn get sessionId =>

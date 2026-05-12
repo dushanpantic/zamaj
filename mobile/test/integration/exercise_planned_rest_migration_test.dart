@@ -66,6 +66,94 @@ void main() {
             schema_version INTEGER NOT NULL
           )
         ''');
+        rawDb.execute('''
+          CREATE TABLE program_workout_days (
+            program_id TEXT NOT NULL REFERENCES programs(id) ON DELETE CASCADE,
+            workout_day_id TEXT NOT NULL REFERENCES workout_days(id) ON DELETE CASCADE,
+            position INTEGER NOT NULL,
+            PRIMARY KEY (program_id, workout_day_id),
+            UNIQUE (program_id, position)
+          )
+        ''');
+        rawDb.execute('''
+          CREATE TABLE sets (
+            id TEXT NOT NULL PRIMARY KEY,
+            exercise_id TEXT NOT NULL REFERENCES exercises(id) ON DELETE CASCADE,
+            position INTEGER NOT NULL,
+            planned_values_discriminator TEXT NOT NULL,
+            planned_values_payload_json TEXT NOT NULL,
+            created_at_ms INTEGER NOT NULL,
+            updated_at_ms INTEGER NOT NULL,
+            schema_version INTEGER NOT NULL,
+            UNIQUE (exercise_id, position)
+          )
+        ''');
+        rawDb.execute('''
+          CREATE TABLE sessions (
+            id TEXT NOT NULL PRIMARY KEY,
+            workout_day_id TEXT NOT NULL,
+            snapshot_json TEXT NOT NULL,
+            snapshot_hash TEXT NOT NULL,
+            started_at_ms INTEGER NOT NULL,
+            ended_at_ms INTEGER,
+            created_at_ms INTEGER NOT NULL,
+            updated_at_ms INTEGER NOT NULL,
+            schema_version INTEGER NOT NULL
+          )
+        ''');
+        rawDb.execute('''
+          CREATE TABLE session_exercises (
+            id TEXT NOT NULL PRIMARY KEY,
+            session_id TEXT NOT NULL REFERENCES sessions(id) ON DELETE CASCADE,
+            position INTEGER NOT NULL,
+            planned_exercise_id_in_snapshot TEXT NOT NULL,
+            state_discriminator TEXT NOT NULL,
+            substitute_payload_json TEXT,
+            superset_tag TEXT,
+            created_at_ms INTEGER NOT NULL,
+            updated_at_ms INTEGER NOT NULL,
+            schema_version INTEGER NOT NULL,
+            UNIQUE (session_id, position)
+          )
+        ''');
+        rawDb.execute('''
+          CREATE TABLE executed_sets (
+            id TEXT NOT NULL PRIMARY KEY,
+            session_exercise_id TEXT NOT NULL REFERENCES session_exercises(id) ON DELETE CASCADE,
+            position INTEGER NOT NULL,
+            measurement_type_discriminator TEXT NOT NULL,
+            actual_values_discriminator TEXT NOT NULL,
+            actual_values_payload_json TEXT NOT NULL,
+            planned_set_id_in_snapshot TEXT,
+            completed_at_ms INTEGER NOT NULL,
+            created_at_ms INTEGER NOT NULL,
+            updated_at_ms INTEGER NOT NULL,
+            schema_version INTEGER NOT NULL,
+            UNIQUE (session_exercise_id, position)
+          )
+        ''');
+        rawDb.execute('''
+          CREATE TABLE session_notes (
+            id TEXT NOT NULL PRIMARY KEY,
+            session_id TEXT NOT NULL REFERENCES sessions(id) ON DELETE CASCADE,
+            body TEXT NOT NULL,
+            created_at_ms INTEGER NOT NULL,
+            updated_at_ms INTEGER NOT NULL,
+            schema_version INTEGER NOT NULL
+          )
+        ''');
+        rawDb.execute('''
+          CREATE TABLE extra_work_items (
+            id TEXT NOT NULL PRIMARY KEY,
+            session_id TEXT NOT NULL REFERENCES sessions(id) ON DELETE CASCADE,
+            position INTEGER NOT NULL,
+            body TEXT NOT NULL,
+            created_at_ms INTEGER NOT NULL,
+            updated_at_ms INTEGER NOT NULL,
+            schema_version INTEGER NOT NULL,
+            UNIQUE (session_id, position)
+          )
+        ''');
         rawDb.execute('PRAGMA user_version = 1');
 
         rawDb.execute('INSERT INTO programs VALUES (?, ?, ?, ?, ?)', [

@@ -99,7 +99,10 @@ class DayTile extends StatelessWidget {
 
   Widget _trailing() {
     return switch (viewModel.status) {
-      DayTileLoading() => const SizedBox(width: 96, height: AppSpacing.touchMin),
+      DayTileLoading() => const SizedBox(
+        width: 96,
+        height: AppSpacing.touchMin,
+      ),
       DayTileFailure() => SizedBox(
         height: AppSpacing.touchMin,
         child: TextButton.icon(

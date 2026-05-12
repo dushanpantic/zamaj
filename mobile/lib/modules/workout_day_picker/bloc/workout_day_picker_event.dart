@@ -24,8 +24,7 @@ final class WorkoutDayPickerReturnedFromSession extends WorkoutDayPickerEvent {
   const WorkoutDayPickerReturnedFromSession();
 }
 
-final class WorkoutDayPickerScreenRetryRequested
-    extends WorkoutDayPickerEvent {
+final class WorkoutDayPickerScreenRetryRequested extends WorkoutDayPickerEvent {
   const WorkoutDayPickerScreenRetryRequested();
 }
 

@@ -140,8 +140,10 @@ class _WorkoutDayPickerScreenState extends State<WorkoutDayPickerScreen> {
       WorkoutDayPickerInitial() ||
       WorkoutDayPickerLoading() => const WorkoutDayPickerLoadingView(),
       WorkoutDayPickerProgramNotFound() => const _NotFoundView(),
-      WorkoutDayPickerScreenFailure(:final error) =>
-        WorkoutDayPickerErrorView(error: error, onRetry: _onScreenRetry),
+      WorkoutDayPickerScreenFailure(:final error) => WorkoutDayPickerErrorView(
+        error: error,
+        onRetry: _onScreenRetry,
+      ),
       WorkoutDayPickerLoaded() => _LoadedBody(
         state: state,
         onEditProgram: () => _onEditProgram(state.program.id),
@@ -233,9 +235,7 @@ class _TransientErrorBanner extends StatelessWidget {
       contentTextStyle: TextStyle(color: colors.onSurface),
       leading: Icon(Icons.error_outline, color: colors.error),
       content: Text('${presented.title}: ${presented.body}'),
-      actions: [
-        TextButton(onPressed: onDismiss, child: const Text('OK')),
-      ],
+      actions: [TextButton(onPressed: onDismiss, child: const Text('OK'))],
     );
   }
 }
@@ -252,11 +252,7 @@ class _NotFoundView extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(
-              Icons.search_off,
-              color: colors.onSurfaceMuted,
-              size: 64,
-            ),
+            Icon(Icons.search_off, color: colors.onSurfaceMuted, size: 64),
             const SizedBox(height: AppSpacing.lg),
             Text(
               'Program not found',

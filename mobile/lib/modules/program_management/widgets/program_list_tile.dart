@@ -77,10 +77,7 @@ class ProgramListTile extends StatelessWidget {
                   WorkoutDayPickerRoutes.picker,
                   arguments: WorkoutDayPickerArgs(programId: program.id),
                 ),
-                icon: Icon(
-                  Icons.play_arrow_rounded,
-                  color: colors.primary,
-                ),
+                icon: Icon(Icons.play_arrow_rounded, color: colors.primary),
                 tooltip: 'Train',
               ),
           ],

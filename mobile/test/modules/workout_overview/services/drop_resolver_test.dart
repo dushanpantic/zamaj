@@ -189,11 +189,7 @@ class _Spec {
   final String? supersetTag;
 }
 
-_Spec _spec(
-  String id, {
-  required ExerciseState state,
-  String? supersetTag,
-}) =>
+_Spec _spec(String id, {required ExerciseState state, String? supersetTag}) =>
     _Spec(id: id, state: state, supersetTag: supersetTag);
 
 List<SupersetGroupViewModel> _groups(List<_Spec> specs) {

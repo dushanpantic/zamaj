@@ -336,10 +336,7 @@ class WorkoutDayPickerBloc
   ) {
     return [
       for (var i = 0; i < source.length; i++)
-        if (i == index)
-          source[i].copyWith(status: status)
-        else
-          source[i],
+        if (i == index) source[i].copyWith(status: status) else source[i],
     ];
   }
 }
