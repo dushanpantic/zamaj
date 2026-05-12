@@ -2,6 +2,7 @@ import 'package:clock/clock.dart';
 import 'package:drift_flutter/drift_flutter.dart';
 import 'package:flutter/widgets.dart';
 import 'package:zamaj/app.dart';
+import 'package:zamaj/modules/domain/domain.dart';
 import 'package:zamaj/modules/persistence/database/app_database.dart';
 import 'package:zamaj/modules/persistence/repositories/drift_program_repository.dart';
 import 'package:zamaj/modules/persistence/repositories/drift_session_repository.dart';
@@ -16,5 +17,16 @@ Future<void> bootstrap() async {
     programRepository: programRepo,
     clock: clock,
   );
-  runApp(MainApp(programRepo: programRepo, sessionRepo: sessionRepo));
+  final sessionFlowEngine = SessionFlowEngine(
+    repository: sessionRepo,
+    clock: clock,
+  );
+  runApp(
+    MainApp(
+      programRepo: programRepo,
+      sessionRepo: sessionRepo,
+      sessionFlowEngine: sessionFlowEngine,
+      clock: clock,
+    ),
+  );
 }

@@ -353,8 +353,8 @@ Conventions:
     - _Requirements: R13 AC1_
     - _Design: §1.2_
 
-- [ ] 8. Navigation wiring
-  - [ ] 8.1 Add a "Train" trailing icon button to
+- [x] 8. Navigation wiring
+  - [x] 8.1 Add a "Train" trailing icon button to
     `lib/modules/program_management/widgets/program_list_tile.dart`
     that calls `Navigator.of(context).pushNamed(
     WorkoutDayPickerRoutes.picker,
@@ -363,7 +363,7 @@ Conventions:
     - _Requirements: R6 AC1, R6 AC5_
     - _Design: §2.2_
 
-  - [ ] 8.2 Create
+  - [x] 8.2 Create
     `screens/session_active_placeholder_screen.dart` (a tiny
     `Scaffold` showing the passed session id and a back button) and
     register `SessionRoutes.active` to it in the existing
@@ -373,7 +373,7 @@ Conventions:
     - _Requirements: R6 AC6_
     - _Design: §2.3, §13 decision 6_
 
-  - [ ] 8.3 Register `WorkoutDayPickerRoutes.picker` in
+  - [x] 8.3 Register `WorkoutDayPickerRoutes.picker` in
     `onGenerateRoute`: the route parses
     `WorkoutDayPickerArgs` from `settings.arguments` and pushes
     `WorkoutDayPickerScreen` with a `BlocProvider` that constructs
@@ -381,8 +381,8 @@ Conventions:
     - _Requirements: R6 AC1, R6 AC5_
     - _Design: §2.1, §2.3_
 
-- [ ] 9. Final checkpoint
-  - [ ] 9.1 Run the full check sequence:
+- [x] 9. Final checkpoint
+  - [x] 9.1 Run the full check sequence:
     `tool/check_offline_imports.sh`,
     `dart run build_runner build --force-jit`,
     `flutter analyze`,

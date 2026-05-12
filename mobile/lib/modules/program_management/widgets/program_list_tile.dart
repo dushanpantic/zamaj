@@ -3,6 +3,8 @@ import 'package:zamaj/core/app_spacing.dart';
 import 'package:zamaj/core/app_theme.dart';
 import 'package:zamaj/core/app_typography.dart';
 import 'package:zamaj/modules/domain/domain.dart';
+import 'package:zamaj/modules/workout_day_picker/models/workout_day_picker_args.dart';
+import 'package:zamaj/modules/workout_day_picker/navigation/workout_day_picker_routes.dart';
 
 class ProgramListTile extends StatelessWidget {
   const ProgramListTile({
@@ -68,6 +70,18 @@ class ProgramListTile extends StatelessWidget {
                   strokeWidth: 2,
                   color: colors.primary,
                 ),
+              )
+            else
+              IconButton(
+                onPressed: () => Navigator.of(context).pushNamed(
+                  WorkoutDayPickerRoutes.picker,
+                  arguments: WorkoutDayPickerArgs(programId: program.id),
+                ),
+                icon: Icon(
+                  Icons.play_arrow_rounded,
+                  color: colors.primary,
+                ),
+                tooltip: 'Train',
               ),
           ],
         ),
