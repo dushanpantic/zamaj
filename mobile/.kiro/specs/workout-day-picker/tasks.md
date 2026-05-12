@@ -98,8 +98,8 @@ Conventions:
     - _Requirements: R1 AC2_
     - _Design: §3.2_
 
-- [ ] 3. Pure-Dart services
-  - [ ] 3.1 Implement `CurrentWeekWindow`
+- [x] 3. Pure-Dart services
+  - [x] 3.1 Implement `CurrentWeekWindow`
     (`services/current_week_window.dart`) as a freezed class with
     fields `DateTime start` and `DateTime end` and a static factory
     `CurrentWeekWindow.compute(DateTime now)` that produces the
@@ -108,7 +108,7 @@ Conventions:
     - _Requirements: R8 AC1, R8 AC2, R8 AC3, R8 AC4, R8 AC5, R8 AC6_
     - _Design: §6_
 
-  - [ ] 3.2 Write `test/modules/workout_day_picker/services/current_week_window_test.dart`
+  - [x] 3.2 Write `test/modules/workout_day_picker/services/current_week_window_test.dart`
     covering: each weekday produces a Monday-anchored start; Monday at
     exactly 00:00:00.000 returns "now" as start; end equals start +
     7 calendar days; a window spanning a DST spring-forward day; a
@@ -116,7 +116,7 @@ Conventions:
     - _Requirements: R8 AC2, R8 AC3, R8 AC5_
     - _Design: §6_
 
-  - [ ] 3.3 Implement `RelativeDateFormatter`
+  - [x] 3.3 Implement `RelativeDateFormatter`
     (`services/relative_date_formatter.dart`) as a pure-Dart
     `abstract final class` with `static String format(DateTime target,
     DateTime now)` per the design pseudocode, hard-coded English
@@ -124,7 +124,7 @@ Conventions:
     - _Requirements: R7 AC1, R7 AC2, R7 AC3, R7 AC4, R7 AC5, R7 AC6, R7 AC7_
     - _Design: §7_
 
-  - [ ] 3.4 Write
+  - [x] 3.4 Write
     `test/modules/workout_day_picker/services/relative_date_formatter_test.dart`
     covering: Today (same instant), Today (different times same
     day), Yesterday, every weekday 2–6 days back, ISO branch at 7
@@ -133,14 +133,14 @@ Conventions:
     - _Requirements: R7 AC2, R7 AC3, R7 AC4, R7 AC5, R7 AC7_
     - _Design: §7_
 
-  - [ ] 3.5 Write property test
+  - [x] 3.5 Write property test
     `test/modules/workout_day_picker/services/relative_date_formatter_determinism_property_test.dart`:
     generate ≥100 random `(target, now)` pairs spanning −365…+365
     days, invoke `format` twice, assert equality
     - _Requirements: R7 AC8_
     - _Design: §11.2_
 
-  - [ ] 3.6 Implement `SessionHistorySummarizer`
+  - [x] 3.6 Implement `SessionHistorySummarizer`
     (`services/session_history_summarizer.dart`) as an
     `abstract final class` with `static DayHistorySummary
     summarize(List<Session> sessions, CurrentWeekWindow window)`,
@@ -148,7 +148,7 @@ Conventions:
     - _Requirements: R2 AC3, R2 AC4, R2 AC5, R2 AC6, R2 AC7, R9 AC1, R9 AC2, R9 AC3, R9 AC4_
     - _Design: §5_
 
-  - [ ] 3.7 Write
+  - [x] 3.7 Write
     `test/modules/workout_day_picker/services/session_history_summarizer_test.dart`
     covering: empty list → all zeros and nulls; one Completed only;
     one Active only; mixed counts; week-window boundary inclusivity
@@ -157,7 +157,7 @@ Conventions:
     - _Requirements: R2 AC3–AC7, R9 AC1–AC4_
     - _Design: §5_
 
-  - [ ] 3.8 Write property test
+  - [x] 3.8 Write property test
     `test/modules/workout_day_picker/services/summarizer_count_property_test.dart`:
     generate ≥100 random `List<Session>` plus a random window;
     assert `totalCompletedCount` equals naive count and
@@ -165,7 +165,7 @@ Conventions:
     - _Requirements: R9 AC2, R9 AC3_
     - _Design: §11.2_
 
-  - [ ] 3.9 Write property test
+  - [x] 3.9 Write property test
     `test/modules/workout_day_picker/services/summarizer_tiebreak_property_test.dart`:
     generate `≥2` active sessions with controlled `updatedAt /
     startedAt / id` triples; assert `activeSessionId` equals the
@@ -173,13 +173,13 @@ Conventions:
     - _Requirements: R9 AC4_
     - _Design: §11.2_
 
-  - [ ] 3.10 Write property test
+  - [x] 3.10 Write property test
     `test/modules/workout_day_picker/services/summarizer_determinism_property_test.dart`:
     invoke twice on the same input and assert equal outputs
     - _Requirements: R9 AC5_
     - _Design: §11.2_
 
-  - [ ] 3.11 Write property test
+  - [x] 3.11 Write property test
     `test/modules/workout_day_picker/services/summarizer_permutation_property_test.dart`:
     invoke on every shuffle of the input list and assert equal outputs
     - _Requirements: R9 AC6_

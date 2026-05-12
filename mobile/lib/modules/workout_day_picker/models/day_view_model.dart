@@ -8,8 +8,7 @@ part 'day_view_model.freezed.dart';
 sealed class DayTileStatus with _$DayTileStatus {
   const factory DayTileStatus.loading() = DayTileLoading;
 
-  const factory DayTileStatus.loaded(DayHistorySummary summary) =
-      DayTileLoaded;
+  const factory DayTileStatus.loaded(DayHistorySummary summary) = DayTileLoaded;
 
   const factory DayTileStatus.failure(DomainError error) = DayTileFailure;
 }
