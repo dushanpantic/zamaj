@@ -3,7 +3,12 @@
     "allow": [
       "mcp__dart__run_tests",
       "Bash(bash tool/check_offline_imports.sh)",
-      "Bash(dart run *)"
+      "Bash(dart run *)",
+      "Bash(mkdir -p /Users/dusanpantic/Projects/github.com/dushanpantic/zamaj/mobile/.kiro/specs/workout-overview-screen)",
+      "Bash(flutter pub *)"
+    ],
+    "additionalDirectories": [
+      "/Users/dusanpantic/Projects/github.com/dushanpantic/zamaj/mobile/.kiro/specs"
     ]
   }
 }
