@@ -8,67 +8,86 @@ abstract final class ExerciseViewModelAssembler {
   static List<SupersetGroupViewModel> assemble(SessionState sessionState) {
     final session = sessionState.session;
     final cursor = sessionState.cursor;
+
+    final plannedById = <String, Exercise>{
+      for (final group in session.snapshot.workoutDay.exerciseGroups)
+        for (final exercise in group.exercises) exercise.id: exercise,
+    };
+
     final sorted = List<SessionExercise>.of(session.sessionExercises)
       ..sort((a, b) => a.position.compareTo(b.position));
 
-    final groups = <SupersetGroupViewModel>[];
-    String? currentTag;
-    var hasCurrent = false;
-    final buffer = <ExerciseViewModel>[];
+    final viewModels = <ExerciseViewModel>[
+      for (final ex in sorted) _buildViewModel(ex, plannedById, cursor),
+    ];
 
-    void flush() {
-      if (buffer.isEmpty) return;
-      if (currentTag == null) {
-        for (final vm in buffer) {
-          groups.add(
-            SupersetGroupViewModel(supersetTag: null, exercises: [vm]),
-          );
-        }
+    return _groupByAdjacentSupersetTag(viewModels, sorted);
+  }
+
+  static ExerciseViewModel _buildViewModel(
+    SessionExercise sessionExercise,
+    Map<String, Exercise> plannedById,
+    Cursor cursor,
+  ) {
+    final planned = plannedById[sessionExercise.plannedExerciseIdInSnapshot];
+    if (planned == null) {
+      throw NotFoundError(
+        entityType: 'Exercise',
+        id: sessionExercise.plannedExerciseIdInSnapshot,
+      );
+    }
+    final isCursorTarget =
+        cursor is ActiveCursor &&
+        cursor.sessionExerciseId == sessionExercise.id;
+    final cursorSetIndex = isCursorTarget ? cursor.setIndex : null;
+    final effectiveMt = switch (sessionExercise.state) {
+      ReplacedState(:final substitute) => substitute.measurementType,
+      _ => planned.measurementType,
+    };
+    return ExerciseViewModel(
+      sessionExercise: sessionExercise,
+      plannedSummary: PlannedSummaryFormatter.summarize(planned),
+      plannedMeasurementType: planned.measurementType,
+      plannedMetadata: planned.metadata,
+      plannedExerciseName: planned.name,
+      setRows: _buildSetRows(sessionExercise, planned, cursor),
+      isCursorTarget: isCursorTarget,
+      cursorSetIndex: cursorSetIndex,
+      effectiveMeasurementType: effectiveMt,
+    );
+  }
+
+  static List<SupersetGroupViewModel> _groupByAdjacentSupersetTag(
+    List<ExerciseViewModel> viewModels,
+    List<SessionExercise> sortedSessionExercises,
+  ) {
+    final groups = <SupersetGroupViewModel>[];
+    var i = 0;
+    while (i < viewModels.length) {
+      final ex = sortedSessionExercises[i];
+      final tag = ex.supersetTag;
+      if (tag == null) {
+        groups.add(SupersetGroupViewModel.single(exercise: viewModels[i]));
+        i++;
+        continue;
+      }
+      var j = i + 1;
+      while (j < viewModels.length &&
+          sortedSessionExercises[j].supersetTag == tag) {
+        j++;
+      }
+      if (j - i == 1) {
+        groups.add(SupersetGroupViewModel.single(exercise: viewModels[i]));
       } else {
         groups.add(
-          SupersetGroupViewModel(
-            supersetTag: currentTag,
-            exercises: List<ExerciseViewModel>.of(buffer),
+          SupersetGroupViewModel.superset(
+            tag: tag,
+            exercises: viewModels.sublist(i, j),
           ),
         );
       }
-      buffer.clear();
+      i = j;
     }
-
-    for (final ex in sorted) {
-      final planned = _lookupPlannedExercise(ex, session);
-      final plannedSummary = PlannedSummaryFormatter.summarize(planned);
-      final isCursorTarget =
-          cursor is ActiveCursor && cursor.sessionExerciseId == ex.id;
-      final cursorSetIndex = isCursorTarget ? cursor.setIndex : null;
-      final effectiveMt = switch (ex.state) {
-        ReplacedState(:final substitute) => substitute.measurementType,
-        _ => planned.measurementType,
-      };
-      final setRows = _buildSetRows(ex, planned, cursor);
-      final vm = ExerciseViewModel(
-        sessionExercise: ex,
-        plannedExerciseInSnapshot: planned,
-        plannedSummary: plannedSummary,
-        setRows: setRows,
-        isCursorTarget: isCursorTarget,
-        cursorSetIndex: cursorSetIndex,
-        effectiveMeasurementType: effectiveMt,
-      );
-
-      final tagMatches =
-          hasCurrent && ex.supersetTag != null && ex.supersetTag == currentTag;
-      if (tagMatches) {
-        buffer.add(vm);
-      } else {
-        flush();
-        currentTag = ex.supersetTag;
-        hasCurrent = true;
-        buffer.add(vm);
-      }
-    }
-    flush();
-
     return groups;
   }
 
@@ -77,57 +96,36 @@ abstract final class ExerciseViewModelAssembler {
     Exercise plannedExercise,
     Cursor cursor,
   ) {
-    final plannedSets = List<WorkoutSet>.of(plannedExercise.sets)
-      ..sort((a, b) => a.position.compareTo(b.position));
-    final executedSets = List<ExecutedSet>.of(sessionExercise.executedSets)
-      ..sort((a, b) => a.position.compareTo(b.position));
+    final plannedByPosition = <int, WorkoutSet>{
+      for (final s in plannedExercise.sets) s.position: s,
+    };
+    final executedByPosition = <int, ExecutedSet>{
+      for (final s in sessionExercise.executedSets) s.position: s,
+    };
+
+    final maxPosition = [
+      ...plannedByPosition.keys,
+      ...executedByPosition.keys,
+    ].fold<int>(-1, (a, b) => b > a ? b : a);
 
     final rows = <SetRowViewModel>[];
-
-    for (var i = 0; i < plannedSets.length; i++) {
-      final executed = i < executedSets.length ? executedSets[i] : null;
-      final isNextLogTarget =
-          cursor is ActiveCursor &&
-          cursor.sessionExerciseId == sessionExercise.id &&
-          cursor.setIndex == i;
+    for (var p = 0; p <= maxPosition; p++) {
+      final planned = plannedByPosition[p];
+      final executed = executedByPosition[p];
+      if (planned == null && executed == null) continue;
       rows.add(
         SetRowViewModel(
-          position: i,
-          plannedValues: plannedSets[i].plannedValues,
+          position: p,
+          plannedValues: planned?.plannedValues,
+          plannedSetIdInSnapshot: planned?.id,
           executedSet: executed,
-          isNextLogTarget: isNextLogTarget,
+          isNextLogTarget:
+              cursor is ActiveCursor &&
+              cursor.sessionExerciseId == sessionExercise.id &&
+              cursor.setIndex == p,
         ),
       );
     }
-
-    for (var j = plannedSets.length; j < executedSets.length; j++) {
-      rows.add(
-        SetRowViewModel(
-          position: j,
-          plannedValues: null,
-          executedSet: executedSets[j],
-          isNextLogTarget: false,
-        ),
-      );
-    }
-
     return rows;
-  }
-
-  static Exercise _lookupPlannedExercise(
-    SessionExercise sessionExercise,
-    Session session,
-  ) {
-    for (final group in session.snapshot.workoutDay.exerciseGroups) {
-      for (final exercise in group.exercises) {
-        if (exercise.id == sessionExercise.plannedExerciseIdInSnapshot) {
-          return exercise;
-        }
-      }
-    }
-    throw StateError(
-      'Planned exercise ${sessionExercise.plannedExerciseIdInSnapshot} '
-      'not found in session ${session.id} snapshot',
-    );
   }
 }

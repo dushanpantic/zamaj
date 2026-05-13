@@ -221,8 +221,10 @@ List<SupersetGroupViewModel> _groups(List<_Spec> specs) {
     );
     return ExerciseViewModel(
       sessionExercise: ex,
-      plannedExerciseInSnapshot: planned,
+      plannedExerciseName: planned.name,
       plannedSummary: '0 sets',
+      plannedMeasurementType: planned.measurementType,
+      plannedMetadata: planned.metadata,
       setRows: const <SetRowViewModel>[],
       isCursorTarget: false,
       cursorSetIndex: null,
@@ -231,41 +233,28 @@ List<SupersetGroupViewModel> _groups(List<_Spec> specs) {
   }
 
   final out = <SupersetGroupViewModel>[];
-  String? currentTag;
-  var hasCurrent = false;
-  final buffer = <ExerciseViewModel>[];
-
-  void flush() {
-    if (buffer.isEmpty) return;
-    if (currentTag == null) {
-      for (final vm in buffer) {
-        out.add(SupersetGroupViewModel(supersetTag: null, exercises: [vm]));
-      }
-    } else {
-      out.add(
-        SupersetGroupViewModel(
-          supersetTag: currentTag,
-          exercises: List<ExerciseViewModel>.of(buffer),
-        ),
-      );
-    }
-    buffer.clear();
-  }
-
-  for (var i = 0; i < specs.length; i++) {
+  var i = 0;
+  while (i < specs.length) {
     final s = specs[i];
     final vm = viewModel(s, i);
-    final tagMatches =
-        hasCurrent && s.supersetTag != null && s.supersetTag == currentTag;
-    if (tagMatches) {
-      buffer.add(vm);
-    } else {
-      flush();
-      currentTag = s.supersetTag;
-      hasCurrent = true;
-      buffer.add(vm);
+    if (s.supersetTag == null) {
+      out.add(SupersetGroupViewModel.single(exercise: vm));
+      i++;
+      continue;
     }
+    final tag = s.supersetTag!;
+    final group = <ExerciseViewModel>[vm];
+    var j = i + 1;
+    while (j < specs.length && specs[j].supersetTag == tag) {
+      group.add(viewModel(specs[j], j));
+      j++;
+    }
+    if (group.length == 1) {
+      out.add(SupersetGroupViewModel.single(exercise: group.single));
+    } else {
+      out.add(SupersetGroupViewModel.superset(tag: tag, exercises: group));
+    }
+    i = j;
   }
-  flush();
   return out;
 }

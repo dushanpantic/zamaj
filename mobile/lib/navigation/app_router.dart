@@ -7,7 +7,9 @@ import 'package:zamaj/modules/workout_day_picker/bloc/bloc.dart';
 import 'package:zamaj/modules/workout_day_picker/models/workout_day_picker_args.dart';
 import 'package:zamaj/modules/workout_day_picker/navigation/workout_day_picker_routes.dart';
 import 'package:zamaj/modules/workout_day_picker/screens/workout_day_picker_screen.dart';
-import 'package:zamaj/navigation/session_active_placeholder_screen.dart';
+import 'package:zamaj/modules/workout_overview/bloc/bloc.dart';
+import 'package:zamaj/modules/workout_overview/screens/workout_overview_screen.dart';
+import 'package:zamaj/navigation/focus_mode_placeholder_screen.dart';
 import 'package:zamaj/navigation/session_routes.dart';
 
 abstract final class AppRouter {
@@ -15,6 +17,7 @@ abstract final class AppRouter {
     return switch (settings.name) {
       WorkoutDayPickerRoutes.picker => _pickerRoute(settings),
       SessionRoutes.active => _sessionActiveRoute(settings),
+      SessionRoutes.focus => _sessionFocusRoute(settings),
       _ => ProgramManagementRouter.onGenerateRoute(settings),
     };
   }
@@ -39,7 +42,20 @@ abstract final class AppRouter {
     final sessionId = settings.arguments! as String;
     return MaterialPageRoute<void>(
       settings: settings,
-      builder: (_) => SessionActivePlaceholderScreen(sessionId: sessionId),
+      builder: (context) => BlocProvider(
+        create: (_) => WorkoutOverviewBloc(
+          sessionFlowEngine: context.read<SessionFlowEngine>(),
+        )..add(WorkoutOverviewOpened(sessionId)),
+        child: const WorkoutOverviewScreen(),
+      ),
+    );
+  }
+
+  static Route<dynamic> _sessionFocusRoute(RouteSettings settings) {
+    final sessionId = settings.arguments! as String;
+    return MaterialPageRoute<void>(
+      settings: settings,
+      builder: (_) => FocusModePlaceholderScreen(sessionId: sessionId),
     );
   }
 }

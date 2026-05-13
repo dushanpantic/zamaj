@@ -7,6 +7,7 @@ import 'dart:math';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:zamaj/modules/domain/domain.dart';
 import 'package:zamaj/modules/workout_overview/models/drop_intent.dart';
+import 'package:zamaj/modules/workout_overview/models/superset_group_view_model.dart';
 import 'package:zamaj/modules/workout_overview/services/drop_resolver.dart';
 import 'package:zamaj/modules/workout_overview/services/exercise_view_model_assembler.dart';
 
@@ -26,7 +27,7 @@ void main() {
 
       final unfinishedIds = <String>[
         for (final g in groups)
-          for (final ex in g.exercises)
+          for (final ex in g.allExercises)
             if (ex.sessionExercise.state is UnfinishedState)
               ex.sessionExercise.id,
       ];

@@ -1,5 +1,6 @@
 import 'package:uuid/uuid.dart';
 import 'package:zamaj/core/clock.dart';
+import 'package:zamaj/core/weight_formatter.dart';
 import 'package:zamaj/modules/domain/domain.dart';
 import 'package:zamaj/modules/program_management/models/program_editor_draft.dart';
 import 'package:zamaj/modules/program_management/services/text_plan/plan_draft.dart';
@@ -82,9 +83,7 @@ abstract final class PlanDraftToAggregate {
             draftId: idGenerator.v4(),
             persistedId: null,
             values: PlannedSetDraftValues.repBased(
-              weightInput: weightKg == weightKg.truncateToDouble()
-                  ? weightKg.toInt().toString()
-                  : weightKg.toString(),
+              weightInput: WeightFormatter.formatKg(weightKg),
               repsInput: reps.toString(),
             ),
           ),

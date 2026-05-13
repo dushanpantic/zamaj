@@ -14,62 +14,30 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$SupersetGroupViewModel {
 
- String? get supersetTag; List<ExerciseViewModel> get exercises;
-/// Create a copy of SupersetGroupViewModel
-/// with the given fields replaced by the non-null parameter values.
-@JsonKey(includeFromJson: false, includeToJson: false)
-@pragma('vm:prefer-inline')
-$SupersetGroupViewModelCopyWith<SupersetGroupViewModel> get copyWith => _$SupersetGroupViewModelCopyWithImpl<SupersetGroupViewModel>(this as SupersetGroupViewModel, _$identity);
+
 
 
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is SupersetGroupViewModel&&(identical(other.supersetTag, supersetTag) || other.supersetTag == supersetTag)&&const DeepCollectionEquality().equals(other.exercises, exercises));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is SupersetGroupViewModel);
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,supersetTag,const DeepCollectionEquality().hash(exercises));
+int get hashCode => runtimeType.hashCode;
 
 @override
 String toString() {
-  return 'SupersetGroupViewModel(supersetTag: $supersetTag, exercises: $exercises)';
+  return 'SupersetGroupViewModel()';
 }
 
 
 }
 
 /// @nodoc
-abstract mixin class $SupersetGroupViewModelCopyWith<$Res>  {
-  factory $SupersetGroupViewModelCopyWith(SupersetGroupViewModel value, $Res Function(SupersetGroupViewModel) _then) = _$SupersetGroupViewModelCopyWithImpl;
-@useResult
-$Res call({
- String? supersetTag, List<ExerciseViewModel> exercises
-});
-
-
-
-
-}
-/// @nodoc
-class _$SupersetGroupViewModelCopyWithImpl<$Res>
-    implements $SupersetGroupViewModelCopyWith<$Res> {
-  _$SupersetGroupViewModelCopyWithImpl(this._self, this._then);
-
-  final SupersetGroupViewModel _self;
-  final $Res Function(SupersetGroupViewModel) _then;
-
-/// Create a copy of SupersetGroupViewModel
-/// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? supersetTag = freezed,Object? exercises = null,}) {
-  return _then(_self.copyWith(
-supersetTag: freezed == supersetTag ? _self.supersetTag : supersetTag // ignore: cast_nullable_to_non_nullable
-as String?,exercises: null == exercises ? _self.exercises : exercises // ignore: cast_nullable_to_non_nullable
-as List<ExerciseViewModel>,
-  ));
-}
-
+class $SupersetGroupViewModelCopyWith<$Res>  {
+$SupersetGroupViewModelCopyWith(SupersetGroupViewModel _, $Res Function(SupersetGroupViewModel) __);
 }
 
 
@@ -87,11 +55,12 @@ extension SupersetGroupViewModelPatterns on SupersetGroupViewModel {
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeMap<TResult extends Object?>(TResult Function( _SupersetGroupViewModel value)?  $default,{required TResult orElse(),}){
+@optionalTypeArgs TResult maybeMap<TResult extends Object?>({TResult Function( SingleGroupViewModel value)?  single,TResult Function( SupersetGroup value)?  superset,required TResult orElse(),}){
 final _that = this;
 switch (_that) {
-case _SupersetGroupViewModel() when $default != null:
-return $default(_that);case _:
+case SingleGroupViewModel() when single != null:
+return single(_that);case SupersetGroup() when superset != null:
+return superset(_that);case _:
   return orElse();
 
 }
@@ -109,14 +78,12 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult map<TResult extends Object?>(TResult Function( _SupersetGroupViewModel value)  $default,){
+@optionalTypeArgs TResult map<TResult extends Object?>({required TResult Function( SingleGroupViewModel value)  single,required TResult Function( SupersetGroup value)  superset,}){
 final _that = this;
 switch (_that) {
-case _SupersetGroupViewModel():
-return $default(_that);case _:
-  throw StateError('Unexpected subclass');
-
-}
+case SingleGroupViewModel():
+return single(_that);case SupersetGroup():
+return superset(_that);}
 }
 /// A variant of `map` that fallback to returning `null`.
 ///
@@ -130,11 +97,12 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult? mapOrNull<TResult extends Object?>(TResult? Function( _SupersetGroupViewModel value)?  $default,){
+@optionalTypeArgs TResult? mapOrNull<TResult extends Object?>({TResult? Function( SingleGroupViewModel value)?  single,TResult? Function( SupersetGroup value)?  superset,}){
 final _that = this;
 switch (_that) {
-case _SupersetGroupViewModel() when $default != null:
-return $default(_that);case _:
+case SingleGroupViewModel() when single != null:
+return single(_that);case SupersetGroup() when superset != null:
+return superset(_that);case _:
   return null;
 
 }
@@ -151,10 +119,11 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String? supersetTag,  List<ExerciseViewModel> exercises)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>({TResult Function( ExerciseViewModel exercise)?  single,TResult Function( String tag,  List<ExerciseViewModel> exercises)?  superset,required TResult orElse(),}) {final _that = this;
 switch (_that) {
-case _SupersetGroupViewModel() when $default != null:
-return $default(_that.supersetTag,_that.exercises);case _:
+case SingleGroupViewModel() when single != null:
+return single(_that.exercise);case SupersetGroup() when superset != null:
+return superset(_that.tag,_that.exercises);case _:
   return orElse();
 
 }
@@ -172,13 +141,11 @@ return $default(_that.supersetTag,_that.exercises);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String? supersetTag,  List<ExerciseViewModel> exercises)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>({required TResult Function( ExerciseViewModel exercise)  single,required TResult Function( String tag,  List<ExerciseViewModel> exercises)  superset,}) {final _that = this;
 switch (_that) {
-case _SupersetGroupViewModel():
-return $default(_that.supersetTag,_that.exercises);case _:
-  throw StateError('Unexpected subclass');
-
-}
+case SingleGroupViewModel():
+return single(_that.exercise);case SupersetGroup():
+return superset(_that.tag,_that.exercises);}
 }
 /// A variant of `when` that fallback to returning `null`
 ///
@@ -192,10 +159,11 @@ return $default(_that.supersetTag,_that.exercises);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String? supersetTag,  List<ExerciseViewModel> exercises)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>({TResult? Function( ExerciseViewModel exercise)?  single,TResult? Function( String tag,  List<ExerciseViewModel> exercises)?  superset,}) {final _that = this;
 switch (_that) {
-case _SupersetGroupViewModel() when $default != null:
-return $default(_that.supersetTag,_that.exercises);case _:
+case SingleGroupViewModel() when single != null:
+return single(_that.exercise);case SupersetGroup() when superset != null:
+return superset(_that.tag,_that.exercises);case _:
   return null;
 
 }
@@ -206,13 +174,88 @@ return $default(_that.supersetTag,_that.exercises);case _:
 /// @nodoc
 
 
-class _SupersetGroupViewModel implements SupersetGroupViewModel {
-  const _SupersetGroupViewModel({required this.supersetTag, required final  List<ExerciseViewModel> exercises}): _exercises = exercises;
+class SingleGroupViewModel implements SupersetGroupViewModel {
+  const SingleGroupViewModel({required this.exercise});
   
 
-@override final  String? supersetTag;
+ final  ExerciseViewModel exercise;
+
+/// Create a copy of SupersetGroupViewModel
+/// with the given fields replaced by the non-null parameter values.
+@JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+$SingleGroupViewModelCopyWith<SingleGroupViewModel> get copyWith => _$SingleGroupViewModelCopyWithImpl<SingleGroupViewModel>(this, _$identity);
+
+
+
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is SingleGroupViewModel&&(identical(other.exercise, exercise) || other.exercise == exercise));
+}
+
+
+@override
+int get hashCode => Object.hash(runtimeType,exercise);
+
+@override
+String toString() {
+  return 'SupersetGroupViewModel.single(exercise: $exercise)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class $SingleGroupViewModelCopyWith<$Res> implements $SupersetGroupViewModelCopyWith<$Res> {
+  factory $SingleGroupViewModelCopyWith(SingleGroupViewModel value, $Res Function(SingleGroupViewModel) _then) = _$SingleGroupViewModelCopyWithImpl;
+@useResult
+$Res call({
+ ExerciseViewModel exercise
+});
+
+
+$ExerciseViewModelCopyWith<$Res> get exercise;
+
+}
+/// @nodoc
+class _$SingleGroupViewModelCopyWithImpl<$Res>
+    implements $SingleGroupViewModelCopyWith<$Res> {
+  _$SingleGroupViewModelCopyWithImpl(this._self, this._then);
+
+  final SingleGroupViewModel _self;
+  final $Res Function(SingleGroupViewModel) _then;
+
+/// Create a copy of SupersetGroupViewModel
+/// with the given fields replaced by the non-null parameter values.
+@pragma('vm:prefer-inline') $Res call({Object? exercise = null,}) {
+  return _then(SingleGroupViewModel(
+exercise: null == exercise ? _self.exercise : exercise // ignore: cast_nullable_to_non_nullable
+as ExerciseViewModel,
+  ));
+}
+
+/// Create a copy of SupersetGroupViewModel
+/// with the given fields replaced by the non-null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$ExerciseViewModelCopyWith<$Res> get exercise {
+  
+  return $ExerciseViewModelCopyWith<$Res>(_self.exercise, (value) {
+    return _then(_self.copyWith(exercise: value));
+  });
+}
+}
+
+/// @nodoc
+
+
+class SupersetGroup implements SupersetGroupViewModel {
+  const SupersetGroup({required this.tag, required final  List<ExerciseViewModel> exercises}): _exercises = exercises;
+  
+
+ final  String tag;
  final  List<ExerciseViewModel> _exercises;
-@override List<ExerciseViewModel> get exercises {
+ List<ExerciseViewModel> get exercises {
   if (_exercises is EqualUnmodifiableListView) return _exercises;
   // ignore: implicit_dynamic_type
   return EqualUnmodifiableListView(_exercises);
@@ -221,35 +264,35 @@ class _SupersetGroupViewModel implements SupersetGroupViewModel {
 
 /// Create a copy of SupersetGroupViewModel
 /// with the given fields replaced by the non-null parameter values.
-@override @JsonKey(includeFromJson: false, includeToJson: false)
+@JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
-_$SupersetGroupViewModelCopyWith<_SupersetGroupViewModel> get copyWith => __$SupersetGroupViewModelCopyWithImpl<_SupersetGroupViewModel>(this, _$identity);
+$SupersetGroupCopyWith<SupersetGroup> get copyWith => _$SupersetGroupCopyWithImpl<SupersetGroup>(this, _$identity);
 
 
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _SupersetGroupViewModel&&(identical(other.supersetTag, supersetTag) || other.supersetTag == supersetTag)&&const DeepCollectionEquality().equals(other._exercises, _exercises));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is SupersetGroup&&(identical(other.tag, tag) || other.tag == tag)&&const DeepCollectionEquality().equals(other._exercises, _exercises));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,supersetTag,const DeepCollectionEquality().hash(_exercises));
+int get hashCode => Object.hash(runtimeType,tag,const DeepCollectionEquality().hash(_exercises));
 
 @override
 String toString() {
-  return 'SupersetGroupViewModel(supersetTag: $supersetTag, exercises: $exercises)';
+  return 'SupersetGroupViewModel.superset(tag: $tag, exercises: $exercises)';
 }
 
 
 }
 
 /// @nodoc
-abstract mixin class _$SupersetGroupViewModelCopyWith<$Res> implements $SupersetGroupViewModelCopyWith<$Res> {
-  factory _$SupersetGroupViewModelCopyWith(_SupersetGroupViewModel value, $Res Function(_SupersetGroupViewModel) _then) = __$SupersetGroupViewModelCopyWithImpl;
-@override @useResult
+abstract mixin class $SupersetGroupCopyWith<$Res> implements $SupersetGroupViewModelCopyWith<$Res> {
+  factory $SupersetGroupCopyWith(SupersetGroup value, $Res Function(SupersetGroup) _then) = _$SupersetGroupCopyWithImpl;
+@useResult
 $Res call({
- String? supersetTag, List<ExerciseViewModel> exercises
+ String tag, List<ExerciseViewModel> exercises
 });
 
 
@@ -257,19 +300,19 @@ $Res call({
 
 }
 /// @nodoc
-class __$SupersetGroupViewModelCopyWithImpl<$Res>
-    implements _$SupersetGroupViewModelCopyWith<$Res> {
-  __$SupersetGroupViewModelCopyWithImpl(this._self, this._then);
+class _$SupersetGroupCopyWithImpl<$Res>
+    implements $SupersetGroupCopyWith<$Res> {
+  _$SupersetGroupCopyWithImpl(this._self, this._then);
 
-  final _SupersetGroupViewModel _self;
-  final $Res Function(_SupersetGroupViewModel) _then;
+  final SupersetGroup _self;
+  final $Res Function(SupersetGroup) _then;
 
 /// Create a copy of SupersetGroupViewModel
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? supersetTag = freezed,Object? exercises = null,}) {
-  return _then(_SupersetGroupViewModel(
-supersetTag: freezed == supersetTag ? _self.supersetTag : supersetTag // ignore: cast_nullable_to_non_nullable
-as String?,exercises: null == exercises ? _self._exercises : exercises // ignore: cast_nullable_to_non_nullable
+@pragma('vm:prefer-inline') $Res call({Object? tag = null,Object? exercises = null,}) {
+  return _then(SupersetGroup(
+tag: null == tag ? _self.tag : tag // ignore: cast_nullable_to_non_nullable
+as String,exercises: null == exercises ? _self._exercises : exercises // ignore: cast_nullable_to_non_nullable
 as List<ExerciseViewModel>,
   ));
 }

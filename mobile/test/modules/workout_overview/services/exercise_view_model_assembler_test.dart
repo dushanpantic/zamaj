@@ -2,6 +2,8 @@
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:zamaj/modules/domain/domain.dart';
+import 'package:zamaj/modules/workout_overview/models/exercise_view_model.dart';
+import 'package:zamaj/modules/workout_overview/models/superset_group_view_model.dart';
 import 'package:zamaj/modules/workout_overview/services/exercise_view_model_assembler.dart';
 
 void main() {
@@ -23,9 +25,8 @@ void main() {
       final groups = ExerciseViewModelAssembler.assemble(state);
 
       expect(groups, hasLength(1));
-      expect(groups.single.supersetTag, isNull);
-      expect(groups.single.exercises, hasLength(1));
-      final vm = groups.single.exercises.single;
+      expect(groups.single, isA<SingleGroupViewModel>());
+      final vm = groups.single.allExercises.single;
       expect(vm.isCursorTarget, isTrue);
       expect(vm.cursorSetIndex, 0);
       expect(vm.setRows, hasLength(3));
@@ -67,15 +68,28 @@ void main() {
       final groups = ExerciseViewModelAssembler.assemble(state);
 
       expect(groups, hasLength(3));
-      expect(groups[0].supersetTag, isNull);
-      expect(groups[0].exercises.map((e) => e.sessionExercise.id), ['se-a']);
-      expect(groups[1].supersetTag, 'tag-x');
-      expect(groups[1].exercises.map((e) => e.sessionExercise.id), [
-        'se-b',
-        'se-c',
-      ]);
-      expect(groups[2].supersetTag, isNull);
-      expect(groups[2].exercises.map((e) => e.sessionExercise.id), ['se-d']);
+      expect(groups[0], isA<SingleGroupViewModel>());
+      expect(
+        groups[0].allExercises.map(
+          (ExerciseViewModel e) => e.sessionExercise.id,
+        ),
+        ['se-a'],
+      );
+      expect(groups[1], isA<SupersetGroup>());
+      expect((groups[1] as SupersetGroup).tag, 'tag-x');
+      expect(
+        groups[1].allExercises.map(
+          (ExerciseViewModel e) => e.sessionExercise.id,
+        ),
+        ['se-b', 'se-c'],
+      );
+      expect(groups[2], isA<SingleGroupViewModel>());
+      expect(
+        groups[2].allExercises.map(
+          (ExerciseViewModel e) => e.sessionExercise.id,
+        ),
+        ['se-d'],
+      );
     });
 
     test('replaced exercise → effectiveMeasurementType = substitute\'s', () {
@@ -102,16 +116,11 @@ void main() {
       final groups = ExerciseViewModelAssembler.assemble(state);
 
       expect(
-        groups.single.exercises.single.effectiveMeasurementType,
+        groups.single.allExercises.single.effectiveMeasurementType,
         const MeasurementType.timeBased(),
       );
       expect(
-        groups
-            .single
-            .exercises
-            .single
-            .plannedExerciseInSnapshot
-            .measurementType,
+        groups.single.allExercises.single.plannedMeasurementType,
         const MeasurementType.repBased(),
       );
     });
@@ -136,9 +145,9 @@ void main() {
       );
 
       final groups = ExerciseViewModelAssembler.assemble(state);
-      expect(groups[0].exercises.single.isCursorTarget, isFalse);
-      expect(groups[0].exercises.single.cursorSetIndex, isNull);
-      expect(groups[1].exercises.single.isCursorTarget, isTrue);
+      expect(groups[0].allExercises.single.isCursorTarget, isFalse);
+      expect(groups[0].allExercises.single.cursorSetIndex, isNull);
+      expect(groups[1].allExercises.single.isCursorTarget, isTrue);
     });
 
     test('cursor.completed → no isCursorTarget anywhere', () {
@@ -162,7 +171,7 @@ void main() {
 
       final groups = ExerciseViewModelAssembler.assemble(state);
       for (final g in groups) {
-        for (final ex in g.exercises) {
+        for (final ex in g.allExercises) {
           expect(ex.isCursorTarget, isFalse);
           expect(ex.cursorSetIndex, isNull);
           for (final r in ex.setRows) {
@@ -188,7 +197,7 @@ void main() {
       );
 
       final groups = ExerciseViewModelAssembler.assemble(state);
-      final rows = groups.single.exercises.single.setRows;
+      final rows = groups.single.allExercises.single.setRows;
 
       expect(rows, hasLength(4));
       expect(rows[0].plannedValues, isNotNull);
@@ -213,9 +222,11 @@ void main() {
 
       final groups = ExerciseViewModelAssembler.assemble(state);
       expect(groups, hasLength(3));
-      expect(groups[0].supersetTag, 'tag-x');
-      expect(groups[1].supersetTag, isNull);
-      expect(groups[2].supersetTag, 'tag-x');
+      // Non-adjacent same-tag exercises degrade to single groups: the
+      // assembler intentionally does not pair non-contiguous tag matches.
+      expect(groups[0], isA<SingleGroupViewModel>());
+      expect(groups[1], isA<SingleGroupViewModel>());
+      expect(groups[2], isA<SingleGroupViewModel>());
     });
 
     test('plannedSummary equals PlannedSummaryFormatter.summarize output', () {
@@ -229,7 +240,7 @@ void main() {
 
       final vm = ExerciseViewModelAssembler.assemble(
         state,
-      ).single.exercises.single;
+      ).single.allExercises.single;
       expect(vm.plannedSummary, '100kg 4×8');
     });
   });

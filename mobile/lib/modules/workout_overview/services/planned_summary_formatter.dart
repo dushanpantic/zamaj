@@ -1,3 +1,4 @@
+import 'package:zamaj/core/weight_formatter.dart';
 import 'package:zamaj/modules/domain/domain.dart';
 
 abstract final class PlannedSummaryFormatter {
@@ -13,13 +14,9 @@ abstract final class PlannedSummaryFormatter {
 
     return switch (first) {
       PlannedRepBased(:final weightKg, :final reps) =>
-        '${_fmtKg(weightKg)}kg ${sets.length}×$reps',
+        '${WeightFormatter.formatKg(weightKg)}kg ${sets.length}×$reps',
       PlannedTimeBased(:final durationSeconds) =>
         '${sets.length}×${durationSeconds}s',
     };
   }
-
-  static String _fmtKg(double kg) => kg == kg.truncateToDouble()
-      ? kg.toStringAsFixed(0)
-      : kg.toStringAsFixed(1);
 }

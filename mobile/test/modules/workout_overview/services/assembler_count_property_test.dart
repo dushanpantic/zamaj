@@ -3,6 +3,7 @@
 import 'dart:math';
 
 import 'package:flutter_test/flutter_test.dart';
+import 'package:zamaj/modules/workout_overview/models/superset_group_view_model.dart';
 import 'package:zamaj/modules/workout_overview/services/exercise_view_model_assembler.dart';
 
 import '../../../support/generators.dart';
@@ -18,7 +19,7 @@ void main() {
 
       final flatCount = groups.fold<int>(
         0,
-        (acc, g) => acc + g.exercises.length,
+        (acc, g) => acc + g.allExercises.length,
       );
       expect(
         flatCount,

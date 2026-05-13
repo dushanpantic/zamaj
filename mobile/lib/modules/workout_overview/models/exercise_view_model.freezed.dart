@@ -14,7 +14,7 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$ExerciseViewModel {
 
- SessionExercise get sessionExercise; Exercise get plannedExerciseInSnapshot; String get plannedSummary; List<SetRowViewModel> get setRows; bool get isCursorTarget; int? get cursorSetIndex; MeasurementType get effectiveMeasurementType;
+ SessionExercise get sessionExercise; String get plannedExerciseName; String get plannedSummary; MeasurementType get plannedMeasurementType; ExerciseMetadata get plannedMetadata; List<SetRowViewModel> get setRows; bool get isCursorTarget; int? get cursorSetIndex; MeasurementType get effectiveMeasurementType;
 /// Create a copy of ExerciseViewModel
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -25,16 +25,16 @@ $ExerciseViewModelCopyWith<ExerciseViewModel> get copyWith => _$ExerciseViewMode
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is ExerciseViewModel&&(identical(other.sessionExercise, sessionExercise) || other.sessionExercise == sessionExercise)&&(identical(other.plannedExerciseInSnapshot, plannedExerciseInSnapshot) || other.plannedExerciseInSnapshot == plannedExerciseInSnapshot)&&(identical(other.plannedSummary, plannedSummary) || other.plannedSummary == plannedSummary)&&const DeepCollectionEquality().equals(other.setRows, setRows)&&(identical(other.isCursorTarget, isCursorTarget) || other.isCursorTarget == isCursorTarget)&&(identical(other.cursorSetIndex, cursorSetIndex) || other.cursorSetIndex == cursorSetIndex)&&(identical(other.effectiveMeasurementType, effectiveMeasurementType) || other.effectiveMeasurementType == effectiveMeasurementType));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is ExerciseViewModel&&(identical(other.sessionExercise, sessionExercise) || other.sessionExercise == sessionExercise)&&(identical(other.plannedExerciseName, plannedExerciseName) || other.plannedExerciseName == plannedExerciseName)&&(identical(other.plannedSummary, plannedSummary) || other.plannedSummary == plannedSummary)&&(identical(other.plannedMeasurementType, plannedMeasurementType) || other.plannedMeasurementType == plannedMeasurementType)&&(identical(other.plannedMetadata, plannedMetadata) || other.plannedMetadata == plannedMetadata)&&const DeepCollectionEquality().equals(other.setRows, setRows)&&(identical(other.isCursorTarget, isCursorTarget) || other.isCursorTarget == isCursorTarget)&&(identical(other.cursorSetIndex, cursorSetIndex) || other.cursorSetIndex == cursorSetIndex)&&(identical(other.effectiveMeasurementType, effectiveMeasurementType) || other.effectiveMeasurementType == effectiveMeasurementType));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,sessionExercise,plannedExerciseInSnapshot,plannedSummary,const DeepCollectionEquality().hash(setRows),isCursorTarget,cursorSetIndex,effectiveMeasurementType);
+int get hashCode => Object.hash(runtimeType,sessionExercise,plannedExerciseName,plannedSummary,plannedMeasurementType,plannedMetadata,const DeepCollectionEquality().hash(setRows),isCursorTarget,cursorSetIndex,effectiveMeasurementType);
 
 @override
 String toString() {
-  return 'ExerciseViewModel(sessionExercise: $sessionExercise, plannedExerciseInSnapshot: $plannedExerciseInSnapshot, plannedSummary: $plannedSummary, setRows: $setRows, isCursorTarget: $isCursorTarget, cursorSetIndex: $cursorSetIndex, effectiveMeasurementType: $effectiveMeasurementType)';
+  return 'ExerciseViewModel(sessionExercise: $sessionExercise, plannedExerciseName: $plannedExerciseName, plannedSummary: $plannedSummary, plannedMeasurementType: $plannedMeasurementType, plannedMetadata: $plannedMetadata, setRows: $setRows, isCursorTarget: $isCursorTarget, cursorSetIndex: $cursorSetIndex, effectiveMeasurementType: $effectiveMeasurementType)';
 }
 
 
@@ -45,11 +45,11 @@ abstract mixin class $ExerciseViewModelCopyWith<$Res>  {
   factory $ExerciseViewModelCopyWith(ExerciseViewModel value, $Res Function(ExerciseViewModel) _then) = _$ExerciseViewModelCopyWithImpl;
 @useResult
 $Res call({
- SessionExercise sessionExercise, Exercise plannedExerciseInSnapshot, String plannedSummary, List<SetRowViewModel> setRows, bool isCursorTarget, int? cursorSetIndex, MeasurementType effectiveMeasurementType
+ SessionExercise sessionExercise, String plannedExerciseName, String plannedSummary, MeasurementType plannedMeasurementType, ExerciseMetadata plannedMetadata, List<SetRowViewModel> setRows, bool isCursorTarget, int? cursorSetIndex, MeasurementType effectiveMeasurementType
 });
 
 
-$SessionExerciseCopyWith<$Res> get sessionExercise;$ExerciseCopyWith<$Res> get plannedExerciseInSnapshot;$MeasurementTypeCopyWith<$Res> get effectiveMeasurementType;
+$SessionExerciseCopyWith<$Res> get sessionExercise;$MeasurementTypeCopyWith<$Res> get plannedMeasurementType;$ExerciseMetadataCopyWith<$Res> get plannedMetadata;$MeasurementTypeCopyWith<$Res> get effectiveMeasurementType;
 
 }
 /// @nodoc
@@ -62,12 +62,14 @@ class _$ExerciseViewModelCopyWithImpl<$Res>
 
 /// Create a copy of ExerciseViewModel
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? sessionExercise = null,Object? plannedExerciseInSnapshot = null,Object? plannedSummary = null,Object? setRows = null,Object? isCursorTarget = null,Object? cursorSetIndex = freezed,Object? effectiveMeasurementType = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? sessionExercise = null,Object? plannedExerciseName = null,Object? plannedSummary = null,Object? plannedMeasurementType = null,Object? plannedMetadata = null,Object? setRows = null,Object? isCursorTarget = null,Object? cursorSetIndex = freezed,Object? effectiveMeasurementType = null,}) {
   return _then(_self.copyWith(
 sessionExercise: null == sessionExercise ? _self.sessionExercise : sessionExercise // ignore: cast_nullable_to_non_nullable
-as SessionExercise,plannedExerciseInSnapshot: null == plannedExerciseInSnapshot ? _self.plannedExerciseInSnapshot : plannedExerciseInSnapshot // ignore: cast_nullable_to_non_nullable
-as Exercise,plannedSummary: null == plannedSummary ? _self.plannedSummary : plannedSummary // ignore: cast_nullable_to_non_nullable
-as String,setRows: null == setRows ? _self.setRows : setRows // ignore: cast_nullable_to_non_nullable
+as SessionExercise,plannedExerciseName: null == plannedExerciseName ? _self.plannedExerciseName : plannedExerciseName // ignore: cast_nullable_to_non_nullable
+as String,plannedSummary: null == plannedSummary ? _self.plannedSummary : plannedSummary // ignore: cast_nullable_to_non_nullable
+as String,plannedMeasurementType: null == plannedMeasurementType ? _self.plannedMeasurementType : plannedMeasurementType // ignore: cast_nullable_to_non_nullable
+as MeasurementType,plannedMetadata: null == plannedMetadata ? _self.plannedMetadata : plannedMetadata // ignore: cast_nullable_to_non_nullable
+as ExerciseMetadata,setRows: null == setRows ? _self.setRows : setRows // ignore: cast_nullable_to_non_nullable
 as List<SetRowViewModel>,isCursorTarget: null == isCursorTarget ? _self.isCursorTarget : isCursorTarget // ignore: cast_nullable_to_non_nullable
 as bool,cursorSetIndex: freezed == cursorSetIndex ? _self.cursorSetIndex : cursorSetIndex // ignore: cast_nullable_to_non_nullable
 as int?,effectiveMeasurementType: null == effectiveMeasurementType ? _self.effectiveMeasurementType : effectiveMeasurementType // ignore: cast_nullable_to_non_nullable
@@ -87,10 +89,19 @@ $SessionExerciseCopyWith<$Res> get sessionExercise {
 /// with the given fields replaced by the non-null parameter values.
 @override
 @pragma('vm:prefer-inline')
-$ExerciseCopyWith<$Res> get plannedExerciseInSnapshot {
+$MeasurementTypeCopyWith<$Res> get plannedMeasurementType {
   
-  return $ExerciseCopyWith<$Res>(_self.plannedExerciseInSnapshot, (value) {
-    return _then(_self.copyWith(plannedExerciseInSnapshot: value));
+  return $MeasurementTypeCopyWith<$Res>(_self.plannedMeasurementType, (value) {
+    return _then(_self.copyWith(plannedMeasurementType: value));
+  });
+}/// Create a copy of ExerciseViewModel
+/// with the given fields replaced by the non-null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$ExerciseMetadataCopyWith<$Res> get plannedMetadata {
+  
+  return $ExerciseMetadataCopyWith<$Res>(_self.plannedMetadata, (value) {
+    return _then(_self.copyWith(plannedMetadata: value));
   });
 }/// Create a copy of ExerciseViewModel
 /// with the given fields replaced by the non-null parameter values.
@@ -183,10 +194,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( SessionExercise sessionExercise,  Exercise plannedExerciseInSnapshot,  String plannedSummary,  List<SetRowViewModel> setRows,  bool isCursorTarget,  int? cursorSetIndex,  MeasurementType effectiveMeasurementType)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( SessionExercise sessionExercise,  String plannedExerciseName,  String plannedSummary,  MeasurementType plannedMeasurementType,  ExerciseMetadata plannedMetadata,  List<SetRowViewModel> setRows,  bool isCursorTarget,  int? cursorSetIndex,  MeasurementType effectiveMeasurementType)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _ExerciseViewModel() when $default != null:
-return $default(_that.sessionExercise,_that.plannedExerciseInSnapshot,_that.plannedSummary,_that.setRows,_that.isCursorTarget,_that.cursorSetIndex,_that.effectiveMeasurementType);case _:
+return $default(_that.sessionExercise,_that.plannedExerciseName,_that.plannedSummary,_that.plannedMeasurementType,_that.plannedMetadata,_that.setRows,_that.isCursorTarget,_that.cursorSetIndex,_that.effectiveMeasurementType);case _:
   return orElse();
 
 }
@@ -204,10 +215,10 @@ return $default(_that.sessionExercise,_that.plannedExerciseInSnapshot,_that.plan
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( SessionExercise sessionExercise,  Exercise plannedExerciseInSnapshot,  String plannedSummary,  List<SetRowViewModel> setRows,  bool isCursorTarget,  int? cursorSetIndex,  MeasurementType effectiveMeasurementType)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( SessionExercise sessionExercise,  String plannedExerciseName,  String plannedSummary,  MeasurementType plannedMeasurementType,  ExerciseMetadata plannedMetadata,  List<SetRowViewModel> setRows,  bool isCursorTarget,  int? cursorSetIndex,  MeasurementType effectiveMeasurementType)  $default,) {final _that = this;
 switch (_that) {
 case _ExerciseViewModel():
-return $default(_that.sessionExercise,_that.plannedExerciseInSnapshot,_that.plannedSummary,_that.setRows,_that.isCursorTarget,_that.cursorSetIndex,_that.effectiveMeasurementType);case _:
+return $default(_that.sessionExercise,_that.plannedExerciseName,_that.plannedSummary,_that.plannedMeasurementType,_that.plannedMetadata,_that.setRows,_that.isCursorTarget,_that.cursorSetIndex,_that.effectiveMeasurementType);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -224,10 +235,10 @@ return $default(_that.sessionExercise,_that.plannedExerciseInSnapshot,_that.plan
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( SessionExercise sessionExercise,  Exercise plannedExerciseInSnapshot,  String plannedSummary,  List<SetRowViewModel> setRows,  bool isCursorTarget,  int? cursorSetIndex,  MeasurementType effectiveMeasurementType)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( SessionExercise sessionExercise,  String plannedExerciseName,  String plannedSummary,  MeasurementType plannedMeasurementType,  ExerciseMetadata plannedMetadata,  List<SetRowViewModel> setRows,  bool isCursorTarget,  int? cursorSetIndex,  MeasurementType effectiveMeasurementType)?  $default,) {final _that = this;
 switch (_that) {
 case _ExerciseViewModel() when $default != null:
-return $default(_that.sessionExercise,_that.plannedExerciseInSnapshot,_that.plannedSummary,_that.setRows,_that.isCursorTarget,_that.cursorSetIndex,_that.effectiveMeasurementType);case _:
+return $default(_that.sessionExercise,_that.plannedExerciseName,_that.plannedSummary,_that.plannedMeasurementType,_that.plannedMetadata,_that.setRows,_that.isCursorTarget,_that.cursorSetIndex,_that.effectiveMeasurementType);case _:
   return null;
 
 }
@@ -239,12 +250,14 @@ return $default(_that.sessionExercise,_that.plannedExerciseInSnapshot,_that.plan
 
 
 class _ExerciseViewModel implements ExerciseViewModel {
-  const _ExerciseViewModel({required this.sessionExercise, required this.plannedExerciseInSnapshot, required this.plannedSummary, required final  List<SetRowViewModel> setRows, required this.isCursorTarget, required this.cursorSetIndex, required this.effectiveMeasurementType}): _setRows = setRows;
+  const _ExerciseViewModel({required this.sessionExercise, required this.plannedExerciseName, required this.plannedSummary, required this.plannedMeasurementType, required this.plannedMetadata, required final  List<SetRowViewModel> setRows, required this.isCursorTarget, required this.cursorSetIndex, required this.effectiveMeasurementType}): _setRows = setRows;
   
 
 @override final  SessionExercise sessionExercise;
-@override final  Exercise plannedExerciseInSnapshot;
+@override final  String plannedExerciseName;
 @override final  String plannedSummary;
+@override final  MeasurementType plannedMeasurementType;
+@override final  ExerciseMetadata plannedMetadata;
  final  List<SetRowViewModel> _setRows;
 @override List<SetRowViewModel> get setRows {
   if (_setRows is EqualUnmodifiableListView) return _setRows;
@@ -266,16 +279,16 @@ _$ExerciseViewModelCopyWith<_ExerciseViewModel> get copyWith => __$ExerciseViewM
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _ExerciseViewModel&&(identical(other.sessionExercise, sessionExercise) || other.sessionExercise == sessionExercise)&&(identical(other.plannedExerciseInSnapshot, plannedExerciseInSnapshot) || other.plannedExerciseInSnapshot == plannedExerciseInSnapshot)&&(identical(other.plannedSummary, plannedSummary) || other.plannedSummary == plannedSummary)&&const DeepCollectionEquality().equals(other._setRows, _setRows)&&(identical(other.isCursorTarget, isCursorTarget) || other.isCursorTarget == isCursorTarget)&&(identical(other.cursorSetIndex, cursorSetIndex) || other.cursorSetIndex == cursorSetIndex)&&(identical(other.effectiveMeasurementType, effectiveMeasurementType) || other.effectiveMeasurementType == effectiveMeasurementType));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _ExerciseViewModel&&(identical(other.sessionExercise, sessionExercise) || other.sessionExercise == sessionExercise)&&(identical(other.plannedExerciseName, plannedExerciseName) || other.plannedExerciseName == plannedExerciseName)&&(identical(other.plannedSummary, plannedSummary) || other.plannedSummary == plannedSummary)&&(identical(other.plannedMeasurementType, plannedMeasurementType) || other.plannedMeasurementType == plannedMeasurementType)&&(identical(other.plannedMetadata, plannedMetadata) || other.plannedMetadata == plannedMetadata)&&const DeepCollectionEquality().equals(other._setRows, _setRows)&&(identical(other.isCursorTarget, isCursorTarget) || other.isCursorTarget == isCursorTarget)&&(identical(other.cursorSetIndex, cursorSetIndex) || other.cursorSetIndex == cursorSetIndex)&&(identical(other.effectiveMeasurementType, effectiveMeasurementType) || other.effectiveMeasurementType == effectiveMeasurementType));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,sessionExercise,plannedExerciseInSnapshot,plannedSummary,const DeepCollectionEquality().hash(_setRows),isCursorTarget,cursorSetIndex,effectiveMeasurementType);
+int get hashCode => Object.hash(runtimeType,sessionExercise,plannedExerciseName,plannedSummary,plannedMeasurementType,plannedMetadata,const DeepCollectionEquality().hash(_setRows),isCursorTarget,cursorSetIndex,effectiveMeasurementType);
 
 @override
 String toString() {
-  return 'ExerciseViewModel(sessionExercise: $sessionExercise, plannedExerciseInSnapshot: $plannedExerciseInSnapshot, plannedSummary: $plannedSummary, setRows: $setRows, isCursorTarget: $isCursorTarget, cursorSetIndex: $cursorSetIndex, effectiveMeasurementType: $effectiveMeasurementType)';
+  return 'ExerciseViewModel(sessionExercise: $sessionExercise, plannedExerciseName: $plannedExerciseName, plannedSummary: $plannedSummary, plannedMeasurementType: $plannedMeasurementType, plannedMetadata: $plannedMetadata, setRows: $setRows, isCursorTarget: $isCursorTarget, cursorSetIndex: $cursorSetIndex, effectiveMeasurementType: $effectiveMeasurementType)';
 }
 
 
@@ -286,11 +299,11 @@ abstract mixin class _$ExerciseViewModelCopyWith<$Res> implements $ExerciseViewM
   factory _$ExerciseViewModelCopyWith(_ExerciseViewModel value, $Res Function(_ExerciseViewModel) _then) = __$ExerciseViewModelCopyWithImpl;
 @override @useResult
 $Res call({
- SessionExercise sessionExercise, Exercise plannedExerciseInSnapshot, String plannedSummary, List<SetRowViewModel> setRows, bool isCursorTarget, int? cursorSetIndex, MeasurementType effectiveMeasurementType
+ SessionExercise sessionExercise, String plannedExerciseName, String plannedSummary, MeasurementType plannedMeasurementType, ExerciseMetadata plannedMetadata, List<SetRowViewModel> setRows, bool isCursorTarget, int? cursorSetIndex, MeasurementType effectiveMeasurementType
 });
 
 
-@override $SessionExerciseCopyWith<$Res> get sessionExercise;@override $ExerciseCopyWith<$Res> get plannedExerciseInSnapshot;@override $MeasurementTypeCopyWith<$Res> get effectiveMeasurementType;
+@override $SessionExerciseCopyWith<$Res> get sessionExercise;@override $MeasurementTypeCopyWith<$Res> get plannedMeasurementType;@override $ExerciseMetadataCopyWith<$Res> get plannedMetadata;@override $MeasurementTypeCopyWith<$Res> get effectiveMeasurementType;
 
 }
 /// @nodoc
@@ -303,12 +316,14 @@ class __$ExerciseViewModelCopyWithImpl<$Res>
 
 /// Create a copy of ExerciseViewModel
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? sessionExercise = null,Object? plannedExerciseInSnapshot = null,Object? plannedSummary = null,Object? setRows = null,Object? isCursorTarget = null,Object? cursorSetIndex = freezed,Object? effectiveMeasurementType = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? sessionExercise = null,Object? plannedExerciseName = null,Object? plannedSummary = null,Object? plannedMeasurementType = null,Object? plannedMetadata = null,Object? setRows = null,Object? isCursorTarget = null,Object? cursorSetIndex = freezed,Object? effectiveMeasurementType = null,}) {
   return _then(_ExerciseViewModel(
 sessionExercise: null == sessionExercise ? _self.sessionExercise : sessionExercise // ignore: cast_nullable_to_non_nullable
-as SessionExercise,plannedExerciseInSnapshot: null == plannedExerciseInSnapshot ? _self.plannedExerciseInSnapshot : plannedExerciseInSnapshot // ignore: cast_nullable_to_non_nullable
-as Exercise,plannedSummary: null == plannedSummary ? _self.plannedSummary : plannedSummary // ignore: cast_nullable_to_non_nullable
-as String,setRows: null == setRows ? _self._setRows : setRows // ignore: cast_nullable_to_non_nullable
+as SessionExercise,plannedExerciseName: null == plannedExerciseName ? _self.plannedExerciseName : plannedExerciseName // ignore: cast_nullable_to_non_nullable
+as String,plannedSummary: null == plannedSummary ? _self.plannedSummary : plannedSummary // ignore: cast_nullable_to_non_nullable
+as String,plannedMeasurementType: null == plannedMeasurementType ? _self.plannedMeasurementType : plannedMeasurementType // ignore: cast_nullable_to_non_nullable
+as MeasurementType,plannedMetadata: null == plannedMetadata ? _self.plannedMetadata : plannedMetadata // ignore: cast_nullable_to_non_nullable
+as ExerciseMetadata,setRows: null == setRows ? _self._setRows : setRows // ignore: cast_nullable_to_non_nullable
 as List<SetRowViewModel>,isCursorTarget: null == isCursorTarget ? _self.isCursorTarget : isCursorTarget // ignore: cast_nullable_to_non_nullable
 as bool,cursorSetIndex: freezed == cursorSetIndex ? _self.cursorSetIndex : cursorSetIndex // ignore: cast_nullable_to_non_nullable
 as int?,effectiveMeasurementType: null == effectiveMeasurementType ? _self.effectiveMeasurementType : effectiveMeasurementType // ignore: cast_nullable_to_non_nullable
@@ -329,10 +344,19 @@ $SessionExerciseCopyWith<$Res> get sessionExercise {
 /// with the given fields replaced by the non-null parameter values.
 @override
 @pragma('vm:prefer-inline')
-$ExerciseCopyWith<$Res> get plannedExerciseInSnapshot {
+$MeasurementTypeCopyWith<$Res> get plannedMeasurementType {
   
-  return $ExerciseCopyWith<$Res>(_self.plannedExerciseInSnapshot, (value) {
-    return _then(_self.copyWith(plannedExerciseInSnapshot: value));
+  return $MeasurementTypeCopyWith<$Res>(_self.plannedMeasurementType, (value) {
+    return _then(_self.copyWith(plannedMeasurementType: value));
+  });
+}/// Create a copy of ExerciseViewModel
+/// with the given fields replaced by the non-null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$ExerciseMetadataCopyWith<$Res> get plannedMetadata {
+  
+  return $ExerciseMetadataCopyWith<$Res>(_self.plannedMetadata, (value) {
+    return _then(_self.copyWith(plannedMetadata: value));
   });
 }/// Create a copy of ExerciseViewModel
 /// with the given fields replaced by the non-null parameter values.

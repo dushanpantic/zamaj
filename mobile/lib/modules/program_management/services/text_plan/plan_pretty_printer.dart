@@ -1,3 +1,4 @@
+import 'package:zamaj/core/weight_formatter.dart';
 import 'package:zamaj/modules/program_management/services/text_plan/plan_draft.dart';
 
 abstract final class PlanPrettyPrinter {
@@ -47,16 +48,9 @@ abstract final class PlanPrettyPrinter {
         : '';
     return switch (set) {
       PlanDraftSetRepBased(:final count, :final reps, :final weightKg) =>
-        '${count}x$reps ${_formatWeight(weightKg)}kg$restSuffix',
+        '${count}x$reps ${WeightFormatter.formatKg(weightKg)}kg$restSuffix',
       PlanDraftSetTimeBased(:final count, :final durationSeconds) =>
         '${count}x${durationSeconds}s$restSuffix',
     };
-  }
-
-  static String _formatWeight(double weightKg) {
-    if (weightKg == weightKg.truncateToDouble()) {
-      return weightKg.toInt().toString();
-    }
-    return weightKg.toString();
   }
 }
