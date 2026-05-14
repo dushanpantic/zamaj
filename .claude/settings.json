@@ -6,7 +6,10 @@
       "Bash(dart run *)",
       "Bash(mkdir -p /Users/dusanpantic/Projects/github.com/dushanpantic/zamaj/mobile/.kiro/specs/workout-overview-screen)",
       "Bash(flutter pub *)",
-      "mcp__dart__analyze_files"
+      "mcp__dart__analyze_files",
+      "Bash(flutter --version)",
+      "Bash(dart --version)",
+      "Bash(dart pub *)"
     ],
     "additionalDirectories": [
       "/Users/dusanpantic/Projects/github.com/dushanpantic/zamaj/mobile/.kiro/specs"

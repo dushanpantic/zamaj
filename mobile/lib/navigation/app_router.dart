@@ -2,6 +2,8 @@ import 'package:clock/clock.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:zamaj/modules/domain/domain.dart';
+import 'package:zamaj/modules/focus_mode/bloc/bloc.dart';
+import 'package:zamaj/modules/focus_mode/screens/focus_mode_screen.dart';
 import 'package:zamaj/modules/program_management/navigation/program_management_router.dart';
 import 'package:zamaj/modules/workout_day_picker/bloc/bloc.dart';
 import 'package:zamaj/modules/workout_day_picker/models/workout_day_picker_args.dart';
@@ -9,7 +11,6 @@ import 'package:zamaj/modules/workout_day_picker/navigation/workout_day_picker_r
 import 'package:zamaj/modules/workout_day_picker/screens/workout_day_picker_screen.dart';
 import 'package:zamaj/modules/workout_overview/bloc/bloc.dart';
 import 'package:zamaj/modules/workout_overview/screens/workout_overview_screen.dart';
-import 'package:zamaj/navigation/focus_mode_placeholder_screen.dart';
 import 'package:zamaj/navigation/session_routes.dart';
 
 abstract final class AppRouter {
@@ -55,7 +56,12 @@ abstract final class AppRouter {
     final sessionId = settings.arguments! as String;
     return MaterialPageRoute<void>(
       settings: settings,
-      builder: (_) => FocusModePlaceholderScreen(sessionId: sessionId),
+      builder: (context) => BlocProvider(
+        create: (_) =>
+            FocusModeBloc(sessionFlowEngine: context.read<SessionFlowEngine>())
+              ..add(FocusModeOpened(sessionId)),
+        child: const FocusModeScreen(),
+      ),
     );
   }
 }

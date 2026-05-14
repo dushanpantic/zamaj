@@ -346,6 +346,25 @@ class SessionFlowEngine {
     return _buildState(updatedSession);
   }
 
+  /// Deletes a previously completed set, reverting exercise state to
+  /// `unfinished` if the deletion drops the executed-set count below the
+  /// planned count.
+  Future<SessionState> deleteExecutedSet({
+    required String executedSetId,
+  }) async {
+    final session = await _repository.getSessionByExecutedSetId(executedSetId);
+    if (session.endedAt != null) {
+      throw ImmutabilityError(
+        sessionId: session.id,
+        message: 'Cannot delete executed set on ended session ${session.id}',
+      );
+    }
+    final updatedSession = await _repository.deleteExecutedSet(
+      executedSetId: executedSetId,
+    );
+    return _buildState(updatedSession);
+  }
+
   /// Groups unfinished exercises into a superset.
   Future<SessionState> createSuperset({
     required String sessionId,

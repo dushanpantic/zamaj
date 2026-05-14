@@ -33,6 +33,14 @@ abstract class SessionRepository {
     required ActualSetValues actualValues,
   });
 
+  /// Deletes a previously completed set.
+  ///
+  /// If the parent exercise was in `completed` state and removing this set
+  /// drops its executed-set count below the planned count, the exercise
+  /// reverts to `unfinished` and is reinserted at the front of the unfinished
+  /// sequence (so the cursor lands on it again).
+  Future<Session> deleteExecutedSet({required String executedSetId});
+
   Future<Session> skipExercise(String sessionExerciseId);
 
   Future<Session> replaceExercise({

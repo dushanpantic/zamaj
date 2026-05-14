@@ -154,7 +154,10 @@ class FakeSessionRepository implements SessionRepository {
 
       final newSets = [...exercise.executedSets, newSet];
       final plannedSetCount = _lookupPlannedSetCount(exercise, session);
-      final newState = newSets.length >= plannedSetCount
+      // Match DriftSessionRepository: only auto-transition unfinished →
+      // completed. Replaced exercises stay replaced even when overlogged.
+      final newState =
+          exercise.state is UnfinishedState && newSets.length >= plannedSetCount
           ? const ExerciseState.completed()
           : exercise.state;
 
@@ -197,6 +200,40 @@ class FakeSessionRepository implements SessionRepository {
       newSets[setIndex] = updatedSet;
 
       return exercise.copyWith(executedSets: newSets, updatedAt: now);
+    }).toList();
+
+    final updated = session.copyWith(
+      sessionExercises: updatedExercises,
+      updatedAt: now,
+    );
+    _sessions[session.id] = updated;
+    return updated;
+  }
+
+  @override
+  Future<Session> deleteExecutedSet({required String executedSetId}) async {
+    final session = await getSessionByExecutedSetId(executedSetId);
+    final now = clock.now().toUtc();
+
+    final updatedExercises = session.sessionExercises.map((exercise) {
+      final setIndex = exercise.executedSets.indexWhere(
+        (s) => s.id == executedSetId,
+      );
+      if (setIndex == -1) return exercise;
+
+      final newSets = List<ExecutedSet>.of(exercise.executedSets)
+        ..removeAt(setIndex);
+      final plannedSetCount = _lookupPlannedSetCount(exercise, session);
+      final wasCompleted = exercise.state is CompletedState;
+      final newState = wasCompleted && newSets.length < plannedSetCount
+          ? const ExerciseState.unfinished()
+          : exercise.state;
+
+      return exercise.copyWith(
+        executedSets: newSets,
+        state: newState,
+        updatedAt: now,
+      );
     }).toList();
 
     final updated = session.copyWith(

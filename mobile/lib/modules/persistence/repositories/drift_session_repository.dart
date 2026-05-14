@@ -412,6 +412,95 @@ class DriftSessionRepository implements SessionRepository {
   }
 
   @override
+  Future<domain.Session> deleteExecutedSet({
+    required String executedSetId,
+  }) async {
+    return _db.transaction(() async {
+      final setRow = await (_db.select(
+        _db.executedSets,
+      )..where((t) => t.id.equals(executedSetId))).getSingleOrNull();
+      if (setRow == null) {
+        throw NotFoundError(entityType: 'ExecutedSet', id: executedSetId);
+      }
+
+      final exerciseRow = await _requireSessionExerciseRow(
+        setRow.sessionExerciseId,
+      );
+      final sessionRow = await _requireSessionRow(exerciseRow.sessionId);
+
+      if (sessionRow.endedAtMs != null) {
+        throw ImmutabilityError(
+          sessionId: sessionRow.id,
+          message:
+              'Cannot delete executed set on ended session ${sessionRow.id}',
+        );
+      }
+
+      await (_db.delete(
+        _db.executedSets,
+      )..where((t) => t.id.equals(executedSetId))).go();
+
+      final remaining = await (_db.select(
+        _db.executedSets,
+      )..where((t) => t.sessionExerciseId.equals(exerciseRow.id))).get();
+      final plannedSetCount = _plannedSetCountForExercise(
+        exerciseRow,
+        sessionRow,
+      );
+
+      final exerciseUpdatedAt = _timestamps.nextUpdatedAt(
+        previousUpdatedAt: msToUtc(exerciseRow.updatedAtMs),
+        createdAt: msToUtc(exerciseRow.createdAtMs),
+      );
+
+      if (exerciseRow.stateDiscriminator == 'completed' &&
+          remaining.length < plannedSetCount) {
+        final lockedPos = await _maxLockedPositionExcluding(
+          exerciseRow.sessionId,
+          excludeId: exerciseRow.id,
+        );
+        final newPosition = lockedPos + 1;
+
+        await (_db.update(
+          _db.sessionExercises,
+        )..where((t) => t.id.equals(exerciseRow.id))).write(
+          SessionExercisesCompanion(
+            stateDiscriminator: const Value('unfinished'),
+            position: Value(newPosition),
+            updatedAtMs: Value(utcToMs(exerciseUpdatedAt)),
+          ),
+        );
+
+        await _renumberUnfinishedAfterLock(
+          sessionId: exerciseRow.sessionId,
+          lockedPosition: newPosition,
+          excludeId: exerciseRow.id,
+        );
+      } else {
+        await (_db.update(
+          _db.sessionExercises,
+        )..where((t) => t.id.equals(exerciseRow.id))).write(
+          SessionExercisesCompanion(
+            updatedAtMs: Value(utcToMs(exerciseUpdatedAt)),
+          ),
+        );
+      }
+
+      final sessionUpdatedAt = _timestamps.nextUpdatedAt(
+        previousUpdatedAt: msToUtc(sessionRow.updatedAtMs),
+        createdAt: msToUtc(sessionRow.createdAtMs),
+      );
+      await (_db.update(
+        _db.sessions,
+      )..where((t) => t.id.equals(sessionRow.id))).write(
+        SessionsCompanion(updatedAtMs: Value(utcToMs(sessionUpdatedAt))),
+      );
+
+      return _loadSession(sessionRow.id);
+    });
+  }
+
+  @override
   Future<domain.Session> skipExercise(String sessionExerciseId) async {
     return _db.transaction(() async {
       final exerciseRow = await _requireSessionExerciseRow(sessionExerciseId);

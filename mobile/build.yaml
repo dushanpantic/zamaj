@@ -6,6 +6,8 @@ targets:
           include:
             - lib/modules/domain/models/**.dart
             - lib/modules/domain/services/**.dart
+            - lib/modules/focus_mode/models/**.dart
+            - lib/modules/focus_mode/services/**.dart
             - lib/modules/program_management/models/**.dart
             - lib/modules/program_management/services/text_plan/**.dart
             - lib/modules/program_management/services/text_plan/**.dart
