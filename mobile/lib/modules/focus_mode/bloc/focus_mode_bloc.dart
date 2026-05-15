@@ -598,7 +598,9 @@ class FocusModeBloc extends Bloc<FocusModeEvent, FocusModeState> {
     }
     final cursorChanged =
         current.viewModel.sessionExerciseId != vm.sessionExerciseId ||
-        current.viewModel.currentSetIndex != vm.currentSetIndex;
+        current.viewModel.currentSetIndex != vm.currentSetIndex ||
+        current.viewModel.effectiveMeasurementType !=
+            vm.effectiveMeasurementType;
     final draft = cursorChanged
         ? _seedDraft(sessionState, vm.effectiveMeasurementType)
         : current.draft;
@@ -626,7 +628,8 @@ class FocusModeBloc extends Bloc<FocusModeEvent, FocusModeState> {
     final cursorChanged =
         priorVm == null ||
         priorVm.sessionExerciseId != vm.sessionExerciseId ||
-        priorVm.currentSetIndex != vm.currentSetIndex;
+        priorVm.currentSetIndex != vm.currentSetIndex ||
+        priorVm.effectiveMeasurementType != vm.effectiveMeasurementType;
     final draft = cursorChanged || priorDraft == null
         ? _seedDraft(sessionState, vm.effectiveMeasurementType)
         : priorDraft;

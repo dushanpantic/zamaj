@@ -37,12 +37,10 @@ abstract final class FocusModeAssembler {
       _ => planned.metadata,
     };
 
-    final sortedPlanned = List<WorkoutSet>.of(planned.sets)
-      ..sort((a, b) => a.position.compareTo(b.position));
-
-    final currentPlanned = cursor.setIndex < sortedPlanned.length
-        ? sortedPlanned[cursor.setIndex]
-        : null;
+    final totalPlannedSets = switch (exercise.state) {
+      ReplacedState(:final substitute) => substitute.setCount,
+      _ => planned.sets.length,
+    };
 
     final sortedExecuted = List<ExecutedSet>.of(exercise.executedSets)
       ..sort((a, b) => a.position.compareTo(b.position));
@@ -53,6 +51,28 @@ abstract final class FocusModeAssembler {
       currentExerciseId: exercise.id,
     );
 
+    final (currentPlannedValues, currentPlannedSetId, plannedSummary) =
+        switch (exercise.state) {
+          ReplacedState(:final substitute) => (
+            cursor.setIndex < substitute.setCount ? substitute.plannedValues
+                : null,
+            null,
+            _summarizeSubstitute(substitute),
+          ),
+          _ => () {
+            final sortedPlanned = List<WorkoutSet>.of(planned.sets)
+              ..sort((a, b) => a.position.compareTo(b.position));
+            final currentPlanned = cursor.setIndex < sortedPlanned.length
+                ? sortedPlanned[cursor.setIndex]
+                : null;
+            return (
+              currentPlanned?.plannedValues,
+              currentPlanned?.id,
+              _summarizePlanned(planned),
+            );
+          }(),
+        };
+
     return FocusModeViewModel(
       sessionId: session.id,
       workoutDayName: session.snapshot.workoutDay.name,
@@ -61,17 +81,26 @@ abstract final class FocusModeAssembler {
       displayMetadata: displayMetadata,
       effectiveMeasurementType: effectiveMt,
       currentSetIndex: cursor.setIndex,
-      totalPlannedSets: sortedPlanned.length,
+      totalPlannedSets: totalPlannedSets,
       completedSetsCount: sortedExecuted.length,
-      currentPlannedValues: currentPlanned?.plannedValues,
-      plannedSummary: _summarizePlanned(planned),
-      currentPlannedSetIdInSnapshot: currentPlanned?.id,
+      currentPlannedValues: currentPlannedValues,
+      plannedSummary: plannedSummary,
+      currentPlannedSetIdInSnapshot: currentPlannedSetId,
       lastExecutedValues: lastExecuted?.actualValues,
       upNextExerciseName: upNext,
       plannedRestSeconds: planned.plannedRestSeconds,
       isReplaced: isReplaced,
       plannedExerciseName: planned.name,
     );
+  }
+
+  static String _summarizeSubstitute(SubstituteExercise substitute) {
+    return switch (substitute.plannedValues) {
+      PlannedRepBased(:final weightKg, :final reps) =>
+        '${WeightFormatter.formatKg(weightKg)}kg ${substitute.setCount}×$reps',
+      PlannedTimeBased(:final durationSeconds) =>
+        '${substitute.setCount}×${durationSeconds}s',
+    };
   }
 
   static Exercise _lookupPlanned({

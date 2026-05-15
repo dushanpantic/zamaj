@@ -96,28 +96,48 @@ abstract final class ExerciseViewModelAssembler {
     Exercise plannedExercise,
     Cursor cursor,
   ) {
-    final plannedByPosition = <int, WorkoutSet>{
-      for (final s in plannedExercise.sets) s.position: s,
-    };
     final executedByPosition = <int, ExecutedSet>{
       for (final s in sessionExercise.executedSets) s.position: s,
     };
 
-    final maxPosition = [
-      ...plannedByPosition.keys,
-      ...executedByPosition.keys,
-    ].fold<int>(-1, (a, b) => b > a ? b : a);
+    final state = sessionExercise.state;
+    final PlannedSetValues? Function(int) plannedValuesAt;
+    final String? Function(int) plannedSetIdAt;
+    final int maxPlannedPosition;
+    if (state is ReplacedState) {
+      plannedValuesAt = (_) => state.substitute.plannedValues;
+      plannedSetIdAt = (_) => null;
+      maxPlannedPosition = state.substitute.setCount - 1;
+    } else {
+      final plannedByPosition = <int, WorkoutSet>{
+        for (final s in plannedExercise.sets) s.position: s,
+      };
+      plannedValuesAt = (p) => plannedByPosition[p]?.plannedValues;
+      plannedSetIdAt = (p) => plannedByPosition[p]?.id;
+      maxPlannedPosition = plannedByPosition.keys.fold<int>(
+        -1,
+        (a, b) => b > a ? b : a,
+      );
+    }
+
+    final maxExecutedPosition = executedByPosition.keys.fold<int>(
+      -1,
+      (a, b) => b > a ? b : a,
+    );
+    final maxPosition = maxPlannedPosition > maxExecutedPosition
+        ? maxPlannedPosition
+        : maxExecutedPosition;
 
     final rows = <SetRowViewModel>[];
     for (var p = 0; p <= maxPosition; p++) {
-      final planned = plannedByPosition[p];
+      final plannedValues = plannedValuesAt(p);
       final executed = executedByPosition[p];
-      if (planned == null && executed == null) continue;
+      if (plannedValues == null && executed == null) continue;
       rows.add(
         SetRowViewModel(
           position: p,
-          plannedValues: planned?.plannedValues,
-          plannedSetIdInSnapshot: planned?.id,
+          plannedValues: plannedValues,
+          plannedSetIdInSnapshot: plannedSetIdAt(p),
           executedSet: executed,
           isNextLogTarget:
               cursor is ActiveCursor &&

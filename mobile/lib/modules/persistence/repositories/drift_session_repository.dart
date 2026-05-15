@@ -1031,6 +1031,13 @@ class DriftSessionRepository implements SessionRepository {
     SessionExercise exerciseRow,
     Session sessionRow,
   ) {
+    if (exerciseRow.stateDiscriminator == 'replaced' &&
+        exerciseRow.substitutePayloadJson != null) {
+      return SubstituteExercise.fromJson(
+        jsonDecode(exerciseRow.substitutePayloadJson!)
+            as Map<String, dynamic>,
+      ).measurementType;
+    }
     final workoutDay = _parseSnapshotWorkoutDay(sessionRow);
     for (final group in workoutDay.exerciseGroups) {
       for (final exercise in group.exercises) {
@@ -1049,6 +1056,13 @@ class DriftSessionRepository implements SessionRepository {
     SessionExercise exerciseRow,
     Session sessionRow,
   ) {
+    if (exerciseRow.stateDiscriminator == 'replaced' &&
+        exerciseRow.substitutePayloadJson != null) {
+      return SubstituteExercise.fromJson(
+        jsonDecode(exerciseRow.substitutePayloadJson!)
+            as Map<String, dynamic>,
+      ).setCount;
+    }
     final workoutDay = _parseSnapshotWorkoutDay(sessionRow);
     for (final group in workoutDay.exerciseGroups) {
       for (final exercise in group.exercises) {
