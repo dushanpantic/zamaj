@@ -135,17 +135,23 @@ final class FocusModeExerciseReplaced extends FocusModeEvent {
   const FocusModeExerciseReplaced({
     required this.substituteName,
     required this.substituteMeasurementType,
+    required this.substitutePlannedValues,
+    required this.substituteSetCount,
     this.substituteMetadata,
   });
 
   final String substituteName;
   final MeasurementType substituteMeasurementType;
+  final PlannedSetValues substitutePlannedValues;
+  final int substituteSetCount;
   final ExerciseMetadata? substituteMetadata;
 
   @override
   List<Object?> get props => [
     substituteName,
     substituteMeasurementType,
+    substitutePlannedValues,
+    substituteSetCount,
     substituteMetadata,
   ];
 }

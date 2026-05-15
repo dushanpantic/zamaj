@@ -310,12 +310,18 @@ void main() {
                 'must be >= createdAt',
           );
 
+          final substituteMt = anyMeasurementType(rng);
           final afterTransition = rng.nextBool()
               ? await sessionRepo.skipExercise(se.id)
               : await sessionRepo.replaceExercise(
                   sessionExerciseId: se.id,
                   substituteName: 'Sub-$iteration',
-                  substituteMeasurementType: anyMeasurementType(rng),
+                  substituteMeasurementType: substituteMt,
+                  substitutePlannedValues: anyPlannedSetValuesForMeasurement(
+                    rng,
+                    substituteMt,
+                  ),
+                  substituteSetCount: 1 + rng.nextInt(4),
                 );
 
           final updatedSe = afterTransition.sessionExercises.firstWhere(

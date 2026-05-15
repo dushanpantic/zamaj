@@ -63,20 +63,22 @@ class WorkoutOverviewBloc
   Future<void> _subscribe(String sessionId) async {
     await _streamSub?.cancel();
     _watchedSessionId = sessionId;
-    _streamSub = _engine.watchSession(sessionId: sessionId).listen(
-      (sessionState) {
-        if (sessionState == null) {
-          add(InternalSessionMissing(sessionId));
-        } else {
-          add(InternalSessionPushed(sessionState));
-        }
-      },
-      onError: (Object error) {
-        if (error is DomainError) {
-          add(InternalSessionFailed(error, sessionId));
-        }
-      },
-    );
+    _streamSub = _engine
+        .watchSession(sessionId: sessionId)
+        .listen(
+          (sessionState) {
+            if (sessionState == null) {
+              add(InternalSessionMissing(sessionId));
+            } else {
+              add(InternalSessionPushed(sessionState));
+            }
+          },
+          onError: (Object error) {
+            if (error is DomainError) {
+              add(InternalSessionFailed(error, sessionId));
+            }
+          },
+        );
   }
 
   // ---------- Internal stream-driven handlers ----------
@@ -190,6 +192,8 @@ class WorkoutOverviewBloc
       sessionExerciseId: event.sessionExerciseId,
       substituteName: event.substituteName,
       substituteMeasurementType: event.substituteMeasurementType,
+      substitutePlannedValues: event.substitutePlannedValues,
+      substituteSetCount: event.substituteSetCount,
       substituteMetadata: event.substituteMetadata,
     ),
   );
@@ -372,4 +376,3 @@ class WorkoutOverviewBloc
     WorkoutOverviewInitial() => _watchedSessionId,
   };
 }
-

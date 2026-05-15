@@ -163,9 +163,10 @@ Cursor _expectedCursor(Session session) {
 bool _isCursorCandidate(SessionExercise exercise, Session session) {
   switch (exercise.state) {
     case UnfinishedState():
-    case ReplacedState():
       final plannedSetCount = _lookupPlannedSetCount(exercise, session);
       return exercise.executedSets.length < plannedSetCount;
+    case ReplacedState(:final substitute):
+      return exercise.executedSets.length < substitute.setCount;
     case CompletedState():
     case SkippedState():
       return false;
@@ -190,9 +191,8 @@ bool _allExercisesTerminal(Session session) {
       case CompletedState():
       case SkippedState():
         continue;
-      case ReplacedState():
-        final plannedSetCount = _lookupPlannedSetCount(exercise, session);
-        if (exercise.executedSets.length < plannedSetCount) return false;
+      case ReplacedState(:final substitute):
+        if (exercise.executedSets.length < substitute.setCount) return false;
       case UnfinishedState():
         return false;
     }

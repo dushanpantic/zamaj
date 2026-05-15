@@ -81,6 +81,8 @@ class SessionFlowEngine {
     required String sessionExerciseId,
     required String substituteName,
     required MeasurementType substituteMeasurementType,
+    required PlannedSetValues substitutePlannedValues,
+    required int substituteSetCount,
     ExerciseMetadata? substituteMetadata,
   }) async {
     final session = await _repository.getSessionByExerciseId(sessionExerciseId);
@@ -92,6 +94,8 @@ class SessionFlowEngine {
       sessionExerciseId: sessionExerciseId,
       substituteName: substituteName,
       substituteMeasurementType: substituteMeasurementType,
+      substitutePlannedValues: substitutePlannedValues,
+      substituteSetCount: substituteSetCount,
       substituteMetadata: substituteMetadata,
     );
     return _buildState(updatedSession);
@@ -205,27 +209,17 @@ class SessionFlowEngine {
           ),
         );
 
-        final originalExercise = _lookupPlannedExercise(exercise, session);
-        final effectiveMeasurementType = switch (exercise.state) {
-          ReplacedState(:final substitute) => substitute.measurementType,
-          _ => originalExercise.measurementType,
-        };
-
         if (setIndex > 0) {
           final lastSet = exercise.executedSets.last;
           return lastSet.actualValues;
         }
 
-        if (exercise.state is ReplacedState) {
-          final ReplacedState replacedState = exercise.state as ReplacedState;
-          if (replacedState.substitute.measurementType !=
-              originalExercise.measurementType) {
-            return _defaultZeroValues(effectiveMeasurementType);
-          }
-        }
-
-        final plannedSet = _lookupPlannedSet(exercise, session, position: 0);
-        return _convertPlannedToActual(plannedSet.plannedValues);
+        final plannedValues = _lookupPlannedValuesAtPosition(
+          exercise,
+          session,
+          position: 0,
+        );
+        return _convertPlannedToActual(plannedValues);
     }
   }
 
@@ -519,8 +513,28 @@ class SessionFlowEngine {
   }
 
   int _lookupPlannedSetCount(SessionExercise sessionExercise, Session session) {
+    final state = sessionExercise.state;
+    if (state is ReplacedState) {
+      return state.substitute.setCount;
+    }
     final exercise = _lookupPlannedExercise(sessionExercise, session);
     return exercise.sets.length;
+  }
+
+  PlannedSetValues _lookupPlannedValuesAtPosition(
+    SessionExercise sessionExercise,
+    Session session, {
+    required int position,
+  }) {
+    final state = sessionExercise.state;
+    if (state is ReplacedState) {
+      return state.substitute.plannedValues;
+    }
+    return _lookupPlannedSet(
+      sessionExercise,
+      session,
+      position: position,
+    ).plannedValues;
   }
 
   WorkoutSet _lookupPlannedSet(
@@ -548,18 +562,6 @@ class SessionFlowEngine {
       ),
       PlannedTimeBased(:final durationSeconds) => ActualSetValues.timeBased(
         durationSeconds: durationSeconds,
-      ),
-    };
-  }
-
-  ActualSetValues _defaultZeroValues(MeasurementType measurementType) {
-    return switch (measurementType) {
-      RepBasedMeasurement() => const ActualSetValues.repBased(
-        weightKg: 0,
-        reps: 0,
-      ),
-      TimeBasedMeasurement() => const ActualSetValues.timeBased(
-        durationSeconds: 0,
       ),
     };
   }

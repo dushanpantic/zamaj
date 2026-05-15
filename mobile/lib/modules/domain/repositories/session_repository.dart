@@ -7,6 +7,7 @@ library;
 import 'package:zamaj/modules/domain/models/actual_set_values.dart';
 import 'package:zamaj/modules/domain/models/exercise_metadata.dart';
 import 'package:zamaj/modules/domain/models/measurement_type.dart';
+import 'package:zamaj/modules/domain/models/planned_set_values.dart';
 import 'package:zamaj/modules/domain/models/session.dart';
 
 abstract class SessionRepository {
@@ -57,6 +58,8 @@ abstract class SessionRepository {
     required String sessionExerciseId,
     required String substituteName,
     required MeasurementType substituteMeasurementType,
+    required PlannedSetValues substitutePlannedValues,
+    required int substituteSetCount,
     ExerciseMetadata? substituteMetadata,
   });
 

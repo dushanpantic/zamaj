@@ -284,6 +284,8 @@ Future<void> _runSessionOps(
         case ReplaceExerciseOp(
           :final substituteName,
           :final substituteMeasurementType,
+          :final substitutePlannedValues,
+          :final substituteSetCount,
           :final substituteMetadata,
         ):
           if (sessionExerciseIds.isNotEmpty) {
@@ -293,6 +295,8 @@ Future<void> _runSessionOps(
               sessionExerciseId: seId,
               substituteName: substituteName,
               substituteMeasurementType: substituteMeasurementType,
+              substitutePlannedValues: substitutePlannedValues,
+              substituteSetCount: substituteSetCount,
               substituteMetadata: substituteMetadata,
             );
           }

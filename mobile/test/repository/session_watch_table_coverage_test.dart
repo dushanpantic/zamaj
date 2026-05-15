@@ -56,10 +56,7 @@ void main() {
       final exerciseId = reloaded!.exerciseGroups.single.exercises.single.id;
       await programRepo.createSet(
         exerciseId: exerciseId,
-        plannedValues: const PlannedSetValues.repBased(
-          weightKg: 100,
-          reps: 5,
-        ),
+        plannedValues: const PlannedSetValues.repBased(weightKg: 100, reps: 5),
       );
 
       // ── sessions table ────────────────────────────────────────────────
@@ -71,9 +68,7 @@ void main() {
       final sessionExId = session.sessionExercises.single.id;
 
       final emissions = <Session?>[];
-      final sub = sessionRepo
-          .watchSession(session.id)
-          .listen(emissions.add);
+      final sub = sessionRepo.watchSession(session.id).listen(emissions.add);
       await pumpEventQueue();
       expect(emissions, hasLength(1), reason: 'initial emission');
 
@@ -112,8 +107,7 @@ void main() {
       // that hits sessionExercises directly. replaceExercise rewrites the
       // exercise state without touching other tables.
       await sessionRepo.deleteExecutedSet(
-        executedSetId:
-            logged.sessionExercises.single.executedSets.single.id,
+        executedSetId: logged.sessionExercises.single.executedSets.single.id,
       );
       await pumpEventQueue();
       expect(emissions, hasLength(5));
@@ -121,6 +115,11 @@ void main() {
         sessionExerciseId: sessionExId,
         substituteName: 'Goblet Squat',
         substituteMeasurementType: const MeasurementType.repBased(),
+        substitutePlannedValues: const PlannedSetValues.repBased(
+          weightKg: 20,
+          reps: 8,
+        ),
+        substituteSetCount: 3,
       );
       await pumpEventQueue();
       expect(
@@ -156,9 +155,7 @@ void main() {
       );
 
       final emissions = <Session?>[];
-      final sub = sessionRepo
-          .watchSession('missing')
-          .listen(emissions.add);
+      final sub = sessionRepo.watchSession('missing').listen(emissions.add);
       await pumpEventQueue();
       expect(emissions, [null]);
       await sub.cancel();

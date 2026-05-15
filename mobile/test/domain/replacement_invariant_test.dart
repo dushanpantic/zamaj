@@ -178,9 +178,15 @@ void main() {
       test('SubstituteExercise with metadata round-trips through JSON', () {
         final rng = Random(308);
         for (var i = 0; i < iterations; i++) {
+          final measurementType = anyMeasurementType(rng);
           final original = SubstituteExercise(
             name: 'Cable Row',
-            measurementType: anyMeasurementType(rng),
+            measurementType: measurementType,
+            plannedValues: anyPlannedSetValuesForMeasurement(
+              rng,
+              measurementType,
+            ),
+            setCount: 1 + rng.nextInt(5),
             metadata: anyExerciseMetadata(rng),
           );
 

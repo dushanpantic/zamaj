@@ -10,7 +10,8 @@
       "Bash(flutter --version)",
       "Bash(dart --version)",
       "Bash(dart pub *)",
-      "Bash(dart analyze *)"
+      "Bash(dart analyze *)",
+      "Bash(bash tool/ci.sh)"
     ],
     "additionalDirectories": [
       "/Users/dusanpantic/Projects/github.com/dushanpantic/zamaj/mobile/.kiro/specs"

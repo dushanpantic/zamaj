@@ -69,6 +69,8 @@ SubstituteExercise anySubstituteExercise(Random rng) {
   return SubstituteExercise(
     name: _anyString(rng, maxLen: 40),
     measurementType: mt,
+    plannedValues: anyPlannedSetValuesForMeasurement(rng, mt),
+    setCount: 1 + rng.nextInt(5),
     metadata: rng.nextBool() ? anyExerciseMetadata(rng) : null,
   );
 }
@@ -692,11 +694,15 @@ final class ReplaceExerciseOp extends SessionRepoOp {
     required this.sessionExerciseId,
     required this.substituteName,
     required this.substituteMeasurementType,
+    required this.substitutePlannedValues,
+    required this.substituteSetCount,
     this.substituteMetadata,
   });
   final String sessionExerciseId;
   final String substituteName;
   final MeasurementType substituteMeasurementType;
+  final PlannedSetValues substitutePlannedValues;
+  final int substituteSetCount;
   final ExerciseMetadata? substituteMetadata;
 }
 
@@ -750,11 +756,17 @@ List<SessionRepoOp> anySessionRepoOpSequence(Random rng) {
     } else if (roll < 5) {
       ops.add(SkipExerciseOp(sessionExerciseId: seId));
     } else if (roll < 7) {
+      final substituteMt = anyMeasurementType(rng);
       ops.add(
         ReplaceExerciseOp(
           sessionExerciseId: seId,
           substituteName: _anyString(rng, maxLen: 30),
-          substituteMeasurementType: anyMeasurementType(rng),
+          substituteMeasurementType: substituteMt,
+          substitutePlannedValues: anyPlannedSetValuesForMeasurement(
+            rng,
+            substituteMt,
+          ),
+          substituteSetCount: 1 + rng.nextInt(5),
           substituteMetadata: rng.nextBool() ? anyExerciseMetadata(rng) : null,
         ),
       );
@@ -1126,9 +1138,16 @@ Cursor _cursorForSession(Session session) {
     ..sort((a, b) => a.position.compareTo(b.position));
   for (final ex in sorted) {
     final state = ex.state;
-    if (state is UnfinishedState || state is ReplacedState) {
+    if (state is UnfinishedState) {
       final planned = _findPlannedExerciseInSnapshot(ex, session);
       if (ex.executedSets.length < planned.sets.length) {
+        return Cursor.active(
+          sessionExerciseId: ex.id,
+          setIndex: ex.executedSets.length,
+        );
+      }
+    } else if (state is ReplacedState) {
+      if (ex.executedSets.length < state.substitute.setCount) {
         return Cursor.active(
           sessionExerciseId: ex.id,
           setIndex: ex.executedSets.length,
@@ -1263,7 +1282,7 @@ int _executedSetCountForState(
   return switch (state) {
     CompletedState() => plannedSetCount,
     SkippedState() => rng.nextInt(plannedSetCount + 1),
-    ReplacedState() => rng.nextInt(plannedSetCount + 1),
+    ReplacedState(:final substitute) => rng.nextInt(substitute.setCount + 1),
     UnfinishedState() => rng.nextInt(plannedSetCount),
   };
 }

@@ -254,7 +254,7 @@ void main() {
         expect(program.name, 'Strength Block');
         expect(program.workoutDayIds, isEmpty);
         expect(program.id.length, 36);
-        expect(program.schemaVersion, 2);
+        expect(program.schemaVersion, 3);
       },
     );
 

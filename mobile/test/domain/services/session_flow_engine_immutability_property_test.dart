@@ -254,30 +254,33 @@ Session _anyAllTerminalSession(Random rng) {
 
   final fixedExercises = session.sessionExercises.map((exercise) {
     final planned = _lookupPlannedExercise(exercise, session);
-    final plannedSetCount = planned.sets.length;
 
-    if (exercise.state is ReplacedState &&
-        exercise.executedSets.length < plannedSetCount) {
+    if (exercise.state is ReplacedState) {
       final ReplacedState replacedState = exercise.state as ReplacedState;
-      final mt = replacedState.substitute.measurementType;
-      final sets = List.generate(plannedSetCount, (j) {
-        if (j < exercise.executedSets.length) return exercise.executedSets[j];
-        return ExecutedSet(
-          id: anyUuidV4(rng),
-          sessionExerciseId: exercise.id,
-          position: j,
-          measurementType: mt,
-          actualValues: anyActualSetValuesForMeasurement(rng, mt),
-          plannedSetIdInSnapshot: j < planned.sets.length
-              ? planned.sets[j].id
-              : null,
-          completedAt: anyUtcDateTime(rng),
-          createdAt: anyUtcDateTime(rng),
-          updatedAt: anyUtcDateTime(rng),
-          schemaVersion: 1,
-        );
-      });
-      return exercise.copyWith(executedSets: sets);
+      final substitute = replacedState.substitute;
+      if (exercise.executedSets.length < substitute.setCount) {
+        final mt = substitute.measurementType;
+        final sets = List.generate(substitute.setCount, (j) {
+          if (j < exercise.executedSets.length) {
+            return exercise.executedSets[j];
+          }
+          return ExecutedSet(
+            id: anyUuidV4(rng),
+            sessionExerciseId: exercise.id,
+            position: j,
+            measurementType: mt,
+            actualValues: anyActualSetValuesForMeasurement(rng, mt),
+            plannedSetIdInSnapshot: j < planned.sets.length
+                ? planned.sets[j].id
+                : null,
+            completedAt: anyUtcDateTime(rng),
+            createdAt: anyUtcDateTime(rng),
+            updatedAt: anyUtcDateTime(rng),
+            schemaVersion: 1,
+          );
+        });
+        return exercise.copyWith(executedSets: sets);
+      }
     }
     return exercise;
   }).toList();

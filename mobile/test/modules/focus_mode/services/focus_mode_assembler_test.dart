@@ -189,6 +189,10 @@ void main() {
         sessionExerciseId: benchId,
         substituteName: 'Cable Fly',
         substituteMeasurementType: const MeasurementType.timeBased(),
+        substitutePlannedValues: const PlannedSetValues.timeBased(
+          durationSeconds: 30,
+        ),
+        substituteSetCount: 3,
       );
       final vm = FocusModeAssembler.assemble(after)!;
       expect(vm.displayExerciseName, 'Cable Fly');

@@ -81,13 +81,18 @@ void main() {
     });
 
     test('ExerciseState.replaced', () {
-      const substitute = SubstituteExercise(
+      final substitute = SubstituteExercise(
         name: 'Dumbbell Press',
-        measurementType: MeasurementType.repBased(),
+        measurementType: const MeasurementType.repBased(),
+        plannedValues: const PlannedSetValues.repBased(
+          weightKg: 22.5,
+          reps: 10,
+        ),
+        setCount: 3,
         metadata: null,
       );
       expect(
-        _encode(const ExerciseState.replaced(substitute: substitute).toJson()),
+        _encode(ExerciseState.replaced(substitute: substitute).toJson()),
         equals(_golden('exercise_state_replaced')),
       );
     });
@@ -254,10 +259,15 @@ void main() {
     });
 
     test('SubstituteExercise', () {
-      const substitute = SubstituteExercise(
+      final substitute = SubstituteExercise(
         name: 'Dumbbell Press',
-        measurementType: MeasurementType.repBased(),
-        metadata: ExerciseMetadata(notes: 'Use 30kg dumbbells'),
+        measurementType: const MeasurementType.repBased(),
+        plannedValues: const PlannedSetValues.repBased(
+          weightKg: 22.5,
+          reps: 10,
+        ),
+        setCount: 3,
+        metadata: const ExerciseMetadata(notes: 'Use 30kg dumbbells'),
       );
       expect(
         _encode(substitute.toJson()),

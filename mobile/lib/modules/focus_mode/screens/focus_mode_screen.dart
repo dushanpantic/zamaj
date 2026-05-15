@@ -424,16 +424,25 @@ class _ExerciseActionsMenu extends StatelessWidget {
   Future<void> _handleReplace(BuildContext context) async {
     final bloc = context.read<FocusModeBloc>();
     final vm = state.viewModel;
+    final defaults = resolveReplaceExerciseDefaults(
+      sessionExerciseId: vm.sessionExerciseId,
+      session: state.sessionState.session,
+    );
+    if (defaults == null) return;
     final result = await ReplaceExerciseDialog.show(
       context: context,
       plannedExerciseName: vm.plannedExerciseName,
       defaultMeasurementType: vm.effectiveMeasurementType,
+      defaultPlannedValues: defaults.plannedValues,
+      defaultSetCount: defaults.setCount,
     );
     if (result == null) return;
     bloc.add(
       FocusModeExerciseReplaced(
         substituteName: result.name,
         substituteMeasurementType: result.measurementType,
+        substitutePlannedValues: result.plannedValues,
+        substituteSetCount: result.setCount,
         substituteMetadata: result.metadata,
       ),
     );

@@ -86,12 +86,16 @@ final class WorkoutOverviewExerciseReplaced extends WorkoutOverviewEvent {
     required this.sessionExerciseId,
     required this.substituteName,
     required this.substituteMeasurementType,
+    required this.substitutePlannedValues,
+    required this.substituteSetCount,
     this.substituteMetadata,
   });
 
   final String sessionExerciseId;
   final String substituteName;
   final MeasurementType substituteMeasurementType;
+  final PlannedSetValues substitutePlannedValues;
+  final int substituteSetCount;
   final ExerciseMetadata? substituteMetadata;
 
   @override
@@ -99,6 +103,8 @@ final class WorkoutOverviewExerciseReplaced extends WorkoutOverviewEvent {
     sessionExerciseId,
     substituteName,
     substituteMeasurementType,
+    substitutePlannedValues,
+    substituteSetCount,
     substituteMetadata,
   ];
 }

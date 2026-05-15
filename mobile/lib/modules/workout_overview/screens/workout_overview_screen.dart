@@ -60,10 +60,19 @@ class _WorkoutOverviewScreenState extends State<WorkoutOverviewScreen> {
   }
 
   Future<void> _handleReplace(ExerciseViewModel viewModel) async {
+    final state = context.read<WorkoutOverviewBloc>().state;
+    if (state is! WorkoutOverviewLoaded) return;
+    final defaults = resolveReplaceExerciseDefaults(
+      sessionExerciseId: viewModel.sessionExercise.id,
+      session: state.sessionState.session,
+    );
+    if (defaults == null) return;
     final result = await ReplaceExerciseDialog.show(
       context: context,
       plannedExerciseName: viewModel.plannedExerciseName,
       defaultMeasurementType: viewModel.effectiveMeasurementType,
+      defaultPlannedValues: defaults.plannedValues,
+      defaultSetCount: defaults.setCount,
     );
     if (!mounted || result == null) return;
     context.read<WorkoutOverviewBloc>().add(
@@ -71,6 +80,8 @@ class _WorkoutOverviewScreenState extends State<WorkoutOverviewScreen> {
         sessionExerciseId: viewModel.sessionExercise.id,
         substituteName: result.name,
         substituteMeasurementType: result.measurementType,
+        substitutePlannedValues: result.plannedValues,
+        substituteSetCount: result.setCount,
         substituteMetadata: result.metadata,
       ),
     );

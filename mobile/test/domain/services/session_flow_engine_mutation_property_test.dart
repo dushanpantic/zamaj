@@ -442,11 +442,18 @@ void main() {
           final substituteMetadata = rng.nextBool()
               ? anyExerciseMetadata(rng)
               : null;
+          final substitutePlannedValues = anyPlannedSetValuesForMeasurement(
+            rng,
+            substituteMt,
+          );
+          final substituteSetCount = 1 + rng.nextInt(5);
 
           final result = await engine.replaceExercise(
             sessionExerciseId: target.id,
             substituteName: substituteName,
             substituteMeasurementType: substituteMt,
+            substitutePlannedValues: substitutePlannedValues,
+            substituteSetCount: substituteSetCount,
             substituteMetadata: substituteMetadata,
           );
 
@@ -841,6 +848,11 @@ Future<SessionState> Function()? _pickMutation(
       sessionExerciseId: replaceTarget.id,
       substituteName: anyUuidV4(rng),
       substituteMeasurementType: substituteMt,
+      substitutePlannedValues: anyPlannedSetValuesForMeasurement(
+        rng,
+        substituteMt,
+      ),
+      substituteSetCount: 1 + rng.nextInt(3),
     ),
   );
 
@@ -873,6 +885,8 @@ Exercise _lookupPlannedExercise(
 }
 
 int _lookupPlannedSetCount(SessionExercise exercise, Session session) {
+  final state = exercise.state;
+  if (state is ReplacedState) return state.substitute.setCount;
   final planned = _lookupPlannedExercise(exercise, session);
   return planned.sets.length;
 }
@@ -1156,6 +1170,8 @@ Session _anySessionWithExecutedSets(Random rng) {
         final sub = SubstituteExercise(
           name: 'sub_$i',
           measurementType: mt,
+          plannedValues: anyPlannedSetValuesForMeasurement(rng, mt),
+          setCount: plannedSetCount,
           metadata: null,
         );
         state = ExerciseState.replaced(substitute: sub);
@@ -1297,6 +1313,8 @@ Session _anySessionWithReplacedDifferentType(Random rng) {
       final sub = SubstituteExercise(
         name: 'substitute_$i',
         measurementType: substituteMt,
+        plannedValues: anyPlannedSetValuesForMeasurement(rng, substituteMt),
+        setCount: plannedSetCount,
         metadata: null,
       );
       final executedSetCount = rng.nextInt(plannedSetCount);

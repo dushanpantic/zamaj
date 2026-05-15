@@ -412,6 +412,8 @@ Future<domain.Session> _applySingleOp({
       sessionExerciseId: seId,
       substituteName: op.substituteName,
       substituteMeasurementType: op.substituteMeasurementType,
+      substitutePlannedValues: op.substitutePlannedValues,
+      substituteSetCount: op.substituteSetCount,
       substituteMetadata: op.substituteMetadata,
     ),
     ReorderUnfinishedOp() => sessionRepo.reorderUnfinished(

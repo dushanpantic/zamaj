@@ -14,6 +14,11 @@ _SubstituteExercise _$SubstituteExerciseFromJson(Map<String, dynamic> json) =>
           'measurementType',
           (v) => MeasurementType.fromJson(v as Map<String, dynamic>),
         ),
+        plannedValues: $checkedConvert(
+          'plannedValues',
+          (v) => PlannedSetValues.fromJson(v as Map<String, dynamic>),
+        ),
+        setCount: $checkedConvert('setCount', (v) => (v as num).toInt()),
         metadata: $checkedConvert(
           'metadata',
           (v) => v == null
@@ -28,5 +33,7 @@ Map<String, dynamic> _$SubstituteExerciseToJson(_SubstituteExercise instance) =>
     <String, dynamic>{
       'name': instance.name,
       'measurementType': instance.measurementType.toJson(),
+      'plannedValues': instance.plannedValues.toJson(),
+      'setCount': instance.setCount,
       'metadata': ?instance.metadata?.toJson(),
     };

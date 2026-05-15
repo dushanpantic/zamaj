@@ -97,11 +97,15 @@ void main() {
         _standalone(
           'a',
           plannedMeasurement: const MeasurementType.repBased(),
-          state: const ExerciseState.replaced(
+          state: ExerciseState.replaced(
             substitute: SubstituteExercise(
               name: 'Cable Fly',
-              measurementType: MeasurementType.timeBased(),
-              metadata: ExerciseMetadata(),
+              measurementType: const MeasurementType.timeBased(),
+              plannedValues: const PlannedSetValues.timeBased(
+                durationSeconds: 30,
+              ),
+              setCount: 3,
+              metadata: const ExerciseMetadata(),
             ),
           ),
           plannedSetCount: 3,

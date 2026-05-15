@@ -158,6 +158,11 @@ void main() {
             sessionExerciseId: 'missing-ex',
             substituteName: 'sub',
             substituteMeasurementType: const MeasurementType.repBased(),
+            substitutePlannedValues: const PlannedSetValues.repBased(
+              weightKg: 20,
+              reps: 8,
+            ),
+            substituteSetCount: 3,
           ),
           throwsA(isA<NotFoundError>()),
         );
@@ -454,6 +459,10 @@ void main() {
         sessionExerciseId: plankId,
         substituteName: 'Wall Sit',
         substituteMeasurementType: const MeasurementType.timeBased(),
+        substitutePlannedValues: const PlannedSetValues.timeBased(
+          durationSeconds: 45,
+        ),
+        substituteSetCount: 2,
       );
       final replacedExercise = _findExercise(
         state.session.sessionExercises,
@@ -492,6 +501,160 @@ void main() {
       );
       expect(_findExercise(finalExercises, plankId).executedSets, hasLength(2));
     });
+  });
+
+  group('substitute carries its own planned values and setCount', () {
+    test('replacing rep-based with time-based substitute suggests the '
+        "substitute's planned values for set 0", () async {
+      final s = setup();
+      final workoutDay = _buildWorkoutDay(
+        id: 'wd-rep-to-time',
+        exerciseSpecs: [
+          _ExerciseSpec(
+            name: 'Shoulder Press',
+            measurementType: const MeasurementType.repBased(),
+            setCount: 3,
+          ),
+        ],
+      );
+      s.repo.seedWorkoutDay(workoutDay);
+      final started = await s.engine.startSession(workoutDayId: workoutDay.id);
+      final pressId = started.session.sessionExercises.single.id;
+
+      final state = await s.engine.replaceExercise(
+        sessionExerciseId: pressId,
+        substituteName: 'Nordic Shoulder',
+        substituteMeasurementType: const MeasurementType.timeBased(),
+        substitutePlannedValues: const PlannedSetValues.timeBased(
+          durationSeconds: 25,
+        ),
+        substituteSetCount: 4,
+      );
+
+      expect(
+        state.suggestedValues,
+        equals(const ActualSetValues.timeBased(durationSeconds: 25)),
+      );
+      final replaced =
+          state.session.sessionExercises.single.state as ReplacedState;
+      expect(replaced.substitute.setCount, 4);
+    });
+
+    test('replacing rep-based with rep-based substitute pre-fills with the '
+        "substitute's weight (not the original snapshot's)", () async {
+      final s = setup();
+      final workoutDay = _buildWorkoutDay(
+        id: 'wd-rep-to-rep',
+        exerciseSpecs: [
+          _ExerciseSpec(
+            name: 'Bench Press',
+            measurementType: const MeasurementType.repBased(),
+            setCount: 3,
+          ),
+        ],
+      );
+      s.repo.seedWorkoutDay(workoutDay);
+      final started = await s.engine.startSession(workoutDayId: workoutDay.id);
+      final benchId = started.session.sessionExercises.single.id;
+
+      final state = await s.engine.replaceExercise(
+        sessionExerciseId: benchId,
+        substituteName: 'Push-Up',
+        substituteMeasurementType: const MeasurementType.repBased(),
+        substitutePlannedValues: const PlannedSetValues.repBased(
+          weightKg: 0,
+          reps: 12,
+        ),
+        substituteSetCount: 3,
+      );
+
+      expect(
+        state.suggestedValues,
+        equals(const ActualSetValues.repBased(weightKg: 0, reps: 12)),
+      );
+    });
+
+    test('set 1 onwards inherits the previously executed actuals on the '
+        'substitute', () async {
+      final s = setup();
+      final workoutDay = _buildWorkoutDay(
+        id: 'wd-last-actual',
+        exerciseSpecs: [
+          _ExerciseSpec(
+            name: 'Squat',
+            measurementType: const MeasurementType.repBased(),
+            setCount: 3,
+          ),
+        ],
+      );
+      s.repo.seedWorkoutDay(workoutDay);
+      final started = await s.engine.startSession(workoutDayId: workoutDay.id);
+      final squatId = started.session.sessionExercises.single.id;
+
+      await s.engine.replaceExercise(
+        sessionExerciseId: squatId,
+        substituteName: 'Leg Press',
+        substituteMeasurementType: const MeasurementType.repBased(),
+        substitutePlannedValues: const PlannedSetValues.repBased(
+          weightKg: 60,
+          reps: 10,
+        ),
+        substituteSetCount: 3,
+      );
+      final afterFirst = await s.engine.completeSet(
+        sessionExerciseId: squatId,
+        actualValues: const ActualSetValues.repBased(weightKg: 70, reps: 12),
+      );
+
+      expect(
+        afterFirst.suggestedValues,
+        equals(const ActualSetValues.repBased(weightKg: 70, reps: 12)),
+      );
+    });
+
+    test(
+      'substitute with smaller setCount advances cursor and completes session',
+      () async {
+        final s = setup();
+        final workoutDay = _buildWorkoutDay(
+          id: 'wd-shorter',
+          exerciseSpecs: [
+            _ExerciseSpec(
+              name: 'Bench Press',
+              measurementType: const MeasurementType.repBased(),
+              setCount: 4,
+            ),
+          ],
+        );
+        s.repo.seedWorkoutDay(workoutDay);
+        final started = await s.engine.startSession(
+          workoutDayId: workoutDay.id,
+        );
+        final benchId = started.session.sessionExercises.single.id;
+
+        await s.engine.replaceExercise(
+          sessionExerciseId: benchId,
+          substituteName: 'Push-Up',
+          substituteMeasurementType: const MeasurementType.repBased(),
+          substitutePlannedValues: const PlannedSetValues.repBased(
+            weightKg: 0,
+            reps: 15,
+          ),
+          substituteSetCount: 2,
+        );
+        await s.engine.completeSet(
+          sessionExerciseId: benchId,
+          actualValues: const ActualSetValues.repBased(weightKg: 0, reps: 15),
+        );
+        final afterSecond = await s.engine.completeSet(
+          sessionExerciseId: benchId,
+          actualValues: const ActualSetValues.repBased(weightKg: 0, reps: 12),
+        );
+
+        expect(afterSecond.cursor, equals(const Cursor.completed()));
+        expect(s.engine.isSessionComplete(afterSecond.session), isTrue);
+      },
+    );
   });
 }
 

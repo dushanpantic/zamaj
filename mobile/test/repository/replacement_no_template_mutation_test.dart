@@ -65,6 +65,11 @@ void main() {
               sessionExerciseId: se.id,
               substituteName: 'Sub${se.id}',
               substituteMeasurementType: mt,
+              substitutePlannedValues: anyPlannedSetValuesForMeasurement(
+                rng,
+                mt,
+              ),
+              substituteSetCount: 1 + rng.nextInt(4),
               substituteMetadata: rng.nextBool()
                   ? anyExerciseMetadata(rng)
                   : null,

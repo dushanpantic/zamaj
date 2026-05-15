@@ -212,6 +212,11 @@ void main() {
         sessionExerciseId: benchId,
         substituteName: 'Cable Fly',
         substituteMeasurementType: const MeasurementType.repBased(),
+        substitutePlannedValues: const PlannedSetValues.repBased(
+          weightKg: 20,
+          reps: 12,
+        ),
+        substituteSetCount: 3,
       );
       await s.engine.completeSet(
         sessionExerciseId: benchId,

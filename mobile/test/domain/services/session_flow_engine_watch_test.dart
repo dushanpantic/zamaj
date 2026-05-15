@@ -195,51 +195,54 @@ void main() {
     await sub.cancel();
   });
 
-  test('updateExecutedSet and deleteExecutedSet each trigger an emission',
-      () async {
-    final s = setup();
-    s.repo.seedWorkoutDay(buildDay());
-    final started = await s.engine.startSession(workoutDayId: 'wd-1');
-    final sessionId = started.session.id;
-    final exA = started.session.sessionExercises
-        .firstWhere((e) => e.plannedExerciseIdInSnapshot == 'ex-a')
-        .id;
-    final logged = await s.engine.completeSet(
-      sessionExerciseId: exA,
-      actualValues: const ActualSetValues.repBased(weightKg: 80, reps: 5),
-    );
-    final setId = logged.session.sessionExercises
-        .firstWhere((e) => e.id == exA)
-        .executedSets
-        .single
-        .id;
+  test(
+    'updateExecutedSet and deleteExecutedSet each trigger an emission',
+    () async {
+      final s = setup();
+      s.repo.seedWorkoutDay(buildDay());
+      final started = await s.engine.startSession(workoutDayId: 'wd-1');
+      final sessionId = started.session.id;
+      final exA = started.session.sessionExercises
+          .firstWhere((e) => e.plannedExerciseIdInSnapshot == 'ex-a')
+          .id;
+      final logged = await s.engine.completeSet(
+        sessionExerciseId: exA,
+        actualValues: const ActualSetValues.repBased(weightKg: 80, reps: 5),
+      );
+      final setId = logged.session.sessionExercises
+          .firstWhere((e) => e.id == exA)
+          .executedSets
+          .single
+          .id;
 
-    final emissions = <SessionState?>[];
-    final sub = s.engine
-        .watchSession(sessionId: sessionId)
-        .listen(emissions.add);
-    await pumpEventQueue();
-    expect(emissions, hasLength(1));
+      final emissions = <SessionState?>[];
+      final sub = s.engine
+          .watchSession(sessionId: sessionId)
+          .listen(emissions.add);
+      await pumpEventQueue();
+      expect(emissions, hasLength(1));
 
-    await s.engine.updateExecutedSet(
-      executedSetId: setId,
-      actualValues: const ActualSetValues.repBased(weightKg: 82.5, reps: 5),
-    );
-    await pumpEventQueue();
-    expect(emissions, hasLength(2));
+      await s.engine.updateExecutedSet(
+        executedSetId: setId,
+        actualValues: const ActualSetValues.repBased(weightKg: 82.5, reps: 5),
+      );
+      await pumpEventQueue();
+      expect(emissions, hasLength(2));
 
-    await s.engine.deleteExecutedSet(executedSetId: setId);
-    await pumpEventQueue();
-    expect(emissions, hasLength(3));
+      await s.engine.deleteExecutedSet(executedSetId: setId);
+      await pumpEventQueue();
+      expect(emissions, hasLength(3));
 
-    // After deletion the exercise reverted to unfinished.
-    final ex = emissions.last!.session.sessionExercises
-        .firstWhere((e) => e.id == exA);
-    expect(ex.state, isA<UnfinishedState>());
-    expect(ex.executedSets, isEmpty);
+      // After deletion the exercise reverted to unfinished.
+      final ex = emissions.last!.session.sessionExercises.firstWhere(
+        (e) => e.id == exA,
+      );
+      expect(ex.state, isA<UnfinishedState>());
+      expect(ex.executedSets, isEmpty);
 
-    await sub.cancel();
-  });
+      await sub.cancel();
+    },
+  );
 
   test('replaceExercise triggers an emission', () async {
     final s = setup();
@@ -261,12 +264,18 @@ void main() {
       sessionExerciseId: exA,
       substituteName: 'Push-Up',
       substituteMeasurementType: const MeasurementType.repBased(),
+      substitutePlannedValues: const PlannedSetValues.repBased(
+        weightKg: 0,
+        reps: 10,
+      ),
+      substituteSetCount: 3,
     );
     await pumpEventQueue();
     expect(emissions, hasLength(2));
 
-    final ex = emissions.last!.session.sessionExercises
-        .firstWhere((e) => e.id == exA);
+    final ex = emissions.last!.session.sessionExercises.firstWhere(
+      (e) => e.id == exA,
+    );
     expect(ex.state, isA<ReplacedState>());
 
     await sub.cancel();

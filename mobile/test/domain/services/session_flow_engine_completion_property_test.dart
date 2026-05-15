@@ -153,9 +153,8 @@ bool _oracleIsComplete(Session session) {
       case CompletedState():
       case SkippedState():
         continue;
-      case ReplacedState():
-        final plannedSetCount = _lookupPlannedSetCount(exercise, session);
-        if (exercise.executedSets.length < plannedSetCount) {
+      case ReplacedState(:final substitute):
+        if (exercise.executedSets.length < substitute.setCount) {
           return false;
         }
       case UnfinishedState():
@@ -163,18 +162,6 @@ bool _oracleIsComplete(Session session) {
     }
   }
   return true;
-}
-
-int _lookupPlannedSetCount(SessionExercise exercise, Session session) {
-  final workoutDay = session.snapshot.workoutDay;
-  for (final group in workoutDay.exerciseGroups) {
-    for (final ex in group.exercises) {
-      if (ex.id == exercise.plannedExerciseIdInSnapshot) {
-        return ex.sets.length;
-      }
-    }
-  }
-  return 0;
 }
 
 Session _sessionWithFullSets(
@@ -203,7 +190,7 @@ Session _sessionWithFullSets(
     final executedSetCount = switch (state) {
       CompletedState() => plannedSetCount,
       SkippedState() => rng.nextInt(plannedSetCount + 1),
-      ReplacedState() => plannedSetCount,
+      ReplacedState(:final substitute) => substitute.setCount,
       UnfinishedState() => rng.nextInt(plannedSetCount),
     };
 
@@ -278,8 +265,8 @@ Session _sessionWithIncompleteReplaced(Random rng) {
     if (i == replacedIndex) {
       final substitute = anySubstituteExercise(rng);
       final state = ExerciseState.replaced(substitute: substitute);
-      final incompleteSets = plannedSetCount > 1
-          ? rng.nextInt(plannedSetCount - 1)
+      final incompleteSets = substitute.setCount > 1
+          ? rng.nextInt(substitute.setCount - 1)
           : 0;
 
       return SessionExercise(

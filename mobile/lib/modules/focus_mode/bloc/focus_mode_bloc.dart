@@ -94,20 +94,22 @@ class FocusModeBloc extends Bloc<FocusModeEvent, FocusModeState> {
   Future<void> _subscribe(String sessionId) async {
     await _streamSub?.cancel();
     _watchedSessionId = sessionId;
-    _streamSub = _engine.watchSession(sessionId: sessionId).listen(
-      (sessionState) {
-        if (sessionState == null) {
-          add(InternalFocusSessionMissing(sessionId));
-        } else {
-          add(InternalFocusSessionPushed(sessionState));
-        }
-      },
-      onError: (Object error) {
-        if (error is DomainError) {
-          add(InternalFocusSessionFailed(error, sessionId));
-        }
-      },
-    );
+    _streamSub = _engine
+        .watchSession(sessionId: sessionId)
+        .listen(
+          (sessionState) {
+            if (sessionState == null) {
+              add(InternalFocusSessionMissing(sessionId));
+            } else {
+              add(InternalFocusSessionPushed(sessionState));
+            }
+          },
+          onError: (Object error) {
+            if (error is DomainError) {
+              add(InternalFocusSessionFailed(error, sessionId));
+            }
+          },
+        );
   }
 
   Future<void> _onSessionPushed(
@@ -139,7 +141,9 @@ class FocusModeBloc extends Bloc<FocusModeEvent, FocusModeState> {
         ),
       );
     } else {
-      emit(FocusModeLoadFailure(sessionId: event.sessionId, error: event.error));
+      emit(
+        FocusModeLoadFailure(sessionId: event.sessionId, error: event.error),
+      );
     }
   }
 
@@ -456,6 +460,8 @@ class FocusModeBloc extends Bloc<FocusModeEvent, FocusModeState> {
         sessionExerciseId: current.viewModel.sessionExerciseId,
         substituteName: event.substituteName,
         substituteMeasurementType: event.substituteMeasurementType,
+        substitutePlannedValues: event.substitutePlannedValues,
+        substituteSetCount: event.substituteSetCount,
         substituteMetadata: event.substituteMetadata,
       );
       _stopRestTicker();
