@@ -2,6 +2,11 @@ import 'package:equatable/equatable.dart';
 import 'package:zamaj/modules/domain/domain.dart';
 import 'package:zamaj/modules/workout_overview/models/drop_intent.dart';
 
+// Public events drive UI intents. Events prefixed with `Internal` are
+// emitted by the bloc itself in response to its session-state subscription
+// — they are part of the bloc's internal protocol but must live here so
+// they remain inside the sealed hierarchy.
+
 sealed class WorkoutOverviewEvent extends Equatable {
   const WorkoutOverviewEvent();
 
@@ -20,10 +25,6 @@ final class WorkoutOverviewOpened extends WorkoutOverviewEvent {
 
 final class WorkoutOverviewRetried extends WorkoutOverviewEvent {
   const WorkoutOverviewRetried();
-}
-
-final class WorkoutOverviewRefreshed extends WorkoutOverviewEvent {
-  const WorkoutOverviewRefreshed();
 }
 
 final class WorkoutOverviewErrorDismissed extends WorkoutOverviewEvent {
@@ -146,4 +147,26 @@ final class WorkoutOverviewExtraWorkAdded extends WorkoutOverviewEvent {
 
 final class WorkoutOverviewSessionEnded extends WorkoutOverviewEvent {
   const WorkoutOverviewSessionEnded();
+}
+
+final class InternalSessionPushed extends WorkoutOverviewEvent {
+  const InternalSessionPushed(this.sessionState);
+  final SessionState sessionState;
+  @override
+  List<Object?> get props => [sessionState];
+}
+
+final class InternalSessionMissing extends WorkoutOverviewEvent {
+  const InternalSessionMissing(this.sessionId);
+  final String sessionId;
+  @override
+  List<Object?> get props => [sessionId];
+}
+
+final class InternalSessionFailed extends WorkoutOverviewEvent {
+  const InternalSessionFailed(this.error, this.sessionId);
+  final DomainError error;
+  final String sessionId;
+  @override
+  List<Object?> get props => [error, sessionId];
 }

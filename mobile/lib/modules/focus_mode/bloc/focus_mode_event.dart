@@ -21,8 +21,29 @@ final class FocusModeRetried extends FocusModeEvent {
   const FocusModeRetried();
 }
 
-final class FocusModeRefreshed extends FocusModeEvent {
-  const FocusModeRefreshed();
+/// Internal events ingest emissions from the engine's session watch-stream.
+/// They live inside the sealed hierarchy because Dart will not let outside
+/// classes extend a sealed type.
+final class InternalFocusSessionPushed extends FocusModeEvent {
+  const InternalFocusSessionPushed(this.sessionState);
+  final SessionState sessionState;
+  @override
+  List<Object?> get props => [sessionState];
+}
+
+final class InternalFocusSessionMissing extends FocusModeEvent {
+  const InternalFocusSessionMissing(this.sessionId);
+  final String sessionId;
+  @override
+  List<Object?> get props => [sessionId];
+}
+
+final class InternalFocusSessionFailed extends FocusModeEvent {
+  const InternalFocusSessionFailed(this.error, this.sessionId);
+  final DomainError error;
+  final String sessionId;
+  @override
+  List<Object?> get props => [error, sessionId];
 }
 
 final class FocusModeErrorDismissed extends FocusModeEvent {

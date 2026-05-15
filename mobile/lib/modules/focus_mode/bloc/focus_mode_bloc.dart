@@ -27,7 +27,9 @@ class FocusModeBloc extends Bloc<FocusModeEvent, FocusModeState> {
       super(const FocusModeInitial()) {
     on<FocusModeOpened>(_onOpened);
     on<FocusModeRetried>(_onRetried);
-    on<FocusModeRefreshed>(_onRefreshed);
+    on<InternalFocusSessionPushed>(_onSessionPushed);
+    on<InternalFocusSessionMissing>(_onSessionMissing);
+    on<InternalFocusSessionFailed>(_onSessionFailed);
     on<FocusModeErrorDismissed>(_onErrorDismissed);
 
     on<FocusModeWeightBumped>(_onWeightBumped);
@@ -59,11 +61,14 @@ class FocusModeBloc extends Bloc<FocusModeEvent, FocusModeState> {
 
   Timer? _restTicker;
   Timer? _stopwatchTicker;
+  StreamSubscription<SessionState?>? _streamSub;
+  String? _watchedSessionId;
 
   @override
-  Future<void> close() {
+  Future<void> close() async {
     _restTicker?.cancel();
     _stopwatchTicker?.cancel();
+    await _streamSub?.cancel();
     return super.close();
   }
 
@@ -74,16 +79,7 @@ class FocusModeBloc extends Bloc<FocusModeEvent, FocusModeState> {
     Emitter<FocusModeState> emit,
   ) async {
     emit(FocusModeLoading(event.sessionId));
-    try {
-      final sessionState = await _engine.resumeSession(
-        sessionId: event.sessionId,
-      );
-      emit(_assemble(sessionState));
-    } on NotFoundError {
-      emit(FocusModeNotFound(event.sessionId));
-    } on DomainError catch (e) {
-      emit(FocusModeLoadFailure(sessionId: event.sessionId, error: e));
-    }
+    await _subscribe(event.sessionId);
   }
 
   Future<void> _onRetried(
@@ -95,27 +91,55 @@ class FocusModeBloc extends Bloc<FocusModeEvent, FocusModeState> {
     add(FocusModeOpened(sessionId));
   }
 
-  Future<void> _onRefreshed(
-    FocusModeRefreshed event,
+  Future<void> _subscribe(String sessionId) async {
+    await _streamSub?.cancel();
+    _watchedSessionId = sessionId;
+    _streamSub = _engine.watchSession(sessionId: sessionId).listen(
+      (sessionState) {
+        if (sessionState == null) {
+          add(InternalFocusSessionMissing(sessionId));
+        } else {
+          add(InternalFocusSessionPushed(sessionState));
+        }
+      },
+      onError: (Object error) {
+        if (error is DomainError) {
+          add(InternalFocusSessionFailed(error, sessionId));
+        }
+      },
+    );
+  }
+
+  Future<void> _onSessionPushed(
+    InternalFocusSessionPushed event,
     Emitter<FocusModeState> emit,
   ) async {
-    final sessionId = _sessionIdOrNull();
-    if (sessionId == null) return;
-    try {
-      final sessionState = await _engine.resumeSession(sessionId: sessionId);
-      emit(_reassembleAfterRefresh(sessionState));
-    } on DomainError catch (e) {
-      final current = state;
-      if (current is FocusModeReady) {
-        emit(current.copyWith(lastTransientError: () => e));
-      } else if (current is FocusModeWorkoutComplete) {
-        emit(
-          FocusModeWorkoutComplete(
-            sessionState: current.sessionState,
-            lastTransientError: e,
-          ),
-        );
-      }
+    emit(_reassembleAfterRefresh(event.sessionState));
+  }
+
+  Future<void> _onSessionMissing(
+    InternalFocusSessionMissing event,
+    Emitter<FocusModeState> emit,
+  ) async {
+    emit(FocusModeNotFound(event.sessionId));
+  }
+
+  Future<void> _onSessionFailed(
+    InternalFocusSessionFailed event,
+    Emitter<FocusModeState> emit,
+  ) async {
+    final current = state;
+    if (current is FocusModeReady) {
+      emit(current.copyWith(lastTransientError: () => event.error));
+    } else if (current is FocusModeWorkoutComplete) {
+      emit(
+        FocusModeWorkoutComplete(
+          sessionState: current.sessionState,
+          lastTransientError: event.error,
+        ),
+      );
+    } else {
+      emit(FocusModeLoadFailure(sessionId: event.sessionId, error: event.error));
     }
   }
 
@@ -699,6 +723,6 @@ class FocusModeBloc extends Bloc<FocusModeEvent, FocusModeState> {
     FocusModeLoading(:final sessionId) => sessionId,
     FocusModeNotFound(:final sessionId) => sessionId,
     FocusModeLoadFailure(:final sessionId) => sessionId,
-    FocusModeInitial() => null,
+    FocusModeInitial() => _watchedSessionId,
   };
 }

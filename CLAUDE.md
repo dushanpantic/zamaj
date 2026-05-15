@@ -11,8 +11,8 @@ Sessions capture an immutable **snapshot** of the planned workout at start. The 
 ```bash
 dart run build_runner build --force-jit   # codegen — --force-jit is REQUIRED
 dart run build_runner watch --force-jit
-bash tool/check_offline_imports.sh         # offline-first isolation guard
-bash tool/ci.sh                            # imports → codegen → analyze → test
+tool/check_offline_imports.sh              # offline-first isolation guard
+tool/ci.sh                                 # imports → codegen → format → analyze → test
 dart run tool/generate_aggregate_goldens.dart  # regenerate JSON goldens
 ```
 

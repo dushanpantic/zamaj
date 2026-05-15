@@ -9,7 +9,8 @@
       "mcp__dart__analyze_files",
       "Bash(flutter --version)",
       "Bash(dart --version)",
-      "Bash(dart pub *)"
+      "Bash(dart pub *)",
+      "Bash(dart analyze *)"
     ],
     "additionalDirectories": [
       "/Users/dusanpantic/Projects/github.com/dushanpantic/zamaj/mobile/.kiro/specs"

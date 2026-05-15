@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:zamaj/modules/domain/domain.dart';
 import 'package:zamaj/modules/workout_overview/bloc/workout_overview_event.dart';
@@ -13,7 +15,6 @@ class WorkoutOverviewBloc
       super(const WorkoutOverviewInitial()) {
     on<WorkoutOverviewOpened>(_onOpened);
     on<WorkoutOverviewRetried>(_onRetried);
-    on<WorkoutOverviewRefreshed>(_onRefreshed);
     on<WorkoutOverviewErrorDismissed>(_onErrorDismissed);
     on<WorkoutOverviewExpansionToggled>(_onExpansionToggled);
     on<WorkoutOverviewSetLogged>(_onSetLogged);
@@ -25,25 +26,29 @@ class WorkoutOverviewBloc
     on<WorkoutOverviewSessionNoteAdded>(_onSessionNoteAdded);
     on<WorkoutOverviewExtraWorkAdded>(_onExtraWorkAdded);
     on<WorkoutOverviewSessionEnded>(_onSessionEnded);
+    on<InternalSessionPushed>(_onSessionPushed);
+    on<InternalSessionMissing>(_onSessionMissing);
+    on<InternalSessionFailed>(_onSessionFailed);
   }
 
   final SessionFlowEngine _engine;
+  StreamSubscription<SessionState?>? _streamSub;
+  String? _watchedSessionId;
+
+  @override
+  Future<void> close() async {
+    await _streamSub?.cancel();
+    return super.close();
+  }
+
+  // ---------- Stream subscription lifecycle ----------
 
   Future<void> _onOpened(
     WorkoutOverviewOpened event,
     Emitter<WorkoutOverviewState> emit,
   ) async {
     emit(WorkoutOverviewLoading(event.sessionId));
-    try {
-      final sessionState = await _engine.resumeSession(
-        sessionId: event.sessionId,
-      );
-      emit(_assemble(sessionState, _initialExpansionFor(sessionState)));
-    } on NotFoundError {
-      emit(WorkoutOverviewNotFound(event.sessionId));
-    } on DomainError catch (e) {
-      emit(WorkoutOverviewLoadFailure(sessionId: event.sessionId, error: e));
-    }
+    await _subscribe(event.sessionId);
   }
 
   Future<void> _onRetried(
@@ -55,25 +60,70 @@ class WorkoutOverviewBloc
     add(WorkoutOverviewOpened(sessionId));
   }
 
-  Future<void> _onRefreshed(
-    WorkoutOverviewRefreshed event,
+  Future<void> _subscribe(String sessionId) async {
+    await _streamSub?.cancel();
+    _watchedSessionId = sessionId;
+    _streamSub = _engine.watchSession(sessionId: sessionId).listen(
+      (sessionState) {
+        if (sessionState == null) {
+          add(InternalSessionMissing(sessionId));
+        } else {
+          add(InternalSessionPushed(sessionState));
+        }
+      },
+      onError: (Object error) {
+        if (error is DomainError) {
+          add(InternalSessionFailed(error, sessionId));
+        }
+      },
+    );
+  }
+
+  // ---------- Internal stream-driven handlers ----------
+
+  Future<void> _onSessionPushed(
+    InternalSessionPushed event,
     Emitter<WorkoutOverviewState> emit,
   ) async {
     final current = state;
-    if (current is! WorkoutOverviewLoaded) return;
-    try {
-      final sessionState = await _engine.resumeSession(
-        sessionId: current.sessionState.session.id,
-      );
+    final next = event.sessionState;
+    if (current is WorkoutOverviewLoaded) {
       emit(
-        _assemble(
-          sessionState,
-          current.expandedExerciseIds,
-          mutationInFlight: current.mutationInFlight,
+        current.copyWith(
+          sessionState: next,
+          groups: ExerciseViewModelAssembler.assemble(next),
+          expandedExerciseIds: _expansionWithCursor(
+            current.expandedExerciseIds,
+            next,
+          ),
         ),
       );
-    } on DomainError catch (e) {
-      emit(current.copyWith(lastTransientError: () => e));
+    } else {
+      emit(_assemble(next, _initialExpansionFor(next)));
+    }
+  }
+
+  Future<void> _onSessionMissing(
+    InternalSessionMissing event,
+    Emitter<WorkoutOverviewState> emit,
+  ) async {
+    emit(WorkoutOverviewNotFound(event.sessionId));
+  }
+
+  Future<void> _onSessionFailed(
+    InternalSessionFailed event,
+    Emitter<WorkoutOverviewState> emit,
+  ) async {
+    final current = state;
+    if (current is WorkoutOverviewLoaded) {
+      emit(current.copyWith(lastTransientError: () => event.error));
+    } else {
+      emit(
+        WorkoutOverviewLoadFailure(
+          sessionId: event.sessionId,
+          error: event.error,
+        ),
+      );
     }
   }
 
@@ -241,13 +291,10 @@ class WorkoutOverviewBloc
     );
   }
 
-  /// Runs an engine mutation, surfaces success by replacing the assembled
-  /// state and clearing any prior transient error, and surfaces failure by
-  /// keeping the prior state and attaching the error.
-  ///
-  /// Refuses to start while another mutation is already in-flight; this
-  /// prevents the UI from sending two competing reorders or two completes
-  /// for the same set.
+  /// Runs an engine mutation. On success, applies the returned session state
+  /// directly and clears the in-flight flag — the watch-stream will push the
+  /// same value moments later but bloc-level equality dedupes it. On failure,
+  /// keeps the prior session state and attaches the error.
   Future<void> _runMutation(
     Emitter<WorkoutOverviewState> emit,
     Future<SessionState> Function() action,
@@ -260,16 +307,26 @@ class WorkoutOverviewBloc
     try {
       final next = await action();
       final latest = state;
-      if (latest is! WorkoutOverviewLoaded) return;
-      emit(
-        _assemble(next, _expansionWithCursor(latest.expandedExerciseIds, next)),
-      );
+      if (latest is WorkoutOverviewLoaded) {
+        emit(
+          latest.copyWith(
+            sessionState: next,
+            groups: ExerciseViewModelAssembler.assemble(next),
+            expandedExerciseIds: _expansionWithCursor(
+              latest.expandedExerciseIds,
+              next,
+            ),
+            mutationInFlight: false,
+          ),
+        );
+      }
     } on DomainError catch (e) {
       final latest = state;
-      if (latest is! WorkoutOverviewLoaded) return;
-      emit(
-        latest.copyWith(mutationInFlight: false, lastTransientError: () => e),
-      );
+      if (latest is WorkoutOverviewLoaded) {
+        emit(
+          latest.copyWith(mutationInFlight: false, lastTransientError: () => e),
+        );
+      }
     }
   }
 
@@ -312,6 +369,7 @@ class WorkoutOverviewBloc
     WorkoutOverviewLoading(:final sessionId) => sessionId,
     WorkoutOverviewNotFound(:final sessionId) => sessionId,
     WorkoutOverviewLoadFailure(:final sessionId) => sessionId,
-    WorkoutOverviewInitial() => null,
+    WorkoutOverviewInitial() => _watchedSessionId,
   };
 }
+

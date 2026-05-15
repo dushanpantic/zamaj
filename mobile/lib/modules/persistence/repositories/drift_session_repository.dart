@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 
 import 'package:clock/clock.dart';
@@ -102,6 +103,48 @@ class DriftSessionRepository implements SessionRepository {
     )..where((t) => t.id.equals(sessionId))).getSingleOrNull();
     if (row == null) return null;
     return _buildSession(row);
+  }
+
+  @override
+  Stream<domain.Session?> watchSession(String sessionId) {
+    // Re-fetch the full session whenever any of the related tables change.
+    // tableUpdates is sync-broadcast: subscribers receive the event in the
+    // same microtask the transaction commits in, so by the time a mutation
+    // future resolves the dependent stream has already emitted.
+    final triggers = _db.tableUpdates(
+      TableUpdateQuery.onAllTables([
+        _db.sessions,
+        _db.sessionExercises,
+        _db.executedSets,
+        _db.sessionNotes,
+        _db.extraWorkItems,
+      ]),
+    );
+    final controller = StreamController<domain.Session?>();
+    StreamSubscription<void>? sub;
+    var lastInFlight = false;
+
+    Future<void> push() async {
+      if (lastInFlight) return;
+      lastInFlight = true;
+      try {
+        final value = await getSession(sessionId);
+        if (!controller.isClosed) controller.add(value);
+      } finally {
+        lastInFlight = false;
+      }
+    }
+
+    controller.onListen = () {
+      push();
+      sub = triggers.listen((_) => push());
+    };
+    controller.onCancel = () async {
+      await sub?.cancel();
+      sub = null;
+      await controller.close();
+    };
+    return controller.stream;
   }
 
   @override

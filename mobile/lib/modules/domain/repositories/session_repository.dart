@@ -20,6 +20,16 @@ abstract class SessionRepository {
   Future<Session> getSessionByExecutedSetId(String executedSetId);
   Future<List<Session>> listSessionsForWorkoutDay(String workoutDayId);
 
+  /// Reactive read of a session. Emits the current value immediately, then
+  /// re-emits whenever the session or any of its related rows (exercises,
+  /// executed sets, notes, extra work) change. Emits `null` when the session
+  /// does not exist or has been deleted.
+  ///
+  /// Subscribers receive every committed mutation regardless of which caller
+  /// initiated it, which lets multiple screens of the same session stay in
+  /// lock-step without manual refresh signals.
+  Stream<Session?> watchSession(String sessionId);
+
   Future<Session> endSession(String sessionId);
 
   Future<Session> completeSet({

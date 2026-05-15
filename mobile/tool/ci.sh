@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-bash tool/check_offline_imports.sh
+tool/check_offline_imports.sh
 dart run build_runner build --force-jit
+dart format .
 flutter analyze
 flutter test

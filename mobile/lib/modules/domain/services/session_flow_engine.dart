@@ -37,6 +37,18 @@ class SessionFlowEngine {
     return _buildState(session);
   }
 
+  /// Reactive read of a session as a fully-assembled [SessionState].
+  ///
+  /// Emits the current value immediately and re-emits whenever the underlying
+  /// session changes — regardless of whether the change originated from this
+  /// caller or another collaborator (e.g. a second screen pushed on top of
+  /// the same session). Emits `null` when the session does not exist.
+  Stream<SessionState?> watchSession({required String sessionId}) {
+    return _repository
+        .watchSession(sessionId)
+        .map((session) => session == null ? null : _buildState(session));
+  }
+
   /// Ends the current session.
   Future<SessionState> endSession({required String sessionId}) async {
     final session = await _repository.getSession(sessionId);

@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:clock/clock.dart';
 import 'package:uuid/uuid.dart';
 import 'package:zamaj/modules/domain/errors.dart';
@@ -23,6 +25,8 @@ class FakeSessionRepository implements SessionRepository {
   final Uuid _uuid;
   final Map<String, Session> _sessions = {};
   final Map<String, WorkoutDay> _workoutDays = {};
+  final StreamController<String> _changeController =
+      StreamController<String>.broadcast(sync: true);
 
   void seedWorkoutDay(WorkoutDay workoutDay) {
     _workoutDays[workoutDay.id] = workoutDay;
@@ -30,6 +34,23 @@ class FakeSessionRepository implements SessionRepository {
 
   void seedSession(Session session) {
     _sessions[session.id] = session;
+    _changeController.add(session.id);
+  }
+
+  void _notify(String sessionId) {
+    if (!_changeController.isClosed) _changeController.add(sessionId);
+  }
+
+  /// Closes the internal change broadcaster. Optional — tests can call this
+  /// in tearDown when they want strict resource hygiene.
+  Future<void> dispose() => _changeController.close();
+
+  @override
+  Stream<Session?> watchSession(String sessionId) async* {
+    yield _sessions[sessionId];
+    yield* _changeController.stream
+        .where((id) => id == sessionId)
+        .map((_) => _sessions[sessionId]);
   }
 
   @override
@@ -81,6 +102,7 @@ class FakeSessionRepository implements SessionRepository {
     );
 
     _sessions[sessionId] = session;
+    _notify(sessionId);
     return session;
   }
 
@@ -124,6 +146,7 @@ class FakeSessionRepository implements SessionRepository {
     final now = clock.now().toUtc();
     final updated = session.copyWith(endedAt: now, updatedAt: now);
     _sessions[sessionId] = updated;
+    _notify(sessionId);
     return updated;
   }
 
@@ -173,6 +196,7 @@ class FakeSessionRepository implements SessionRepository {
       updatedAt: now,
     );
     _sessions[session.id] = updated;
+    _notify(session.id);
     return updated;
   }
 
@@ -207,6 +231,7 @@ class FakeSessionRepository implements SessionRepository {
       updatedAt: now,
     );
     _sessions[session.id] = updated;
+    _notify(session.id);
     return updated;
   }
 
@@ -241,6 +266,7 @@ class FakeSessionRepository implements SessionRepository {
       updatedAt: now,
     );
     _sessions[session.id] = updated;
+    _notify(session.id);
     return updated;
   }
 
@@ -262,6 +288,7 @@ class FakeSessionRepository implements SessionRepository {
       updatedAt: now,
     );
     _sessions[session.id] = updated;
+    _notify(session.id);
     return updated;
   }
 
@@ -294,6 +321,7 @@ class FakeSessionRepository implements SessionRepository {
       updatedAt: now,
     );
     _sessions[session.id] = updated;
+    _notify(session.id);
     return updated;
   }
 
@@ -333,6 +361,7 @@ class FakeSessionRepository implements SessionRepository {
       updatedAt: now,
     );
     _sessions[sessionId] = updated;
+    _notify(sessionId);
     return updated;
   }
 
@@ -372,6 +401,7 @@ class FakeSessionRepository implements SessionRepository {
 
     final updated = session.copyWith(sessionExercises: result, updatedAt: now);
     _sessions[sessionId] = updated;
+    _notify(sessionId);
     return updated;
   }
 
@@ -395,6 +425,7 @@ class FakeSessionRepository implements SessionRepository {
       updatedAt: now,
     );
     _sessions[sessionId] = updated;
+    _notify(sessionId);
     return updated;
   }
 
@@ -420,6 +451,7 @@ class FakeSessionRepository implements SessionRepository {
       updatedAt: now,
     );
     _sessions[sessionId] = updated;
+    _notify(sessionId);
     return updated;
   }
 
@@ -446,6 +478,7 @@ class FakeSessionRepository implements SessionRepository {
       updatedAt: now,
     );
     _sessions[sessionId] = updated;
+    _notify(sessionId);
     return updated;
   }
 
