@@ -1,0 +1,70 @@
+# CLAUDE.md
+
+## Project
+
+**Zamaj** — offline-first Flutter workout execution app. Code lives in `mobile/`; run all commands from there.
+
+Sessions capture an immutable **snapshot** of the planned workout at start. The program template is never mutated by in-session edits; completed sessions never change retroactively. Planned and actual values are tracked separately.
+
+## Commands (project-specific only)
+
+```bash
+dart run build_runner build --force-jit   # codegen — --force-jit is REQUIRED
+dart run build_runner watch --force-jit
+bash tool/check_offline_imports.sh         # offline-first isolation guard
+bash tool/ci.sh                            # imports → codegen → analyze → test
+dart run tool/generate_aggregate_goldens.dart  # regenerate JSON goldens
+```
+
+- `--force-jit` is required: AOT fails because `sqlite3` 3.x uses Dart native build hooks.
+- Do not pass `--delete-conflicting-outputs` (removed in build_runner 2.14, silently ignored).
+- Generated files (`*.freezed.dart`, `*.g.dart`) are committed; never hand-edit.
+
+## Architecture
+
+`lib/modules/` splits into `domain/` (pure Dart: freezed models, repo contracts, `SessionFlowEngine`), `persistence/` (Drift tables, migrations, repo impls), and UI feature modules (`program_management/`, `workout_day_picker/`, `workout_overview/`, `focus_mode/`). `lib/core/` is cross-cutting (theme, tokens, clock, canonical_json, schema_versions). `lib/navigation/` routes per-module.
+
+**Layer rules — enforced by `tool/check_offline_imports.sh`:**
+
+- `core`, `domain`, `persistence` must NOT import networking (`dart:io`, `http`, `dio`, `web_socket_channel`, `grpc`, `socket_io_client`).
+- UI modules must NOT import `drift`/`drift_flutter`/`sqlite3` or reference `AppDatabase`/`NativeDatabase`/`GeneratedDatabase`/`HttpClient`/`Socket`. UI talks to data only through domain repository contracts.
+- `domain` is pure Dart — no Flutter, no Drift, no platform channels.
+- Cross-module imports go through barrel files (`domain.dart`, `persistence.dart`, `<feature>.dart`). Use `package:zamaj/...`, not relative imports.
+
+**Session flow:** `SessionFlowEngine` is a stateless orchestrator. Every mutation round-trips through `SessionRepository`, recomputes a `Cursor`, returns a fresh `SessionState`. UI blocs depend on the engine, not on repositories directly for session flow.
+
+**Schema versions:** `lib/core/schema_versions.dart` is the single source of truth for both Drift's `schemaVersion` and the `domain` version stamped on every persisted row. Bump deliberately and add a migration under `lib/modules/persistence/database/migrations.dart`.
+
+**Canonical JSON:** `lib/core/canonical_json.dart` produces byte-stable JSON (sorted keys, trimmed numbers, RFC 8259 escapes) used for snapshot hashing and goldens.
+
+## Conventions
+
+### Freezed models with validation
+
+Use a private `._()` constructor with a body + a **non-`const`** redirecting factory:
+
+```dart
+@freezed
+abstract class MyModel with _$MyModel {
+  MyModel._() {
+    if (someField < 0) throw ValidationError(...);
+  }
+  factory MyModel({required int someField}) = _MyModel;
+  factory MyModel.fromJson(Map<String, dynamic> json) => _$MyModelFromJson(json);
+}
+```
+
+The factory must not be `const` (freezed-generated `const _MyModel(...)` can't call a non-const super). Do not parameterise `._({...})` — json_serializable targets the public factory's signature. `explicit_to_json: true` is set globally in `build.yaml`.
+
+### UI tokens (mandatory under `lib/modules/**/screens|widgets/`, `lib/building_blocks/`)
+
+No hard-coded pixels, no `Color(0x...)` literals.
+
+- Colors: `Theme.of(context).appColors` (extension in `lib/core/app_theme.dart`). Never import `AppColors.dark`/`AppColors.light` directly.
+- Spacing/radius: `AppSpacing.xs..xxxl`, `AppRadius.sm|md|lg|pill`. Tap targets ≥ `AppSpacing.touchMin` (48 dp).
+- Typography: `Theme.of(context).textTheme.*`; use `AppTypography.standard.numeric` / `numericLarge` for any numeric readout so tabular figures don't jitter.
+- Semantic colors: `planned`/`actual`, `exerciseCompleted|Skipped|Replaced`, `restTimer`/`restTimerOvertime`. Add new semantic fields to `AppColors` (both palettes) rather than one-off values.
+
+### Tests
+
+Scope is **domain + persistence**. Do not add `bloc_test` (not a dependency) or widget tests. Layout mirrors `lib/` under `test/{core,domain,persistence,repository,serialization}`. Property tests use `test/support/generators.dart`. Drift end-to-end tests live in `test/integration/`; use `makeInMemoryDatabase()` from `test/support/in_memory_app_database.dart`. `Random.nextInt(max)` requires `max <= 2^32` — for dates, use a base timestamp + millisecond offset.
