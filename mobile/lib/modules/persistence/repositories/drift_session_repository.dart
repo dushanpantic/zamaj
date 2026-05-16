@@ -8,6 +8,7 @@ import 'package:zamaj/core/canonical_json.dart';
 import 'package:zamaj/core/schema_versions.dart';
 import 'package:zamaj/modules/domain/errors.dart';
 import 'package:zamaj/modules/domain/models/actual_set_values.dart';
+import 'package:zamaj/modules/domain/models/exercise_group_kind.dart';
 import 'package:zamaj/modules/domain/models/exercise_metadata.dart';
 import 'package:zamaj/modules/domain/models/measurement_type.dart';
 import 'package:zamaj/modules/domain/models/planned_set_values.dart';
@@ -72,6 +73,7 @@ class DriftSessionRepository implements SessionRepository {
 
       var position = 0;
       for (final group in workoutDay.exerciseGroups) {
+        final supersetTag = group.kind is SupersetKind ? group.id : null;
         for (final exercise in group.exercises) {
           final exerciseId = _uuid.v4();
           await _db
@@ -84,6 +86,7 @@ class DriftSessionRepository implements SessionRepository {
                   plannedExerciseIdInSnapshot: exercise.id,
                   stateDiscriminator: 'unfinished',
                   substitutePayloadJson: const Value(null),
+                  supersetTag: Value(supersetTag),
                   createdAtMs: nowMs,
                   updatedAtMs: nowMs,
                   schemaVersion: SchemaVersions.domain,

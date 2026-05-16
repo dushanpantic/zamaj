@@ -5,6 +5,7 @@ import 'package:uuid/uuid.dart';
 import 'package:zamaj/modules/domain/errors.dart';
 import 'package:zamaj/modules/domain/models/actual_set_values.dart';
 import 'package:zamaj/modules/domain/models/executed_set.dart';
+import 'package:zamaj/modules/domain/models/exercise_group_kind.dart';
 import 'package:zamaj/modules/domain/models/exercise_metadata.dart';
 import 'package:zamaj/modules/domain/models/exercise_state.dart';
 import 'package:zamaj/modules/domain/models/extra_work.dart';
@@ -72,6 +73,7 @@ class FakeSessionRepository implements SessionRepository {
     var position = 0;
     final exercises = <SessionExercise>[];
     for (final group in workoutDay.exerciseGroups) {
+      final supersetTag = group.kind is SupersetKind ? group.id : null;
       for (final exercise in group.exercises) {
         exercises.add(
           SessionExercise(
@@ -81,6 +83,7 @@ class FakeSessionRepository implements SessionRepository {
             plannedExerciseIdInSnapshot: exercise.id,
             state: const ExerciseState.unfinished(),
             executedSets: const [],
+            supersetTag: supersetTag,
             createdAt: now,
             updatedAt: now,
             schemaVersion: 1,
