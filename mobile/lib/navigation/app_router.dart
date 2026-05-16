@@ -2,6 +2,7 @@ import 'package:clock/clock.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:zamaj/modules/domain/domain.dart';
+import 'package:zamaj/modules/export/navigation/export_router.dart';
 import 'package:zamaj/modules/focus_mode/bloc/bloc.dart';
 import 'package:zamaj/modules/focus_mode/screens/focus_mode_screen.dart';
 import 'package:zamaj/modules/program_management/navigation/program_management_router.dart';
@@ -19,7 +20,9 @@ abstract final class AppRouter {
       WorkoutDayPickerRoutes.picker => _pickerRoute(settings),
       SessionRoutes.active => _sessionActiveRoute(settings),
       SessionRoutes.focus => _sessionFocusRoute(settings),
-      _ => ProgramManagementRouter.onGenerateRoute(settings),
+      _ =>
+        ExportRouter.onGenerateRoute(settings) ??
+            ProgramManagementRouter.onGenerateRoute(settings),
     };
   }
 

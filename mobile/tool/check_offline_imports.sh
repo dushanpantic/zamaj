@@ -51,6 +51,7 @@ PM_DIRS=(
   "lib/modules/program_management"
   "lib/modules/workout_day_picker"
   "lib/modules/workout_overview"
+  "lib/modules/export"
 )
 
 PM_NETWORKING_PATTERNS=(

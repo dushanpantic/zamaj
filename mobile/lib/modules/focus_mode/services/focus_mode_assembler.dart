@@ -51,27 +51,29 @@ abstract final class FocusModeAssembler {
       currentExerciseId: exercise.id,
     );
 
-    final (currentPlannedValues, currentPlannedSetId, plannedSummary) =
-        switch (exercise.state) {
-          ReplacedState(:final substitute) => (
-            cursor.setIndex < substitute.setCount ? substitute.plannedValues
-                : null,
-            null,
-            _summarizeSubstitute(substitute),
-          ),
-          _ => () {
-            final sortedPlanned = List<WorkoutSet>.of(planned.sets)
-              ..sort((a, b) => a.position.compareTo(b.position));
-            final currentPlanned = cursor.setIndex < sortedPlanned.length
-                ? sortedPlanned[cursor.setIndex]
-                : null;
-            return (
-              currentPlanned?.plannedValues,
-              currentPlanned?.id,
-              _summarizePlanned(planned),
-            );
-          }(),
-        };
+    final (
+      currentPlannedValues,
+      currentPlannedSetId,
+      plannedSummary,
+    ) = switch (exercise.state) {
+      ReplacedState(:final substitute) => (
+        cursor.setIndex < substitute.setCount ? substitute.plannedValues : null,
+        null,
+        _summarizeSubstitute(substitute),
+      ),
+      _ => () {
+        final sortedPlanned = List<WorkoutSet>.of(planned.sets)
+          ..sort((a, b) => a.position.compareTo(b.position));
+        final currentPlanned = cursor.setIndex < sortedPlanned.length
+            ? sortedPlanned[cursor.setIndex]
+            : null;
+        return (
+          currentPlanned?.plannedValues,
+          currentPlanned?.id,
+          _summarizePlanned(planned),
+        );
+      }(),
+    };
 
     return FocusModeViewModel(
       sessionId: session.id,

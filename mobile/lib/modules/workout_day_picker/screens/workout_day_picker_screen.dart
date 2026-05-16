@@ -5,6 +5,8 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:zamaj/core/app_spacing.dart';
 import 'package:zamaj/core/app_theme.dart';
 import 'package:zamaj/modules/domain/domain.dart';
+import 'package:zamaj/modules/export/models/recent_sessions_args.dart';
+import 'package:zamaj/modules/export/navigation/export_routes.dart';
 import 'package:zamaj/modules/program_management/navigation/program_management_routes.dart';
 import 'package:zamaj/modules/program_management/services/domain_error_presenter.dart';
 import 'package:zamaj/modules/workout_day_picker/bloc/bloc.dart';
@@ -99,6 +101,13 @@ class _WorkoutDayPickerScreenState extends State<WorkoutDayPickerScreen> {
     }
   }
 
+  void _onOpenRecentSessions(String programId) {
+    Navigator.of(context).pushNamed(
+      ExportRoutes.recentSessions,
+      arguments: RecentSessionsArgs(programId: programId),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final colors = Theme.of(context).appColors;
@@ -111,6 +120,11 @@ class _WorkoutDayPickerScreenState extends State<WorkoutDayPickerScreen> {
             title: Text(_titleFor(state)),
             actions: state is WorkoutDayPickerLoaded
                 ? [
+                    IconButton(
+                      onPressed: () => _onOpenRecentSessions(state.program.id),
+                      icon: const Icon(Icons.history),
+                      tooltip: 'Recent sessions',
+                    ),
                     IconButton(
                       onPressed: _onRefresh,
                       icon: const Icon(Icons.refresh),
