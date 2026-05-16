@@ -105,9 +105,11 @@ abstract final class ExerciseViewModelAssembler {
     final String? Function(int) plannedSetIdAt;
     final int maxPlannedPosition;
     if (state is ReplacedState) {
-      plannedValuesAt = (_) => state.substitute.plannedValues;
+      final substituteSetCount = state.substitute.setCount;
+      plannedValuesAt = (p) =>
+          p < substituteSetCount ? state.substitute.plannedValues : null;
       plannedSetIdAt = (_) => null;
-      maxPlannedPosition = state.substitute.setCount - 1;
+      maxPlannedPosition = substituteSetCount - 1;
     } else {
       final plannedByPosition = <int, WorkoutSet>{
         for (final s in plannedExercise.sets) s.position: s,
