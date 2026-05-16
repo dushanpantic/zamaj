@@ -1,0 +1,109 @@
+name: Release iOS (reusable)
+
+on:
+  workflow_call:
+    inputs:
+      lane:
+        description: 'Fastlane lane to invoke (internal | external)'
+        required: true
+        type: string
+      runner:
+        description: 'Runner label to execute on'
+        required: true
+        type: string
+      release_notes:
+        description: 'Release notes shown to testers (optional)'
+        required: false
+        type: string
+        default: ''
+    secrets:
+      IOS_APP_STORE_CONNECT_KEY_CONTENT:
+        required: true
+      IOS_CERT_P12_BASE64:
+        required: true
+      IOS_CERT_PASSWORD:
+        required: true
+      IOS_PROVISIONING_PROFILE_BASE64:
+        required: true
+      IOS_KEYCHAIN_PASSWORD:
+        required: true
+
+permissions:
+  contents: read
+
+jobs:
+  release:
+    name: Build & upload (${{ inputs.lane }})
+    runs-on: ${{ inputs.runner }}
+    timeout-minutes: 90
+    concurrency:
+      group: release-ios-${{ inputs.lane }}
+      cancel-in-progress: false
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+
+      - name: Set up Ruby + Bundler
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: '3.3'
+          bundler-cache: true
+          working-directory: mobile/ios
+
+      - name: Decode signing assets
+        env:
+          IOS_CERT_P12_BASE64: ${{ secrets.IOS_CERT_P12_BASE64 }}
+          IOS_PROVISIONING_PROFILE_BASE64: ${{ secrets.IOS_PROVISIONING_PROFILE_BASE64 }}
+        run: |
+          set -euo pipefail
+          SIGNING_DIR="${RUNNER_TEMP}/ios-signing"
+          mkdir -p "$SIGNING_DIR"
+          printf '%s' "$IOS_CERT_P12_BASE64" | base64 --decode > "$SIGNING_DIR/cert.p12"
+          printf '%s' "$IOS_PROVISIONING_PROFILE_BASE64" | base64 --decode > "$SIGNING_DIR/profile.mobileprovision"
+          test -s "$SIGNING_DIR/cert.p12"
+          test -s "$SIGNING_DIR/profile.mobileprovision"
+          echo "IOS_CERT_PATH=$SIGNING_DIR/cert.p12" >> "$GITHUB_ENV"
+          echo "IOS_PROVISIONING_PROFILE_PATH=$SIGNING_DIR/profile.mobileprovision" >> "$GITHUB_ENV"
+
+      - name: Flutter pub get
+        working-directory: mobile
+        run: flutter pub get
+
+      - name: Run code generation
+        working-directory: mobile
+        run: dart run build_runner build --force-jit
+
+      - name: Verify offline import isolation
+        working-directory: mobile
+        run: tool/check_offline_imports.sh
+
+      - name: CocoaPods install
+        working-directory: mobile/ios
+        run: bundle exec pod install
+
+      - name: Deploy via fastlane
+        working-directory: mobile/ios
+        env:
+          IOS_APP_STORE_CONNECT_KEY_ID: ${{ vars.IOS_APP_STORE_CONNECT_KEY_ID }}
+          IOS_APP_STORE_CONNECT_ISSUER_ID: ${{ vars.IOS_APP_STORE_CONNECT_ISSUER_ID }}
+          IOS_APP_STORE_CONNECT_KEY_CONTENT: ${{ secrets.IOS_APP_STORE_CONNECT_KEY_CONTENT }}
+          IOS_CERT_PASSWORD: ${{ secrets.IOS_CERT_PASSWORD }}
+          IOS_KEYCHAIN_PASSWORD: ${{ secrets.IOS_KEYCHAIN_PASSWORD }}
+          IOS_TESTFLIGHT_EXTERNAL_GROUPS: ${{ vars.IOS_TESTFLIGHT_EXTERNAL_GROUPS }}
+          FASTLANE_HIDE_CHANGELOG: '1'
+          LC_ALL: en_US.UTF-8
+          LANG: en_US.UTF-8
+        run: bundle exec fastlane ${{ inputs.lane }} release_notes:"${{ inputs.release_notes }}"
+
+      - name: Clean up signing material
+        if: always()
+        run: |
+          rm -rf "${RUNNER_TEMP}/ios-signing"
+          rm -f mobile/ios/ExportOptions.plist

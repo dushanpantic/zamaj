@@ -1,0 +1,30 @@
+name: Release • TestFlight • External Testing
+
+on:
+  workflow_dispatch:
+    inputs:
+      runner:
+        description: 'Runner to execute on (must be macOS-capable)'
+        type: choice
+        required: true
+        default: self-hosted
+        options:
+          - self-hosted
+          - macos-latest
+      release_notes:
+        description: 'Release notes shown to external testers (required for external review)'
+        type: string
+        required: true
+        default: ''
+
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    uses: ./.github/workflows/_release_ios.yml
+    with:
+      lane: external
+      runner: ${{ inputs.runner }}
+      release_notes: ${{ inputs.release_notes }}
+    secrets: inherit

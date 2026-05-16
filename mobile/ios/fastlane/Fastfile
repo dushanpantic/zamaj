@@ -1,0 +1,149 @@
+default_platform(:ios)
+
+APP_IDENTIFIER = "app.zamaj"
+TEAM_ID = "9DV3BTZ69W"
+KEYCHAIN_NAME = "zamaj_ci_keychain"
+
+FLUTTER_ROOT = File.expand_path("../..", __dir__)
+IOS_ROOT = File.expand_path("..", __dir__)
+EXPORT_OPTIONS_PATH = File.join(IOS_ROOT, "ExportOptions.plist")
+IPA_OUTPUT_DIR = File.join(FLUTTER_ROOT, "build/ios/ipa")
+
+platform :ios do
+  before_all do
+    setup_ci if is_ci
+  end
+
+  desc "Upload a new build to TestFlight (internal testers only)"
+  lane :internal do |options|
+    build_and_upload(external: false, release_notes: options[:release_notes])
+  end
+
+  desc "Upload a new build to TestFlight and distribute to external groups"
+  lane :external do |options|
+    build_and_upload(external: true, release_notes: options[:release_notes])
+  end
+
+  private_lane :build_and_upload do |options|
+    prepare_signing
+    profile_name = installed_profile_name
+    write_export_options(profile_name: profile_name)
+    flutter_build_ipa
+    upload_ipa(external: options[:external], release_notes: options[:release_notes])
+  end
+
+  private_lane :prepare_signing do
+    keychain_password = ENV.fetch("IOS_KEYCHAIN_PASSWORD")
+
+    create_keychain(
+      name: KEYCHAIN_NAME,
+      password: keychain_password,
+      default_keychain: true,
+      unlock: true,
+      timeout: 3600,
+      lock_when_sleeps: false,
+      add_to_search_list: true,
+    )
+
+    import_certificate(
+      certificate_path: ENV.fetch("IOS_CERT_PATH"),
+      certificate_password: ENV.fetch("IOS_CERT_PASSWORD"),
+      keychain_name: KEYCHAIN_NAME,
+      keychain_password: keychain_password,
+    )
+
+    install_provisioning_profile(path: ENV.fetch("IOS_PROVISIONING_PROFILE_PATH"))
+  end
+
+  private_lane :installed_profile_name do
+    profile_path = ENV.fetch("IOS_PROVISIONING_PROFILE_PATH")
+    plist_xml = sh("security", "cms", "-D", "-i", profile_path, log: false)
+    match = plist_xml.match(%r{<key>Name</key>\s*<string>([^<]+)</string>})
+    UI.user_error!("Could not parse provisioning profile Name from #{profile_path}") unless match
+    match[1]
+  end
+
+  private_lane :write_export_options do |options|
+    profile_name = options[:profile_name]
+    File.write(EXPORT_OPTIONS_PATH, <<~PLIST)
+      <?xml version="1.0" encoding="UTF-8"?>
+      <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+      <plist version="1.0">
+      <dict>
+          <key>method</key>
+          <string>app-store</string>
+          <key>teamID</key>
+          <string>#{TEAM_ID}</string>
+          <key>signingStyle</key>
+          <string>manual</string>
+          <key>provisioningProfiles</key>
+          <dict>
+              <key>#{APP_IDENTIFIER}</key>
+              <string>#{profile_name}</string>
+          </dict>
+          <key>uploadSymbols</key>
+          <true/>
+          <key>stripSwiftSymbols</key>
+          <true/>
+      </dict>
+      </plist>
+    PLIST
+  end
+
+  private_lane :flutter_build_ipa do
+    build_number = (Time.now.to_i / 60).to_s
+    UI.message("Building iOS IPA (build_number=#{build_number})")
+
+    Dir.chdir(FLUTTER_ROOT) do
+      sh("flutter", "build", "ipa",
+         "--release",
+         "--build-number=#{build_number}",
+         "--export-options-plist=#{EXPORT_OPTIONS_PATH}")
+    end
+  end
+
+  private_lane :upload_ipa do |options|
+    api_key = app_store_connect_api_key(
+      key_id: ENV.fetch("IOS_APP_STORE_CONNECT_KEY_ID"),
+      issuer_id: ENV.fetch("IOS_APP_STORE_CONNECT_ISSUER_ID"),
+      key_content: ENV.fetch("IOS_APP_STORE_CONNECT_KEY_CONTENT"),
+      is_key_content_base64: true,
+      in_house: false,
+    )
+
+    ipa_path = Dir.glob(File.join(IPA_OUTPUT_DIR, "*.ipa")).first
+    UI.user_error!("No IPA found in #{IPA_OUTPUT_DIR}") unless ipa_path
+
+    external = options[:external]
+    groups = (ENV["IOS_TESTFLIGHT_EXTERNAL_GROUPS"] || "").split(",").map(&:strip).reject(&:empty?)
+
+    if external && groups.empty?
+      UI.user_error!("IOS_TESTFLIGHT_EXTERNAL_GROUPS must be set (comma-separated) for external distribution")
+    end
+
+    upload_to_testflight(
+      api_key: api_key,
+      ipa: ipa_path,
+      app_identifier: APP_IDENTIFIER,
+      skip_waiting_for_build_processing: !external,
+      distribute_external: external,
+      groups: external ? groups : nil,
+      changelog: options[:release_notes],
+      notify_external_testers: external,
+      reject_build_waiting_for_review: false,
+    )
+  end
+
+  after_all do
+    cleanup_keychain
+  end
+
+  error do |_lane, _exception|
+    cleanup_keychain
+  end
+
+  private_lane :cleanup_keychain do
+    keychain_db = File.expand_path("~/Library/Keychains/#{KEYCHAIN_NAME}-db")
+    delete_keychain(name: KEYCHAIN_NAME) if File.exist?(keychain_db)
+  end
+end

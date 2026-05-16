@@ -1,0 +1,30 @@
+name: Release • Play Store • Internal Testing
+
+on:
+  workflow_dispatch:
+    inputs:
+      runner:
+        description: 'Runner to execute on'
+        type: choice
+        required: true
+        default: self-hosted
+        options:
+          - self-hosted
+          - ubuntu-latest
+      release_notes:
+        description: 'Release notes shown to testers (optional)'
+        type: string
+        required: false
+        default: ''
+
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    uses: ./.github/workflows/_release_android.yml
+    with:
+      lane: internal
+      runner: ${{ inputs.runner }}
+      release_notes: ${{ inputs.release_notes }}
+    secrets: inherit

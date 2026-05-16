@@ -1,0 +1,61 @@
+default_platform(:android)
+
+PACKAGE_NAME = "app.zamaj"
+FLUTTER_ROOT = File.expand_path("../..", __dir__)
+AAB_PATH = File.join(FLUTTER_ROOT, "build/app/outputs/bundle/release/app-release.aab")
+
+platform :android do
+  desc "Upload a new build to the Internal Testing track"
+  lane :internal do |options|
+    deploy(track: "internal", release_notes: options[:release_notes])
+  end
+
+  desc "Upload a new build to the Closed Testing (alpha) track"
+  lane :closed do |options|
+    deploy(track: "alpha", release_notes: options[:release_notes])
+  end
+
+  desc "Upload a new build to the Open Testing (beta) track"
+  lane :open do |options|
+    deploy(track: "beta", release_notes: options[:release_notes])
+  end
+
+  private_lane :deploy do |options|
+    track = options[:track]
+    release_notes = options[:release_notes]
+    build_number = (Time.now.to_i / 60).to_s
+
+    UI.message("Building Android App Bundle (build_number=#{build_number}) for track=#{track}")
+
+    Dir.chdir(FLUTTER_ROOT) do
+      sh("flutter", "build", "appbundle",
+         "--release",
+         "--build-number=#{build_number}")
+    end
+
+    UI.user_error!("AAB not found at #{AAB_PATH}") unless File.exist?(AAB_PATH)
+
+    upload_args = {
+      track: track,
+      aab: AAB_PATH,
+      package_name: PACKAGE_NAME,
+      json_key_data: ENV.fetch("ANDROID_PLAY_STORE_SERVICE_ACCOUNT_JSON"),
+      skip_upload_apk: true,
+      skip_upload_metadata: true,
+      skip_upload_images: true,
+      skip_upload_screenshots: true,
+      release_status: "completed",
+    }
+
+    if release_notes && !release_notes.strip.empty?
+      changelog_dir = File.join(__dir__, "metadata/android/en-US/changelogs")
+      FileUtils.mkdir_p(changelog_dir)
+      File.write(File.join(changelog_dir, "default.txt"), release_notes)
+      upload_args[:skip_upload_changelogs] = false
+    else
+      upload_args[:skip_upload_changelogs] = true
+    end
+
+    upload_to_play_store(**upload_args)
+  end
+end
