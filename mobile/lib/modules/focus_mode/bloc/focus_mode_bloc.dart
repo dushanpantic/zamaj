@@ -45,7 +45,6 @@ class FocusModeBloc extends Bloc<FocusModeEvent, FocusModeState> {
 
     on<FocusModeSetCompleted>(_onSetCompleted);
     on<FocusModeUndoRequested>(_onUndoRequested);
-    on<FocusModeUndoExpired>(_onUndoExpired);
 
     on<FocusModeExerciseSkipped>(_onExerciseSkipped);
     on<FocusModeExerciseReplaced>(_onExerciseReplaced);
@@ -407,17 +406,6 @@ class FocusModeBloc extends Bloc<FocusModeEvent, FocusModeState> {
           latest.copyWith(mutationInFlight: false, lastTransientError: () => e),
         );
       }
-    }
-  }
-
-  Future<void> _onUndoExpired(
-    FocusModeUndoExpired event,
-    Emitter<FocusModeState> emit,
-  ) async {
-    final current = state;
-    if (current is! FocusModeReady) return;
-    if (current.undoable?.executedSetId == event.executedSetId) {
-      emit(current.copyWith(undoable: () => null));
     }
   }
 

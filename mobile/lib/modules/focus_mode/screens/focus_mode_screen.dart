@@ -30,26 +30,10 @@ class FocusModeScreen extends StatefulWidget {
 }
 
 class _FocusModeScreenState extends State<FocusModeScreen> {
-  /// Tracks which undoable-set id has already had its snackbar shown so we
-  /// don't replay the snackbar on every rebuild of the same state.
-  String? _shownUndoableSetId;
-
   @override
   Widget build(BuildContext context) {
     final colors = Theme.of(context).appColors;
-    return BlocConsumer<FocusModeBloc, FocusModeState>(
-      listenWhen: (prev, next) {
-        final prevId = _undoableIdOf(prev);
-        final nextId = _undoableIdOf(next);
-        return prevId != nextId && nextId != null;
-      },
-      listener: (context, state) {
-        final undoable = _undoableOf(state);
-        if (undoable == null) return;
-        if (_shownUndoableSetId == undoable.executedSetId) return;
-        _shownUndoableSetId = undoable.executedSetId;
-        _showUndoSnackBar(context, undoable);
-      },
+    return BlocBuilder<FocusModeBloc, FocusModeState>(
       builder: (context, state) {
         return Scaffold(
           backgroundColor: colors.background,
@@ -94,35 +78,6 @@ class _FocusModeScreenState extends State<FocusModeScreen> {
     };
   }
 
-  UndoableSet? _undoableOf(FocusModeState state) => switch (state) {
-    FocusModeReady(:final undoable) => undoable,
-    _ => null,
-  };
-
-  String? _undoableIdOf(FocusModeState state) =>
-      _undoableOf(state)?.executedSetId;
-
-  void _showUndoSnackBar(BuildContext context, UndoableSet undoable) {
-    final bloc = context.read<FocusModeBloc>();
-    final messenger = ScaffoldMessenger.of(context);
-    messenger.hideCurrentSnackBar();
-    messenger
-        .showSnackBar(
-          SnackBar(
-            content: Text('Logged set on ${undoable.exerciseDisplayName}'),
-            duration: const Duration(seconds: 4),
-            action: SnackBarAction(
-              label: 'UNDO',
-              onPressed: () => bloc.add(const FocusModeUndoRequested()),
-            ),
-          ),
-        )
-        .closed
-        .then((_) {
-          if (!mounted) return;
-          bloc.add(FocusModeUndoExpired(undoable.executedSetId));
-        });
-  }
 }
 
 class _ReadyBody extends StatelessWidget {
@@ -198,6 +153,13 @@ class _ReadyBody extends StatelessWidget {
                   ),
                 ),
               ],
+              if (state.undoable != null) ...[
+                const SizedBox(height: AppSpacing.sm),
+                _UndoLastSetButton(
+                  undoable: state.undoable!,
+                  enabled: canMutate,
+                ),
+              ],
               const SizedBox(height: AppSpacing.lg),
               if (vm.upNextExerciseName != null)
                 FocusUpNext(label: 'Up next', detail: vm.upNextExerciseName!)
@@ -219,6 +181,35 @@ class _ReadyBody extends StatelessWidget {
             child: LinearProgressIndicator(minHeight: 2),
           ),
       ],
+    );
+  }
+}
+
+class _UndoLastSetButton extends StatelessWidget {
+  const _UndoLastSetButton({required this.undoable, required this.enabled});
+
+  final UndoableSet undoable;
+  final bool enabled;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = Theme.of(context).appColors;
+    return Align(
+      alignment: Alignment.centerLeft,
+      child: TextButton.icon(
+        onPressed: enabled
+            ? () => context.read<FocusModeBloc>().add(
+                const FocusModeUndoRequested(),
+              )
+            : null,
+        icon: const Icon(Icons.undo),
+        label: Text('Undo last set on ${undoable.exerciseDisplayName}'),
+        style: TextButton.styleFrom(
+          foregroundColor: colors.onSurfaceMuted,
+          minimumSize: const Size(0, AppSpacing.touchMin),
+          padding: const EdgeInsets.symmetric(horizontal: AppSpacing.sm),
+        ),
+      ),
     );
   }
 }

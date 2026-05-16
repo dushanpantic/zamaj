@@ -118,13 +118,6 @@ final class FocusModeUndoRequested extends FocusModeEvent {
   const FocusModeUndoRequested();
 }
 
-final class FocusModeUndoExpired extends FocusModeEvent {
-  const FocusModeUndoExpired(this.executedSetId);
-  final String executedSetId;
-  @override
-  List<Object?> get props => [executedSetId];
-}
-
 // Per-exercise actions accessible from the focus AppBar menu ---------------
 
 final class FocusModeExerciseSkipped extends FocusModeEvent {
