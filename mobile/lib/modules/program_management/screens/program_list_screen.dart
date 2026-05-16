@@ -11,6 +11,8 @@ import 'package:zamaj/modules/program_management/navigation/program_management_r
 import 'package:zamaj/modules/program_management/widgets/confirmation_dialog.dart';
 import 'package:zamaj/modules/program_management/widgets/domain_error_banner.dart';
 import 'package:zamaj/modules/program_management/widgets/program_list_tile.dart';
+import 'package:zamaj/modules/workout_day_picker/models/workout_day_picker_args.dart';
+import 'package:zamaj/modules/workout_day_picker/navigation/workout_day_picker_routes.dart';
 
 class ProgramListScreen extends StatefulWidget {
   const ProgramListScreen({super.key});
@@ -126,7 +128,19 @@ class _ProgramListScreenState extends State<ProgramListScreen> {
                         : _ProgramList(
                             programs: programs,
                             deletionCandidateId: deletionCandidateId,
-                            onTap: (program) =>
+                            onTap: (program) {
+                              if (program.workoutDayIds.isEmpty) {
+                                _navigateToEditor(programId: program.id);
+                              } else {
+                                Navigator.of(context).pushNamed(
+                                  WorkoutDayPickerRoutes.picker,
+                                  arguments: WorkoutDayPickerArgs(
+                                    programId: program.id,
+                                  ),
+                                );
+                              }
+                            },
+                            onEdit: (program) =>
                                 _navigateToEditor(programId: program.id),
                             onDeleteRequested: (program) =>
                                 _onDeleteRequested(program.id),
@@ -259,12 +273,14 @@ class _ProgramList extends StatelessWidget {
     required this.programs,
     required this.deletionCandidateId,
     required this.onTap,
+    required this.onEdit,
     required this.onDeleteRequested,
   });
 
   final List<Program> programs;
   final String? deletionCandidateId;
   final void Function(Program program) onTap;
+  final void Function(Program program) onEdit;
   final void Function(Program program) onDeleteRequested;
 
   @override
@@ -283,6 +299,7 @@ class _ProgramList extends StatelessWidget {
         return ProgramListTile(
           program: program,
           onTap: () => onTap(program),
+          onEdit: () => onEdit(program),
           onDeleteRequested: () => onDeleteRequested(program),
           isDeleting: program.id == deletionCandidateId,
         );

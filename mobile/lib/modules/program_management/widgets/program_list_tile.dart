@@ -3,20 +3,20 @@ import 'package:zamaj/core/app_spacing.dart';
 import 'package:zamaj/core/app_theme.dart';
 import 'package:zamaj/core/app_typography.dart';
 import 'package:zamaj/modules/domain/domain.dart';
-import 'package:zamaj/modules/workout_day_picker/models/workout_day_picker_args.dart';
-import 'package:zamaj/modules/workout_day_picker/navigation/workout_day_picker_routes.dart';
 
 class ProgramListTile extends StatelessWidget {
   const ProgramListTile({
     super.key,
     required this.program,
     required this.onTap,
+    required this.onEdit,
     required this.onDeleteRequested,
     this.isDeleting = false,
   });
 
   final Program program;
   final VoidCallback onTap;
+  final VoidCallback onEdit;
   final VoidCallback onDeleteRequested;
   final bool isDeleting;
 
@@ -72,13 +72,36 @@ class ProgramListTile extends StatelessWidget {
                 ),
               )
             else
-              IconButton(
-                onPressed: () => Navigator.of(context).pushNamed(
-                  WorkoutDayPickerRoutes.picker,
-                  arguments: WorkoutDayPickerArgs(programId: program.id),
-                ),
-                icon: Icon(Icons.play_arrow_rounded, color: colors.primary),
-                tooltip: 'Train',
+              PopupMenuButton<_TileAction>(
+                tooltip: 'More actions',
+                icon: Icon(Icons.more_vert, color: colors.onSurfaceMuted),
+                onSelected: (action) {
+                  switch (action) {
+                    case _TileAction.edit:
+                      onEdit();
+                    case _TileAction.delete:
+                      onDeleteRequested();
+                  }
+                },
+                itemBuilder: (context) => [
+                  const PopupMenuItem(
+                    value: _TileAction.edit,
+                    child: ListTile(
+                      leading: Icon(Icons.edit_outlined),
+                      title: Text('Edit'),
+                    ),
+                  ),
+                  PopupMenuItem(
+                    value: _TileAction.delete,
+                    child: ListTile(
+                      leading: Icon(Icons.delete_outline, color: colors.error),
+                      title: Text(
+                        'Delete',
+                        style: TextStyle(color: colors.error),
+                      ),
+                    ),
+                  ),
+                ],
               ),
           ],
         ),
@@ -112,3 +135,5 @@ class ProgramListTile extends StatelessWidget {
     return '${local.year}-${local.month.toString().padLeft(2, '0')}-${local.day.toString().padLeft(2, '0')}';
   }
 }
+
+enum _TileAction { edit, delete }
