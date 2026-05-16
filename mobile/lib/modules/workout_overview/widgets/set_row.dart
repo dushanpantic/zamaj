@@ -81,41 +81,43 @@ class _SetRowState extends State<SetRow> {
   @override
   void didUpdateWidget(covariant SetRow oldWidget) {
     super.didUpdateWidget(oldWidget);
-    final justExpanded = widget.isExpanded && !oldWidget.isExpanded;
-    final executedChanged =
-        widget.viewModel.executedSet?.id != oldWidget.viewModel.executedSet?.id;
-    if (justExpanded || executedChanged) {
-      _seedFromViewModel();
-    }
+    // Mirror focus mode: refresh the editor from the latest view model on
+    // every update, except when the user is mid-edit on this row (still
+    // expanded and the executed set hasn't changed under them).
+    final stillEditing =
+        oldWidget.isExpanded &&
+        widget.isExpanded &&
+        widget.viewModel.executedSet?.id == oldWidget.viewModel.executedSet?.id;
+    if (stillEditing) return;
+    _seedFromViewModel();
   }
 
   void _seedFromViewModel() {
-    final executed = widget.viewModel.executedSet?.actualValues;
-    final planned = widget.viewModel.plannedValues;
+    final vm = widget.viewModel;
+    final seed =
+        vm.executedSet?.actualValues ??
+        vm.suggestedActualValues ??
+        _plannedAsActual(vm.plannedValues);
     switch (widget.measurementType) {
       case RepBasedMeasurement():
-        final (weight, reps) = switch (executed) {
-          ActualRepBased(:final weightKg, :final reps) => (weightKg, reps),
-          null => switch (planned) {
-            PlannedRepBased(:final weightKg, :final reps) => (weightKg, reps),
-            PlannedTimeBased() || null => (0.0, 0),
-          },
-          ActualTimeBased() => (0.0, 0),
-        };
-        _weight.text = WeightFormatter.formatKg(weight);
-        _reps.text = reps.toString();
+        final rb = seed is ActualRepBased ? seed : null;
+        _weight.text = WeightFormatter.formatKg(rb?.weightKg ?? 0);
+        _reps.text = (rb?.reps ?? 0).toString();
       case TimeBasedMeasurement():
-        final seconds = switch (executed) {
-          ActualTimeBased(:final durationSeconds) => durationSeconds,
-          null => switch (planned) {
-            PlannedTimeBased(:final durationSeconds) => durationSeconds,
-            PlannedRepBased() || null => 0,
-          },
-          ActualRepBased() => 0,
-        };
-        _duration.text = seconds.toString();
+        final tb = seed is ActualTimeBased ? seed : null;
+        _duration.text = (tb?.durationSeconds ?? 0).toString();
     }
   }
+
+  static ActualSetValues? _plannedAsActual(PlannedSetValues? planned) =>
+      switch (planned) {
+        PlannedRepBased(:final weightKg, :final reps) =>
+          ActualSetValues.repBased(weightKg: weightKg, reps: reps),
+        PlannedTimeBased(:final durationSeconds) => ActualSetValues.timeBased(
+          durationSeconds: durationSeconds,
+        ),
+        null => null,
+      };
 
   @override
   void dispose() {

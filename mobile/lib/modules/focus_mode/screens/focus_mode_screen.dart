@@ -77,7 +77,6 @@ class _FocusModeScreenState extends State<FocusModeScreen> {
       FocusModeReady() => _ReadyBody(state: state),
     };
   }
-
 }
 
 class _ReadyBody extends StatelessWidget {

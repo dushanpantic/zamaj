@@ -16,5 +16,6 @@ abstract class SetRowViewModel with _$SetRowViewModel {
     required String? plannedSetIdInSnapshot,
     required ExecutedSet? executedSet,
     required bool isNextLogTarget,
+    ActualSetValues? suggestedActualValues,
   }) = _SetRowViewModel;
 }

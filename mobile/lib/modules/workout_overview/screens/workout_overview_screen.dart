@@ -156,11 +156,22 @@ class _WorkoutOverviewScreenState extends State<WorkoutOverviewScreen> {
     Navigator.of(context).pushNamed(SessionRoutes.focus, arguments: sessionId);
   }
 
+  static Cursor? _cursorOf(WorkoutOverviewState s) =>
+      s is WorkoutOverviewLoaded ? s.sessionState.cursor : null;
+
   @override
   Widget build(BuildContext context) {
     final colors = Theme.of(context).appColors;
 
-    return BlocBuilder<WorkoutOverviewBloc, WorkoutOverviewState>(
+    return BlocConsumer<WorkoutOverviewBloc, WorkoutOverviewState>(
+      listenWhen: (p, c) => _cursorOf(p) != _cursorOf(c),
+      listener: (context, state) {
+        final cursor = _cursorOf(state);
+        if (cursor is! ActiveCursor) return;
+        setState(() {
+          _expandedSetPositions[cursor.sessionExerciseId] = cursor.setIndex;
+        });
+      },
       builder: (context, state) {
         return Scaffold(
           backgroundColor: colors.background,

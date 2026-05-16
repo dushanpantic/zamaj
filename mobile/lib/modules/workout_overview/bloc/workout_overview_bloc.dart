@@ -354,18 +354,27 @@ class WorkoutOverviewBloc
     return <String>{};
   }
 
-  /// Keeps user-driven expansions and additionally ensures the new cursor
-  /// target is open after a mutation. Skipped/replaced/completed exercises
-  /// keep their explicit expansion state — the user decides when to fold
-  /// them away.
+  /// Drops exercises that have reached a terminal state with all sets done,
+  /// then ensures the new cursor target is open. Auto-collapsing done
+  /// exercises mirrors focus mode's behavior of moving on once finished.
   Set<String> _expansionWithCursor(
     Set<String> current,
     SessionState sessionState,
   ) {
+    final kept = <String>{
+      for (final ex in sessionState.session.sessionExercises)
+        if (current.contains(ex.id) &&
+            switch (ex.state) {
+              UnfinishedState() => true,
+              ReplacedState(:final substitute) =>
+                ex.executedSets.length < substitute.setCount,
+              CompletedState() || SkippedState() => false,
+            })
+          ex.id,
+    };
     final cursor = sessionState.cursor;
-    if (cursor is! ActiveCursor) return current;
-    if (current.contains(cursor.sessionExerciseId)) return current;
-    return {...current, cursor.sessionExerciseId};
+    if (cursor is ActiveCursor) kept.add(cursor.sessionExerciseId);
+    return kept;
   }
 
   String? _sessionIdOrNull() => switch (state) {
