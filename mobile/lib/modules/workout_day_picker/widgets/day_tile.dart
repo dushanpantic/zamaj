@@ -4,6 +4,7 @@ import 'package:zamaj/core/app_theme.dart';
 import 'package:zamaj/core/app_typography.dart';
 import 'package:zamaj/modules/program_management/services/domain_error_presenter.dart';
 import 'package:zamaj/modules/workout_day_picker/models/day_view_model.dart';
+import 'package:zamaj/modules/workout_day_picker/widgets/day_recommendation_badge.dart';
 import 'package:zamaj/modules/workout_day_picker/widgets/day_tile_history_labels.dart';
 import 'package:zamaj/modules/workout_day_picker/widgets/start_resume_action_button.dart';
 
@@ -53,13 +54,27 @@ class DayTile extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  day.name,
-                  style: typography.titleSmall.copyWith(
-                    color: colors.onSurface,
-                  ),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    Flexible(
+                      child: Text(
+                        day.name,
+                        style: typography.titleSmall.copyWith(
+                          color: colors.onSurface,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                    if (viewModel.status case DayTileLoaded(:final summary)) ...[
+                      const SizedBox(width: AppSpacing.sm),
+                      DayRecommendationBadge(
+                        summary: summary,
+                        referenceNow: referenceNow,
+                      ),
+                    ],
+                  ],
                 ),
                 const SizedBox(height: AppSpacing.xs),
                 Text(

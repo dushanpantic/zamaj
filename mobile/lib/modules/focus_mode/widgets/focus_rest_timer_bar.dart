@@ -8,7 +8,8 @@ import 'package:zamaj/modules/focus_mode/models/rest_timer_view_model.dart';
 ///
 /// Shows mm:ss elapsed (or remaining when a plan exists), with controls for
 /// pause/resume, +15s, and skip. Tints orange normally, red once overtime.
-/// Persistence and foreground notifications land in spec 7.
+/// Buttons are sized to [AppSpacing.touchMin] so sweaty mid-set fingers don't
+/// miss. Persistence and foreground notifications land in spec 7.
 class FocusRestTimerBar extends StatelessWidget {
   const FocusRestTimerBar({
     super.key,
@@ -52,11 +53,7 @@ class FocusRestTimerBar extends StatelessWidget {
           const SizedBox(width: AppSpacing.sm),
           Text(
             '$prefix${_formatMmss(displaySeconds)}',
-            style: typography.numeric.copyWith(
-              color: tint,
-              fontSize: 22,
-              fontWeight: FontWeight.w700,
-            ),
+            style: typography.numericMd.copyWith(color: tint),
           ),
           const SizedBox(width: AppSpacing.xs),
           Text(
@@ -69,13 +66,16 @@ class FocusRestTimerBar extends StatelessWidget {
             onPressed: onPauseToggle,
             icon: Icon(timer.isPaused ? Icons.play_arrow : Icons.pause),
             color: colors.onSurface,
-            visualDensity: VisualDensity.compact,
+            constraints: const BoxConstraints(
+              minWidth: AppSpacing.touchMin,
+              minHeight: AppSpacing.touchMin,
+            ),
           ),
           TextButton(
             onPressed: onExtend,
             style: TextButton.styleFrom(
-              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.sm),
-              minimumSize: const Size(0, 32),
+              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
+              minimumSize: const Size(0, AppSpacing.touchMin),
               foregroundColor: colors.onSurface,
             ),
             child: const Text('+15'),
@@ -83,8 +83,8 @@ class FocusRestTimerBar extends StatelessWidget {
           TextButton(
             onPressed: onSkip,
             style: TextButton.styleFrom(
-              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.sm),
-              minimumSize: const Size(0, 32),
+              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
+              minimumSize: const Size(0, AppSpacing.touchMin),
               foregroundColor: colors.onSurfaceMuted,
             ),
             child: const Text('Skip'),

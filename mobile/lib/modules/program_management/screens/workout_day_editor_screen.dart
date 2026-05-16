@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:zamaj/core/app_colors.dart';
 import 'package:zamaj/core/app_spacing.dart';
 import 'package:zamaj/core/app_theme.dart';
+import 'package:zamaj/core/app_typography.dart';
 import 'package:zamaj/core/rest_formatter.dart';
 import 'package:zamaj/core/weight_formatter.dart';
 import 'package:zamaj/modules/domain/domain.dart';
@@ -154,10 +155,8 @@ class _NotFoundView extends StatelessWidget {
               const SizedBox(height: AppSpacing.lg),
               Text(
                 'Workout day not found.',
-                style: TextStyle(
+                style: AppTypography.standard.titleSmall.copyWith(
                   color: colors.onBackground,
-                  fontSize: 16,
-                  fontWeight: FontWeight.w600,
                 ),
                 textAlign: TextAlign.center,
               ),
@@ -265,15 +264,17 @@ class _NameField extends StatelessWidget {
     return TextField(
       controller: controller,
       onChanged: onChanged,
-      style: TextStyle(color: colors.onSurface, fontSize: 16),
+      style: AppTypography.standard.body.copyWith(color: colors.onSurface),
       decoration: InputDecoration(
         hintText: 'Day name',
-        hintStyle: TextStyle(color: colors.onSurfaceMuted),
+        hintStyle: AppTypography.standard.body.copyWith(
+          color: colors.onSurfaceMuted,
+        ),
         border: InputBorder.none,
         errorText: isValid || controller.text.isEmpty
             ? null
             : 'Name must be 1–100 characters',
-        errorStyle: TextStyle(color: colors.error, fontSize: 11),
+        errorStyle: AppTypography.standard.caption.copyWith(color: colors.error),
       ),
       maxLength: 100,
       buildCounter:
@@ -307,7 +308,9 @@ class _ExerciseList extends StatelessWidget {
               const SizedBox(height: AppSpacing.lg),
               Text(
                 'No exercises yet.\nTap + to add one.',
-                style: TextStyle(color: colors.onSurfaceMuted, fontSize: 14),
+                style: AppTypography.standard.bodySmall.copyWith(
+                  color: colors.onSurfaceMuted,
+                ),
                 textAlign: TextAlign.center,
               ),
             ],
@@ -530,11 +533,7 @@ class _ExerciseTileContent extends StatelessWidget {
       children: [
         Text(
           exercise.name.isEmpty ? 'Unnamed exercise' : exercise.name,
-          style: TextStyle(
-            color: colors.onSurface,
-            fontSize: 14,
-            fontWeight: FontWeight.w500,
-          ),
+          style: AppTypography.standard.label.copyWith(color: colors.onSurface),
         ),
         const SizedBox(height: 2),
         Row(
@@ -542,7 +541,9 @@ class _ExerciseTileContent extends StatelessWidget {
             Flexible(
               child: Text(
                 subtitle,
-                style: TextStyle(color: colors.onSurfaceMuted, fontSize: 12),
+                style: AppTypography.standard.caption.copyWith(
+                  color: colors.onSurfaceMuted,
+                ),
                 overflow: TextOverflow.ellipsis,
               ),
             ),
@@ -632,10 +633,8 @@ class _RestChip extends StatelessWidget {
         const SizedBox(width: 2),
         Text(
           RestFormatter.format(seconds),
-          style: TextStyle(
+          style: AppTypography.standard.numericXs.copyWith(
             color: colors.onSurfaceMuted,
-            fontSize: 12,
-            fontFeatures: const [FontFeature.tabularFigures()],
           ),
         ),
       ],
@@ -696,10 +695,8 @@ class _SupersetCard extends StatelessWidget {
                   ),
                   child: Text(
                     'Superset',
-                    style: TextStyle(
+                    style: AppTypography.standard.badge.copyWith(
                       color: colors.onSurfaceMuted,
-                      fontSize: 12,
-                      fontWeight: FontWeight.w600,
                     ),
                   ),
                 ),
@@ -905,7 +902,9 @@ class _SaveErrorBanner extends StatelessWidget {
           Expanded(
             child: Text(
               'Failed to save. Please try again.',
-              style: TextStyle(color: colors.error, fontSize: 13),
+              style: AppTypography.standard.labelSmall.copyWith(
+                color: colors.error,
+              ),
             ),
           ),
         ],

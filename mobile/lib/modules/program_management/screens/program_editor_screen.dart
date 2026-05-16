@@ -198,12 +198,16 @@ class _ProgramEditorScreenState extends State<ProgramEditorScreen> {
             children: [
               Text(
                 'Program not found',
-                style: TextStyle(color: colors.onSurface, fontSize: 18),
+                style: AppTypography.standard.titleSmall.copyWith(
+                  color: colors.onSurface,
+                ),
               ),
               const SizedBox(height: AppSpacing.sm),
               Text(
                 programId,
-                style: TextStyle(color: colors.onSurfaceMuted, fontSize: 12),
+                style: AppTypography.standard.caption.copyWith(
+                  color: colors.onSurfaceMuted,
+                ),
               ),
               const SizedBox(height: AppSpacing.xl),
               TextButton(

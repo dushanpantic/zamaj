@@ -152,6 +152,56 @@ class DriftSessionRepository implements SessionRepository {
   }
 
   @override
+  Future<domain.Session?> getActiveSession() async {
+    final row =
+        await (_db.select(_db.sessions)
+              ..where((t) => t.endedAtMs.isNull())
+              ..orderBy([(t) => OrderingTerm.desc(t.startedAtMs)])
+              ..limit(1))
+            .getSingleOrNull();
+    if (row == null) return null;
+    return _buildSession(row);
+  }
+
+  @override
+  Stream<domain.Session?> watchActiveSession() {
+    final triggers = _db.tableUpdates(
+      TableUpdateQuery.onAllTables([
+        _db.sessions,
+        _db.sessionExercises,
+        _db.executedSets,
+        _db.sessionNotes,
+        _db.extraWorkItems,
+      ]),
+    );
+    final controller = StreamController<domain.Session?>();
+    StreamSubscription<void>? sub;
+    var lastInFlight = false;
+
+    Future<void> push() async {
+      if (lastInFlight) return;
+      lastInFlight = true;
+      try {
+        final value = await getActiveSession();
+        if (!controller.isClosed) controller.add(value);
+      } finally {
+        lastInFlight = false;
+      }
+    }
+
+    controller.onListen = () {
+      push();
+      sub = triggers.listen((_) => push());
+    };
+    controller.onCancel = () async {
+      await sub?.cancel();
+      sub = null;
+      await controller.close();
+    };
+    return controller.stream;
+  }
+
+  @override
   Future<domain.Session> getSessionByExerciseId(
     String sessionExerciseId,
   ) async {

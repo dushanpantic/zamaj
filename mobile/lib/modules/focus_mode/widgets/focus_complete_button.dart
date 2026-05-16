@@ -39,14 +39,7 @@ class FocusCompleteButton extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Text(
-              label,
-              style: typography.label.copyWith(
-                fontSize: 18,
-                fontWeight: FontWeight.w700,
-                letterSpacing: 0.5,
-              ),
-            ),
+            Text(label, style: typography.actionLabel),
             if (subLabel != null) ...[
               const SizedBox(height: 2),
               Text(

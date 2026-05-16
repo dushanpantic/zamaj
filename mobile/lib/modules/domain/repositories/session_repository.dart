@@ -21,6 +21,18 @@ abstract class SessionRepository {
   Future<Session> getSessionByExecutedSetId(String executedSetId);
   Future<List<Session>> listSessionsForWorkoutDay(String workoutDayId);
 
+  /// Returns the currently in-flight session (one whose `endedAt` is null), or
+  /// null when no session is active. If — defensively — more than one row has
+  /// `endedAt == null`, returns the most recently started one.
+  Future<Session?> getActiveSession();
+
+  /// Reactive read of the currently in-flight session. Emits the latest
+  /// in-flight [Session] (or null when none is active) on subscribe, then
+  /// re-emits whenever session-related rows change. Used by the global
+  /// "session in flight" banner to surface a resume affordance from anywhere
+  /// in the app.
+  Stream<Session?> watchActiveSession();
+
   /// Reactive read of a session. Emits the current value immediately, then
   /// re-emits whenever the session or any of its related rows (exercises,
   /// executed sets, notes, extra work) change. Emits `null` when the session

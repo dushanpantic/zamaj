@@ -40,7 +40,23 @@ class ExerciseEditorBloc
   final _uuid = const Uuid();
 
   Exercise? _baselineExercise;
+  ExerciseDraft? _baselineDraft;
+  String? _baselinePlannedRestInput;
   String? _plannedRestInput;
+
+  /// True when the in-memory draft differs from the loaded baseline. Drives
+  /// the back-press "discard changes?" guard on [ExerciseEditorScreen].
+  ///
+  /// Returns false while the editor is loading, in not-found state, or while
+  /// a save is in flight (the save itself will pop the route on completion).
+  bool get isDirty {
+    final current = state;
+    if (current is! ExerciseEditorEditing) return false;
+    final baselineDraft = _baselineDraft;
+    if (baselineDraft == null) return false;
+    if (current.draft != baselineDraft) return true;
+    return _plannedRestInput != _baselinePlannedRestInput;
+  }
 
   Future<void> _onOpened(
     ExerciseEditorOpened event,
@@ -69,6 +85,8 @@ class ExerciseEditorBloc
       );
     }
     _plannedRestInput = draft.plannedRestSeconds?.toString() ?? '180';
+    _baselineDraft = draft;
+    _baselinePlannedRestInput = _plannedRestInput;
     final validation = _computeValidation(draft);
     emit(ExerciseEditorEditing(draft: draft, validation: validation));
   }

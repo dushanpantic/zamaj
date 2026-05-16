@@ -143,9 +143,8 @@ class _FocusTimeBasedPanelState extends State<FocusTimeBasedPanel> {
                     ? widget.stopwatch.elapsedSeconds
                     : widget.durationSeconds,
               ),
-              style: typography.numericLarge.copyWith(
+              style: typography.numericHero.copyWith(
                 color: isRunning ? colors.primary : colors.onSurface,
-                fontSize: 56,
               ),
             ),
           ),

@@ -267,11 +267,10 @@ class _Header extends StatelessWidget {
         const SizedBox(width: AppSpacing.md),
         Text(
           _actualLabel(viewModel.executedSet, mode),
-          style: typography.numeric.copyWith(
+          style: typography.numericSm.copyWith(
             color: viewModel.executedSet != null
                 ? colors.actual
                 : colors.onSurfaceMuted,
-            fontSize: 14,
           ),
         ),
         const SizedBox(width: AppSpacing.sm),

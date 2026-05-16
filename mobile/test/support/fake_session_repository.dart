@@ -145,6 +145,19 @@ class FakeSessionRepository implements SessionRepository {
   }
 
   @override
+  Future<Session?> getActiveSession() async {
+    final active = _sessions.values.where((s) => s.endedAt == null).toList()
+      ..sort((a, b) => b.startedAt.compareTo(a.startedAt));
+    return active.isEmpty ? null : active.first;
+  }
+
+  @override
+  Stream<Session?> watchActiveSession() async* {
+    yield await getActiveSession();
+    yield* _changeController.stream.asyncMap((_) => getActiveSession());
+  }
+
+  @override
   Future<Session> endSession(String sessionId) async {
     final session = _requireSession(sessionId);
     final now = clock.now().toUtc();

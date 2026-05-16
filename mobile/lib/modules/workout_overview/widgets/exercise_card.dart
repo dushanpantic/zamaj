@@ -222,9 +222,8 @@ class _Header extends StatelessWidget {
                         if (totalPlanned > 0)
                           Text(
                             '$completedCount / $totalPlanned',
-                            style: typography.numeric.copyWith(
+                            style: typography.numericSm.copyWith(
                               color: colors.onSurfaceMuted,
-                              fontSize: 14,
                             ),
                           ),
                       ],
@@ -270,10 +269,7 @@ class _RestIndicator extends StatelessWidget {
         const SizedBox(width: 2),
         Text(
           RestFormatter.format(seconds),
-          style: typography.numeric.copyWith(
-            color: colors.onSurfaceMuted,
-            fontSize: 12,
-          ),
+          style: typography.numericXs.copyWith(color: colors.onSurfaceMuted),
         ),
       ],
     );

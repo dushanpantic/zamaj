@@ -10,6 +10,7 @@ import 'package:zamaj/modules/program_management/bloc/plan_preview/plan_preview_
 import 'package:zamaj/modules/program_management/models/program_editor_draft.dart';
 import 'package:zamaj/modules/program_management/navigation/program_management_routes.dart';
 import 'package:zamaj/modules/program_management/services/text_plan/plan_parse_warning.dart';
+import 'package:zamaj/modules/program_management/widgets/confirmation_dialog.dart';
 import 'package:zamaj/modules/program_management/widgets/domain_error_banner.dart';
 
 class PlanPreviewScreen extends StatefulWidget {
@@ -53,6 +54,20 @@ class _PlanPreviewScreenState extends State<PlanPreviewScreen> {
     }
   }
 
+  Future<void> _handlePop(BuildContext context, bool didPop) async {
+    if (didPop) return;
+    final confirmed = await ConfirmationDialog.show(
+      context: context,
+      title: 'Discard preview?',
+      body: 'The imported plan will not be saved.',
+      confirmLabel: 'Discard',
+      cancelLabel: 'Keep preview',
+      isDestructive: true,
+    );
+    if (!context.mounted || confirmed != true) return;
+    Navigator.of(context).pop();
+  }
+
   Widget _buildScaffold(BuildContext context, PlanPreviewState state) {
     return switch (state) {
       PlanPreviewInitial() => const Scaffold(
@@ -63,14 +78,18 @@ class _PlanPreviewScreenState extends State<PlanPreviewScreen> {
         :final warnings,
         :final lastSaveError,
       ) =>
-        Scaffold(
-          appBar: _buildAppBar(context, enabled: true),
-          body: Column(
-            children: [
-              if (lastSaveError != null)
-                DomainErrorBanner(error: lastSaveError),
-              Expanded(child: _buildPreviewBody(context, draft, warnings)),
-            ],
+        PopScope(
+          canPop: false,
+          onPopInvokedWithResult: (didPop, _) => _handlePop(context, didPop),
+          child: Scaffold(
+            appBar: _buildAppBar(context, enabled: true),
+            body: Column(
+              children: [
+                if (lastSaveError != null)
+                  DomainErrorBanner(error: lastSaveError),
+                Expanded(child: _buildPreviewBody(context, draft, warnings)),
+              ],
+            ),
           ),
         ),
       PlanPreviewSaving(:final draft, :final warnings) => Scaffold(
@@ -78,10 +97,10 @@ class _PlanPreviewScreenState extends State<PlanPreviewScreen> {
         body: Stack(
           children: [
             _buildPreviewBody(context, draft, warnings),
-            const Positioned.fill(
+            Positioned.fill(
               child: ColoredBox(
-                color: Colors.black38,
-                child: Center(child: CircularProgressIndicator()),
+                color: Theme.of(context).appColors.scrim,
+                child: const Center(child: CircularProgressIndicator()),
               ),
             ),
           ],

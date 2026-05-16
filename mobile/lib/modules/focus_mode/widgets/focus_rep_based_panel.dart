@@ -137,9 +137,8 @@ class _FocusRepBasedPanelState extends State<FocusRepBasedPanel> {
               const SizedBox(width: AppSpacing.lg),
               Text(
                 '×',
-                style: typography.numericLarge.copyWith(
+                style: typography.displaySmall.copyWith(
                   color: colors.onSurfaceMuted,
-                  fontSize: 28,
                 ),
               ),
               const SizedBox(width: AppSpacing.lg),
@@ -227,10 +226,7 @@ class _BigNumericField extends StatelessWidget {
             ),
           ],
           onSubmitted: onSubmitted,
-          style: typography.numericLarge.copyWith(
-            color: colors.onSurface,
-            fontSize: 44,
-          ),
+          style: typography.numericHero.copyWith(color: colors.onSurface),
           decoration: InputDecoration(
             isDense: true,
             filled: true,

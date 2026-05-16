@@ -26,6 +26,7 @@ class AppColors {
     required this.exerciseReplaced,
     required this.restTimer,
     required this.restTimerOvertime,
+    required this.scrim,
   });
 
   final Color background;
@@ -55,6 +56,10 @@ class AppColors {
   final Color restTimer;
   final Color restTimerOvertime;
 
+  /// Translucent overlay color for modal/scrim layers behind dialogs and
+  /// saving indicators. Always combined with an alpha around 0.4-0.6.
+  final Color scrim;
+
   static const AppColors dark = AppColors(
     background: Color(0xFF0B0B0E),
     surface: Color(0xFF17171C),
@@ -76,6 +81,7 @@ class AppColors {
     exerciseReplaced: Color(0xFFF59E0B),
     restTimer: Color(0xFFF97316),
     restTimerOvertime: Color(0xFFEF4444),
+    scrim: Color(0xCC000000),
   );
 
   static const AppColors light = AppColors(
@@ -99,5 +105,6 @@ class AppColors {
     exerciseReplaced: Color(0xFFD97706),
     restTimer: Color(0xFFEA580C),
     restTimerOvertime: Color(0xFFDC2626),
+    scrim: Color(0x99000000),
   );
 }

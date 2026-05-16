@@ -251,10 +251,8 @@ class _ReplaceExerciseDialogState extends State<ReplaceExerciseDialog> {
             const SizedBox(height: AppSpacing.lg),
             Text(
               'Measurement',
-              style: TextStyle(
+              style: AppTypography.standard.badge.copyWith(
                 color: colors.onSurfaceMuted,
-                fontSize: 12,
-                fontWeight: FontWeight.w600,
               ),
             ),
             const SizedBox(height: AppSpacing.xs),

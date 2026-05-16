@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:zamaj/core/app_spacing.dart';
 import 'package:zamaj/core/app_theme.dart';
 
+/// Primary action on the Day Picker tile. Filled visual treatment because
+/// "start a workout" is the screen's top user goal; Resume gets the same
+/// emphasis since interrupted sessions are the most-recoverable state.
 class StartResumeActionButton extends StatelessWidget {
   const StartResumeActionButton({
     super.key,
@@ -24,18 +27,29 @@ class StartResumeActionButton extends StatelessWidget {
 
     return SizedBox(
       height: AppSpacing.touchMin,
-      child: OutlinedButton(
+      child: FilledButton.icon(
         onPressed: canTap ? onPressed : null,
-        child: busy
+        icon: busy
             ? SizedBox(
-                width: AppSpacing.lg,
-                height: AppSpacing.lg,
+                width: 16,
+                height: 16,
                 child: CircularProgressIndicator(
                   strokeWidth: 2,
-                  color: colors.primary,
+                  color: colors.onPrimary,
                 ),
               )
-            : Text(label),
+            : Icon(
+                isResume ? Icons.play_arrow : Icons.fitness_center,
+                size: 20,
+              ),
+        label: Text(label),
+        style: FilledButton.styleFrom(
+          backgroundColor: colors.primary,
+          foregroundColor: colors.onPrimary,
+          disabledBackgroundColor: colors.surfaceVariant,
+          disabledForegroundColor: colors.onSurfaceMuted,
+          padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
+        ),
       ),
     );
   }

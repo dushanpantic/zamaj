@@ -90,87 +90,66 @@ class _ReadyBody extends StatelessWidget {
     const typography = AppTypography.standard;
     final vm = state.viewModel;
     final canMutate = !state.mutationInFlight;
+    final isResting = state.restTimer != null;
 
     return Stack(
       children: [
-        SingleChildScrollView(
-          padding: const EdgeInsets.fromLTRB(
-            AppSpacing.lg,
-            AppSpacing.md,
-            AppSpacing.lg,
-            AppSpacing.xl,
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              if (state.lastTransientError != null) ...[
-                _TransientErrorBanner(
-                  error: state.lastTransientError!,
-                  onDismiss: () => context.read<FocusModeBloc>().add(
-                    const FocusModeErrorDismissed(),
-                  ),
+        Column(
+          children: [
+            Expanded(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.fromLTRB(
+                  AppSpacing.lg,
+                  AppSpacing.md,
+                  AppSpacing.lg,
+                  AppSpacing.lg,
                 ),
-                const SizedBox(height: AppSpacing.sm),
-              ],
-              _ExerciseHeader(viewModel: vm),
-              const SizedBox(height: AppSpacing.sm),
-              FocusSetProgress(
-                completed: vm.completedSetsCount,
-                total: vm.totalPlannedSets,
-                currentIndex: vm.currentSetIndex,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    if (state.lastTransientError != null) ...[
+                      _TransientErrorBanner(
+                        error: state.lastTransientError!,
+                        onDismiss: () => context.read<FocusModeBloc>().add(
+                          const FocusModeErrorDismissed(),
+                        ),
+                      ),
+                      const SizedBox(height: AppSpacing.sm),
+                    ],
+                    _ExerciseHeader(viewModel: vm),
+                    const SizedBox(height: AppSpacing.sm),
+                    FocusSetProgress(
+                      completed: vm.completedSetsCount,
+                      total: vm.totalPlannedSets,
+                      currentIndex: vm.currentSetIndex,
+                    ),
+                    const SizedBox(height: AppSpacing.lg),
+                    _PlannedAndLast(viewModel: vm),
+                    const SizedBox(height: AppSpacing.lg),
+                    _CurrentValuesPanel(state: state, canMutate: canMutate),
+                    const SizedBox(height: AppSpacing.lg),
+                    if (vm.upNextExerciseName != null)
+                      FocusUpNext(
+                        label: 'Up next',
+                        detail: vm.upNextExerciseName!,
+                      )
+                    else
+                      Text(
+                        'Last exercise in this session',
+                        style: typography.caption.copyWith(
+                          color: colors.onSurfaceMuted,
+                        ),
+                      ),
+                  ],
+                ),
               ),
-              const SizedBox(height: AppSpacing.lg),
-              _PlannedAndLast(viewModel: vm),
-              const SizedBox(height: AppSpacing.lg),
-              _CurrentValuesPanel(state: state, canMutate: canMutate),
-              const SizedBox(height: AppSpacing.lg),
-              FocusCompleteButton(
-                onPressed: () => context.read<FocusModeBloc>().add(
-                  const FocusModeSetCompleted(),
-                ),
-                label: 'COMPLETE SET',
-                subLabel: vm.totalPlannedSets > 0
-                    ? 'Set ${vm.currentSetIndex + 1}'
-                          '${vm.totalPlannedSets > 0 ? ' of ${vm.totalPlannedSets}' : ''}'
-                    : null,
-                enabled: canMutate,
-              ),
-              if (state.restTimer != null) ...[
-                const SizedBox(height: AppSpacing.md),
-                FocusRestTimerBar(
-                  timer: state.restTimer!,
-                  onPauseToggle: () => context.read<FocusModeBloc>().add(
-                    state.restTimer!.isPaused
-                        ? const FocusModeRestResumed()
-                        : const FocusModeRestPaused(),
-                  ),
-                  onExtend: () => context.read<FocusModeBloc>().add(
-                    const FocusModeRestExtended(),
-                  ),
-                  onSkip: () => context.read<FocusModeBloc>().add(
-                    const FocusModeRestSkipped(),
-                  ),
-                ),
-              ],
-              if (state.undoable != null) ...[
-                const SizedBox(height: AppSpacing.sm),
-                _UndoLastSetButton(
-                  undoable: state.undoable!,
-                  enabled: canMutate,
-                ),
-              ],
-              const SizedBox(height: AppSpacing.lg),
-              if (vm.upNextExerciseName != null)
-                FocusUpNext(label: 'Up next', detail: vm.upNextExerciseName!)
-              else
-                Text(
-                  'Last exercise in this session',
-                  style: typography.caption.copyWith(
-                    color: colors.onSurfaceMuted,
-                  ),
-                ),
-            ],
-          ),
+            ),
+            _PinnedActionBar(
+              state: state,
+              canMutate: canMutate,
+              isResting: isResting,
+            ),
+          ],
         ),
         if (state.mutationInFlight)
           const Positioned(
@@ -180,6 +159,112 @@ class _ReadyBody extends StatelessWidget {
             child: LinearProgressIndicator(minHeight: 2),
           ),
       ],
+    );
+  }
+}
+
+/// Pinned bottom action bar. Always reachable with the thumb during a working
+/// set so the COMPLETE button never scrolls out of view. During rest, the
+/// timer takes visual focus and COMPLETE is demoted to a secondary "Skip rest"
+/// affordance — finishing the rest is the only logical next step.
+class _PinnedActionBar extends StatelessWidget {
+  const _PinnedActionBar({
+    required this.state,
+    required this.canMutate,
+    required this.isResting,
+  });
+
+  final FocusModeReady state;
+  final bool canMutate;
+  final bool isResting;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = Theme.of(context).appColors;
+    final bloc = context.read<FocusModeBloc>();
+    final vm = state.viewModel;
+
+    return Container(
+      decoration: BoxDecoration(
+        color: colors.background,
+        border: Border(top: BorderSide(color: colors.outline)),
+      ),
+      padding: const EdgeInsets.fromLTRB(
+        AppSpacing.lg,
+        AppSpacing.md,
+        AppSpacing.lg,
+        AppSpacing.md,
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          if (isResting) ...[
+            FocusRestTimerBar(
+              timer: state.restTimer!,
+              onPauseToggle: () => bloc.add(
+                state.restTimer!.isPaused
+                    ? const FocusModeRestResumed()
+                    : const FocusModeRestPaused(),
+              ),
+              onExtend: () => bloc.add(const FocusModeRestExtended()),
+              onSkip: () => bloc.add(const FocusModeRestSkipped()),
+            ),
+            const SizedBox(height: AppSpacing.sm),
+            _SkipRestButton(
+              enabled: canMutate,
+              onPressed: () => bloc.add(const FocusModeRestSkipped()),
+            ),
+          ] else
+            FocusCompleteButton(
+              onPressed: () => bloc.add(const FocusModeSetCompleted()),
+              label: 'COMPLETE SET',
+              subLabel: vm.totalPlannedSets > 0
+                  ? 'Set ${vm.currentSetIndex + 1}'
+                        '${vm.totalPlannedSets > 0 ? ' of ${vm.totalPlannedSets}' : ''}'
+                  : null,
+              enabled: canMutate,
+            ),
+          if (state.undoable != null) ...[
+            const SizedBox(height: AppSpacing.xs),
+            _UndoLastSetButton(
+              undoable: state.undoable!,
+              enabled: canMutate,
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+/// Secondary CTA shown beneath the rest timer. While resting, COMPLETE is
+/// demoted; this is the only forward action so it stays prominent (filled
+/// tonal) but visually subordinate to the live timer above.
+class _SkipRestButton extends StatelessWidget {
+  const _SkipRestButton({required this.enabled, required this.onPressed});
+
+  final bool enabled;
+  final VoidCallback onPressed;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = Theme.of(context).appColors;
+    return SizedBox(
+      width: double.infinity,
+      height: AppSpacing.touchMin,
+      child: FilledButton.tonalIcon(
+        onPressed: enabled ? onPressed : null,
+        icon: const Icon(Icons.skip_next, size: 20),
+        label: const Text('Skip rest → next set'),
+        style: FilledButton.styleFrom(
+          backgroundColor: colors.surfaceVariant,
+          foregroundColor: colors.onSurface,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(AppRadius.lg),
+          ),
+        ),
+      ),
     );
   }
 }
@@ -227,10 +312,7 @@ class _ExerciseHeader extends StatelessWidget {
       children: [
         Text(
           viewModel.displayExerciseName,
-          style: typography.display.copyWith(
-            color: colors.onBackground,
-            fontSize: 28,
-          ),
+          style: typography.displaySmall.copyWith(color: colors.onBackground),
           maxLines: 2,
           overflow: TextOverflow.ellipsis,
         ),

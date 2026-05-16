@@ -13,6 +13,7 @@ import 'package:zamaj/modules/program_management/widgets/domain_error_banner.dar
 import 'package:zamaj/modules/program_management/widgets/program_list_tile.dart';
 import 'package:zamaj/modules/workout_day_picker/models/workout_day_picker_args.dart';
 import 'package:zamaj/modules/workout_day_picker/navigation/workout_day_picker_routes.dart';
+import 'package:zamaj/navigation/widgets/session_in_flight_banner.dart';
 
 class ProgramListScreen extends StatefulWidget {
   const ProgramListScreen({super.key});
@@ -99,57 +100,65 @@ class _ProgramListScreenState extends State<ProgramListScreen> {
         icon: const Icon(Icons.add),
         label: const Text('New program'),
       ),
-      body: BlocBuilder<ProgramListBloc, ProgramListState>(
-        builder: (context, state) {
-          return switch (state) {
-            ProgramListInitial() ||
-            ProgramListLoading() => const _LoadingView(),
-            ProgramListFailure(:final error) => _FailureView(
-              error: error,
-              onRetry: () => context.read<ProgramListBloc>().add(
-                const ProgramListRetryRequested(),
-              ),
-            ),
-            ProgramListLoaded(
-              :final programs,
-              :final deletionCandidateId,
-              :final lastDeleteError,
-            ) =>
-              Column(
-                children: [
-                  if (lastDeleteError != null)
-                    DomainErrorBanner(error: lastDeleteError),
-                  Expanded(
-                    child: programs.isEmpty
-                        ? _EmptyView(
-                            onCreateEmpty: () => _navigateToEditor(),
-                            onImport: _navigateToImport,
-                          )
-                        : _ProgramList(
-                            programs: programs,
-                            deletionCandidateId: deletionCandidateId,
-                            onTap: (program) {
-                              if (program.workoutDayIds.isEmpty) {
-                                _navigateToEditor(programId: program.id);
-                              } else {
-                                Navigator.of(context).pushNamed(
-                                  WorkoutDayPickerRoutes.picker,
-                                  arguments: WorkoutDayPickerArgs(
+      body: Column(
+        children: [
+          const SessionInFlightBanner(),
+          Expanded(
+            child: BlocBuilder<ProgramListBloc, ProgramListState>(
+              builder: (context, state) {
+                return switch (state) {
+                  ProgramListInitial() ||
+                  ProgramListLoading() => const _LoadingView(),
+                  ProgramListFailure(:final error) => _FailureView(
+                    error: error,
+                    onRetry: () => context.read<ProgramListBloc>().add(
+                      const ProgramListRetryRequested(),
+                    ),
+                  ),
+                  ProgramListLoaded(
+                    :final programs,
+                    :final deletionCandidateId,
+                    :final lastDeleteError,
+                  ) =>
+                    Column(
+                      children: [
+                        if (lastDeleteError != null)
+                          DomainErrorBanner(error: lastDeleteError),
+                        Expanded(
+                          child: programs.isEmpty
+                              ? _EmptyView(
+                                  onCreateEmpty: () => _navigateToEditor(),
+                                  onImport: _navigateToImport,
+                                )
+                              : _ProgramList(
+                                  programs: programs,
+                                  deletionCandidateId: deletionCandidateId,
+                                  onTap: (program) {
+                                    if (program.workoutDayIds.isEmpty) {
+                                      _navigateToEditor(programId: program.id);
+                                    } else {
+                                      Navigator.of(context).pushNamed(
+                                        WorkoutDayPickerRoutes.picker,
+                                        arguments: WorkoutDayPickerArgs(
+                                          programId: program.id,
+                                        ),
+                                      );
+                                    }
+                                  },
+                                  onEdit: (program) => _navigateToEditor(
                                     programId: program.id,
                                   ),
-                                );
-                              }
-                            },
-                            onEdit: (program) =>
-                                _navigateToEditor(programId: program.id),
-                            onDeleteRequested: (program) =>
-                                _onDeleteRequested(program.id),
-                          ),
-                  ),
-                ],
-              ),
-          };
-        },
+                                  onDeleteRequested: (program) =>
+                                      _onDeleteRequested(program.id),
+                                ),
+                        ),
+                      ],
+                    ),
+                };
+              },
+            ),
+          ),
+        ],
       ),
     );
   }
