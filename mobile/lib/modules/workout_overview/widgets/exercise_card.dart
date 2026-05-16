@@ -3,6 +3,7 @@ import 'package:zamaj/core/app_colors.dart';
 import 'package:zamaj/core/app_spacing.dart';
 import 'package:zamaj/core/app_theme.dart';
 import 'package:zamaj/core/app_typography.dart';
+import 'package:zamaj/core/rest_formatter.dart';
 import 'package:zamaj/modules/domain/domain.dart';
 import 'package:zamaj/modules/workout_overview/models/exercise_view_model.dart';
 import 'package:zamaj/modules/workout_overview/widgets/set_row.dart';
@@ -196,11 +197,26 @@ class _Header extends StatelessWidget {
                     Row(
                       children: [
                         Expanded(
-                          child: Text(
-                            viewModel.plannedSummary,
-                            style: typography.caption.copyWith(
-                              color: colors.onSurfaceMuted,
-                            ),
+                          child: Row(
+                            children: [
+                              Flexible(
+                                child: Text(
+                                  viewModel.plannedSummary,
+                                  style: typography.caption.copyWith(
+                                    color: colors.onSurfaceMuted,
+                                  ),
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ),
+                              if (viewModel.plannedRestSeconds != null) ...[
+                                const SizedBox(width: AppSpacing.sm),
+                                _RestIndicator(
+                                  seconds: viewModel.plannedRestSeconds!,
+                                  typography: typography,
+                                  colors: colors,
+                                ),
+                              ],
+                            ],
                           ),
                         ),
                         if (totalPlanned > 0)
@@ -230,6 +246,36 @@ class _Header extends StatelessWidget {
           ),
         ),
       ),
+    );
+  }
+}
+
+class _RestIndicator extends StatelessWidget {
+  const _RestIndicator({
+    required this.seconds,
+    required this.typography,
+    required this.colors,
+  });
+
+  final int seconds;
+  final AppTypography typography;
+  final AppColors colors;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Icon(Icons.timer_outlined, size: 12, color: colors.onSurfaceMuted),
+        const SizedBox(width: 2),
+        Text(
+          RestFormatter.format(seconds),
+          style: typography.numeric.copyWith(
+            color: colors.onSurfaceMuted,
+            fontSize: 12,
+          ),
+        ),
+      ],
     );
   }
 }

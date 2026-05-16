@@ -3,6 +3,8 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:zamaj/core/app_colors.dart';
 import 'package:zamaj/core/app_spacing.dart';
 import 'package:zamaj/core/app_theme.dart';
+import 'package:zamaj/core/rest_formatter.dart';
+import 'package:zamaj/core/weight_formatter.dart';
 import 'package:zamaj/modules/domain/domain.dart';
 import 'package:zamaj/modules/program_management/bloc/workout_day_editor/workout_day_editor_bloc.dart';
 import 'package:zamaj/modules/program_management/bloc/workout_day_editor/workout_day_editor_event.dart';
@@ -519,12 +521,8 @@ class _ExerciseTileContent extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final setCount = exercise.sets.length;
-    final typeLabel = switch (exercise.measurementType) {
-      RepBasedMeasurement() => 'Rep-based',
-      TimeBasedMeasurement() => 'Time-based',
-    };
-    final subtitle = setCount > 0 ? '$setCount sets · $typeLabel' : typeLabel;
+    final subtitle = _subtitleFor(exercise);
+    final rest = exercise.plannedRestSeconds;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -539,9 +537,90 @@ class _ExerciseTileContent extends StatelessWidget {
           ),
         ),
         const SizedBox(height: 2),
+        Row(
+          children: [
+            Flexible(
+              child: Text(
+                subtitle,
+                style: TextStyle(color: colors.onSurfaceMuted, fontSize: 12),
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+            if (rest != null) ...[
+              const SizedBox(width: AppSpacing.sm),
+              _RestChip(seconds: rest, colors: colors),
+            ],
+          ],
+        ),
+      ],
+    );
+  }
+
+  static String _subtitleFor(ExerciseDraft exercise) {
+    final sets = exercise.sets;
+    final typeLabel = switch (exercise.measurementType) {
+      RepBasedMeasurement() => 'Rep-based',
+      TimeBasedMeasurement() => 'Time-based',
+    };
+    if (sets.isEmpty) return typeLabel;
+
+    final summary = _uniformSummary(sets);
+    if (summary != null) return summary;
+    return '${sets.length} sets · $typeLabel';
+  }
+
+  static String? _uniformSummary(List<PlannedSetDraft> sets) {
+    final first = sets.first.values;
+    switch (first) {
+      case PlannedSetDraftRepBased():
+        double? weight;
+        int? reps;
+        for (final set in sets) {
+          final values = set.values;
+          if (values is! PlannedSetDraftRepBased) return null;
+          final w = double.tryParse(values.weightInput);
+          final r = int.tryParse(values.repsInput);
+          if (w == null || r == null) return null;
+          weight ??= w;
+          reps ??= r;
+          if (w != weight || r != reps) return null;
+        }
+        return '${WeightFormatter.formatKg(weight!)}kg ${sets.length}×$reps';
+      case PlannedSetDraftTimeBased():
+        int? duration;
+        for (final set in sets) {
+          final values = set.values;
+          if (values is! PlannedSetDraftTimeBased) return null;
+          final d = int.tryParse(values.durationInput);
+          if (d == null) return null;
+          duration ??= d;
+          if (d != duration) return null;
+        }
+        return '${sets.length}×${duration}s';
+    }
+  }
+}
+
+class _RestChip extends StatelessWidget {
+  const _RestChip({required this.seconds, required this.colors});
+
+  final int seconds;
+  final AppColors colors;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Icon(Icons.timer_outlined, size: 12, color: colors.onSurfaceMuted),
+        const SizedBox(width: 2),
         Text(
-          subtitle,
-          style: TextStyle(color: colors.onSurfaceMuted, fontSize: 12),
+          RestFormatter.format(seconds),
+          style: TextStyle(
+            color: colors.onSurfaceMuted,
+            fontSize: 12,
+            fontFeatures: const [FontFeature.tabularFigures()],
+          ),
         ),
       ],
     );

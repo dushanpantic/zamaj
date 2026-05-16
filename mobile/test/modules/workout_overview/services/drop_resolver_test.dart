@@ -225,6 +225,7 @@ List<SupersetGroupViewModel> _groups(List<_Spec> specs) {
       plannedSummary: '0 sets',
       plannedMeasurementType: planned.measurementType,
       plannedMetadata: planned.metadata,
+      plannedRestSeconds: null,
       setRows: const <SetRowViewModel>[],
       isCursorTarget: false,
       cursorSetIndex: null,

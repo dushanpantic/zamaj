@@ -49,6 +49,7 @@ abstract final class ExerciseViewModelAssembler {
       plannedSummary: PlannedSummaryFormatter.summarize(planned),
       plannedMeasurementType: planned.measurementType,
       plannedMetadata: planned.metadata,
+      plannedRestSeconds: planned.plannedRestSeconds,
       plannedExerciseName: planned.name,
       setRows: _buildSetRows(sessionExercise, planned, cursor),
       isCursorTarget: isCursorTarget,

@@ -21,6 +21,7 @@ abstract class ExerciseViewModel with _$ExerciseViewModel {
     required String plannedSummary,
     required MeasurementType plannedMeasurementType,
     required ExerciseMetadata plannedMetadata,
+    required int? plannedRestSeconds,
     required List<SetRowViewModel> setRows,
     required bool isCursorTarget,
     required int? cursorSetIndex,
