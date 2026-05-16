@@ -96,59 +96,51 @@ abstract final class ExerciseViewModelAssembler {
     Exercise plannedExercise,
     Cursor cursor,
   ) {
-    // Executed sets are ordered by their LexoRank-style [position] field,
-    // which encodes chronological completion order — not the planned-set
-    // index. So the i-th executed set in this list is the i-th set the user
-    // actually performed; row i pairs it with the i-th planned set.
-    final sortedExecuted = List<ExecutedSet>.of(sessionExercise.executedSets)
-      ..sort((a, b) => a.position.compareTo(b.position));
-
+    // executedSets is already in chronological order (mapper sorts by the
+    // dense ExecutedSet.position). Planned sets live on the template side
+    // and use LexoRank ordering, so sort them once.
+    final executed = sessionExercise.executedSets;
     final state = sessionExercise.state;
     final PlannedSetValues? Function(int) plannedValuesAt;
     final String? Function(int) plannedSetIdAt;
     final int plannedCount;
     if (state is ReplacedState) {
-      final substituteSetCount = state.substitute.setCount;
-      plannedValuesAt = (i) =>
-          i < substituteSetCount ? state.substitute.plannedValues : null;
+      final n = state.substitute.setCount;
+      plannedValuesAt = (i) => i < n ? state.substitute.plannedValues : null;
       plannedSetIdAt = (_) => null;
-      plannedCount = substituteSetCount;
+      plannedCount = n;
     } else {
-      final sortedPlanned = List<WorkoutSet>.of(plannedExercise.sets)
+      final sorted = List<WorkoutSet>.of(plannedExercise.sets)
         ..sort((a, b) => a.position.compareTo(b.position));
       plannedValuesAt = (i) =>
-          i < sortedPlanned.length ? sortedPlanned[i].plannedValues : null;
-      plannedSetIdAt = (i) =>
-          i < sortedPlanned.length ? sortedPlanned[i].id : null;
-      plannedCount = sortedPlanned.length;
+          i < sorted.length ? sorted[i].plannedValues : null;
+      plannedSetIdAt = (i) => i < sorted.length ? sorted[i].id : null;
+      plannedCount = sorted.length;
     }
 
-    final maxIndex = sortedExecuted.length > plannedCount
-        ? sortedExecuted.length
+    final maxIndex = executed.length > plannedCount
+        ? executed.length
         : plannedCount;
-
     final rows = <SetRowViewModel>[];
-    ActualSetValues? lastExecutedActuals;
     for (var i = 0; i < maxIndex; i++) {
-      final plannedValues = plannedValuesAt(i);
-      final executed = i < sortedExecuted.length ? sortedExecuted[i] : null;
-      if (plannedValues == null && executed == null) continue;
+      final planned = plannedValuesAt(i);
+      final exec = i < executed.length ? executed[i] : null;
+      if (planned == null && exec == null) continue;
       rows.add(
         SetRowViewModel(
           position: i,
-          plannedValues: plannedValues,
+          plannedValues: planned,
           plannedSetIdInSnapshot: plannedSetIdAt(i),
-          executedSet: executed,
+          executedSet: exec,
           isNextLogTarget:
               cursor is ActiveCursor &&
               cursor.sessionExerciseId == sessionExercise.id &&
               cursor.setIndex == i,
-          suggestedActualValues: executed == null ? lastExecutedActuals : null,
+          suggestedActualValues: exec == null && executed.isNotEmpty
+              ? executed.last.actualValues
+              : null,
         ),
       );
-      if (executed != null) {
-        lastExecutedActuals = executed.actualValues;
-      }
     }
     return rows;
   }

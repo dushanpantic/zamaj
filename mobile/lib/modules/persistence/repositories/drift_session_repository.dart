@@ -287,18 +287,13 @@ class DriftSessionRepository implements SessionRepository {
         entityId: sessionExerciseId,
       );
 
-      final existingSets =
-          await (_db.select(_db.executedSets)
-                ..where((t) => t.sessionExerciseId.equals(sessionExerciseId))
-                ..orderBy([(t) => OrderingTerm.desc(t.position)]))
-              .get();
+      final existingSets = await (_db.select(
+        _db.executedSets,
+      )..where((t) => t.sessionExerciseId.equals(sessionExerciseId))).get();
 
-      final maxExistingPos = existingSets.isEmpty
-          ? 0
-          : existingSets.first.position;
-      final newSetPosition = existingSets.isEmpty
-          ? _gap
-          : maxExistingPos + _gap;
+      // ExecutedSet.position is a dense chronological index, so the next set
+      // appends at the current count.
+      final newSetPosition = existingSets.length;
 
       final setId = _uuid.v4();
       final now = _clock.now().toUtc();
@@ -487,9 +482,18 @@ class DriftSessionRepository implements SessionRepository {
         _db.executedSets,
       )..where((t) => t.id.equals(executedSetId))).go();
 
-      final remaining = await (_db.select(
-        _db.executedSets,
-      )..where((t) => t.sessionExerciseId.equals(exerciseRow.id))).get();
+      // Renumber to keep positions dense 0..N-1 in chronological order.
+      final remaining =
+          await (_db.select(_db.executedSets)
+                ..where((t) => t.sessionExerciseId.equals(exerciseRow.id))
+                ..orderBy([(t) => OrderingTerm.asc(t.position)]))
+              .get();
+      for (var i = 0; i < remaining.length; i++) {
+        if (remaining[i].position == i) continue;
+        await (_db.update(_db.executedSets)
+              ..where((t) => t.id.equals(remaining[i].id)))
+            .write(ExecutedSetsCompanion(position: Value(i)));
+      }
       final plannedSetCount = _plannedSetCountForExercise(
         exerciseRow,
         sessionRow,

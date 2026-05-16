@@ -26,6 +26,37 @@ abstract final class AppMigrations {
     if (from < 5) {
       await _upgradeSubstitutePayloadsToV3(db);
     }
+    if (from < 6) {
+      await _denseExecutedSetPositions(db);
+    }
+  }
+
+  /// Rewrites `executed_sets.position` from the legacy LexoRank-style values
+  /// (1024, 2048, ...) to dense chronological indices (0, 1, 2, ...) within
+  /// each `session_exercise_id`, preserving the existing relative order.
+  /// ExecutedSets are append-only — they never reorder — so the gap-based
+  /// scheme it inherited from the template side was overkill and caused
+  /// confusion with [WorkoutSet.position].
+  static Future<void> _denseExecutedSetPositions(AppDatabase db) async {
+    if (!await _tableExists(db, 'executed_sets')) return;
+    await db.customStatement(
+      'UPDATE executed_sets '
+      'SET position = ('
+      '  SELECT COUNT(*) FROM executed_sets AS others '
+      '  WHERE others.session_exercise_id = executed_sets.session_exercise_id '
+      '  AND others.position < executed_sets.position'
+      ')',
+    );
+  }
+
+  static Future<bool> _tableExists(AppDatabase db, String table) async {
+    final rows = await db
+        .customSelect(
+          "SELECT name FROM sqlite_master WHERE type='table' AND name = ?",
+          variables: [Variable<String>(table)],
+        )
+        .get();
+    return rows.isNotEmpty;
   }
 
   static Future<bool> _columnExists(

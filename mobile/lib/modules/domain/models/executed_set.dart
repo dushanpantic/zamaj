@@ -7,6 +7,14 @@ import 'package:zamaj/modules/domain/models/measurement_type.dart';
 part 'executed_set.freezed.dart';
 part 'executed_set.g.dart';
 
+/// A set the user actually performed for a session exercise.
+///
+/// [position] is a dense chronological index within the owning
+/// [SessionExercise]: the first logged set has position 0, the second 1, and
+/// so on. The repository keeps positions packed (0..N-1) by renumbering on
+/// delete, so `executedSets[i]` is always the i-th set the user performed.
+/// This is distinct from [WorkoutSet.position], which is a LexoRank-style
+/// ordering value on the *template* side.
 @freezed
 abstract class ExecutedSet with _$ExecutedSet {
   ExecutedSet._() {
