@@ -36,13 +36,32 @@ abstract class WorkoutSet with _$WorkoutSet {
             message: 'reps must be >= 0, got $reps',
           );
         }
-      case (TimeBasedMeasurement(), PlannedTimeBased(:final durationSeconds)):
+      case (
+        TimeBasedMeasurement(),
+        PlannedTimeBased(:final durationSeconds, :final weightKg),
+      ):
         if (durationSeconds < 0) {
           throw ValidationError(
             entityId: id,
             invariant: 'durationSeconds_non_negative',
             message: 'durationSeconds must be >= 0, got $durationSeconds',
           );
+        }
+        if (weightKg != null) {
+          if (weightKg < 0) {
+            throw ValidationError(
+              entityId: id,
+              invariant: 'weightKg_non_negative',
+              message: 'weightKg must be >= 0, got $weightKg',
+            );
+          }
+          if ((weightKg * 2).roundToDouble() != weightKg * 2) {
+            throw ValidationError(
+              entityId: id,
+              invariant: 'weightKg_half_kg_resolution',
+              message: 'weightKg must be a multiple of 0.5, got $weightKg',
+            );
+          }
         }
       case (RepBasedMeasurement(), _):
         throw ValidationError(

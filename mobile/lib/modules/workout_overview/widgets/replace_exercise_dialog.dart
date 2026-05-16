@@ -145,8 +145,11 @@ class _ReplaceExerciseDialogState extends State<ReplaceExerciseDialog> {
       case PlannedRepBased(:final weightKg, :final reps):
         _weight.text = WeightFormatter.formatKg(weightKg);
         _reps.text = reps.toString();
-      case PlannedTimeBased(:final durationSeconds):
+      case PlannedTimeBased(:final durationSeconds, :final weightKg):
         _duration.text = durationSeconds.toString();
+        _weight.text = weightKg == null
+            ? ''
+            : WeightFormatter.formatKg(weightKg);
     }
   }
 
@@ -162,7 +165,19 @@ class _ReplaceExerciseDialogState extends State<ReplaceExerciseDialog> {
       case TimeBasedMeasurement():
         final seconds = int.tryParse(_duration.text.trim());
         if (seconds == null || seconds < 0) return null;
-        return PlannedSetValues.timeBased(durationSeconds: seconds);
+        final weightRaw = _weight.text.trim();
+        double? weightKg;
+        if (weightRaw.isNotEmpty) {
+          final parsed = double.tryParse(weightRaw);
+          if (parsed == null) return null;
+          if (parsed < 0) return null;
+          if ((parsed * 2).roundToDouble() != parsed * 2) return null;
+          weightKg = parsed;
+        }
+        return PlannedSetValues.timeBased(
+          durationSeconds: seconds,
+          weightKg: weightKg,
+        );
     }
   }
 
@@ -202,6 +217,9 @@ class _ReplaceExerciseDialogState extends State<ReplaceExerciseDialog> {
           _reps.text = '0';
         case TimeBasedMeasurement():
           _duration.text = '0';
+          // weight is optional on time-based; leave blank so the user can
+          // opt-in (e.g. weighted deadhang) without being forced to type 0.
+          _weight.text = '';
       }
     });
   }
@@ -358,28 +376,51 @@ class _PlannedFields extends StatelessWidget {
           ],
         );
       case TimeBasedMeasurement():
-        return Row(
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Expanded(
-              child: TextField(
-                controller: durationController,
-                keyboardType: TextInputType.number,
-                inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-                style: numeric,
-                decoration: const InputDecoration(labelText: 'Duration (s)'),
-                onChanged: (_) => onChanged(),
-              ),
+            Row(
+              children: [
+                Expanded(
+                  child: TextField(
+                    controller: durationController,
+                    keyboardType: TextInputType.number,
+                    inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                    style: numeric,
+                    decoration: const InputDecoration(
+                      labelText: 'Duration (s)',
+                    ),
+                    onChanged: (_) => onChanged(),
+                  ),
+                ),
+                const SizedBox(width: AppSpacing.sm),
+                Expanded(
+                  child: TextField(
+                    controller: setsController,
+                    keyboardType: TextInputType.number,
+                    inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                    style: numeric,
+                    decoration: const InputDecoration(labelText: 'Sets'),
+                    onChanged: (_) => onChanged(),
+                  ),
+                ),
+              ],
             ),
-            const SizedBox(width: AppSpacing.sm),
-            Expanded(
-              child: TextField(
-                controller: setsController,
-                keyboardType: TextInputType.number,
-                inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-                style: numeric,
-                decoration: const InputDecoration(labelText: 'Sets'),
-                onChanged: (_) => onChanged(),
+            const SizedBox(height: AppSpacing.sm),
+            TextField(
+              controller: weightController,
+              keyboardType: const TextInputType.numberWithOptions(
+                decimal: true,
               ),
+              inputFormatters: [
+                FilteringTextInputFormatter.allow(RegExp(r'[0-9.]')),
+              ],
+              style: numeric,
+              decoration: const InputDecoration(
+                labelText: 'Added weight (kg)',
+                hintText: 'optional · e.g. 10 for weighted deadhang',
+              ),
+              onChanged: (_) => onChanged(),
             ),
           ],
         );

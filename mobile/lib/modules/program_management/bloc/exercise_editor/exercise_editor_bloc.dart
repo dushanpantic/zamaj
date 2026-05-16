@@ -271,9 +271,15 @@ class ExerciseEditorBloc
     final updated = current.draft.copyWith(
       sets: current.draft.sets.map((s) {
         if (s.draftId != event.setDraftId) return s;
-        final values = s.values;
-        if (values is! PlannedSetDraftRepBased) return s;
-        return s.copyWith(values: values.copyWith(weightInput: event.rawInput));
+        final next = switch (s.values) {
+          final PlannedSetDraftRepBased rep => rep.copyWith(
+            weightInput: event.rawInput,
+          ),
+          final PlannedSetDraftTimeBased tb => tb.copyWith(
+            weightInput: event.rawInput,
+          ),
+        };
+        return s.copyWith(values: next);
       }).toList(),
     );
     final validation = _computeValidation(updated);
@@ -416,9 +422,10 @@ class ExerciseEditorBloc
           weightInput: weightKg.toString(),
           repsInput: reps.toString(),
         ),
-      PlannedTimeBased(:final durationSeconds) =>
+      PlannedTimeBased(:final durationSeconds, :final weightKg) =>
         PlannedSetDraftValues.timeBased(
           durationInput: durationSeconds.toString(),
+          weightInput: weightKg == null ? '' : weightKg.toString(),
         ),
     };
     return PlannedSetDraft(
@@ -436,6 +443,7 @@ class ExerciseEditorBloc
       ),
       TimeBasedMeasurement() => const PlannedSetDraftValues.timeBased(
         durationInput: '',
+        weightInput: '',
       ),
     };
   }
@@ -463,17 +471,28 @@ class ExerciseEditorBloc
           };
         }(),
       (
-        PlannedSetDraftTimeBased(:final durationInput),
+        PlannedSetDraftTimeBased(:final durationInput, :final weightInput),
         TimeBasedMeasurement(),
       ) =>
         () {
-          final result = ProgramValidation.validateTimeBasedSet(durationInput);
-          return switch (result) {
-            Valid(:final value) => PlannedSetValues.timeBased(
-              durationSeconds: value,
-            ),
-            Invalid() => const PlannedSetValues.timeBased(durationSeconds: 0),
+          final durationResult = ProgramValidation.validateTimeBasedSet(
+            durationInput,
+          );
+          final weightResult = ProgramValidation.validateTimeBasedSetWeight(
+            weightInput,
+          );
+          final durationSeconds = switch (durationResult) {
+            Valid(:final value) => value,
+            Invalid() => 0,
           };
+          final weightKg = switch (weightResult) {
+            Valid(:final value) => value,
+            Invalid() => null,
+          };
+          return PlannedSetValues.timeBased(
+            durationSeconds: durationSeconds,
+            weightKg: weightKg,
+          );
         }(),
       (PlannedSetDraftRepBased(), TimeBasedMeasurement()) =>
         const PlannedSetValues.timeBased(durationSeconds: 0),

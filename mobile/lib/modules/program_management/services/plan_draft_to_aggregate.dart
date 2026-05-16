@@ -88,7 +88,11 @@ abstract final class PlanDraftToAggregate {
             ),
           ),
         ),
-      PlanDraftSetTimeBased(:final count, :final durationSeconds) =>
+      PlanDraftSetTimeBased(
+        :final count,
+        :final durationSeconds,
+        :final weightKg,
+      ) =>
         List.generate(
           count,
           (_) => PlannedSetDraft(
@@ -96,6 +100,9 @@ abstract final class PlanDraftToAggregate {
             persistedId: null,
             values: PlannedSetDraftValues.timeBased(
               durationInput: durationSeconds.toString(),
+              weightInput: weightKg == null
+                  ? ''
+                  : WeightFormatter.formatKg(weightKg),
             ),
           ),
         ),

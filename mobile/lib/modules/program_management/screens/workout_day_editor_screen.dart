@@ -588,6 +588,8 @@ class _ExerciseTileContent extends StatelessWidget {
         return '${WeightFormatter.formatKg(weight!)}kg ${sets.length}×$reps';
       case PlannedSetDraftTimeBased():
         int? duration;
+        double? weight;
+        var weightSeen = false;
         for (final set in sets) {
           final values = set.values;
           if (values is! PlannedSetDraftTimeBased) return null;
@@ -595,8 +597,22 @@ class _ExerciseTileContent extends StatelessWidget {
           if (d == null) return null;
           duration ??= d;
           if (d != duration) return null;
+
+          final wInput = values.weightInput.trim();
+          if (wInput.isEmpty) {
+            if (weightSeen && weight != null) return null;
+            weightSeen = true;
+          } else {
+            final w = double.tryParse(wInput);
+            if (w == null) return null;
+            if (weightSeen && weight != w) return null;
+            weight = w;
+            weightSeen = true;
+          }
         }
-        return '${sets.length}×${duration}s';
+        if (weight == null) return '${sets.length}×${duration}s';
+        return '${WeightFormatter.formatKg(weight)}kg '
+            '${sets.length}×${duration}s';
     }
   }
 }

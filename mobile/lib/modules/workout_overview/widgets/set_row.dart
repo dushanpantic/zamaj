@@ -106,6 +106,9 @@ class _SetRowState extends State<SetRow> {
       case TimeBasedMeasurement():
         final tb = seed is ActualTimeBased ? seed : null;
         _duration.text = (tb?.durationSeconds ?? 0).toString();
+        _weight.text = tb?.weightKg != null
+            ? WeightFormatter.formatKg(tb!.weightKg!)
+            : '';
     }
   }
 
@@ -113,9 +116,11 @@ class _SetRowState extends State<SetRow> {
       switch (planned) {
         PlannedRepBased(:final weightKg, :final reps) =>
           ActualSetValues.repBased(weightKg: weightKg, reps: reps),
-        PlannedTimeBased(:final durationSeconds) => ActualSetValues.timeBased(
-          durationSeconds: durationSeconds,
-        ),
+        PlannedTimeBased(:final durationSeconds, :final weightKg) =>
+          ActualSetValues.timeBased(
+            durationSeconds: durationSeconds,
+            weightKg: weightKg,
+          ),
         null => null,
       };
 
@@ -157,7 +162,17 @@ class _SetRowState extends State<SetRow> {
   ActualSetValues? _readTimeBased() {
     final seconds = int.tryParse(_duration.text.trim());
     if (seconds == null || seconds < 0) return null;
-    return ActualSetValues.timeBased(durationSeconds: seconds);
+    final weightRaw = _weight.text.trim();
+    double? weightKg;
+    if (weightRaw.isNotEmpty) {
+      final parsed = double.tryParse(weightRaw);
+      if (parsed == null || parsed < 0) return null;
+      weightKg = (parsed * 2).round() / 2;
+    }
+    return ActualSetValues.timeBased(
+      durationSeconds: seconds,
+      weightKg: weightKg,
+    );
   }
 
   @override
@@ -270,7 +285,10 @@ class _Header extends StatelessWidget {
     return switch (planned) {
       PlannedRepBased(:final weightKg, :final reps) =>
         '${WeightFormatter.formatKg(weightKg)}kg × $reps',
-      PlannedTimeBased(:final durationSeconds) => '${durationSeconds}s',
+      PlannedTimeBased(:final durationSeconds, :final weightKg) =>
+        weightKg == null
+            ? '${durationSeconds}s'
+            : '${WeightFormatter.formatKg(weightKg)}kg × ${durationSeconds}s',
     };
   }
 
@@ -279,7 +297,10 @@ class _Header extends StatelessWidget {
       return switch (executed.actualValues) {
         ActualRepBased(:final weightKg, :final reps) =>
           '${WeightFormatter.formatKg(weightKg)} × $reps',
-        ActualTimeBased(:final durationSeconds) => '${durationSeconds}s',
+        ActualTimeBased(:final durationSeconds, :final weightKg) =>
+          weightKg == null
+              ? '${durationSeconds}s'
+              : '${WeightFormatter.formatKg(weightKg)} × ${durationSeconds}s',
       };
     }
     return switch (mode) {
@@ -367,6 +388,7 @@ class _Editor extends StatelessWidget {
             ),
             TimeBasedMeasurement() => _TimeBasedFields(
               duration: duration,
+              weight: weight,
               onChanged: onChanged,
             ),
           },
@@ -425,19 +447,41 @@ class _RepBasedFields extends StatelessWidget {
 }
 
 class _TimeBasedFields extends StatelessWidget {
-  const _TimeBasedFields({required this.duration, required this.onChanged});
+  const _TimeBasedFields({
+    required this.duration,
+    required this.weight,
+    required this.onChanged,
+  });
 
   final TextEditingController duration;
+  final TextEditingController weight;
   final VoidCallback onChanged;
 
   @override
   Widget build(BuildContext context) {
-    return _NumericField(
-      controller: duration,
-      label: 'seconds',
-      allowDecimal: false,
-      steps: const [-5, 5],
-      onChanged: onChanged,
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Expanded(
+          child: _NumericField(
+            controller: duration,
+            label: 'seconds',
+            allowDecimal: false,
+            steps: const [-5, 5],
+            onChanged: onChanged,
+          ),
+        ),
+        const SizedBox(width: AppSpacing.sm),
+        Expanded(
+          child: _NumericField(
+            controller: weight,
+            label: 'kg (optional)',
+            allowDecimal: true,
+            steps: const [-2.5, 2.5],
+            onChanged: onChanged,
+          ),
+        ),
+      ],
     );
   }
 }

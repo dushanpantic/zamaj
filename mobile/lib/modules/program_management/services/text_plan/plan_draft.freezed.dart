@@ -1096,7 +1096,7 @@ as List<PlanParseWarning>,
 /// @nodoc
 mixin _$PlanDraftSet {
 
- int get count;
+ int get count; double? get weightKg;
 /// Create a copy of PlanDraftSet
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -1107,16 +1107,16 @@ $PlanDraftSetCopyWith<PlanDraftSet> get copyWith => _$PlanDraftSetCopyWithImpl<P
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is PlanDraftSet&&(identical(other.count, count) || other.count == count));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is PlanDraftSet&&(identical(other.count, count) || other.count == count)&&(identical(other.weightKg, weightKg) || other.weightKg == weightKg));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,count);
+int get hashCode => Object.hash(runtimeType,count,weightKg);
 
 @override
 String toString() {
-  return 'PlanDraftSet(count: $count)';
+  return 'PlanDraftSet(count: $count, weightKg: $weightKg)';
 }
 
 
@@ -1127,7 +1127,7 @@ abstract mixin class $PlanDraftSetCopyWith<$Res>  {
   factory $PlanDraftSetCopyWith(PlanDraftSet value, $Res Function(PlanDraftSet) _then) = _$PlanDraftSetCopyWithImpl;
 @useResult
 $Res call({
- int count
+ int count, double weightKg
 });
 
 
@@ -1144,10 +1144,11 @@ class _$PlanDraftSetCopyWithImpl<$Res>
 
 /// Create a copy of PlanDraftSet
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? count = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? count = null,Object? weightKg = null,}) {
   return _then(_self.copyWith(
 count: null == count ? _self.count : count // ignore: cast_nullable_to_non_nullable
-as int,
+as int,weightKg: null == weightKg ? _self.weightKg! : weightKg // ignore: cast_nullable_to_non_nullable
+as double,
   ));
 }
 
@@ -1232,11 +1233,11 @@ return timeBased(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>({TResult Function( int count,  int reps,  double weightKg)?  repBased,TResult Function( int count,  int durationSeconds)?  timeBased,required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>({TResult Function( int count,  int reps,  double weightKg)?  repBased,TResult Function( int count,  int durationSeconds,  double? weightKg)?  timeBased,required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case PlanDraftSetRepBased() when repBased != null:
 return repBased(_that.count,_that.reps,_that.weightKg);case PlanDraftSetTimeBased() when timeBased != null:
-return timeBased(_that.count,_that.durationSeconds);case _:
+return timeBased(_that.count,_that.durationSeconds,_that.weightKg);case _:
   return orElse();
 
 }
@@ -1254,11 +1255,11 @@ return timeBased(_that.count,_that.durationSeconds);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>({required TResult Function( int count,  int reps,  double weightKg)  repBased,required TResult Function( int count,  int durationSeconds)  timeBased,}) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>({required TResult Function( int count,  int reps,  double weightKg)  repBased,required TResult Function( int count,  int durationSeconds,  double? weightKg)  timeBased,}) {final _that = this;
 switch (_that) {
 case PlanDraftSetRepBased():
 return repBased(_that.count,_that.reps,_that.weightKg);case PlanDraftSetTimeBased():
-return timeBased(_that.count,_that.durationSeconds);}
+return timeBased(_that.count,_that.durationSeconds,_that.weightKg);}
 }
 /// A variant of `when` that fallback to returning `null`
 ///
@@ -1272,11 +1273,11 @@ return timeBased(_that.count,_that.durationSeconds);}
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>({TResult? Function( int count,  int reps,  double weightKg)?  repBased,TResult? Function( int count,  int durationSeconds)?  timeBased,}) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>({TResult? Function( int count,  int reps,  double weightKg)?  repBased,TResult? Function( int count,  int durationSeconds,  double? weightKg)?  timeBased,}) {final _that = this;
 switch (_that) {
 case PlanDraftSetRepBased() when repBased != null:
 return repBased(_that.count,_that.reps,_that.weightKg);case PlanDraftSetTimeBased() when timeBased != null:
-return timeBased(_that.count,_that.durationSeconds);case _:
+return timeBased(_that.count,_that.durationSeconds,_that.weightKg);case _:
   return null;
 
 }
@@ -1293,7 +1294,7 @@ class PlanDraftSetRepBased implements PlanDraftSet {
 
 @override final  int count;
  final  int reps;
- final  double weightKg;
+@override final  double weightKg;
 
 /// Create a copy of PlanDraftSet
 /// with the given fields replaced by the non-null parameter values.
@@ -1358,11 +1359,12 @@ as double,
 
 
 class PlanDraftSetTimeBased implements PlanDraftSet {
-  const PlanDraftSetTimeBased({required this.count, required this.durationSeconds});
+  const PlanDraftSetTimeBased({required this.count, required this.durationSeconds, this.weightKg});
   
 
 @override final  int count;
  final  int durationSeconds;
+@override final  double? weightKg;
 
 /// Create a copy of PlanDraftSet
 /// with the given fields replaced by the non-null parameter values.
@@ -1374,16 +1376,16 @@ $PlanDraftSetTimeBasedCopyWith<PlanDraftSetTimeBased> get copyWith => _$PlanDraf
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is PlanDraftSetTimeBased&&(identical(other.count, count) || other.count == count)&&(identical(other.durationSeconds, durationSeconds) || other.durationSeconds == durationSeconds));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is PlanDraftSetTimeBased&&(identical(other.count, count) || other.count == count)&&(identical(other.durationSeconds, durationSeconds) || other.durationSeconds == durationSeconds)&&(identical(other.weightKg, weightKg) || other.weightKg == weightKg));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,count,durationSeconds);
+int get hashCode => Object.hash(runtimeType,count,durationSeconds,weightKg);
 
 @override
 String toString() {
-  return 'PlanDraftSet.timeBased(count: $count, durationSeconds: $durationSeconds)';
+  return 'PlanDraftSet.timeBased(count: $count, durationSeconds: $durationSeconds, weightKg: $weightKg)';
 }
 
 
@@ -1394,7 +1396,7 @@ abstract mixin class $PlanDraftSetTimeBasedCopyWith<$Res> implements $PlanDraftS
   factory $PlanDraftSetTimeBasedCopyWith(PlanDraftSetTimeBased value, $Res Function(PlanDraftSetTimeBased) _then) = _$PlanDraftSetTimeBasedCopyWithImpl;
 @override @useResult
 $Res call({
- int count, int durationSeconds
+ int count, int durationSeconds, double? weightKg
 });
 
 
@@ -1411,11 +1413,12 @@ class _$PlanDraftSetTimeBasedCopyWithImpl<$Res>
 
 /// Create a copy of PlanDraftSet
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? count = null,Object? durationSeconds = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? count = null,Object? durationSeconds = null,Object? weightKg = freezed,}) {
   return _then(PlanDraftSetTimeBased(
 count: null == count ? _self.count : count // ignore: cast_nullable_to_non_nullable
 as int,durationSeconds: null == durationSeconds ? _self.durationSeconds : durationSeconds // ignore: cast_nullable_to_non_nullable
-as int,
+as int,weightKg: freezed == weightKg ? _self.weightKg : weightKg // ignore: cast_nullable_to_non_nullable
+as double?,
   ));
 }
 

@@ -168,7 +168,10 @@ abstract final class SessionExportFormatter {
     return switch (s.actualValues) {
       ActualRepBased(:final weightKg, :final reps) =>
         '${WeightFormatter.formatKg(weightKg)} × $reps',
-      ActualTimeBased(:final durationSeconds) => '${durationSeconds}s',
+      ActualTimeBased(:final durationSeconds, :final weightKg) =>
+        weightKg == null
+            ? '${durationSeconds}s'
+            : '${WeightFormatter.formatKg(weightKg)} × ${durationSeconds}s',
     };
   }
 
@@ -189,8 +192,11 @@ abstract final class SessionExportFormatter {
     return switch (first) {
       PlannedRepBased(:final weightKg, :final reps) =>
         '${WeightFormatter.formatKg(weightKg)}kg ${sets.length} × $reps',
-      PlannedTimeBased(:final durationSeconds) =>
-        '${sets.length} × ${durationSeconds}s',
+      PlannedTimeBased(:final durationSeconds, :final weightKg) =>
+        weightKg == null
+            ? '${sets.length} × ${durationSeconds}s'
+            : '${WeightFormatter.formatKg(weightKg)}kg '
+                  '${sets.length} × ${durationSeconds}s',
     };
   }
 
@@ -198,7 +204,10 @@ abstract final class SessionExportFormatter {
     return switch (s.plannedValues) {
       PlannedRepBased(:final weightKg, :final reps) =>
         '${WeightFormatter.formatKg(weightKg)}kg × $reps',
-      PlannedTimeBased(:final durationSeconds) => '${durationSeconds}s',
+      PlannedTimeBased(:final durationSeconds, :final weightKg) =>
+        weightKg == null
+            ? '${durationSeconds}s'
+            : '${WeightFormatter.formatKg(weightKg)}kg × ${durationSeconds}s',
     };
   }
 
@@ -206,8 +215,11 @@ abstract final class SessionExportFormatter {
     return switch (sub.plannedValues) {
       PlannedRepBased(:final weightKg, :final reps) =>
         '${WeightFormatter.formatKg(weightKg)}kg ${sub.setCount} × $reps',
-      PlannedTimeBased(:final durationSeconds) =>
-        '${sub.setCount} × ${durationSeconds}s',
+      PlannedTimeBased(:final durationSeconds, :final weightKg) =>
+        weightKg == null
+            ? '${sub.setCount} × ${durationSeconds}s'
+            : '${WeightFormatter.formatKg(weightKg)}kg '
+                  '${sub.setCount} × ${durationSeconds}s',
     };
   }
 

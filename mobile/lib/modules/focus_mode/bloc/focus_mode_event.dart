@@ -75,7 +75,10 @@ final class FocusModeDurationBumped extends FocusModeEvent {
 
 final class FocusModeWeightEdited extends FocusModeEvent {
   const FocusModeWeightEdited(this.weightKg);
-  final double weightKg;
+
+  /// `null` clears the weight on a time-based draft. On a rep-based draft
+  /// `null` is treated as `0`.
+  final double? weightKg;
   @override
   List<Object?> get props => [weightKg];
 }

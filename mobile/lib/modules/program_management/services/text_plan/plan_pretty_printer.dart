@@ -49,8 +49,14 @@ abstract final class PlanPrettyPrinter {
     return switch (set) {
       PlanDraftSetRepBased(:final count, :final reps, :final weightKg) =>
         '${count}x$reps ${WeightFormatter.formatKg(weightKg)}kg$restSuffix',
-      PlanDraftSetTimeBased(:final count, :final durationSeconds) =>
-        '${count}x${durationSeconds}s$restSuffix',
+      PlanDraftSetTimeBased(
+        :final count,
+        :final durationSeconds,
+        :final weightKg,
+      ) =>
+        weightKg == null
+            ? '${count}x${durationSeconds}s$restSuffix'
+            : '${count}x${durationSeconds}s ${WeightFormatter.formatKg(weightKg)}kg$restSuffix',
     };
   }
 }

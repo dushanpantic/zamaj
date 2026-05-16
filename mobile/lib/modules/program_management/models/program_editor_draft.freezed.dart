@@ -1479,7 +1479,12 @@ PlannedSetDraftValues _$PlannedSetDraftValuesFromJson(
 /// @nodoc
 mixin _$PlannedSetDraftValues {
 
-
+ String get weightInput;
+/// Create a copy of PlannedSetDraftValues
+/// with the given fields replaced by the non-null parameter values.
+@JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+$PlannedSetDraftValuesCopyWith<PlannedSetDraftValues> get copyWith => _$PlannedSetDraftValuesCopyWithImpl<PlannedSetDraftValues>(this as PlannedSetDraftValues, _$identity);
 
   /// Serializes this PlannedSetDraftValues to a JSON map.
   Map<String, dynamic> toJson();
@@ -1487,24 +1492,50 @@ mixin _$PlannedSetDraftValues {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is PlannedSetDraftValues);
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is PlannedSetDraftValues&&(identical(other.weightInput, weightInput) || other.weightInput == weightInput));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => runtimeType.hashCode;
+int get hashCode => Object.hash(runtimeType,weightInput);
 
 @override
 String toString() {
-  return 'PlannedSetDraftValues()';
+  return 'PlannedSetDraftValues(weightInput: $weightInput)';
 }
 
 
 }
 
 /// @nodoc
-class $PlannedSetDraftValuesCopyWith<$Res>  {
-$PlannedSetDraftValuesCopyWith(PlannedSetDraftValues _, $Res Function(PlannedSetDraftValues) __);
+abstract mixin class $PlannedSetDraftValuesCopyWith<$Res>  {
+  factory $PlannedSetDraftValuesCopyWith(PlannedSetDraftValues value, $Res Function(PlannedSetDraftValues) _then) = _$PlannedSetDraftValuesCopyWithImpl;
+@useResult
+$Res call({
+ String weightInput
+});
+
+
+
+
+}
+/// @nodoc
+class _$PlannedSetDraftValuesCopyWithImpl<$Res>
+    implements $PlannedSetDraftValuesCopyWith<$Res> {
+  _$PlannedSetDraftValuesCopyWithImpl(this._self, this._then);
+
+  final PlannedSetDraftValues _self;
+  final $Res Function(PlannedSetDraftValues) _then;
+
+/// Create a copy of PlannedSetDraftValues
+/// with the given fields replaced by the non-null parameter values.
+@pragma('vm:prefer-inline') @override $Res call({Object? weightInput = null,}) {
+  return _then(_self.copyWith(
+weightInput: null == weightInput ? _self.weightInput : weightInput // ignore: cast_nullable_to_non_nullable
+as String,
+  ));
+}
+
 }
 
 
@@ -1586,11 +1617,11 @@ return timeBased(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>({TResult Function( String weightInput,  String repsInput)?  repBased,TResult Function( String durationInput)?  timeBased,required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>({TResult Function( String weightInput,  String repsInput)?  repBased,TResult Function( String durationInput,  String weightInput)?  timeBased,required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case PlannedSetDraftRepBased() when repBased != null:
 return repBased(_that.weightInput,_that.repsInput);case PlannedSetDraftTimeBased() when timeBased != null:
-return timeBased(_that.durationInput);case _:
+return timeBased(_that.durationInput,_that.weightInput);case _:
   return orElse();
 
 }
@@ -1608,11 +1639,11 @@ return timeBased(_that.durationInput);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>({required TResult Function( String weightInput,  String repsInput)  repBased,required TResult Function( String durationInput)  timeBased,}) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>({required TResult Function( String weightInput,  String repsInput)  repBased,required TResult Function( String durationInput,  String weightInput)  timeBased,}) {final _that = this;
 switch (_that) {
 case PlannedSetDraftRepBased():
 return repBased(_that.weightInput,_that.repsInput);case PlannedSetDraftTimeBased():
-return timeBased(_that.durationInput);}
+return timeBased(_that.durationInput,_that.weightInput);}
 }
 /// A variant of `when` that fallback to returning `null`
 ///
@@ -1626,11 +1657,11 @@ return timeBased(_that.durationInput);}
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>({TResult? Function( String weightInput,  String repsInput)?  repBased,TResult? Function( String durationInput)?  timeBased,}) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>({TResult? Function( String weightInput,  String repsInput)?  repBased,TResult? Function( String durationInput,  String weightInput)?  timeBased,}) {final _that = this;
 switch (_that) {
 case PlannedSetDraftRepBased() when repBased != null:
 return repBased(_that.weightInput,_that.repsInput);case PlannedSetDraftTimeBased() when timeBased != null:
-return timeBased(_that.durationInput);case _:
+return timeBased(_that.durationInput,_that.weightInput);case _:
   return null;
 
 }
@@ -1645,7 +1676,7 @@ class PlannedSetDraftRepBased implements PlannedSetDraftValues {
   const PlannedSetDraftRepBased({required this.weightInput, required this.repsInput, final  String? $type}): $type = $type ?? 'repBased';
   factory PlannedSetDraftRepBased.fromJson(Map<String, dynamic> json) => _$PlannedSetDraftRepBasedFromJson(json);
 
- final  String weightInput;
+@override final  String weightInput;
  final  String repsInput;
 
 @JsonKey(name: 'type')
@@ -1654,7 +1685,7 @@ final String $type;
 
 /// Create a copy of PlannedSetDraftValues
 /// with the given fields replaced by the non-null parameter values.
-@JsonKey(includeFromJson: false, includeToJson: false)
+@override @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
 $PlannedSetDraftRepBasedCopyWith<PlannedSetDraftRepBased> get copyWith => _$PlannedSetDraftRepBasedCopyWithImpl<PlannedSetDraftRepBased>(this, _$identity);
 
@@ -1683,7 +1714,7 @@ String toString() {
 /// @nodoc
 abstract mixin class $PlannedSetDraftRepBasedCopyWith<$Res> implements $PlannedSetDraftValuesCopyWith<$Res> {
   factory $PlannedSetDraftRepBasedCopyWith(PlannedSetDraftRepBased value, $Res Function(PlannedSetDraftRepBased) _then) = _$PlannedSetDraftRepBasedCopyWithImpl;
-@useResult
+@override @useResult
 $Res call({
  String weightInput, String repsInput
 });
@@ -1702,7 +1733,7 @@ class _$PlannedSetDraftRepBasedCopyWithImpl<$Res>
 
 /// Create a copy of PlannedSetDraftValues
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') $Res call({Object? weightInput = null,Object? repsInput = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? weightInput = null,Object? repsInput = null,}) {
   return _then(PlannedSetDraftRepBased(
 weightInput: null == weightInput ? _self.weightInput : weightInput // ignore: cast_nullable_to_non_nullable
 as String,repsInput: null == repsInput ? _self.repsInput : repsInput // ignore: cast_nullable_to_non_nullable
@@ -1717,10 +1748,11 @@ as String,
 @JsonSerializable()
 
 class PlannedSetDraftTimeBased implements PlannedSetDraftValues {
-  const PlannedSetDraftTimeBased({required this.durationInput, final  String? $type}): $type = $type ?? 'timeBased';
+  const PlannedSetDraftTimeBased({required this.durationInput, this.weightInput = '', final  String? $type}): $type = $type ?? 'timeBased';
   factory PlannedSetDraftTimeBased.fromJson(Map<String, dynamic> json) => _$PlannedSetDraftTimeBasedFromJson(json);
 
  final  String durationInput;
+@override@JsonKey() final  String weightInput;
 
 @JsonKey(name: 'type')
 final String $type;
@@ -1728,7 +1760,7 @@ final String $type;
 
 /// Create a copy of PlannedSetDraftValues
 /// with the given fields replaced by the non-null parameter values.
-@JsonKey(includeFromJson: false, includeToJson: false)
+@override @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
 $PlannedSetDraftTimeBasedCopyWith<PlannedSetDraftTimeBased> get copyWith => _$PlannedSetDraftTimeBasedCopyWithImpl<PlannedSetDraftTimeBased>(this, _$identity);
 
@@ -1739,16 +1771,16 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is PlannedSetDraftTimeBased&&(identical(other.durationInput, durationInput) || other.durationInput == durationInput));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is PlannedSetDraftTimeBased&&(identical(other.durationInput, durationInput) || other.durationInput == durationInput)&&(identical(other.weightInput, weightInput) || other.weightInput == weightInput));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,durationInput);
+int get hashCode => Object.hash(runtimeType,durationInput,weightInput);
 
 @override
 String toString() {
-  return 'PlannedSetDraftValues.timeBased(durationInput: $durationInput)';
+  return 'PlannedSetDraftValues.timeBased(durationInput: $durationInput, weightInput: $weightInput)';
 }
 
 
@@ -1757,9 +1789,9 @@ String toString() {
 /// @nodoc
 abstract mixin class $PlannedSetDraftTimeBasedCopyWith<$Res> implements $PlannedSetDraftValuesCopyWith<$Res> {
   factory $PlannedSetDraftTimeBasedCopyWith(PlannedSetDraftTimeBased value, $Res Function(PlannedSetDraftTimeBased) _then) = _$PlannedSetDraftTimeBasedCopyWithImpl;
-@useResult
+@override @useResult
 $Res call({
- String durationInput
+ String durationInput, String weightInput
 });
 
 
@@ -1776,9 +1808,10 @@ class _$PlannedSetDraftTimeBasedCopyWithImpl<$Res>
 
 /// Create a copy of PlannedSetDraftValues
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') $Res call({Object? durationInput = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? durationInput = null,Object? weightInput = null,}) {
   return _then(PlannedSetDraftTimeBased(
 durationInput: null == durationInput ? _self.durationInput : durationInput // ignore: cast_nullable_to_non_nullable
+as String,weightInput: null == weightInput ? _self.weightInput : weightInput // ignore: cast_nullable_to_non_nullable
 as String,
   ));
 }

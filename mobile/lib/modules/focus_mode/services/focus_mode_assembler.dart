@@ -100,8 +100,11 @@ abstract final class FocusModeAssembler {
     return switch (substitute.plannedValues) {
       PlannedRepBased(:final weightKg, :final reps) =>
         '${WeightFormatter.formatKg(weightKg)}kg ${substitute.setCount}×$reps',
-      PlannedTimeBased(:final durationSeconds) =>
-        '${substitute.setCount}×${durationSeconds}s',
+      PlannedTimeBased(:final durationSeconds, :final weightKg) =>
+        weightKg == null
+            ? '${substitute.setCount}×${durationSeconds}s'
+            : '${WeightFormatter.formatKg(weightKg)}kg '
+                  '${substitute.setCount}×${durationSeconds}s',
     };
   }
 
@@ -163,8 +166,11 @@ abstract final class FocusModeAssembler {
     return switch (first) {
       PlannedRepBased(:final weightKg, :final reps) =>
         '${WeightFormatter.formatKg(weightKg)}kg ${sets.length}×$reps',
-      PlannedTimeBased(:final durationSeconds) =>
-        '${sets.length}×${durationSeconds}s',
+      PlannedTimeBased(:final durationSeconds, :final weightKg) =>
+        weightKg == null
+            ? '${sets.length}×${durationSeconds}s'
+            : '${WeightFormatter.formatKg(weightKg)}kg '
+                  '${sets.length}×${durationSeconds}s',
     };
   }
 }

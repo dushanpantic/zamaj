@@ -3,27 +3,41 @@ import 'package:flutter/services.dart';
 import 'package:zamaj/core/app_spacing.dart';
 import 'package:zamaj/core/app_theme.dart';
 import 'package:zamaj/core/app_typography.dart';
+import 'package:zamaj/core/weight_formatter.dart';
 import 'package:zamaj/modules/focus_mode/models/stopwatch_view_model.dart';
 
 /// Big editable panel for the current time-based set: stopwatch with
 /// START/STOP, with a fallback numeric field + ±5 bumps so users can also
 /// log durations they timed themselves.
+///
+/// When [weightKg] is non-null the exercise carries weight (e.g. weighted
+/// deadhang); a secondary kg row appears below the duration controls. When
+/// it is null the panel shows an "+ Add weight" affordance instead, keeping
+/// the unweighted case visually minimal.
 class FocusTimeBasedPanel extends StatefulWidget {
   const FocusTimeBasedPanel({
     super.key,
     required this.durationSeconds,
+    required this.weightKg,
     required this.stopwatch,
     required this.onDurationBump,
     required this.onDurationCommitted,
+    required this.onWeightBump,
+    required this.onWeightCommitted,
+    required this.onWeightCleared,
     required this.onStopwatchStart,
     required this.onStopwatchStop,
     required this.enabled,
   });
 
   final int durationSeconds;
+  final double? weightKg;
   final StopwatchViewModel stopwatch;
   final void Function(int delta) onDurationBump;
   final void Function(int seconds) onDurationCommitted;
+  final void Function(double delta) onWeightBump;
+  final void Function(double weightKg) onWeightCommitted;
+  final VoidCallback onWeightCleared;
   final VoidCallback onStopwatchStart;
   final VoidCallback onStopwatchStop;
   final bool enabled;
@@ -34,13 +48,21 @@ class FocusTimeBasedPanel extends StatefulWidget {
 
 class _FocusTimeBasedPanelState extends State<FocusTimeBasedPanel> {
   late final TextEditingController _seconds;
+  late final TextEditingController _weight;
   final FocusNode _secondsFocus = FocusNode();
+  final FocusNode _weightFocus = FocusNode();
 
   @override
   void initState() {
     super.initState();
     _seconds = TextEditingController(text: widget.durationSeconds.toString());
+    _weight = TextEditingController(
+      text: widget.weightKg == null
+          ? ''
+          : WeightFormatter.formatKg(widget.weightKg!),
+    );
     _secondsFocus.addListener(_commitOnBlur);
+    _weightFocus.addListener(_commitWeightOnBlur);
   }
 
   @override
@@ -50,13 +72,21 @@ class _FocusTimeBasedPanelState extends State<FocusTimeBasedPanel> {
         widget.durationSeconds != oldWidget.durationSeconds) {
       _seconds.text = widget.durationSeconds.toString();
     }
+    if (!_weightFocus.hasFocus && widget.weightKg != oldWidget.weightKg) {
+      _weight.text = widget.weightKg == null
+          ? ''
+          : WeightFormatter.formatKg(widget.weightKg!);
+    }
   }
 
   @override
   void dispose() {
     _secondsFocus.removeListener(_commitOnBlur);
+    _weightFocus.removeListener(_commitWeightOnBlur);
     _seconds.dispose();
+    _weight.dispose();
     _secondsFocus.dispose();
+    _weightFocus.dispose();
     super.dispose();
   }
 
@@ -68,6 +98,23 @@ class _FocusTimeBasedPanelState extends State<FocusTimeBasedPanel> {
       return;
     }
     widget.onDurationCommitted(parsed);
+  }
+
+  void _commitWeightOnBlur() {
+    if (_weightFocus.hasFocus) return;
+    final raw = _weight.text.trim();
+    if (raw.isEmpty) {
+      widget.onWeightCleared();
+      return;
+    }
+    final parsed = double.tryParse(raw);
+    if (parsed == null) {
+      _weight.text = widget.weightKg == null
+          ? ''
+          : WeightFormatter.formatKg(widget.weightKg!);
+      return;
+    }
+    widget.onWeightCommitted(parsed);
   }
 
   @override
@@ -186,6 +233,114 @@ class _FocusTimeBasedPanelState extends State<FocusTimeBasedPanel> {
               ),
             ],
           ),
+          if (widget.weightKg != null) ...[
+            const SizedBox(height: AppSpacing.md),
+            Divider(color: colors.outline, height: 1),
+            const SizedBox(height: AppSpacing.sm),
+            Row(
+              children: [
+                Text(
+                  'Added weight',
+                  style: typography.caption.copyWith(
+                    color: colors.onSurfaceMuted,
+                  ),
+                ),
+                const Spacer(),
+                TextButton.icon(
+                  onPressed: widget.enabled ? widget.onWeightCleared : null,
+                  icon: const Icon(Icons.close, size: 16),
+                  label: const Text('Remove'),
+                  style: TextButton.styleFrom(
+                    foregroundColor: colors.onSurfaceMuted,
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: AppSpacing.sm,
+                    ),
+                    minimumSize: const Size(0, 32),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: AppSpacing.xs),
+            Row(
+              children: [
+                Expanded(
+                  child: SizedBox(
+                    height: AppSpacing.touchMin,
+                    child: OutlinedButton(
+                      onPressed: widget.enabled
+                          ? () => widget.onWeightBump(-2.5)
+                          : null,
+                      child: const Text('-2.5'),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: AppSpacing.sm),
+                Expanded(
+                  flex: 2,
+                  child: TextField(
+                    controller: _weight,
+                    focusNode: _weightFocus,
+                    enabled: widget.enabled,
+                    textAlign: TextAlign.center,
+                    keyboardType: const TextInputType.numberWithOptions(
+                      decimal: true,
+                    ),
+                    inputFormatters: [
+                      FilteringTextInputFormatter.allow(RegExp(r'[0-9.]')),
+                    ],
+                    onSubmitted: (text) {
+                      final raw = text.trim();
+                      if (raw.isEmpty) {
+                        widget.onWeightCleared();
+                        return;
+                      }
+                      final parsed = double.tryParse(raw);
+                      if (parsed != null) widget.onWeightCommitted(parsed);
+                    },
+                    decoration: InputDecoration(
+                      isDense: true,
+                      filled: true,
+                      fillColor: colors.surfaceVariant,
+                      suffixText: 'kg',
+                      contentPadding: const EdgeInsets.symmetric(
+                        horizontal: AppSpacing.md,
+                        vertical: AppSpacing.md,
+                      ),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(AppRadius.md),
+                        borderSide: BorderSide(color: colors.outline),
+                      ),
+                    ),
+                    style: typography.numeric.copyWith(color: colors.onSurface),
+                  ),
+                ),
+                const SizedBox(width: AppSpacing.sm),
+                Expanded(
+                  child: SizedBox(
+                    height: AppSpacing.touchMin,
+                    child: OutlinedButton(
+                      onPressed: widget.enabled
+                          ? () => widget.onWeightBump(2.5)
+                          : null,
+                      child: const Text('+2.5'),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ] else ...[
+            const SizedBox(height: AppSpacing.sm),
+            Align(
+              alignment: Alignment.center,
+              child: TextButton.icon(
+                onPressed: widget.enabled
+                    ? () => widget.onWeightCommitted(0)
+                    : null,
+                icon: const Icon(Icons.add, size: 16),
+                label: const Text('Add weight'),
+              ),
+            ),
+          ],
         ],
       ),
     );

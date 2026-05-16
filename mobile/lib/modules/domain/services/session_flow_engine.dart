@@ -560,9 +560,11 @@ class SessionFlowEngine {
         weightKg: weightKg,
         reps: reps,
       ),
-      PlannedTimeBased(:final durationSeconds) => ActualSetValues.timeBased(
-        durationSeconds: durationSeconds,
-      ),
+      PlannedTimeBased(:final durationSeconds, :final weightKg) =>
+        ActualSetValues.timeBased(
+          durationSeconds: durationSeconds,
+          weightKg: weightKg,
+        ),
     };
   }
 

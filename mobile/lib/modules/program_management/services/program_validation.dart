@@ -73,6 +73,22 @@ abstract final class ProgramValidation {
     return Valid(parsed);
   }
 
+  /// Validates the optional weight on a time-based set.
+  /// Empty / whitespace input is treated as "no weight" and yields
+  /// `Valid(null)`. Non-empty input must parse, be in `[0, 1000]`, and
+  /// resolve to a multiple of 0.5 kg.
+  static ValidationResult<double?> validateTimeBasedSetWeight(String input) {
+    final trimmed = input.trim();
+    if (trimmed.isEmpty) return const Valid(null);
+    final parsed = double.tryParse(trimmed);
+    if (parsed == null) return const Invalid('weight_invalid');
+    if (parsed < 0) return const Invalid('weight_out_of_range');
+    if (parsed > 1000) return const Invalid('weight_out_of_range');
+    final remainder = (parsed * 2).round() - (parsed * 2);
+    if (remainder.abs() > 1e-9) return const Invalid('weight_not_half_kg');
+    return Valid(parsed);
+  }
+
   static ValidationResult<int?> validatePlannedRest(String? input) {
     if (input == null || input.trim().isEmpty) return const Valid(null);
     final parsed = int.tryParse(input.trim());

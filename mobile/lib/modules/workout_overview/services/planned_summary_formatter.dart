@@ -15,8 +15,11 @@ abstract final class PlannedSummaryFormatter {
     return switch (first) {
       PlannedRepBased(:final weightKg, :final reps) =>
         '${WeightFormatter.formatKg(weightKg)}kg ${sets.length}×$reps',
-      PlannedTimeBased(:final durationSeconds) =>
-        '${sets.length}×${durationSeconds}s',
+      PlannedTimeBased(:final durationSeconds, :final weightKg) =>
+        weightKg == null
+            ? '${sets.length}×${durationSeconds}s'
+            : '${WeightFormatter.formatKg(weightKg)}kg '
+                  '${sets.length}×${durationSeconds}s',
     };
   }
 }

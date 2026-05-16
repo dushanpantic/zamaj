@@ -55,10 +55,16 @@ class PlannedSetRow extends StatelessWidget {
                   onWeightChanged: onWeightChanged,
                   onRepsChanged: onRepsChanged,
                 ),
-              PlannedSetDraftTimeBased(:final durationInput) => _TimeBasedField(
-                durationInput: durationInput,
-                onDurationChanged: onDurationChanged,
-              ),
+              PlannedSetDraftTimeBased(
+                :final durationInput,
+                :final weightInput,
+              ) =>
+                _TimeBasedField(
+                  durationInput: durationInput,
+                  weightInput: weightInput,
+                  onDurationChanged: onDurationChanged,
+                  onWeightChanged: onWeightChanged,
+                ),
             },
           ),
           IconButton(
@@ -188,11 +194,15 @@ class _RepBasedFieldsState extends State<_RepBasedFields> {
 class _TimeBasedField extends StatefulWidget {
   const _TimeBasedField({
     required this.durationInput,
+    required this.weightInput,
     required this.onDurationChanged,
+    required this.onWeightChanged,
   });
 
   final String durationInput;
+  final String weightInput;
   final void Function(String) onDurationChanged;
+  final void Function(String) onWeightChanged;
 
   @override
   State<_TimeBasedField> createState() => _TimeBasedFieldState();
@@ -200,11 +210,13 @@ class _TimeBasedField extends StatefulWidget {
 
 class _TimeBasedFieldState extends State<_TimeBasedField> {
   late final TextEditingController _durationController;
+  late final TextEditingController _weightController;
 
   @override
   void initState() {
     super.initState();
     _durationController = TextEditingController(text: widget.durationInput);
+    _weightController = TextEditingController(text: widget.weightInput);
   }
 
   @override
@@ -214,11 +226,16 @@ class _TimeBasedFieldState extends State<_TimeBasedField> {
         _durationController.text != widget.durationInput) {
       _durationController.text = widget.durationInput;
     }
+    if (oldWidget.weightInput != widget.weightInput &&
+        _weightController.text != widget.weightInput) {
+      _weightController.text = widget.weightInput;
+    }
   }
 
   @override
   void dispose() {
     _durationController.dispose();
+    _weightController.dispose();
     super.dispose();
   }
 
@@ -227,19 +244,44 @@ class _TimeBasedFieldState extends State<_TimeBasedField> {
     const typography = AppTypography.standard;
     final colors = Theme.of(context).appColors;
 
-    return TextField(
-      controller: _durationController,
-      keyboardType: TextInputType.number,
-      inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-      style: typography.bodySmall.copyWith(color: colors.onSurface),
-      decoration: const InputDecoration(
-        labelText: 'Duration (seconds)',
-        contentPadding: EdgeInsets.symmetric(
-          horizontal: AppSpacing.md,
-          vertical: AppSpacing.sm,
+    return Row(
+      children: [
+        Expanded(
+          child: TextField(
+            controller: _durationController,
+            keyboardType: TextInputType.number,
+            inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+            style: typography.bodySmall.copyWith(color: colors.onSurface),
+            decoration: const InputDecoration(
+              labelText: 'Duration (s)',
+              contentPadding: EdgeInsets.symmetric(
+                horizontal: AppSpacing.md,
+                vertical: AppSpacing.sm,
+              ),
+            ),
+            onChanged: widget.onDurationChanged,
+          ),
         ),
-      ),
-      onChanged: widget.onDurationChanged,
+        const SizedBox(width: AppSpacing.sm),
+        Expanded(
+          child: TextField(
+            controller: _weightController,
+            keyboardType: const TextInputType.numberWithOptions(decimal: true),
+            inputFormatters: [
+              FilteringTextInputFormatter.allow(RegExp(r'[0-9.]')),
+            ],
+            style: typography.bodySmall.copyWith(color: colors.onSurface),
+            decoration: const InputDecoration(
+              labelText: 'Weight (kg, opt)',
+              contentPadding: EdgeInsets.symmetric(
+                horizontal: AppSpacing.md,
+                vertical: AppSpacing.sm,
+              ),
+            ),
+            onChanged: widget.onWeightChanged,
+          ),
+        ),
+      ],
     );
   }
 }

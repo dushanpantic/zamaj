@@ -164,6 +164,7 @@ PlannedSetDraftTimeBased _$PlannedSetDraftTimeBasedFromJson(
 ) => $checkedCreate('PlannedSetDraftTimeBased', json, ($checkedConvert) {
   final val = PlannedSetDraftTimeBased(
     durationInput: $checkedConvert('durationInput', (v) => v as String),
+    weightInput: $checkedConvert('weightInput', (v) => v as String? ?? ''),
     $type: $checkedConvert('type', (v) => v as String?),
   );
   return val;
@@ -173,5 +174,6 @@ Map<String, dynamic> _$PlannedSetDraftTimeBasedToJson(
   PlannedSetDraftTimeBased instance,
 ) => <String, dynamic>{
   'durationInput': instance.durationInput,
+  'weightInput': instance.weightInput,
   'type': instance.$type,
 };

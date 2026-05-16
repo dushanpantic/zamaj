@@ -1,5 +1,6 @@
 import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:zamaj/core/schema_versions.dart';
 import 'package:zamaj/modules/domain/errors.dart';
 import 'package:zamaj/modules/domain/models/exercise.dart' as domain;
 import 'package:zamaj/modules/domain/models/exercise_group_kind.dart';
@@ -254,7 +255,7 @@ void main() {
         expect(program.name, 'Strength Block');
         expect(program.workoutDayIds, isEmpty);
         expect(program.id.length, 36);
-        expect(program.schemaVersion, 3);
+        expect(program.schemaVersion, SchemaVersions.domain);
       },
     );
 

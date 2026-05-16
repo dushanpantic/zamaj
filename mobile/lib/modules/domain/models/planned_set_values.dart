@@ -11,8 +11,10 @@ sealed class PlannedSetValues with _$PlannedSetValues {
     required int reps,
   }) = PlannedRepBased;
 
-  const factory PlannedSetValues.timeBased({required int durationSeconds}) =
-      PlannedTimeBased;
+  const factory PlannedSetValues.timeBased({
+    required int durationSeconds,
+    double? weightKg,
+  }) = PlannedTimeBased;
 
   factory PlannedSetValues.fromJson(Map<String, dynamic> json) =>
       wrapDeserializationErrors(

@@ -308,7 +308,10 @@ class _PlannedAndLast extends StatelessWidget {
     return switch (values) {
       PlannedRepBased(:final weightKg, :final reps) =>
         '${WeightFormatter.formatKg(weightKg)}kg × $reps',
-      PlannedTimeBased(:final durationSeconds) => '${durationSeconds}s',
+      PlannedTimeBased(:final durationSeconds, :final weightKg) =>
+        weightKg == null
+            ? '${durationSeconds}s'
+            : '${WeightFormatter.formatKg(weightKg)}kg × ${durationSeconds}s',
     };
   }
 
@@ -317,7 +320,10 @@ class _PlannedAndLast extends StatelessWidget {
     return switch (values) {
       ActualRepBased(:final weightKg, :final reps) =>
         '${WeightFormatter.formatKg(weightKg)}kg × $reps',
-      ActualTimeBased(:final durationSeconds) => '${durationSeconds}s',
+      ActualTimeBased(:final durationSeconds, :final weightKg) =>
+        weightKg == null
+            ? '${durationSeconds}s'
+            : '${WeightFormatter.formatKg(weightKg)}kg × ${durationSeconds}s',
     };
   }
 }
@@ -342,15 +348,20 @@ class _CurrentValuesPanel extends StatelessWidget {
         onWeightCommitted: (v) => bloc.add(FocusModeWeightEdited(v)),
         onRepsCommitted: (v) => bloc.add(FocusModeRepsEdited(v)),
       ),
-      ActualTimeBased(:final durationSeconds) => FocusTimeBasedPanel(
-        durationSeconds: durationSeconds,
-        stopwatch: state.stopwatch,
-        enabled: canMutate,
-        onDurationBump: (delta) => bloc.add(FocusModeDurationBumped(delta)),
-        onDurationCommitted: (v) => bloc.add(FocusModeDurationEdited(v)),
-        onStopwatchStart: () => bloc.add(const FocusModeStopwatchStarted()),
-        onStopwatchStop: () => bloc.add(const FocusModeStopwatchStopped()),
-      ),
+      ActualTimeBased(:final durationSeconds, :final weightKg) =>
+        FocusTimeBasedPanel(
+          durationSeconds: durationSeconds,
+          weightKg: weightKg,
+          stopwatch: state.stopwatch,
+          enabled: canMutate,
+          onDurationBump: (delta) => bloc.add(FocusModeDurationBumped(delta)),
+          onDurationCommitted: (v) => bloc.add(FocusModeDurationEdited(v)),
+          onWeightBump: (delta) => bloc.add(FocusModeWeightBumped(delta)),
+          onWeightCommitted: (v) => bloc.add(FocusModeWeightEdited(v)),
+          onWeightCleared: () => bloc.add(const FocusModeWeightEdited(null)),
+          onStopwatchStart: () => bloc.add(const FocusModeStopwatchStarted()),
+          onStopwatchStop: () => bloc.add(const FocusModeStopwatchStopped()),
+        ),
     };
   }
 }

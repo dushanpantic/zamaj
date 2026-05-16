@@ -11,8 +11,10 @@ sealed class ActualSetValues with _$ActualSetValues {
     required int reps,
   }) = ActualRepBased;
 
-  const factory ActualSetValues.timeBased({required int durationSeconds}) =
-      ActualTimeBased;
+  const factory ActualSetValues.timeBased({
+    required int durationSeconds,
+    double? weightKg,
+  }) = ActualTimeBased;
 
   factory ActualSetValues.fromJson(Map<String, dynamic> json) =>
       wrapDeserializationErrors(

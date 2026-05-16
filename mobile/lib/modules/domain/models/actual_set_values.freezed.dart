@@ -38,7 +38,12 @@ ActualSetValues _$ActualSetValuesFromJson(
 /// @nodoc
 mixin _$ActualSetValues {
 
-
+ double? get weightKg;
+/// Create a copy of ActualSetValues
+/// with the given fields replaced by the non-null parameter values.
+@JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+$ActualSetValuesCopyWith<ActualSetValues> get copyWith => _$ActualSetValuesCopyWithImpl<ActualSetValues>(this as ActualSetValues, _$identity);
 
   /// Serializes this ActualSetValues to a JSON map.
   Map<String, dynamic> toJson();
@@ -46,24 +51,50 @@ mixin _$ActualSetValues {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is ActualSetValues);
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is ActualSetValues&&(identical(other.weightKg, weightKg) || other.weightKg == weightKg));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => runtimeType.hashCode;
+int get hashCode => Object.hash(runtimeType,weightKg);
 
 @override
 String toString() {
-  return 'ActualSetValues()';
+  return 'ActualSetValues(weightKg: $weightKg)';
 }
 
 
 }
 
 /// @nodoc
-class $ActualSetValuesCopyWith<$Res>  {
-$ActualSetValuesCopyWith(ActualSetValues _, $Res Function(ActualSetValues) __);
+abstract mixin class $ActualSetValuesCopyWith<$Res>  {
+  factory $ActualSetValuesCopyWith(ActualSetValues value, $Res Function(ActualSetValues) _then) = _$ActualSetValuesCopyWithImpl;
+@useResult
+$Res call({
+ double weightKg
+});
+
+
+
+
+}
+/// @nodoc
+class _$ActualSetValuesCopyWithImpl<$Res>
+    implements $ActualSetValuesCopyWith<$Res> {
+  _$ActualSetValuesCopyWithImpl(this._self, this._then);
+
+  final ActualSetValues _self;
+  final $Res Function(ActualSetValues) _then;
+
+/// Create a copy of ActualSetValues
+/// with the given fields replaced by the non-null parameter values.
+@pragma('vm:prefer-inline') @override $Res call({Object? weightKg = null,}) {
+  return _then(_self.copyWith(
+weightKg: null == weightKg ? _self.weightKg! : weightKg // ignore: cast_nullable_to_non_nullable
+as double,
+  ));
+}
+
 }
 
 
@@ -145,11 +176,11 @@ return timeBased(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>({TResult Function( double weightKg,  int reps)?  repBased,TResult Function( int durationSeconds)?  timeBased,required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>({TResult Function( double weightKg,  int reps)?  repBased,TResult Function( int durationSeconds,  double? weightKg)?  timeBased,required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case ActualRepBased() when repBased != null:
 return repBased(_that.weightKg,_that.reps);case ActualTimeBased() when timeBased != null:
-return timeBased(_that.durationSeconds);case _:
+return timeBased(_that.durationSeconds,_that.weightKg);case _:
   return orElse();
 
 }
@@ -167,11 +198,11 @@ return timeBased(_that.durationSeconds);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>({required TResult Function( double weightKg,  int reps)  repBased,required TResult Function( int durationSeconds)  timeBased,}) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>({required TResult Function( double weightKg,  int reps)  repBased,required TResult Function( int durationSeconds,  double? weightKg)  timeBased,}) {final _that = this;
 switch (_that) {
 case ActualRepBased():
 return repBased(_that.weightKg,_that.reps);case ActualTimeBased():
-return timeBased(_that.durationSeconds);}
+return timeBased(_that.durationSeconds,_that.weightKg);}
 }
 /// A variant of `when` that fallback to returning `null`
 ///
@@ -185,11 +216,11 @@ return timeBased(_that.durationSeconds);}
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>({TResult? Function( double weightKg,  int reps)?  repBased,TResult? Function( int durationSeconds)?  timeBased,}) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>({TResult? Function( double weightKg,  int reps)?  repBased,TResult? Function( int durationSeconds,  double? weightKg)?  timeBased,}) {final _that = this;
 switch (_that) {
 case ActualRepBased() when repBased != null:
 return repBased(_that.weightKg,_that.reps);case ActualTimeBased() when timeBased != null:
-return timeBased(_that.durationSeconds);case _:
+return timeBased(_that.durationSeconds,_that.weightKg);case _:
   return null;
 
 }
@@ -204,7 +235,7 @@ class ActualRepBased implements ActualSetValues {
   const ActualRepBased({required this.weightKg, required this.reps, final  String? $type}): $type = $type ?? 'repBased';
   factory ActualRepBased.fromJson(Map<String, dynamic> json) => _$ActualRepBasedFromJson(json);
 
- final  double weightKg;
+@override final  double weightKg;
  final  int reps;
 
 @JsonKey(name: 'type')
@@ -213,7 +244,7 @@ final String $type;
 
 /// Create a copy of ActualSetValues
 /// with the given fields replaced by the non-null parameter values.
-@JsonKey(includeFromJson: false, includeToJson: false)
+@override @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
 $ActualRepBasedCopyWith<ActualRepBased> get copyWith => _$ActualRepBasedCopyWithImpl<ActualRepBased>(this, _$identity);
 
@@ -242,7 +273,7 @@ String toString() {
 /// @nodoc
 abstract mixin class $ActualRepBasedCopyWith<$Res> implements $ActualSetValuesCopyWith<$Res> {
   factory $ActualRepBasedCopyWith(ActualRepBased value, $Res Function(ActualRepBased) _then) = _$ActualRepBasedCopyWithImpl;
-@useResult
+@override @useResult
 $Res call({
  double weightKg, int reps
 });
@@ -261,7 +292,7 @@ class _$ActualRepBasedCopyWithImpl<$Res>
 
 /// Create a copy of ActualSetValues
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') $Res call({Object? weightKg = null,Object? reps = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? weightKg = null,Object? reps = null,}) {
   return _then(ActualRepBased(
 weightKg: null == weightKg ? _self.weightKg : weightKg // ignore: cast_nullable_to_non_nullable
 as double,reps: null == reps ? _self.reps : reps // ignore: cast_nullable_to_non_nullable
@@ -276,10 +307,11 @@ as int,
 @JsonSerializable()
 
 class ActualTimeBased implements ActualSetValues {
-  const ActualTimeBased({required this.durationSeconds, final  String? $type}): $type = $type ?? 'timeBased';
+  const ActualTimeBased({required this.durationSeconds, this.weightKg, final  String? $type}): $type = $type ?? 'timeBased';
   factory ActualTimeBased.fromJson(Map<String, dynamic> json) => _$ActualTimeBasedFromJson(json);
 
  final  int durationSeconds;
+@override final  double? weightKg;
 
 @JsonKey(name: 'type')
 final String $type;
@@ -287,7 +319,7 @@ final String $type;
 
 /// Create a copy of ActualSetValues
 /// with the given fields replaced by the non-null parameter values.
-@JsonKey(includeFromJson: false, includeToJson: false)
+@override @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
 $ActualTimeBasedCopyWith<ActualTimeBased> get copyWith => _$ActualTimeBasedCopyWithImpl<ActualTimeBased>(this, _$identity);
 
@@ -298,16 +330,16 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is ActualTimeBased&&(identical(other.durationSeconds, durationSeconds) || other.durationSeconds == durationSeconds));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is ActualTimeBased&&(identical(other.durationSeconds, durationSeconds) || other.durationSeconds == durationSeconds)&&(identical(other.weightKg, weightKg) || other.weightKg == weightKg));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,durationSeconds);
+int get hashCode => Object.hash(runtimeType,durationSeconds,weightKg);
 
 @override
 String toString() {
-  return 'ActualSetValues.timeBased(durationSeconds: $durationSeconds)';
+  return 'ActualSetValues.timeBased(durationSeconds: $durationSeconds, weightKg: $weightKg)';
 }
 
 
@@ -316,9 +348,9 @@ String toString() {
 /// @nodoc
 abstract mixin class $ActualTimeBasedCopyWith<$Res> implements $ActualSetValuesCopyWith<$Res> {
   factory $ActualTimeBasedCopyWith(ActualTimeBased value, $Res Function(ActualTimeBased) _then) = _$ActualTimeBasedCopyWithImpl;
-@useResult
+@override @useResult
 $Res call({
- int durationSeconds
+ int durationSeconds, double? weightKg
 });
 
 
@@ -335,10 +367,11 @@ class _$ActualTimeBasedCopyWithImpl<$Res>
 
 /// Create a copy of ActualSetValues
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') $Res call({Object? durationSeconds = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? durationSeconds = null,Object? weightKg = freezed,}) {
   return _then(ActualTimeBased(
 durationSeconds: null == durationSeconds ? _self.durationSeconds : durationSeconds // ignore: cast_nullable_to_non_nullable
-as int,
+as int,weightKg: freezed == weightKg ? _self.weightKg : weightKg // ignore: cast_nullable_to_non_nullable
+as double?,
   ));
 }
 

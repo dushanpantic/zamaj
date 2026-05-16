@@ -220,6 +220,73 @@ void main() {
       );
       expect(set.plannedValues, isA<PlannedTimeBased>());
     });
+
+    test('timeBased with optional positive weightKg constructs', () {
+      final rng = Random(52);
+      final now = anyUtcDateTime(rng);
+      final set = WorkoutSet(
+        id: anyUuidV4(rng),
+        exerciseId: anyUuidV4(rng),
+        position: 0,
+        measurementType: const MeasurementType.timeBased(),
+        plannedValues: const PlannedSetValues.timeBased(
+          durationSeconds: 30,
+          weightKg: 10.0,
+        ),
+        createdAt: now,
+        updatedAt: now,
+        schemaVersion: 1,
+      );
+      final values = set.plannedValues;
+      expect(values, isA<PlannedTimeBased>());
+      expect((values as PlannedTimeBased).weightKg, 10.0);
+    });
+
+    test('timeBased with negative weightKg throws weightKg_non_negative', () {
+      final rng = Random(53);
+      final id = anyUuidV4(rng);
+      final now = anyUtcDateTime(rng);
+      final error = _expectValidationError(
+        () => WorkoutSet(
+          id: id,
+          exerciseId: anyUuidV4(rng),
+          position: 0,
+          measurementType: const MeasurementType.timeBased(),
+          plannedValues: const PlannedSetValues.timeBased(
+            durationSeconds: 30,
+            weightKg: -2.5,
+          ),
+          createdAt: now,
+          updatedAt: now,
+          schemaVersion: 1,
+        ),
+      );
+      expect(error.entityId, equals(id));
+      expect(error.invariant, equals('weightKg_non_negative'));
+    });
+
+    test('timeBased with non-half-kg weightKg throws half_kg_resolution', () {
+      final rng = Random(54);
+      final id = anyUuidV4(rng);
+      final now = anyUtcDateTime(rng);
+      final error = _expectValidationError(
+        () => WorkoutSet(
+          id: id,
+          exerciseId: anyUuidV4(rng),
+          position: 0,
+          measurementType: const MeasurementType.timeBased(),
+          plannedValues: const PlannedSetValues.timeBased(
+            durationSeconds: 30,
+            weightKg: 2.3,
+          ),
+          createdAt: now,
+          updatedAt: now,
+          schemaVersion: 1,
+        ),
+      );
+      expect(error.entityId, equals(id));
+      expect(error.invariant, equals('weightKg_half_kg_resolution'));
+    });
   });
 }
 

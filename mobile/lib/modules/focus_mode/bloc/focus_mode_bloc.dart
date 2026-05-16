@@ -168,15 +168,30 @@ class FocusModeBloc extends Bloc<FocusModeEvent, FocusModeState> {
     final current = state;
     if (current is! FocusModeReady) return;
     final draft = current.draft;
-    if (draft is! ActualRepBased) return;
-    emit(
-      current.copyWith(
-        draft: ActualSetValues.repBased(
-          weightKg: IncrementRules.bumpWeight(draft.weightKg, event.delta),
-          reps: draft.reps,
-        ),
-      ),
-    );
+    switch (draft) {
+      case ActualRepBased():
+        emit(
+          current.copyWith(
+            draft: ActualSetValues.repBased(
+              weightKg: IncrementRules.bumpWeight(draft.weightKg, event.delta),
+              reps: draft.reps,
+            ),
+          ),
+        );
+      case ActualTimeBased():
+        final next = IncrementRules.bumpWeight(
+          draft.weightKg ?? 0,
+          event.delta,
+        );
+        emit(
+          current.copyWith(
+            draft: ActualSetValues.timeBased(
+              durationSeconds: draft.durationSeconds,
+              weightKg: next,
+            ),
+          ),
+        );
+    }
   }
 
   Future<void> _onRepsBumped(
@@ -224,14 +239,29 @@ class FocusModeBloc extends Bloc<FocusModeEvent, FocusModeState> {
     final current = state;
     if (current is! FocusModeReady) return;
     final draft = current.draft;
-    if (draft is! ActualRepBased) return;
-    final rounded = (event.weightKg * 2).round() / 2;
-    final clamped = rounded < 0 ? 0.0 : rounded;
-    emit(
-      current.copyWith(
-        draft: ActualSetValues.repBased(weightKg: clamped, reps: draft.reps),
-      ),
-    );
+    final raw = event.weightKg;
+    final rounded = raw == null ? null : (raw * 2).round() / 2;
+    final clamped = rounded == null ? null : (rounded < 0 ? 0.0 : rounded);
+    switch (draft) {
+      case ActualRepBased():
+        emit(
+          current.copyWith(
+            draft: ActualSetValues.repBased(
+              weightKg: clamped ?? 0,
+              reps: draft.reps,
+            ),
+          ),
+        );
+      case ActualTimeBased():
+        emit(
+          current.copyWith(
+            draft: ActualSetValues.timeBased(
+              durationSeconds: draft.durationSeconds,
+              weightKg: clamped,
+            ),
+          ),
+        );
+    }
   }
 
   Future<void> _onRepsEdited(

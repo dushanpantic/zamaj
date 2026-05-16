@@ -332,6 +332,8 @@ Future<void> _runSessionOps(
       // acceptable — measurement type mismatch on completeSet
     } on NotFoundError {
       // acceptable — entity deleted or not found
+    } on ImmutabilityError {
+      // acceptable — random ops may try to end an already-ended session
     } on SqliteException {
       // acceptable — unique constraint violation from concurrent position assignment
     }

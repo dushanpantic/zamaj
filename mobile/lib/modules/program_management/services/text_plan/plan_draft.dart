@@ -49,5 +49,6 @@ sealed class PlanDraftSet with _$PlanDraftSet {
   const factory PlanDraftSet.timeBased({
     required int count,
     required int durationSeconds,
+    double? weightKg,
   }) = PlanDraftSetTimeBased;
 }

@@ -112,6 +112,14 @@ abstract class ProgramDraft with _$ProgramDraft {
     );
   }
 
+  static double? _parseOptionalWeight(String input) {
+    final trimmed = input.trim();
+    if (trimmed.isEmpty) return null;
+    final parsed = double.tryParse(trimmed);
+    if (parsed == null) return null;
+    return parsed;
+  }
+
   static PlannedSetValues _toPlannedSetValues(PlannedSetDraftValues values) {
     return switch (values) {
       PlannedSetDraftRepBased(:final weightInput, :final repsInput) =>
@@ -119,9 +127,10 @@ abstract class ProgramDraft with _$ProgramDraft {
           weightKg: double.tryParse(weightInput) ?? 0.0,
           reps: int.tryParse(repsInput) ?? 0,
         ),
-      PlannedSetDraftTimeBased(:final durationInput) =>
+      PlannedSetDraftTimeBased(:final durationInput, :final weightInput) =>
         PlannedSetValues.timeBased(
           durationSeconds: int.tryParse(durationInput) ?? 0,
+          weightKg: _parseOptionalWeight(weightInput),
         ),
     };
   }
@@ -195,6 +204,7 @@ sealed class PlannedSetDraftValues with _$PlannedSetDraftValues {
 
   const factory PlannedSetDraftValues.timeBased({
     required String durationInput,
+    @Default('') String weightInput,
   }) = PlannedSetDraftTimeBased;
 
   factory PlannedSetDraftValues.fromJson(Map<String, dynamic> json) =>

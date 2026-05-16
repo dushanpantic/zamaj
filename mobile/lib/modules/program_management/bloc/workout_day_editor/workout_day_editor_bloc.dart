@@ -630,6 +630,12 @@ class WorkoutDayEditorBloc
     );
   }
 
+  static double? _parseOptionalWeight(String input) {
+    final trimmed = input.trim();
+    if (trimmed.isEmpty) return null;
+    return double.tryParse(trimmed);
+  }
+
   static PlannedSetValues _draftValuesToPlanned(PlannedSetDraftValues values) {
     return switch (values) {
       PlannedSetDraftRepBased(:final weightInput, :final repsInput) =>
@@ -637,9 +643,10 @@ class WorkoutDayEditorBloc
           weightKg: double.tryParse(weightInput) ?? 0.0,
           reps: int.tryParse(repsInput) ?? 0,
         ),
-      PlannedSetDraftTimeBased(:final durationInput) =>
+      PlannedSetDraftTimeBased(:final durationInput, :final weightInput) =>
         PlannedSetValues.timeBased(
           durationSeconds: int.tryParse(durationInput) ?? 0,
+          weightKg: _parseOptionalWeight(weightInput),
         ),
     };
   }
@@ -707,9 +714,10 @@ class WorkoutDayEditorBloc
           weightInput: weightKg.toString(),
           repsInput: reps.toString(),
         ),
-      PlannedTimeBased(:final durationSeconds) =>
+      PlannedTimeBased(:final durationSeconds, :final weightKg) =>
         PlannedSetDraftValues.timeBased(
           durationInput: durationSeconds.toString(),
+          weightInput: weightKg == null ? '' : weightKg.toString(),
         ),
     };
   }

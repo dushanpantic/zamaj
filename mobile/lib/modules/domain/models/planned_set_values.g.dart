@@ -30,6 +30,7 @@ PlannedTimeBased _$PlannedTimeBasedFromJson(Map<String, dynamic> json) =>
           'durationSeconds',
           (v) => (v as num).toInt(),
         ),
+        weightKg: $checkedConvert('weightKg', (v) => (v as num?)?.toDouble()),
         $type: $checkedConvert('type', (v) => v as String?),
       );
       return val;
@@ -38,5 +39,6 @@ PlannedTimeBased _$PlannedTimeBasedFromJson(Map<String, dynamic> json) =>
 Map<String, dynamic> _$PlannedTimeBasedToJson(PlannedTimeBased instance) =>
     <String, dynamic>{
       'durationSeconds': instance.durationSeconds,
+      'weightKg': ?instance.weightKg,
       'type': instance.$type,
     };

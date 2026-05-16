@@ -95,7 +95,10 @@ PlannedSetValues anyPlannedSetValues(Random rng) {
       reps: rng.nextInt(30),
     );
   }
-  return PlannedSetValues.timeBased(durationSeconds: rng.nextInt(300));
+  return PlannedSetValues.timeBased(
+    durationSeconds: rng.nextInt(300),
+    weightKg: _maybeOptionalWeightKg(rng),
+  );
 }
 
 PlannedSetValues anyPlannedSetValuesForMeasurement(
@@ -107,8 +110,10 @@ PlannedSetValues anyPlannedSetValuesForMeasurement(
       weightKg: _anyWeightKg(rng),
       reps: rng.nextInt(30),
     ),
-    timeBased: () =>
-        PlannedSetValues.timeBased(durationSeconds: rng.nextInt(300)),
+    timeBased: () => PlannedSetValues.timeBased(
+      durationSeconds: rng.nextInt(300),
+      weightKg: _maybeOptionalWeightKg(rng),
+    ),
   );
 }
 
@@ -119,7 +124,10 @@ ActualSetValues anyActualSetValues(Random rng) {
       reps: rng.nextInt(30),
     );
   }
-  return ActualSetValues.timeBased(durationSeconds: rng.nextInt(300));
+  return ActualSetValues.timeBased(
+    durationSeconds: rng.nextInt(300),
+    weightKg: _maybeOptionalWeightKg(rng),
+  );
 }
 
 ActualSetValues anyActualSetValuesForMeasurement(
@@ -131,9 +139,15 @@ ActualSetValues anyActualSetValuesForMeasurement(
       weightKg: _anyWeightKg(rng),
       reps: rng.nextInt(30),
     ),
-    timeBased: () =>
-        ActualSetValues.timeBased(durationSeconds: rng.nextInt(300)),
+    timeBased: () => ActualSetValues.timeBased(
+      durationSeconds: rng.nextInt(300),
+      weightKg: _maybeOptionalWeightKg(rng),
+    ),
   );
+}
+
+double? _maybeOptionalWeightKg(Random rng) {
+  return rng.nextBool() ? _anyWeightKg(rng) : null;
 }
 
 double _anyWeightKg(Random rng) {

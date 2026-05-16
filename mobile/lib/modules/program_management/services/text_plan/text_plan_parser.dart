@@ -316,7 +316,17 @@ void _attachPlannedSet(
   if (timeMatch != null) {
     final count = int.parse(timeMatch.group(1)!);
     final durationSeconds = int.parse(timeMatch.group(3)!);
-    final remaining = tokens.skip(1).toList();
+    var remaining = tokens.skip(1).toList();
+    double? weightKg;
+    if (remaining.isNotEmpty) {
+      final weightMatch = RegExp(
+        r'^(\d+(?:\.\d+)?)[kK][gG]$',
+      ).firstMatch(remaining.first);
+      if (weightMatch != null) {
+        weightKg = double.parse(weightMatch.group(1)!);
+        remaining = remaining.skip(1).toList();
+      }
+    }
     final restResult = _parseRestTokens(
       remaining,
       lineNumber,
@@ -324,7 +334,11 @@ void _attachPlannedSet(
       exercise.draftId,
     );
     exercise.sets.add(
-      PlanDraftSet.timeBased(count: count, durationSeconds: durationSeconds),
+      PlanDraftSet.timeBased(
+        count: count,
+        durationSeconds: durationSeconds,
+        weightKg: weightKg,
+      ),
     );
     if (restResult.restSeconds != null) {
       exercise.plannedRestSeconds = restResult.restSeconds;
@@ -367,11 +381,22 @@ void _attachPlannedSet(
       warnings.addAll(restResult.warnings);
     } else if (durationMatch != null) {
       final duration = int.parse(durationMatch.group(1)!);
+      var trailingTokens = remaining.skip(1).toList();
+      double? timeWeight;
+      if (trailingTokens.isNotEmpty) {
+        final weightMatch2 = RegExp(
+          r'^(\d+(?:\.\d+)?)[kK][gG]$',
+        ).firstMatch(trailingTokens.first);
+        if (weightMatch2 != null) {
+          timeWeight = double.parse(weightMatch2.group(1)!);
+          trailingTokens = trailingTokens.skip(1).toList();
+        }
+      }
       parsedSet = PlanDraftSet.timeBased(
         count: count,
         durationSeconds: duration,
+        weightKg: timeWeight,
       );
-      final trailingTokens = remaining.skip(1).toList();
       final restResult = _parseRestTokens(
         trailingTokens,
         lineNumber,
