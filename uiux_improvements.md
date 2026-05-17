@@ -44,7 +44,7 @@ Severity legend:
 - **Where:** Voice/wording drifts: "Could not load programs" / "Workout day not found." (period) / "Session not found" (no period) / "Program not found" / "Failed to save. Please try again."
 - **Recommend (P3):** Single `ErrorScreen` widget with title + body + (retry/back) actions. One copy doc for app-wide tone.
 
-### 1.7 No haptic feedback anywhere
+### 1.7 No haptic feedback anywhere ✅ DONE
 - **Where:** Set logged, rest timer overtime, drag accepted, replace confirmed, etc.
 - **Recommend (P2):** Add `HapticFeedback.lightImpact()` on:
   - Set log success (focus mode + overview)
@@ -52,12 +52,12 @@ Severity legend:
   - Rest timer crossing zero (`heavyImpact` once)
   - Long-press to start drag
   - Workout complete
-- Gyms are noisy; tactile signals double-confirm action.
+- Gyms are noisy; tactile signals double-confirm action. *(Centralised in [haptics.dart](mobile/lib/core/haptics.dart): `tap`/`grab`/`emphasis`. Wired to set-logged + workout-complete + rest-overtime in Focus, and drag accept + long-press start + set-logged in Overview.)*
 
-### 1.8 Destructive actions block on dialog; no undo
+### 1.8 Destructive actions block on dialog; no undo  *(not pursuing for now)*
 - **Where:** [confirmation_dialog.dart](mobile/lib/modules/program_management/widgets/confirmation_dialog.dart) used by delete program, delete day, delete exercise, skip exercise, end session, change measurement type
 - **Problem:** Every destructive flow is dialog-gated. Combined with swipe-to-delete in [program_list_tile.dart:113](mobile/lib/modules/program_management/widgets/program_list_tile.dart#L113), the user gets *both* a swipe and a dialog — the swipe is essentially a slow tap on "delete more vert > delete".
-- **Recommend (P1):** Prefer **undo snackbar** for moderate-risk actions (delete one exercise/set, skip exercise). Reserve dialogs for cascading deletes (program with N days, end session). Snackbars are non-blocking, support quick recovery, and the dominant pattern in mobile apps (Gmail, Drive, Apple Notes).
+- **Recommend (P1):** Prefer **undo snackbar** for moderate-risk actions (delete one exercise/set, skip exercise). Reserve dialogs for cascading deletes (program with N days, end session). Snackbars are non-blocking, support quick recovery, and the dominant pattern in mobile apps (Gmail, Drive, Apple Notes). *(Decision 2026-05-17: deferred — staying with confirmation dialogs for now.)*
 
 ### 1.9 No back-press guard on unsaved editors ✅ DONE
 - **Where:** [exercise_editor_screen.dart](mobile/lib/modules/program_management/screens/exercise_editor_screen.dart) — back gesture silently discards in-progress edits; only the explicit "Save" button persists
@@ -113,7 +113,7 @@ Severity legend:
 | # | Severity | Finding |
 |---|---|---|
 | a | P2 | Tile shows only program name + raw ISO date. Add workout-day count and "last session: <relative date>" — high-density info that helps choose. |
-| b | P2 | Date format `2026-05-16` ([program_list_tile.dart:133](mobile/lib/modules/program_management/widgets/program_list_tile.dart#L133)) is machine-friendly, not human. Use "Today", "Yesterday", "3 days ago", then date. |
+| b | ✅ DONE | Date format `2026-05-16` ([program_list_tile.dart:133](mobile/lib/modules/program_management/widgets/program_list_tile.dart#L133)) is machine-friendly, not human. Use "Today", "Yesterday", "3 days ago", then date. *(`RelativeDateFormatter` promoted to [core](mobile/lib/core/relative_date_formatter.dart) and used by ProgramListTile — same labels as Recent Sessions / Day Picker.)* |
 | c | P2 | Tap routes either to editor (if empty) or picker (if not) — magic-routing surprises users. Two distinct affordances: tile tap → picker, `>` chevron or Edit menu → editor. Or always go to picker with an empty-state "edit program" CTA. |
 | d | P3 | Swipe-to-delete duplicates the popup menu's delete. Pick one. Swipe is faster; menu is more discoverable. Keep both only if you'd be willing to A/B test which one survives. |
 | e | P2 | Import action is icon-only at top-right and emoji-poor. Surface it in the FAB as a speed-dial (`+` opens "New blank" / "Import from text"). |
@@ -124,9 +124,9 @@ Severity legend:
 
 | # | Severity | Finding |
 |---|---|---|
-| a | P1 | Blank text area with no placeholder / example format. New users will not know what syntax is expected. Add an expandable "See example" disclosure with a sample plan; or pre-fill the field with a commented template. |
+| a | ✅ DONE | Blank text area with no placeholder / example format. New users will not know what syntax is expected. Add an expandable "See example" disclosure with a sample plan; or pre-fill the field with a commented template. *(Multiline monospace placeholder shows a 5-line template; expandable "See example format" panel below the input renders the full sample with a "Use this example" CTA that fills the field.)* |
 | b | P2 | "Parse" button label is technical. Use "Preview" or "Import" — user mental model is "I'm importing a plan", not "I'm running a parser". |
-| c | P2 | No "paste from clipboard" button. One-tap paste is friction-killer on mobile. |
+| c | ✅ DONE | No "paste from clipboard" button. One-tap paste is friction-killer on mobile. *(Toolbar above the input now has a "Paste" `TextButton.icon` that reads the clipboard; falls back to a "Clipboard is empty" snackbar.)* |
 | d | P3 | No "clear" button to wipe the field. |
 | e | P3 | Failure banner appears under input but the Parse button moves down with it — slight layout jump. Pin the button. |
 
@@ -192,8 +192,8 @@ Severity legend:
 
 | # | Severity | Finding |
 |---|---|---|
-| a | P1 | **No overall progress indicator.** During a session the user can't tell at a glance "I'm 3/9 exercises in, 40% done". Add a thin `LinearProgressIndicator` under the AppBar showing fraction of exercises completed, or a "3 of 9" pill in the title. |
-| b | P1 | **No total session elapsed time.** Most workout apps show "00:42:13" — pace awareness is core to training. Put a small ticking timer in the AppBar (right side, before End-session icon). |
+| a | ✅ DONE | **No overall progress indicator.** During a session the user can't tell at a glance "I'm 3/9 exercises in, 40% done". Add a thin `LinearProgressIndicator` under the AppBar showing fraction of exercises completed, or a "3 of 9" pill in the title. *(AppBar title now stacks workout-day name above a `<done> of <total>` count derived from non-Unfinished exercises.)* |
+| b | ✅ DONE | **No total session elapsed time.** Most workout apps show "00:42:13" — pace awareness is core to training. Put a small ticking timer in the AppBar (right side, before End-session icon). *(New `_SessionElapsedLabel` widget ticks every second from `session.startedAt`; freezes to `endedAt - startedAt` once the session ends. Format collapses to `mm:ss` under an hour, `H:mm:ss` above.)* |
 | c | P1 | Drag-to-reorder via `_ReorderGap` (6px tall when idle) is **invisible**. Users won't discover it. Either (i) explicit "Reorder" mode toggle, or (ii) make the gap always show a faint dashed divider on the drag handle hover state. The card-onto-card "create superset" also lacks affordance — add a one-time tooltip. |
 | d | P2 | Bottom action bar labels "Note" / "Extra" / "Focus" — "Extra" is jargon for "extra work". Either "Add extra" or an icon-only with a longer accessible label. |
 | e | P2 | Exercise card's only expansion affordance is a small chevron in the actions row; tap target is the whole header. Make the chevron larger / animated to clarify "tap me". |
@@ -298,13 +298,18 @@ This is the **single most-used screen during a workout**. Highest stakes for one
 
 1. ✅ **Pin primary actions** in Focus Mode (a, c, d in 2.9). Single biggest perceived-quality win.
 2. ✅ **Session in-flight banner / bottom nav** (1.1, 1.15). Unlocks "resume anywhere". *(banner shipped; full root-level bottom nav left as a follow-up.)*
-3. **Undo snackbars for set-level destructive actions** (1.8, 2.8i, 2.9f). Cuts dialog-fatigue.
+3. ~~**Undo snackbars for set-level destructive actions** (1.8, 2.8i, 2.9f). Cuts dialog-fatigue.~~ *(not pursuing — see 1.8)*
 4. ✅ **Back-press guard on editors** (1.9, 2.6b). Prevents lost work. *(Applied to ExerciseEditor + PlanPreview; ProgramEditor/WorkoutDayEditor auto-save so no guard needed.)*
 5. ✅ **Touch-target audit** (1.12, 2.9c). Accessibility floor. *(Rest-timer + transient-error banner close buttons now at `AppSpacing.touchMin`; broader Semantics/tooltip sweep on decorative icons still pending.)*
 6. ✅ **Day Picker primary button → FilledButton + recommendation badges** (2.7a–b). Front-door warmth.
 7. ✅ **Hardcoded font/color cleanup** (1.10, 1.11). Sets up the rest of the polish work.
 
-The remaining items (haptics, skeletons, motion, history grouping, etc.) are best done incrementally as those screens see updates — they're cheap individually but add up to a noticeably more refined product.
+8. ✅ **Haptic feedback pass** (1.7). Centralised in [haptics.dart](mobile/lib/core/haptics.dart) and wired into Focus + Overview hot paths.
+9. ✅ **Human-readable program-list dates** (2.1b). `RelativeDateFormatter` promoted to core.
+10. ✅ **WorkoutOverview AppBar: progress count + elapsed timer** (2.8a, 2.8b). Pace and position visible at a glance.
+11. ✅ **PlanImport onboarding: monospace placeholder + paste button + example disclosure** (2.2a, 2.2c). Removes the "blank page" first-run problem.
+
+The remaining items (skeletons, motion, history grouping, etc.) are best done incrementally as those screens see updates — they're cheap individually but add up to a noticeably more refined product.
 
 ---
 

@@ -36,8 +36,17 @@ class PlanTextInput extends StatelessWidget {
         fontFamily: 'monospace',
       ),
       decoration: InputDecoration(
-        hintText: 'Paste your plan text here…',
-        hintStyle: typography.body.copyWith(color: colors.onSurfaceMuted),
+        hintText:
+            'Program name\n'
+            '\n'
+            'Day 1\n'
+            'Bench Press\n'
+            '4x8 100kg 2m\n'
+            '…',
+        hintStyle: typography.body.copyWith(
+          color: colors.onSurfaceMuted,
+          fontFamily: 'monospace',
+        ),
         contentPadding: const EdgeInsets.all(AppSpacing.lg),
       ),
     );

@@ -1,8 +1,11 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:zamaj/core/app_spacing.dart';
 import 'package:zamaj/core/app_theme.dart';
 import 'package:zamaj/core/app_typography.dart';
+import 'package:zamaj/core/haptics.dart';
 import 'package:zamaj/modules/domain/domain.dart';
 import 'package:zamaj/modules/program_management/services/domain_error_presenter.dart';
 import 'package:zamaj/modules/program_management/services/external_link_launcher.dart';
@@ -176,7 +179,9 @@ class _WorkoutOverviewScreenState extends State<WorkoutOverviewScreen> {
         return Scaffold(
           backgroundColor: colors.background,
           appBar: AppBar(
-            title: Text(_titleFor(state)),
+            title: state is WorkoutOverviewLoaded
+                ? _LoadedAppBarTitle(state: state)
+                : Text(_titleFor(state)),
             actions: state is WorkoutOverviewLoaded
                 ? [
                     if (!state.isEnded)
@@ -418,14 +423,16 @@ class _GroupBuilder extends StatelessWidget {
           ),
           onToggleSetExpansion: (pos) =>
               onToggleSetExpansion(exercise.sessionExercise.id, pos),
-          onLogSet: (values, plannedSetId) =>
-              context.read<WorkoutOverviewBloc>().add(
-                WorkoutOverviewSetLogged(
-                  sessionExerciseId: exercise.sessionExercise.id,
-                  actualValues: values,
-                  plannedSetIdInSnapshot: plannedSetId,
-                ),
+          onLogSet: (values, plannedSetId) {
+            Haptics.tap();
+            context.read<WorkoutOverviewBloc>().add(
+              WorkoutOverviewSetLogged(
+                sessionExerciseId: exercise.sessionExercise.id,
+                actualValues: values,
+                plannedSetIdInSnapshot: plannedSetId,
               ),
+            );
+          },
           onEditSet: (executedSetId, values) =>
               context.read<WorkoutOverviewBloc>().add(
                 WorkoutOverviewSetEdited(
@@ -450,14 +457,16 @@ class _GroupBuilder extends StatelessWidget {
           WorkoutOverviewExpansionToggled(id),
         ),
         onToggleSetExpansion: onToggleSetExpansion,
-        onLogSet: (id, values, plannedId) =>
-            context.read<WorkoutOverviewBloc>().add(
-              WorkoutOverviewSetLogged(
-                sessionExerciseId: id,
-                actualValues: values,
-                plannedSetIdInSnapshot: plannedId,
-              ),
+        onLogSet: (id, values, plannedId) {
+          Haptics.tap();
+          context.read<WorkoutOverviewBloc>().add(
+            WorkoutOverviewSetLogged(
+              sessionExerciseId: id,
+              actualValues: values,
+              plannedSetIdInSnapshot: plannedId,
             ),
+          );
+        },
         onEditSet: (executedSetId, values) =>
             context.read<WorkoutOverviewBloc>().add(
               WorkoutOverviewSetEdited(
@@ -507,6 +516,7 @@ class _DraggableExercise extends StatelessWidget {
         return true;
       },
       onAcceptWithDetails: (details) {
+        Haptics.tap();
         context.read<WorkoutOverviewBloc>().add(
           WorkoutOverviewDropResolved(
             draggedSessionExerciseId: details.data.sessionExerciseId,
@@ -551,6 +561,7 @@ class _MaybeDraggable extends StatelessWidget {
     return LongPressDraggable<ExerciseDragPayload>(
       data: payload,
       delay: const Duration(milliseconds: 250),
+      onDragStarted: Haptics.grab,
       feedback: Material(
         elevation: 6,
         color: Colors.transparent,
@@ -582,6 +593,7 @@ class _ReorderGap extends StatelessWidget {
     return DragTarget<ExerciseDragPayload>(
       onWillAcceptWithDetails: (_) => enabled,
       onAcceptWithDetails: (details) {
+        Haptics.tap();
         context.read<WorkoutOverviewBloc>().add(
           WorkoutOverviewDropResolved(
             draggedSessionExerciseId: details.data.sessionExerciseId,
@@ -767,5 +779,130 @@ class _BottomActionBar extends StatelessWidget {
         ),
       ),
     );
+  }
+}
+
+/// AppBar title for the loaded state. Stacks the workout-day name above a
+/// `done of total · mm:ss` status line so the user always knows their
+/// position and pace at a glance.
+class _LoadedAppBarTitle extends StatelessWidget {
+  const _LoadedAppBarTitle({required this.state});
+
+  final WorkoutOverviewLoaded state;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = Theme.of(context).appColors;
+    const typography = AppTypography.standard;
+    final counts = _exerciseCounts(state);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Text(
+          state.sessionState.session.snapshot.workoutDay.name,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+        ),
+        Row(
+          children: [
+            Text(
+              '${counts.done} of ${counts.total}',
+              style: typography.numericSm.copyWith(color: colors.onSurfaceMuted),
+            ),
+            Text(
+              '  ·  ',
+              style: typography.labelSmall.copyWith(
+                color: colors.onSurfaceMuted,
+              ),
+            ),
+            _SessionElapsedLabel(
+              startedAt: state.sessionState.session.startedAt,
+              endedAt: state.sessionState.session.endedAt,
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+
+  static ({int done, int total}) _exerciseCounts(WorkoutOverviewLoaded state) {
+    var done = 0;
+    var total = 0;
+    for (final group in state.groups) {
+      for (final ex in group.allExercises) {
+        total++;
+        if (ex.sessionExercise.state is! UnfinishedState) done++;
+      }
+    }
+    return (done: done, total: total);
+  }
+}
+
+/// Ticking elapsed-time readout. Counts up from [startedAt] every second
+/// while the session is live; freezes at `endedAt - startedAt` once the
+/// session ends.
+class _SessionElapsedLabel extends StatefulWidget {
+  const _SessionElapsedLabel({required this.startedAt, required this.endedAt});
+
+  final DateTime startedAt;
+  final DateTime? endedAt;
+
+  @override
+  State<_SessionElapsedLabel> createState() => _SessionElapsedLabelState();
+}
+
+class _SessionElapsedLabelState extends State<_SessionElapsedLabel> {
+  Timer? _ticker;
+
+  @override
+  void initState() {
+    super.initState();
+    _maybeStartTicker();
+  }
+
+  @override
+  void didUpdateWidget(covariant _SessionElapsedLabel old) {
+    super.didUpdateWidget(old);
+    if (old.endedAt != widget.endedAt) {
+      _ticker?.cancel();
+      _ticker = null;
+      _maybeStartTicker();
+    }
+  }
+
+  @override
+  void dispose() {
+    _ticker?.cancel();
+    super.dispose();
+  }
+
+  void _maybeStartTicker() {
+    if (widget.endedAt != null) return;
+    _ticker = Timer.periodic(const Duration(seconds: 1), (_) {
+      if (mounted) setState(() {});
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = Theme.of(context).appColors;
+    const typography = AppTypography.standard;
+    final end = widget.endedAt ?? DateTime.now().toUtc();
+    final seconds = end.difference(widget.startedAt).inSeconds;
+    return Text(
+      _formatElapsed(seconds < 0 ? 0 : seconds),
+      style: typography.numericSm.copyWith(color: colors.onSurfaceMuted),
+    );
+  }
+
+  static String _formatElapsed(int totalSeconds) {
+    final h = totalSeconds ~/ 3600;
+    final m = (totalSeconds % 3600) ~/ 60;
+    final s = totalSeconds % 60;
+    final mm = m.toString().padLeft(2, '0');
+    final ss = s.toString().padLeft(2, '0');
+    if (h > 0) return '$h:$mm:$ss';
+    return '$mm:$ss';
   }
 }

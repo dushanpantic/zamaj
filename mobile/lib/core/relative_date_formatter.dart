@@ -1,3 +1,10 @@
+import 'package:zamaj/core/date_formatter.dart';
+
+/// Human-readable relative date label for a past [target] anchored on [now].
+///
+/// Same-day returns "Today", one-day-ago "Yesterday", 2–6 days returns the
+/// weekday name, and anything earlier falls back to the ISO date string
+/// from [DateFormatter.isoDate].
 abstract final class RelativeDateFormatter {
   static String format(DateTime target, DateTime now) {
     final t = target.isUtc ? target.toLocal() : target;
@@ -8,7 +15,7 @@ abstract final class RelativeDateFormatter {
     if (deltaDays == 0) return 'Today';
     if (deltaDays == 1) return 'Yesterday';
     if (deltaDays > 1 && deltaDays < 7) return _weekdayName(t.weekday);
-    return _iso(t);
+    return DateFormatter.isoDate(t);
   }
 
   static String _weekdayName(int weekday) {
@@ -30,12 +37,5 @@ abstract final class RelativeDateFormatter {
       default:
         throw ArgumentError('Unknown weekday: $weekday');
     }
-  }
-
-  static String _iso(DateTime t) {
-    final y = t.year.toString().padLeft(4, '0');
-    final m = t.month.toString().padLeft(2, '0');
-    final d = t.day.toString().padLeft(2, '0');
-    return '$y-$m-$d';
   }
 }

@@ -3,7 +3,7 @@
 import 'dart:math';
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:zamaj/modules/workout_day_picker/services/relative_date_formatter.dart';
+import 'package:zamaj/core/relative_date_formatter.dart';
 
 void main() {
   const iterations = 200;

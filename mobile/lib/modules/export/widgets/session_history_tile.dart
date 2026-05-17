@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:zamaj/core/app_spacing.dart';
 import 'package:zamaj/core/app_theme.dart';
 import 'package:zamaj/core/app_typography.dart';
+import 'package:zamaj/core/relative_date_formatter.dart';
 import 'package:zamaj/modules/export/models/session_history_item.dart';
-import 'package:zamaj/modules/workout_day_picker/services/relative_date_formatter.dart';
 
 class SessionHistoryTile extends StatelessWidget {
   const SessionHistoryTile({

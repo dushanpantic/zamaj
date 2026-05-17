@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:zamaj/core/app_spacing.dart';
 import 'package:zamaj/core/app_theme.dart';
 import 'package:zamaj/core/app_typography.dart';
+import 'package:zamaj/core/haptics.dart';
 import 'package:zamaj/core/weight_formatter.dart';
 import 'package:zamaj/modules/domain/domain.dart';
 import 'package:zamaj/modules/focus_mode/bloc/bloc.dart';
@@ -33,15 +34,48 @@ class _FocusModeScreenState extends State<FocusModeScreen> {
   @override
   Widget build(BuildContext context) {
     final colors = Theme.of(context).appColors;
-    return BlocBuilder<FocusModeBloc, FocusModeState>(
-      builder: (context, state) {
-        return Scaffold(
-          backgroundColor: colors.background,
-          appBar: _appBarFor(context, state),
-          body: SafeArea(child: _body(context, state)),
-        );
-      },
+    return MultiBlocListener(
+      listeners: [
+        BlocListener<FocusModeBloc, FocusModeState>(
+          listenWhen: _isSetJustLogged,
+          listener: (_, _) => Haptics.tap(),
+        ),
+        BlocListener<FocusModeBloc, FocusModeState>(
+          listenWhen: (p, c) =>
+              p is! FocusModeWorkoutComplete && c is FocusModeWorkoutComplete,
+          listener: (_, _) => Haptics.emphasis(),
+        ),
+        BlocListener<FocusModeBloc, FocusModeState>(
+          listenWhen: _restJustWentOvertime,
+          listener: (_, _) => Haptics.emphasis(),
+        ),
+      ],
+      child: BlocBuilder<FocusModeBloc, FocusModeState>(
+        builder: (context, state) {
+          return Scaffold(
+            backgroundColor: colors.background,
+            appBar: _appBarFor(context, state),
+            body: SafeArea(child: _body(context, state)),
+          );
+        },
+      ),
     );
+  }
+
+  static bool _isSetJustLogged(FocusModeState p, FocusModeState c) {
+    if (c is! FocusModeReady) return false;
+    final priorId = p is FocusModeReady ? p.undoable?.executedSetId : null;
+    final nextId = c.undoable?.executedSetId;
+    return nextId != null && nextId != priorId;
+  }
+
+  static bool _restJustWentOvertime(FocusModeState p, FocusModeState c) {
+    if (c is! FocusModeReady) return false;
+    final nextOver = c.restTimer?.isOvertime ?? false;
+    if (!nextOver) return false;
+    final priorOver =
+        (p is FocusModeReady ? p.restTimer?.isOvertime : null) ?? false;
+    return !priorOver;
   }
 
   PreferredSizeWidget _appBarFor(BuildContext context, FocusModeState state) {
