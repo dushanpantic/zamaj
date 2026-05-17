@@ -511,101 +511,96 @@ void main() {
 
   // **Validates: Requirements 9.1, 9.4**
   group(
-    'Property 14: Reorder preserves completed positions and applies new order',
+    'Property 14: Reorder permutes unfinished slots and freezes locked positions',
     () {
-      test(
-        'reorderUnfinished keeps locked exercises in their original relative '
-        'order and applies the new order to unfinished exercises',
-        () async {
-          const iterations = 100;
-          final masterSeed = Random().nextInt(1 << 32);
+      test('reorderUnfinished permutes unfinished ids across their existing '
+          'position slots and leaves locked positions untouched', () async {
+        const iterations = 100;
+        final masterSeed = Random().nextInt(1 << 32);
 
-          for (var i = 0; i < iterations; i++) {
-            final rng = Random(masterSeed + i);
-            final session = _anySessionForReorder(rng);
-            final fakeClock = Clock.fixed(anyUtcDateTime(rng));
-            final repo = FakeSessionRepository(clock: fakeClock);
-            repo.seedSession(session);
+        for (var i = 0; i < iterations; i++) {
+          final rng = Random(masterSeed + i);
+          final session = _anySessionForReorder(rng);
+          final fakeClock = Clock.fixed(anyUtcDateTime(rng));
+          final repo = FakeSessionRepository(clock: fakeClock);
+          repo.seedSession(session);
 
-            final engine = SessionFlowEngine(repository: repo);
+          final engine = SessionFlowEngine(repository: repo);
 
-            final originalSorted = List<SessionExercise>.of(
-              session.sessionExercises,
-            )..sort((a, b) => a.position.compareTo(b.position));
+          final unfinishedSortedByPosition =
+              session.sessionExercises
+                  .where((e) => e.state is UnfinishedState)
+                  .toList()
+                ..sort((a, b) => a.position.compareTo(b.position));
+          final unfinishedSlots = unfinishedSortedByPosition
+              .map((e) => e.position)
+              .toList();
+          final unfinishedIds = unfinishedSortedByPosition
+              .map((e) => e.id)
+              .toList();
 
-            final originalLockedOrder = originalSorted
-                .where((e) => e.state is! UnfinishedState)
-                .map((e) => e.id)
-                .toList();
+          final shuffledUnfinished = [...unfinishedIds]..shuffle(rng);
 
-            final unfinishedIds = originalSorted
-                .where((e) => e.state is UnfinishedState)
-                .map((e) => e.id)
-                .toList();
+          final result = await engine.reorderUnfinished(
+            sessionId: session.id,
+            orderedUnfinishedIds: shuffledUnfinished,
+          );
 
-            final shuffledUnfinished = [...unfinishedIds]..shuffle(rng);
+          final resultById = {
+            for (final e in result.session.sessionExercises) e.id: e,
+          };
 
-            final result = await engine.reorderUnfinished(
-              sessionId: session.id,
-              orderedUnfinishedIds: shuffledUnfinished,
-            );
-
-            final resultSorted = List<SessionExercise>.of(
-              result.session.sessionExercises,
-            )..sort((a, b) => a.position.compareTo(b.position));
-
-            final positions = resultSorted.map((e) => e.position).toList();
+          for (final originalLocked in session.sessionExercises.where(
+            (e) => e.state is! UnfinishedState,
+          )) {
             expect(
-              positions,
-              equals(List.generate(positions.length, (j) => j)),
+              resultById[originalLocked.id]!.position,
+              equals(originalLocked.position),
               reason:
                   'iteration $i (seed ${masterSeed + i}): '
-                  'positions must be a dense 0..n-1 sequence',
-            );
-
-            final resultLockedOrder = resultSorted
-                .where((e) => e.state is! UnfinishedState)
-                .map((e) => e.id)
-                .toList();
-            expect(
-              resultLockedOrder,
-              equals(originalLockedOrder),
-              reason:
-                  'iteration $i (seed ${masterSeed + i}): '
-                  'locked exercises must keep their original relative order',
-            );
-
-            final resultUnfinishedOrder = resultSorted
-                .where((e) => e.state is UnfinishedState)
-                .map((e) => e.id)
-                .toList();
-            expect(
-              resultUnfinishedOrder,
-              equals(shuffledUnfinished),
-              reason:
-                  'iteration $i (seed ${masterSeed + i}): '
-                  'unfinished exercises must follow the specified new order',
-            );
-
-            final maxLockedPosition = resultSorted
-                .where((e) => e.state is! UnfinishedState)
-                .map((e) => e.position)
-                .fold<int>(-1, max);
-            final minUnfinishedPosition = resultSorted
-                .where((e) => e.state is UnfinishedState)
-                .map((e) => e.position)
-                .reduce(min);
-            expect(
-              minUnfinishedPosition,
-              greaterThan(maxLockedPosition),
-              reason:
-                  'iteration $i (seed ${masterSeed + i}): '
-                  'all unfinished exercises must be positioned after the '
-                  'locked exercises',
+                  'locked exercise ${originalLocked.id} changed position',
             );
           }
-        },
-      );
+
+          for (var slot = 0; slot < shuffledUnfinished.length; slot++) {
+            final id = shuffledUnfinished[slot];
+            expect(
+              resultById[id]!.position,
+              equals(unfinishedSlots[slot]),
+              reason:
+                  'iteration $i (seed ${masterSeed + i}): '
+                  'unfinished id $id should occupy slot index $slot '
+                  '(position ${unfinishedSlots[slot]})',
+            );
+          }
+
+          final resultUnfinishedSlots =
+              result.session.sessionExercises
+                  .where((e) => e.state is UnfinishedState)
+                  .map((e) => e.position)
+                  .toList()
+                ..sort();
+          expect(
+            resultUnfinishedSlots,
+            equals(unfinishedSlots),
+            reason:
+                'iteration $i (seed ${masterSeed + i}): '
+                'the set of position slots held by unfinished exercises '
+                'must be unchanged after reorder',
+          );
+
+          // States are never altered by reordering.
+          for (final original in session.sessionExercises) {
+            expect(
+              resultById[original.id]!.state,
+              equals(original.state),
+              reason:
+                  'iteration $i (seed ${masterSeed + i}): '
+                  'exercise ${original.id} state changed during reorder',
+            );
+          }
+        }
+      });
     },
   );
 

@@ -288,6 +288,37 @@ class FakeSessionRepository implements SessionRepository {
   }
 
   @override
+  Future<Session> markExerciseDone({required String sessionExerciseId}) async {
+    final session = await getSessionByExerciseId(sessionExerciseId);
+    final now = clock.now().toUtc();
+
+    final exercise = session.sessionExercises.firstWhere(
+      (e) => e.id == sessionExerciseId,
+    );
+    if (exercise.state is! UnfinishedState) {
+      throw OrderingError(
+        sessionExerciseId: sessionExerciseId,
+        currentState: exercise.state.discriminator,
+        message:
+            'SessionExercise $sessionExerciseId is already locked in state ${exercise.state.discriminator}',
+      );
+    }
+
+    final updatedExercises = session.sessionExercises.map((e) {
+      if (e.id != sessionExerciseId) return e;
+      return e.copyWith(state: const ExerciseState.completed(), updatedAt: now);
+    }).toList();
+
+    final updated = session.copyWith(
+      sessionExercises: updatedExercises,
+      updatedAt: now,
+    );
+    _sessions[session.id] = updated;
+    _notify(session.id);
+    return updated;
+  }
+
+  @override
   Future<Session> skipExercise(String sessionExerciseId) async {
     final session = await getSessionByExerciseId(sessionExerciseId);
     final now = clock.now().toUtc();
@@ -354,31 +385,42 @@ class FakeSessionRepository implements SessionRepository {
     final session = _requireSession(sessionId);
     final now = clock.now().toUtc();
 
-    final lockedExercises =
-        session.sessionExercises
-            .where((e) => e.state is! UnfinishedState)
-            .toList()
-          ..sort((a, b) => a.position.compareTo(b.position));
-
-    final unfinishedById = {
-      for (final e in session.sessionExercises)
-        if (e.state is UnfinishedState) e.id: e,
-    };
-
-    final reordered = <SessionExercise>[];
-    var position = 0;
-
-    for (final locked in lockedExercises) {
-      reordered.add(locked.copyWith(position: position++));
-    }
+    final exerciseById = {for (final e in session.sessionExercises) e.id: e};
 
     for (final id in orderedUnfinishedIds) {
-      final exercise = unfinishedById[id]!;
-      reordered.add(exercise.copyWith(position: position++, updatedAt: now));
+      final exercise = exerciseById[id];
+      if (exercise == null) {
+        throw NotFoundError(entityType: 'SessionExercise', id: id);
+      }
+      if (exercise.state is! UnfinishedState) {
+        throw OrderingError(
+          sessionExerciseId: id,
+          currentState: exercise.state.discriminator,
+          message:
+              'SessionExercise $id is in state ${exercise.state.discriminator}, not unfinished',
+        );
+      }
     }
 
+    // Permute among the provided unfinished ids' existing position slots.
+    // Locked exercises and any unfinished exercise not in the input are
+    // unaffected.
+    final slots =
+        orderedUnfinishedIds.map((id) => exerciseById[id]!.position).toList()
+          ..sort();
+    final newPositionById = <String, int>{
+      for (var i = 0; i < orderedUnfinishedIds.length; i++)
+        orderedUnfinishedIds[i]: slots[i],
+    };
+
+    final updatedExercises = session.sessionExercises.map((e) {
+      final newPos = newPositionById[e.id];
+      if (newPos == null || newPos == e.position) return e;
+      return e.copyWith(position: newPos, updatedAt: now);
+    }).toList();
+
     final updated = session.copyWith(
-      sessionExercises: reordered,
+      sessionExercises: updatedExercises,
       updatedAt: now,
     );
     _sessions[sessionId] = updated;

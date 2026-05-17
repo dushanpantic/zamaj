@@ -715,6 +715,11 @@ final class SkipExerciseOp extends SessionRepoOp {
   final String sessionExerciseId;
 }
 
+final class MarkExerciseDoneOp extends SessionRepoOp {
+  MarkExerciseDoneOp({required this.sessionExerciseId});
+  final String sessionExerciseId;
+}
+
 final class ReplaceExerciseOp extends SessionRepoOp {
   ReplaceExerciseOp({
     required this.sessionExerciseId,
@@ -769,7 +774,7 @@ List<SessionRepoOp> anySessionRepoOpSequence(Random rng) {
     final seId = sessionExerciseIds[rng.nextInt(sessionExerciseIds.length)];
 
     // Bias: 60% state transitions, 40% structural ops
-    final roll = rng.nextInt(10);
+    final roll = rng.nextInt(11);
     if (roll < 3) {
       final mt = anyMeasurementType(rng);
       ops.add(
@@ -781,6 +786,8 @@ List<SessionRepoOp> anySessionRepoOpSequence(Random rng) {
       );
     } else if (roll < 5) {
       ops.add(SkipExerciseOp(sessionExerciseId: seId));
+    } else if (roll == 5) {
+      ops.add(MarkExerciseDoneOp(sessionExerciseId: seId));
     } else if (roll < 7) {
       final substituteMt = anyMeasurementType(rng);
       ops.add(

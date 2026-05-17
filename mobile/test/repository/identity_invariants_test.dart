@@ -281,6 +281,13 @@ Future<void> _runSessionOps(
             await sessionRepo.skipExercise(seId);
           }
 
+        case MarkExerciseDoneOp():
+          if (sessionExerciseIds.isNotEmpty) {
+            final seId =
+                sessionExerciseIds[rng.nextInt(sessionExerciseIds.length)];
+            await sessionRepo.markExerciseDone(sessionExerciseId: seId);
+          }
+
         case ReplaceExerciseOp(
           :final substituteName,
           :final substituteMeasurementType,

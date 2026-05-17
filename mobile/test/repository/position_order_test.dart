@@ -1,15 +1,18 @@
 /// **Validates: Requirements 7.1, 7.2, 7.3, 7.4, 7.5**
 ///
-/// Property 6: Position total-order invariant.
+/// Property 6: Position stability invariant.
 ///
-/// After any sequence of session repository operations the following four
-/// clauses must hold simultaneously:
+/// After the set-order redesign, positions assigned at `startSession` are
+/// stable. State transitions (`completeSet`, `skipExercise`,
+/// `replaceExercise`, `deleteExecutedSet`, `markExerciseDone`) never modify
+/// any exercise's `position`. Only `reorderUnfinished` can change positions,
+/// and it can only permute slots already held by unfinished exercises.
 ///
 ///   P6-a  All session exercise positions within a session are distinct.
-///   P6-b  Locked exercises (completed / skipped / replaced) have positions
-///         strictly below every unfinished exercise.
-///   P6-c  Once an exercise transitions to a locked state its position never
-///         changes again.
+///   P6-b  Locked exercises (completed / skipped / replaced) never change
+///         position after the operation that locked them.
+///   P6-c  When no `reorderUnfinished` was applied, every exercise — locked
+///         or not — keeps its initial `startSession` position.
 ///   P6-d  `reorderUnfinished` targeting a locked id raises `OrderingError`
 ///         and leaves the session unchanged.
 library;
@@ -35,7 +38,7 @@ import 'package:zamaj/modules/persistence/repositories/drift_session_repository.
 import '../support/generators.dart';
 
 void main() {
-  group('P6 – Position total-order invariant', () {
+  group('P6 – Position stability invariant', () {
     test(
       'P6-a: all session exercise positions are distinct after any op sequence',
       () async {
@@ -82,43 +85,7 @@ void main() {
     );
 
     test(
-      'P6-b: locked exercises have positions strictly below all unfinished exercises',
-      () async {
-        final rng = Random(137);
-        for (var iteration = 0; iteration < 100; iteration++) {
-          final db = AppDatabase(NativeDatabase.memory());
-          try {
-            final programRepo = DriftProgramRepository(db: db);
-            final sessionRepo = DriftSessionRepository(
-              db: db,
-              programRepository: programRepo,
-            );
-
-            final session = await _seedSession(rng, programRepo, sessionRepo);
-            final sessionId = session.id;
-            final seIds = session.sessionExercises.map((e) => e.id).toList();
-
-            final ops = anySessionRepoOpSequence(rng);
-            await _applyOps(
-              ops: ops,
-              sessionId: sessionId,
-              seIds: seIds,
-              sessionRepo: sessionRepo,
-              rng: rng,
-            );
-
-            final result = await sessionRepo.getSession(sessionId);
-            expect(result, isNotNull);
-            _assertLockedBelowUnfinished(result!, iteration);
-          } finally {
-            await db.close();
-          }
-        }
-      },
-    );
-
-    test(
-      'P6-c: locked positions are frozen – they never change after locking',
+      'P6-b: locked exercise positions never change after locking',
       () async {
         final rng = Random(271);
         for (var iteration = 0; iteration < 100; iteration++) {
@@ -152,21 +119,69 @@ void main() {
               }
 
               for (final se in afterOp.sessionExercises) {
-                if (_isLocked(se)) {
-                  if (lockedPositions.containsKey(se.id)) {
-                    expect(
-                      se.position,
-                      equals(lockedPositions[se.id]),
-                      reason:
-                          'Iteration $iteration: locked exercise ${se.id} '
-                          'changed position from ${lockedPositions[se.id]} '
-                          'to ${se.position}',
-                    );
-                  } else {
-                    lockedPositions[se.id] = se.position;
-                  }
+                if (!_isLocked(se)) continue;
+                if (lockedPositions.containsKey(se.id)) {
+                  expect(
+                    se.position,
+                    equals(lockedPositions[se.id]),
+                    reason:
+                        'Iteration $iteration: locked exercise ${se.id} '
+                        'changed position from ${lockedPositions[se.id]} '
+                        'to ${se.position}',
+                  );
+                } else {
+                  lockedPositions[se.id] = se.position;
                 }
               }
+            }
+          } finally {
+            await db.close();
+          }
+        }
+      },
+    );
+
+    test(
+      'P6-c: with no reorderUnfinished, every position equals its startSession value',
+      () async {
+        final rng = Random(137);
+        for (var iteration = 0; iteration < 100; iteration++) {
+          final db = AppDatabase(NativeDatabase.memory());
+          try {
+            final programRepo = DriftProgramRepository(db: db);
+            final sessionRepo = DriftSessionRepository(
+              db: db,
+              programRepository: programRepo,
+            );
+
+            final session = await _seedSession(rng, programRepo, sessionRepo);
+            final sessionId = session.id;
+            final seIds = session.sessionExercises.map((e) => e.id).toList();
+            final initialPositions = {
+              for (final se in session.sessionExercises) se.id: se.position,
+            };
+
+            final ops = anySessionRepoOpSequence(
+              rng,
+            ).where((op) => op is! ReorderUnfinishedOp).toList();
+            await _applyOps(
+              ops: ops,
+              sessionId: sessionId,
+              seIds: seIds,
+              sessionRepo: sessionRepo,
+              rng: rng,
+            );
+
+            final result = await sessionRepo.getSession(sessionId);
+            expect(result, isNotNull);
+            for (final se in result!.sessionExercises) {
+              expect(
+                se.position,
+                equals(initialPositions[se.id]),
+                reason:
+                    'Iteration $iteration: ${se.id} drifted from initial '
+                    'position ${initialPositions[se.id]} to ${se.position}',
+              );
             }
           } finally {
             await db.close();
@@ -276,6 +291,110 @@ void main() {
       },
     );
   });
+
+  group('markExerciseDone', () {
+    test(
+      'flips an unfinished exercise to completed without changing position',
+      () async {
+        final rng = Random(11);
+        final db = AppDatabase(NativeDatabase.memory());
+        try {
+          final programRepo = DriftProgramRepository(db: db);
+          final sessionRepo = DriftSessionRepository(
+            db: db,
+            programRepository: programRepo,
+          );
+
+          final session = await _seedSession(rng, programRepo, sessionRepo);
+          final target = session.sessionExercises.first;
+
+          final after = await sessionRepo.markExerciseDone(
+            sessionExerciseId: target.id,
+          );
+
+          final flipped = after.sessionExercises.firstWhere(
+            (e) => e.id == target.id,
+          );
+          expect(flipped.state, isA<CompletedState>());
+          expect(flipped.position, equals(target.position));
+          expect(flipped.executedSets, isEmpty);
+        } finally {
+          await db.close();
+        }
+      },
+    );
+
+    test(
+      'preserves previously logged sets when marking partially done',
+      () async {
+        final rng = Random(12);
+        final db = AppDatabase(NativeDatabase.memory());
+        try {
+          final programRepo = DriftProgramRepository(db: db);
+          final sessionRepo = DriftSessionRepository(
+            db: db,
+            programRepository: programRepo,
+          );
+
+          final session = await _seedSession(
+            rng,
+            programRepo,
+            sessionRepo,
+            setsPerExercise: 3,
+          );
+          final target = session.sessionExercises.first;
+          final plannedExercise = session.snapshot.workoutDay.exerciseGroups
+              .expand((g) => g.exercises)
+              .firstWhere((e) => e.id == target.plannedExerciseIdInSnapshot);
+          final measurementType = plannedExercise.measurementType;
+
+          await sessionRepo.completeSet(
+            sessionExerciseId: target.id,
+            actualValues: anyActualSetValuesForMeasurement(
+              rng,
+              measurementType,
+            ),
+          );
+
+          final after = await sessionRepo.markExerciseDone(
+            sessionExerciseId: target.id,
+          );
+
+          final flipped = after.sessionExercises.firstWhere(
+            (e) => e.id == target.id,
+          );
+          expect(flipped.state, isA<CompletedState>());
+          expect(flipped.executedSets, hasLength(1));
+        } finally {
+          await db.close();
+        }
+      },
+    );
+
+    test('throws OrderingError when the exercise is already locked', () async {
+      final rng = Random(13);
+      final db = AppDatabase(NativeDatabase.memory());
+      try {
+        final programRepo = DriftProgramRepository(db: db);
+        final sessionRepo = DriftSessionRepository(
+          db: db,
+          programRepository: programRepo,
+        );
+
+        final session = await _seedSession(rng, programRepo, sessionRepo);
+        final target = session.sessionExercises.first;
+
+        await sessionRepo.skipExercise(target.id);
+
+        await expectLater(
+          () => sessionRepo.markExerciseDone(sessionExerciseId: target.id),
+          throwsA(isA<OrderingError>()),
+        );
+      } finally {
+        await db.close();
+      }
+    });
+  });
 }
 
 bool _isLocked(domain.SessionExercise se) {
@@ -287,31 +406,12 @@ bool _isLocked(domain.SessionExercise se) {
   };
 }
 
-void _assertLockedBelowUnfinished(domain.Session session, int iteration) {
-  final locked = session.sessionExercises.where(_isLocked).toList();
-  final unfinished = session.sessionExercises
-      .where((e) => !_isLocked(e))
-      .toList();
-
-  if (locked.isEmpty || unfinished.isEmpty) return;
-
-  final maxLockedPos = locked.map((e) => e.position).reduce(max);
-  final minUnfinishedPos = unfinished.map((e) => e.position).reduce(min);
-
-  expect(
-    maxLockedPos,
-    lessThan(minUnfinishedPos),
-    reason:
-        'Iteration $iteration: max locked position ($maxLockedPos) is not '
-        'strictly below min unfinished position ($minUnfinishedPos)',
-  );
-}
-
 Future<domain.Session> _seedSession(
   Random rng,
   DriftProgramRepository programRepo,
-  DriftSessionRepository sessionRepo,
-) async {
+  DriftSessionRepository sessionRepo, {
+  int setsPerExercise = 1,
+}) async {
   final program = await programRepo.createProgram(name: 'Test Program');
   final exerciseCount = 3 + rng.nextInt(3);
   final exercises = List.generate(exerciseCount, (i) {
@@ -323,7 +423,10 @@ Future<domain.Session> _seedSession(
       name: 'Exercise $i',
       measurementType: mt,
       metadata: ExerciseMetadata.empty,
-      sets: [_makePlannedSet(rng, mt, anyUuidV4(rng))],
+      sets: List.generate(
+        setsPerExercise,
+        (_) => _makePlannedSet(rng, mt, anyUuidV4(rng)),
+      ),
       createdAt: DateTime.utc(2024),
       updatedAt: DateTime.utc(2024),
       schemaVersion: 1,
@@ -408,6 +511,9 @@ Future<domain.Session> _applySingleOp({
       plannedSetIdInSnapshot: op.plannedSetIdInSnapshot,
     ),
     SkipExerciseOp() => sessionRepo.skipExercise(seId),
+    MarkExerciseDoneOp() => sessionRepo.markExerciseDone(
+      sessionExerciseId: seId,
+    ),
     ReplaceExerciseOp() => sessionRepo.replaceExercise(
       sessionExerciseId: seId,
       substituteName: op.substituteName,

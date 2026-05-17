@@ -384,38 +384,20 @@ class DriftSessionRepository implements SessionRepository {
         createdAt: msToUtc(exerciseRow.createdAtMs),
       );
 
-      if (completedSetCount >= plannedSetCount &&
-          exerciseRow.stateDiscriminator == 'unfinished') {
-        final lockedPos = await _maxLockedPositionExcluding(
-          exerciseRow.sessionId,
-          excludeId: sessionExerciseId,
-        );
-        final newExercisePosition = lockedPos + 1;
+      final autoComplete =
+          completedSetCount >= plannedSetCount &&
+          exerciseRow.stateDiscriminator == 'unfinished';
 
-        await (_db.update(
-          _db.sessionExercises,
-        )..where((t) => t.id.equals(sessionExerciseId))).write(
-          SessionExercisesCompanion(
-            stateDiscriminator: const Value('completed'),
-            position: Value(newExercisePosition),
-            updatedAtMs: Value(utcToMs(exerciseUpdatedAt)),
-          ),
-        );
-
-        await _renumberUnfinishedAfterLock(
-          sessionId: exerciseRow.sessionId,
-          lockedPosition: newExercisePosition,
-          excludeId: sessionExerciseId,
-        );
-      } else {
-        await (_db.update(
-          _db.sessionExercises,
-        )..where((t) => t.id.equals(sessionExerciseId))).write(
-          SessionExercisesCompanion(
-            updatedAtMs: Value(utcToMs(exerciseUpdatedAt)),
-          ),
-        );
-      }
+      await (_db.update(
+        _db.sessionExercises,
+      )..where((t) => t.id.equals(sessionExerciseId))).write(
+        SessionExercisesCompanion(
+          stateDiscriminator: autoComplete
+              ? const Value('completed')
+              : const Value.absent(),
+          updatedAtMs: Value(utcToMs(exerciseUpdatedAt)),
+        ),
+      );
 
       final sessionUpdatedAt = _timestamps.nextUpdatedAt(
         previousUpdatedAt: msToUtc(sessionRow.updatedAtMs),
@@ -554,38 +536,20 @@ class DriftSessionRepository implements SessionRepository {
         createdAt: msToUtc(exerciseRow.createdAtMs),
       );
 
-      if (exerciseRow.stateDiscriminator == 'completed' &&
-          remaining.length < plannedSetCount) {
-        final lockedPos = await _maxLockedPositionExcluding(
-          exerciseRow.sessionId,
-          excludeId: exerciseRow.id,
-        );
-        final newPosition = lockedPos + 1;
+      final revertToUnfinished =
+          exerciseRow.stateDiscriminator == 'completed' &&
+          remaining.length < plannedSetCount;
 
-        await (_db.update(
-          _db.sessionExercises,
-        )..where((t) => t.id.equals(exerciseRow.id))).write(
-          SessionExercisesCompanion(
-            stateDiscriminator: const Value('unfinished'),
-            position: Value(newPosition),
-            updatedAtMs: Value(utcToMs(exerciseUpdatedAt)),
-          ),
-        );
-
-        await _renumberUnfinishedAfterLock(
-          sessionId: exerciseRow.sessionId,
-          lockedPosition: newPosition,
-          excludeId: exerciseRow.id,
-        );
-      } else {
-        await (_db.update(
-          _db.sessionExercises,
-        )..where((t) => t.id.equals(exerciseRow.id))).write(
-          SessionExercisesCompanion(
-            updatedAtMs: Value(utcToMs(exerciseUpdatedAt)),
-          ),
-        );
-      }
+      await (_db.update(
+        _db.sessionExercises,
+      )..where((t) => t.id.equals(exerciseRow.id))).write(
+        SessionExercisesCompanion(
+          stateDiscriminator: revertToUnfinished
+              ? const Value('unfinished')
+              : const Value.absent(),
+          updatedAtMs: Value(utcToMs(exerciseUpdatedAt)),
+        ),
+      );
 
       final sessionUpdatedAt = _timestamps.nextUpdatedAt(
         previousUpdatedAt: msToUtc(sessionRow.updatedAtMs),
@@ -607,12 +571,6 @@ class DriftSessionRepository implements SessionRepository {
       final exerciseRow = await _requireSessionExerciseRow(sessionExerciseId);
       _requireUnfinished(exerciseRow);
 
-      final lockedPos = await _maxLockedPositionExcluding(
-        exerciseRow.sessionId,
-        excludeId: sessionExerciseId,
-      );
-      final newPosition = lockedPos + 1;
-
       final exerciseUpdatedAt = _timestamps.nextUpdatedAt(
         previousUpdatedAt: msToUtc(exerciseRow.updatedAtMs),
         createdAt: msToUtc(exerciseRow.createdAtMs),
@@ -623,15 +581,45 @@ class DriftSessionRepository implements SessionRepository {
       )..where((t) => t.id.equals(sessionExerciseId))).write(
         SessionExercisesCompanion(
           stateDiscriminator: const Value('skipped'),
-          position: Value(newPosition),
           updatedAtMs: Value(utcToMs(exerciseUpdatedAt)),
         ),
       );
 
-      await _renumberUnfinishedAfterLock(
-        sessionId: exerciseRow.sessionId,
-        lockedPosition: newPosition,
-        excludeId: sessionExerciseId,
+      final sessionRow = await _requireSessionRow(exerciseRow.sessionId);
+      final sessionUpdatedAt = _timestamps.nextUpdatedAt(
+        previousUpdatedAt: msToUtc(sessionRow.updatedAtMs),
+        createdAt: msToUtc(sessionRow.createdAtMs),
+      );
+      await (_db.update(
+        _db.sessions,
+      )..where((t) => t.id.equals(exerciseRow.sessionId))).write(
+        SessionsCompanion(updatedAtMs: Value(utcToMs(sessionUpdatedAt))),
+      );
+
+      return _loadSession(exerciseRow.sessionId);
+    });
+  }
+
+  @override
+  Future<domain.Session> markExerciseDone({
+    required String sessionExerciseId,
+  }) async {
+    return _db.transaction(() async {
+      final exerciseRow = await _requireSessionExerciseRow(sessionExerciseId);
+      _requireUnfinished(exerciseRow);
+
+      final exerciseUpdatedAt = _timestamps.nextUpdatedAt(
+        previousUpdatedAt: msToUtc(exerciseRow.updatedAtMs),
+        createdAt: msToUtc(exerciseRow.createdAtMs),
+      );
+
+      await (_db.update(
+        _db.sessionExercises,
+      )..where((t) => t.id.equals(sessionExerciseId))).write(
+        SessionExercisesCompanion(
+          stateDiscriminator: const Value('completed'),
+          updatedAtMs: Value(utcToMs(exerciseUpdatedAt)),
+        ),
       );
 
       final sessionRow = await _requireSessionRow(exerciseRow.sessionId);
@@ -671,12 +659,6 @@ class DriftSessionRepository implements SessionRepository {
       );
       final substituteJson = CanonicalJson.encode(substitute.toJson());
 
-      final lockedPos = await _maxLockedPositionExcluding(
-        exerciseRow.sessionId,
-        excludeId: sessionExerciseId,
-      );
-      final newPosition = lockedPos + 1;
-
       final exerciseUpdatedAt = _timestamps.nextUpdatedAt(
         previousUpdatedAt: msToUtc(exerciseRow.updatedAtMs),
         createdAt: msToUtc(exerciseRow.createdAtMs),
@@ -688,15 +670,8 @@ class DriftSessionRepository implements SessionRepository {
         SessionExercisesCompanion(
           stateDiscriminator: const Value('replaced'),
           substitutePayloadJson: Value(substituteJson),
-          position: Value(newPosition),
           updatedAtMs: Value(utcToMs(exerciseUpdatedAt)),
         ),
-      );
-
-      await _renumberUnfinishedAfterLock(
-        sessionId: exerciseRow.sessionId,
-        lockedPosition: newPosition,
-        excludeId: sessionExerciseId,
       );
 
       final sessionRow = await _requireSessionRow(exerciseRow.sessionId);
@@ -741,12 +716,19 @@ class DriftSessionRepository implements SessionRepository {
     }
 
     return _db.transaction(() async {
-      final lockedPos = await _maxLockedPosition(sessionId);
+      // Permute positions among the provided unfinished ids: the slots they
+      // currently occupy (sorted ascending) get re-assigned in the new order.
+      // Locked exercises and any unfinished exercise not in the input keep
+      // their current positions.
+      final slots =
+          orderedUnfinishedIds.map((id) => exerciseById[id]!.position).toList()
+            ..sort();
 
       for (var i = 0; i < orderedUnfinishedIds.length; i++) {
         final id = orderedUnfinishedIds[i];
         final exercise = exerciseById[id]!;
-        final newPosition = lockedPos + (i + 1) * _gap;
+        final newPosition = slots[i];
+        if (newPosition == exercise.position) continue;
         final updatedAt = _timestamps.nextUpdatedAt(
           previousUpdatedAt: msToUtc(exercise.updatedAtMs),
           createdAt: msToUtc(exercise.createdAtMs),
@@ -1010,70 +992,6 @@ class DriftSessionRepository implements SessionRepository {
         currentState: row.stateDiscriminator,
         message:
             'SessionExercise ${row.id} is already locked in state ${row.stateDiscriminator}',
-      );
-    }
-  }
-
-  Future<int> _maxLockedPosition(String sessionId) async {
-    final lockedExercises =
-        await (_db.select(_db.sessionExercises)
-              ..where(
-                (t) =>
-                    t.sessionId.equals(sessionId) &
-                    t.stateDiscriminator.isNotIn(['unfinished']),
-              )
-              ..orderBy([(t) => OrderingTerm.desc(t.position)]))
-            .get();
-    return lockedExercises.isEmpty ? 0 : lockedExercises.first.position;
-  }
-
-  Future<int> _maxLockedPositionExcluding(
-    String sessionId, {
-    required String excludeId,
-  }) async {
-    final lockedExercises =
-        await (_db.select(_db.sessionExercises)
-              ..where(
-                (t) =>
-                    t.sessionId.equals(sessionId) &
-                    t.stateDiscriminator.isNotIn(['unfinished']) &
-                    t.id.isNotValue(excludeId),
-              )
-              ..orderBy([(t) => OrderingTerm.desc(t.position)]))
-            .get();
-    return lockedExercises.isEmpty ? 0 : lockedExercises.first.position;
-  }
-
-  Future<void> _renumberUnfinishedAfterLock({
-    required String sessionId,
-    required int lockedPosition,
-    required String excludeId,
-  }) async {
-    final unfinished =
-        await (_db.select(_db.sessionExercises)
-              ..where(
-                (t) =>
-                    t.sessionId.equals(sessionId) &
-                    t.stateDiscriminator.equals('unfinished') &
-                    t.id.isNotValue(excludeId),
-              )
-              ..orderBy([(t) => OrderingTerm.asc(t.position)]))
-            .get();
-
-    for (var j = 0; j < unfinished.length; j++) {
-      final row = unfinished[j];
-      final newPos = lockedPosition + (j + 1) * _gap;
-      final updatedAt = _timestamps.nextUpdatedAt(
-        previousUpdatedAt: msToUtc(row.updatedAtMs),
-        createdAt: msToUtc(row.createdAtMs),
-      );
-      await (_db.update(
-        _db.sessionExercises,
-      )..where((t) => t.id.equals(row.id))).write(
-        SessionExercisesCompanion(
-          position: Value(newPos),
-          updatedAtMs: Value(utcToMs(updatedAt)),
-        ),
       );
     }
   }

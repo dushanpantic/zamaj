@@ -60,11 +60,16 @@ abstract class SessionRepository {
   ///
   /// If the parent exercise was in `completed` state and removing this set
   /// drops its executed-set count below the planned count, the exercise
-  /// reverts to `unfinished` and is reinserted at the front of the unfinished
-  /// sequence (so the cursor lands on it again).
+  /// reverts to `unfinished`. The exercise's `position` is never modified by
+  /// this operation.
   Future<Session> deleteExecutedSet({required String executedSetId});
 
   Future<Session> skipExercise(String sessionExerciseId);
+
+  /// Locks an `unfinished` exercise into `completed` state without requiring
+  /// the full planned-set count. Sets already logged remain attached. Throws
+  /// [OrderingError] when the exercise is not in `unfinished` state.
+  Future<Session> markExerciseDone({required String sessionExerciseId});
 
   Future<Session> replaceExercise({
     required String sessionExerciseId,

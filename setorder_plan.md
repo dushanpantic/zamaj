@@ -280,11 +280,11 @@ Sized to keep each PR independently testable. CLAUDE.md says "one bundled
 PR" can be preferred for refactors — the user is solo, so I'd land this as
 a single feature branch but with clear commits per phase.
 
-1. **Engine: cursor removal + per-exercise targets.** Update `SessionState`,
+1. (COMPLETED) **Engine: cursor removal + per-exercise targets.** Update `SessionState`,
    delete `Cursor`, rewrite engine, update domain tests. Repo unchanged at
    this phase — keep its reanchoring, just don't read it. (UI still
    compiles against the old API surface via temporary shims.)
-2. **Repository: stop reanchoring; add `markExerciseDone`.** Update repo
+2. (COMPLETED) **Repository: stop reanchoring; add `markExerciseDone`.** Update repo
    tests for the stable-position invariant.
 3. **Migration v7→v8.** Re-normalize positions. Integration test on a
    seeded v7 db.
