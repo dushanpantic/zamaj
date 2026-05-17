@@ -286,7 +286,7 @@ a single feature branch but with clear commits per phase.
    compiles against the old API surface via temporary shims.)
 2. (COMPLETED) **Repository: stop reanchoring; add `markExerciseDone`.** Update repo
    tests for the stable-position invariant.
-3. **Migration v7→v8.** Re-normalize positions. Integration test on a
+3. (COMPLETED) **Migration v7→v8.** Re-normalize positions. Integration test on a
    seeded v7 db.
 4. **Workout Overview UI.** Switch `SetRowMode` semantics, auto-expand all
    loggable rows, drop the cursor-driven expansion logic, add the

@@ -34,6 +34,95 @@ abstract final class AppMigrations {
       // dropped — single-install app, no compat layer.
       await _wipeAllDomainTables(db);
     }
+    if (from < 8) {
+      await _renormalizeSessionExercisePositions(db);
+    }
+  }
+
+  /// Re-anchors `session_exercises.position` to template order for every
+  /// in-flight session by walking the captured snapshot. The pre-v8 repo
+  /// pushed terminal exercises past unfinished ones to make the (now-removed)
+  /// global cursor advance; this restores a stable order matching the
+  /// snapshot so cards in the overview and rows in the export reflect the
+  /// planned layout verbatim. `position = snapshotIndex * 1024`, where
+  /// `snapshotIndex` walks `snapshot.exerciseGroups[].exercises[]` in order.
+  static Future<void> _renormalizeSessionExercisePositions(
+    AppDatabase db,
+  ) async {
+    if (!await _tableExists(db, 'sessions')) return;
+    if (!await _tableExists(db, 'session_exercises')) return;
+
+    final sessions = await db
+        .customSelect(
+          'SELECT id, snapshot_json FROM sessions WHERE ended_at_ms IS NULL',
+        )
+        .get();
+
+    for (final session in sessions) {
+      final sessionId = session.read<String>('id');
+      final snapshot =
+          jsonDecode(session.read<String>('snapshot_json'))
+              as Map<String, dynamic>;
+
+      final order = _walkSnapshotPlannedExerciseIds(snapshot);
+      if (order.isEmpty) continue;
+      final indexByPlannedId = <String, int>{
+        for (var i = 0; i < order.length; i++) order[i]: i,
+      };
+
+      final rows = await db
+          .customSelect(
+            'SELECT id, planned_exercise_id_in_snapshot '
+            'FROM session_exercises WHERE session_id = ?',
+            variables: [Variable<String>(sessionId)],
+          )
+          .get();
+
+      // Park current positions in a disjoint negative range to dodge the
+      // (session_id, position) UNIQUE constraint while we rewrite.
+      await db.customStatement(
+        'UPDATE session_exercises SET position = -1 - position '
+        'WHERE session_id = ?',
+        [sessionId],
+      );
+
+      for (final row in rows) {
+        final id = row.read<String>('id');
+        final plannedId = row.read<String>('planned_exercise_id_in_snapshot');
+        final index = indexByPlannedId[plannedId];
+        if (index == null) {
+          throw ValidationError(
+            entityId: id,
+            invariant: 'session_exercise_resolvable_in_snapshot',
+            message:
+                'Cannot resolve plannedExerciseIdInSnapshot=$plannedId in '
+                'session=$sessionId snapshot during v8 migration',
+          );
+        }
+        await db.customStatement(
+          'UPDATE session_exercises SET position = ? WHERE id = ?',
+          [index * 1024, id],
+        );
+      }
+    }
+  }
+
+  static List<String> _walkSnapshotPlannedExerciseIds(
+    Map<String, dynamic> snapshot,
+  ) {
+    final result = <String>[];
+    final groups = snapshot['exerciseGroups'] as List<dynamic>?;
+    if (groups == null) return result;
+    for (final group in groups) {
+      final exercises =
+          (group as Map<String, dynamic>)['exercises'] as List<dynamic>?;
+      if (exercises == null) continue;
+      for (final exercise in exercises) {
+        final ex = exercise as Map<String, dynamic>;
+        result.add(ex['id'] as String);
+      }
+    }
+    return result;
   }
 
   /// Deletes every row from the domain-data tables. Used by the v6→v7
