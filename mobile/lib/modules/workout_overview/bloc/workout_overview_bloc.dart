@@ -20,6 +20,7 @@ class WorkoutOverviewBloc
     on<WorkoutOverviewSetLogged>(_onSetLogged);
     on<WorkoutOverviewSetEdited>(_onSetEdited);
     on<WorkoutOverviewExerciseSkipped>(_onExerciseSkipped);
+    on<WorkoutOverviewExerciseMarkedDone>(_onExerciseMarkedDone);
     on<WorkoutOverviewExerciseReplaced>(_onExerciseReplaced);
     on<WorkoutOverviewDropResolved>(_onDropResolved);
     on<WorkoutOverviewSupersetUngrouped>(_onSupersetUngrouped);
@@ -94,7 +95,7 @@ class WorkoutOverviewBloc
         current.copyWith(
           sessionState: next,
           groups: ExerciseViewModelAssembler.assemble(next),
-          expandedExerciseIds: _expansionWithCursor(
+          expandedExerciseIds: _expansionForOpenTargets(
             current.expandedExerciseIds,
             next,
           ),
@@ -162,6 +163,7 @@ class WorkoutOverviewBloc
       actualValues: event.actualValues,
       plannedSetIdInSnapshot: event.plannedSetIdInSnapshot,
     ),
+    touchedSessionExerciseId: event.sessionExerciseId,
   );
 
   Future<void> _onSetEdited(
@@ -181,6 +183,14 @@ class WorkoutOverviewBloc
   ) => _runMutation(
     emit,
     () => _engine.skipExercise(sessionExerciseId: event.sessionExerciseId),
+  );
+
+  Future<void> _onExerciseMarkedDone(
+    WorkoutOverviewExerciseMarkedDone event,
+    Emitter<WorkoutOverviewState> emit,
+  ) => _runMutation(
+    emit,
+    () => _engine.markExerciseDone(sessionExerciseId: event.sessionExerciseId),
   );
 
   Future<void> _onExerciseReplaced(
@@ -299,10 +309,15 @@ class WorkoutOverviewBloc
   /// directly and clears the in-flight flag — the watch-stream will push the
   /// same value moments later but bloc-level equality dedupes it. On failure,
   /// keeps the prior session state and attaches the error.
+  ///
+  /// [touchedSessionExerciseId], when provided, is recorded as the last-
+  /// touched exercise so the UI can apply a subtle accent on its loggable
+  /// row.
   Future<void> _runMutation(
     Emitter<WorkoutOverviewState> emit,
-    Future<SessionState> Function() action,
-  ) async {
+    Future<SessionState> Function() action, {
+    String? touchedSessionExerciseId,
+  }) async {
     final current = state;
     if (current is! WorkoutOverviewLoaded) return;
     if (current.mutationInFlight) return;
@@ -316,11 +331,14 @@ class WorkoutOverviewBloc
           latest.copyWith(
             sessionState: next,
             groups: ExerciseViewModelAssembler.assemble(next),
-            expandedExerciseIds: _expansionWithCursor(
+            expandedExerciseIds: _expansionForOpenTargets(
               latest.expandedExerciseIds,
               next,
             ),
             mutationInFlight: false,
+            lastTouchedSessionExerciseId: touchedSessionExerciseId != null
+                ? () => touchedSessionExerciseId
+                : null,
           ),
         );
       }
@@ -348,16 +366,20 @@ class WorkoutOverviewBloc
     );
   }
 
+  /// Initial expansion: every currently-loggable exercise is auto-expanded
+  /// so the user sees the next-set editor for each in-progress exercise
+  /// (including all members of a superset) the moment the screen opens.
   Set<String> _initialExpansionFor(SessionState sessionState) {
-    final cursor = sessionState.cursor;
-    if (cursor is ActiveCursor) return {cursor.sessionExerciseId};
-    return <String>{};
+    return <String>{
+      for (final t in sessionState.openTargets) t.sessionExerciseId,
+    };
   }
 
-  /// Drops exercises that have reached a terminal state with all sets done,
-  /// then ensures the new cursor target is open. Auto-collapsing done
-  /// exercises mirrors focus mode's behavior of moving on once finished.
-  Set<String> _expansionWithCursor(
+  /// On each refresh: keep manually-expanded cards open as long as their
+  /// exercise still exists, drop those that hit a terminal state with all
+  /// sets done, and force-expand every loggable exercise so the user can
+  /// always tap a loggable row without an extra expand step.
+  Set<String> _expansionForOpenTargets(
     Set<String> current,
     SessionState sessionState,
   ) {
@@ -372,8 +394,9 @@ class WorkoutOverviewBloc
             })
           ex.id,
     };
-    final cursor = sessionState.cursor;
-    if (cursor is ActiveCursor) kept.add(cursor.sessionExerciseId);
+    for (final t in sessionState.openTargets) {
+      kept.add(t.sessionExerciseId);
+    }
     return kept;
   }
 

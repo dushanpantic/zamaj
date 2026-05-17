@@ -25,31 +25,35 @@ class ExerciseCard extends StatelessWidget {
     super.key,
     required this.viewModel,
     required this.isExpanded,
-    required this.expandedSetPosition,
     required this.canMutate,
     required this.onToggleExpansion,
-    required this.onToggleSetExpansion,
     required this.onLogSet,
     required this.onEditSet,
     required this.onSkipPressed,
+    required this.onMarkDonePressed,
     required this.onReplacePressed,
     required this.onOpenVideo,
+    this.isLastTouched = false,
     this.showDragHandle = false,
     this.isDropTarget = false,
   });
 
   final ExerciseViewModel viewModel;
   final bool isExpanded;
-  final int? expandedSetPosition;
   final bool canMutate;
   final VoidCallback onToggleExpansion;
-  final void Function(int setPosition) onToggleSetExpansion;
   final void Function(ActualSetValues values, String? plannedSetIdInSnapshot)
   onLogSet;
   final void Function(String executedSetId, ActualSetValues values) onEditSet;
   final VoidCallback onSkipPressed;
+  final VoidCallback onMarkDonePressed;
   final VoidCallback onReplacePressed;
   final void Function(String videoUrl) onOpenVideo;
+
+  /// True when this exercise was the target of the most recent log/edit
+  /// action. The loggable row inside receives a subtle accent so the eye
+  /// returns to where the user left off after a rest.
+  final bool isLastTouched;
   final bool showDragHandle;
   final bool isDropTarget;
 
@@ -59,6 +63,7 @@ class ExerciseCard extends StatelessWidget {
     const typography = AppTypography.standard;
     final sessionExercise = viewModel.sessionExercise;
     final state = sessionExercise.state;
+    final hasExecutedSet = sessionExercise.executedSets.isNotEmpty;
 
     return AnimatedContainer(
       duration: const Duration(milliseconds: 120),
@@ -77,9 +82,11 @@ class ExerciseCard extends StatelessWidget {
             viewModel: viewModel,
             isExpanded: isExpanded,
             canMutate: canMutate,
+            canMarkDone: state is UnfinishedState && hasExecutedSet,
             showDragHandle: showDragHandle && state is UnfinishedState,
             onTap: onToggleExpansion,
             onSkip: onSkipPressed,
+            onMarkDone: onMarkDonePressed,
             onReplace: onReplacePressed,
             onOpenVideo: onOpenVideo,
             typography: typography,
@@ -88,9 +95,8 @@ class ExerciseCard extends StatelessWidget {
           if (isExpanded)
             _ExpandedBody(
               viewModel: viewModel,
-              expandedSetPosition: expandedSetPosition,
               canMutate: canMutate,
-              onToggleSetExpansion: onToggleSetExpansion,
+              isLastTouched: isLastTouched,
               onLogSet: onLogSet,
               onEditSet: onEditSet,
               onOpenVideo: onOpenVideo,
@@ -108,9 +114,11 @@ class _Header extends StatelessWidget {
     required this.viewModel,
     required this.isExpanded,
     required this.canMutate,
+    required this.canMarkDone,
     required this.showDragHandle,
     required this.onTap,
     required this.onSkip,
+    required this.onMarkDone,
     required this.onReplace,
     required this.onOpenVideo,
     required this.typography,
@@ -120,9 +128,11 @@ class _Header extends StatelessWidget {
   final ExerciseViewModel viewModel;
   final bool isExpanded;
   final bool canMutate;
+  final bool canMarkDone;
   final bool showDragHandle;
   final VoidCallback onTap;
   final VoidCallback onSkip;
+  final VoidCallback onMarkDone;
   final VoidCallback onReplace;
   final void Function(String videoUrl) onOpenVideo;
   final AppTypography typography;
@@ -234,9 +244,11 @@ class _Header extends StatelessWidget {
               _Actions(
                 isUnfinished: isUnfinished,
                 canMutate: canMutate,
+                canMarkDone: canMutate && canMarkDone,
                 videoUrl: videoUrl,
                 isExpanded: isExpanded,
                 onSkip: onSkip,
+                onMarkDone: onMarkDone,
                 onReplace: onReplace,
                 onOpenVideo: onOpenVideo,
                 colors: colors,
@@ -313,9 +325,11 @@ class _Actions extends StatelessWidget {
   const _Actions({
     required this.isUnfinished,
     required this.canMutate,
+    required this.canMarkDone,
     required this.videoUrl,
     required this.isExpanded,
     required this.onSkip,
+    required this.onMarkDone,
     required this.onReplace,
     required this.onOpenVideo,
     required this.colors,
@@ -323,9 +337,11 @@ class _Actions extends StatelessWidget {
 
   final bool isUnfinished;
   final bool canMutate;
+  final bool canMarkDone;
   final String? videoUrl;
   final bool isExpanded;
   final VoidCallback onSkip;
+  final VoidCallback onMarkDone;
   final VoidCallback onReplace;
   final void Function(String videoUrl) onOpenVideo;
   final AppColors colors;
@@ -352,6 +368,8 @@ class _Actions extends StatelessWidget {
               switch (action) {
                 case _MenuAction.skip:
                   onSkip();
+                case _MenuAction.markDone:
+                  onMarkDone();
                 case _MenuAction.replace:
                   onReplace();
                 case _MenuAction.openVideo:
@@ -366,6 +384,16 @@ class _Actions extends StatelessWidget {
                   child: ListTile(
                     leading: Icon(Icons.swap_horiz),
                     title: Text('Replace'),
+                    contentPadding: EdgeInsets.zero,
+                    dense: true,
+                  ),
+                ),
+              if (canMarkDone)
+                const PopupMenuItem(
+                  value: _MenuAction.markDone,
+                  child: ListTile(
+                    leading: Icon(Icons.check_circle_outline),
+                    title: Text('Mark done'),
                     contentPadding: EdgeInsets.zero,
                     dense: true,
                   ),
@@ -399,14 +427,13 @@ class _Actions extends StatelessWidget {
   }
 }
 
-enum _MenuAction { skip, replace, openVideo }
+enum _MenuAction { skip, markDone, replace, openVideo }
 
 class _ExpandedBody extends StatelessWidget {
   const _ExpandedBody({
     required this.viewModel,
-    required this.expandedSetPosition,
     required this.canMutate,
-    required this.onToggleSetExpansion,
+    required this.isLastTouched,
     required this.onLogSet,
     required this.onEditSet,
     required this.onOpenVideo,
@@ -415,9 +442,8 @@ class _ExpandedBody extends StatelessWidget {
   });
 
   final ExerciseViewModel viewModel;
-  final int? expandedSetPosition;
   final bool canMutate;
-  final void Function(int setPosition) onToggleSetExpansion;
+  final bool isLastTouched;
   final void Function(ActualSetValues values, String? plannedSetIdInSnapshot)
   onLogSet;
   final void Function(String executedSetId, ActualSetValues values) onEditSet;
@@ -469,9 +495,8 @@ class _ExpandedBody extends StatelessWidget {
             viewModel: row,
             sessionExerciseId: viewModel.sessionExercise.id,
             measurementType: viewModel.effectiveMeasurementType,
-            isExpanded: expandedSetPosition == row.position,
             canMutate: canMutate && _exerciseAllowsMutation(state),
-            onTapHeader: () => onToggleSetExpansion(row.position),
+            highlightLoggable: isLastTouched,
             onLogSet: onLogSet,
             onEditSet: onEditSet,
           ),

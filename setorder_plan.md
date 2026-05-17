@@ -288,7 +288,7 @@ a single feature branch but with clear commits per phase.
    tests for the stable-position invariant.
 3. (COMPLETED) **Migration v7→v8.** Re-normalize positions. Integration test on a
    seeded v7 db.
-4. **Workout Overview UI.** Switch `SetRowMode` semantics, auto-expand all
+4. (COMPLETED) **Workout Overview UI.** Switch `SetRowMode` semantics, auto-expand all
    loggable rows, drop the cursor-driven expansion logic, add the
    "Mark done" menu entry.
 5. **Focus Mode UI.** Superset-aware layout; "switch exercise" affordance.

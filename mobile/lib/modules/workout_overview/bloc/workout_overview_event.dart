@@ -81,6 +81,15 @@ final class WorkoutOverviewExerciseSkipped extends WorkoutOverviewEvent {
   List<Object?> get props => [sessionExerciseId];
 }
 
+final class WorkoutOverviewExerciseMarkedDone extends WorkoutOverviewEvent {
+  const WorkoutOverviewExerciseMarkedDone(this.sessionExerciseId);
+
+  final String sessionExerciseId;
+
+  @override
+  List<Object?> get props => [sessionExerciseId];
+}
+
 final class WorkoutOverviewExerciseReplaced extends WorkoutOverviewEvent {
   const WorkoutOverviewExerciseReplaced({
     required this.sessionExerciseId,

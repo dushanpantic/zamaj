@@ -14,7 +14,12 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$SetRowViewModel {
 
- int get position; PlannedSetValues? get plannedValues; String? get plannedSetIdInSnapshot; ExecutedSet? get executedSet; bool get isNextLogTarget; ActualSetValues? get suggestedActualValues;
+ int get position; PlannedSetValues? get plannedValues; String? get plannedSetIdInSnapshot; ExecutedSet? get executedSet;/// True when this row is the next chronological slot to log on a
+/// loggable exercise — equivalent to `position == executedSets.length`
+/// for an exercise present in [SessionState.openTargets]. UI renders
+/// loggable rows pre-expanded with an inline editor; all other unlogged
+/// rows render as inert "future" rows.
+ bool get isLoggable; ActualSetValues? get suggestedActualValues;
 /// Create a copy of SetRowViewModel
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -25,16 +30,16 @@ $SetRowViewModelCopyWith<SetRowViewModel> get copyWith => _$SetRowViewModelCopyW
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is SetRowViewModel&&(identical(other.position, position) || other.position == position)&&(identical(other.plannedValues, plannedValues) || other.plannedValues == plannedValues)&&(identical(other.plannedSetIdInSnapshot, plannedSetIdInSnapshot) || other.plannedSetIdInSnapshot == plannedSetIdInSnapshot)&&(identical(other.executedSet, executedSet) || other.executedSet == executedSet)&&(identical(other.isNextLogTarget, isNextLogTarget) || other.isNextLogTarget == isNextLogTarget)&&(identical(other.suggestedActualValues, suggestedActualValues) || other.suggestedActualValues == suggestedActualValues));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is SetRowViewModel&&(identical(other.position, position) || other.position == position)&&(identical(other.plannedValues, plannedValues) || other.plannedValues == plannedValues)&&(identical(other.plannedSetIdInSnapshot, plannedSetIdInSnapshot) || other.plannedSetIdInSnapshot == plannedSetIdInSnapshot)&&(identical(other.executedSet, executedSet) || other.executedSet == executedSet)&&(identical(other.isLoggable, isLoggable) || other.isLoggable == isLoggable)&&(identical(other.suggestedActualValues, suggestedActualValues) || other.suggestedActualValues == suggestedActualValues));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,position,plannedValues,plannedSetIdInSnapshot,executedSet,isNextLogTarget,suggestedActualValues);
+int get hashCode => Object.hash(runtimeType,position,plannedValues,plannedSetIdInSnapshot,executedSet,isLoggable,suggestedActualValues);
 
 @override
 String toString() {
-  return 'SetRowViewModel(position: $position, plannedValues: $plannedValues, plannedSetIdInSnapshot: $plannedSetIdInSnapshot, executedSet: $executedSet, isNextLogTarget: $isNextLogTarget, suggestedActualValues: $suggestedActualValues)';
+  return 'SetRowViewModel(position: $position, plannedValues: $plannedValues, plannedSetIdInSnapshot: $plannedSetIdInSnapshot, executedSet: $executedSet, isLoggable: $isLoggable, suggestedActualValues: $suggestedActualValues)';
 }
 
 
@@ -45,7 +50,7 @@ abstract mixin class $SetRowViewModelCopyWith<$Res>  {
   factory $SetRowViewModelCopyWith(SetRowViewModel value, $Res Function(SetRowViewModel) _then) = _$SetRowViewModelCopyWithImpl;
 @useResult
 $Res call({
- int position, PlannedSetValues? plannedValues, String? plannedSetIdInSnapshot, ExecutedSet? executedSet, bool isNextLogTarget, ActualSetValues? suggestedActualValues
+ int position, PlannedSetValues? plannedValues, String? plannedSetIdInSnapshot, ExecutedSet? executedSet, bool isLoggable, ActualSetValues? suggestedActualValues
 });
 
 
@@ -62,13 +67,13 @@ class _$SetRowViewModelCopyWithImpl<$Res>
 
 /// Create a copy of SetRowViewModel
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? position = null,Object? plannedValues = freezed,Object? plannedSetIdInSnapshot = freezed,Object? executedSet = freezed,Object? isNextLogTarget = null,Object? suggestedActualValues = freezed,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? position = null,Object? plannedValues = freezed,Object? plannedSetIdInSnapshot = freezed,Object? executedSet = freezed,Object? isLoggable = null,Object? suggestedActualValues = freezed,}) {
   return _then(_self.copyWith(
 position: null == position ? _self.position : position // ignore: cast_nullable_to_non_nullable
 as int,plannedValues: freezed == plannedValues ? _self.plannedValues : plannedValues // ignore: cast_nullable_to_non_nullable
 as PlannedSetValues?,plannedSetIdInSnapshot: freezed == plannedSetIdInSnapshot ? _self.plannedSetIdInSnapshot : plannedSetIdInSnapshot // ignore: cast_nullable_to_non_nullable
 as String?,executedSet: freezed == executedSet ? _self.executedSet : executedSet // ignore: cast_nullable_to_non_nullable
-as ExecutedSet?,isNextLogTarget: null == isNextLogTarget ? _self.isNextLogTarget : isNextLogTarget // ignore: cast_nullable_to_non_nullable
+as ExecutedSet?,isLoggable: null == isLoggable ? _self.isLoggable : isLoggable // ignore: cast_nullable_to_non_nullable
 as bool,suggestedActualValues: freezed == suggestedActualValues ? _self.suggestedActualValues : suggestedActualValues // ignore: cast_nullable_to_non_nullable
 as ActualSetValues?,
   ));
@@ -191,10 +196,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( int position,  PlannedSetValues? plannedValues,  String? plannedSetIdInSnapshot,  ExecutedSet? executedSet,  bool isNextLogTarget,  ActualSetValues? suggestedActualValues)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( int position,  PlannedSetValues? plannedValues,  String? plannedSetIdInSnapshot,  ExecutedSet? executedSet,  bool isLoggable,  ActualSetValues? suggestedActualValues)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _SetRowViewModel() when $default != null:
-return $default(_that.position,_that.plannedValues,_that.plannedSetIdInSnapshot,_that.executedSet,_that.isNextLogTarget,_that.suggestedActualValues);case _:
+return $default(_that.position,_that.plannedValues,_that.plannedSetIdInSnapshot,_that.executedSet,_that.isLoggable,_that.suggestedActualValues);case _:
   return orElse();
 
 }
@@ -212,10 +217,10 @@ return $default(_that.position,_that.plannedValues,_that.plannedSetIdInSnapshot,
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( int position,  PlannedSetValues? plannedValues,  String? plannedSetIdInSnapshot,  ExecutedSet? executedSet,  bool isNextLogTarget,  ActualSetValues? suggestedActualValues)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( int position,  PlannedSetValues? plannedValues,  String? plannedSetIdInSnapshot,  ExecutedSet? executedSet,  bool isLoggable,  ActualSetValues? suggestedActualValues)  $default,) {final _that = this;
 switch (_that) {
 case _SetRowViewModel():
-return $default(_that.position,_that.plannedValues,_that.plannedSetIdInSnapshot,_that.executedSet,_that.isNextLogTarget,_that.suggestedActualValues);case _:
+return $default(_that.position,_that.plannedValues,_that.plannedSetIdInSnapshot,_that.executedSet,_that.isLoggable,_that.suggestedActualValues);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -232,10 +237,10 @@ return $default(_that.position,_that.plannedValues,_that.plannedSetIdInSnapshot,
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( int position,  PlannedSetValues? plannedValues,  String? plannedSetIdInSnapshot,  ExecutedSet? executedSet,  bool isNextLogTarget,  ActualSetValues? suggestedActualValues)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( int position,  PlannedSetValues? plannedValues,  String? plannedSetIdInSnapshot,  ExecutedSet? executedSet,  bool isLoggable,  ActualSetValues? suggestedActualValues)?  $default,) {final _that = this;
 switch (_that) {
 case _SetRowViewModel() when $default != null:
-return $default(_that.position,_that.plannedValues,_that.plannedSetIdInSnapshot,_that.executedSet,_that.isNextLogTarget,_that.suggestedActualValues);case _:
+return $default(_that.position,_that.plannedValues,_that.plannedSetIdInSnapshot,_that.executedSet,_that.isLoggable,_that.suggestedActualValues);case _:
   return null;
 
 }
@@ -247,14 +252,19 @@ return $default(_that.position,_that.plannedValues,_that.plannedSetIdInSnapshot,
 
 
 class _SetRowViewModel implements SetRowViewModel {
-  const _SetRowViewModel({required this.position, required this.plannedValues, required this.plannedSetIdInSnapshot, required this.executedSet, required this.isNextLogTarget, this.suggestedActualValues});
+  const _SetRowViewModel({required this.position, required this.plannedValues, required this.plannedSetIdInSnapshot, required this.executedSet, required this.isLoggable, this.suggestedActualValues});
   
 
 @override final  int position;
 @override final  PlannedSetValues? plannedValues;
 @override final  String? plannedSetIdInSnapshot;
 @override final  ExecutedSet? executedSet;
-@override final  bool isNextLogTarget;
+/// True when this row is the next chronological slot to log on a
+/// loggable exercise — equivalent to `position == executedSets.length`
+/// for an exercise present in [SessionState.openTargets]. UI renders
+/// loggable rows pre-expanded with an inline editor; all other unlogged
+/// rows render as inert "future" rows.
+@override final  bool isLoggable;
 @override final  ActualSetValues? suggestedActualValues;
 
 /// Create a copy of SetRowViewModel
@@ -267,16 +277,16 @@ _$SetRowViewModelCopyWith<_SetRowViewModel> get copyWith => __$SetRowViewModelCo
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _SetRowViewModel&&(identical(other.position, position) || other.position == position)&&(identical(other.plannedValues, plannedValues) || other.plannedValues == plannedValues)&&(identical(other.plannedSetIdInSnapshot, plannedSetIdInSnapshot) || other.plannedSetIdInSnapshot == plannedSetIdInSnapshot)&&(identical(other.executedSet, executedSet) || other.executedSet == executedSet)&&(identical(other.isNextLogTarget, isNextLogTarget) || other.isNextLogTarget == isNextLogTarget)&&(identical(other.suggestedActualValues, suggestedActualValues) || other.suggestedActualValues == suggestedActualValues));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _SetRowViewModel&&(identical(other.position, position) || other.position == position)&&(identical(other.plannedValues, plannedValues) || other.plannedValues == plannedValues)&&(identical(other.plannedSetIdInSnapshot, plannedSetIdInSnapshot) || other.plannedSetIdInSnapshot == plannedSetIdInSnapshot)&&(identical(other.executedSet, executedSet) || other.executedSet == executedSet)&&(identical(other.isLoggable, isLoggable) || other.isLoggable == isLoggable)&&(identical(other.suggestedActualValues, suggestedActualValues) || other.suggestedActualValues == suggestedActualValues));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,position,plannedValues,plannedSetIdInSnapshot,executedSet,isNextLogTarget,suggestedActualValues);
+int get hashCode => Object.hash(runtimeType,position,plannedValues,plannedSetIdInSnapshot,executedSet,isLoggable,suggestedActualValues);
 
 @override
 String toString() {
-  return 'SetRowViewModel(position: $position, plannedValues: $plannedValues, plannedSetIdInSnapshot: $plannedSetIdInSnapshot, executedSet: $executedSet, isNextLogTarget: $isNextLogTarget, suggestedActualValues: $suggestedActualValues)';
+  return 'SetRowViewModel(position: $position, plannedValues: $plannedValues, plannedSetIdInSnapshot: $plannedSetIdInSnapshot, executedSet: $executedSet, isLoggable: $isLoggable, suggestedActualValues: $suggestedActualValues)';
 }
 
 
@@ -287,7 +297,7 @@ abstract mixin class _$SetRowViewModelCopyWith<$Res> implements $SetRowViewModel
   factory _$SetRowViewModelCopyWith(_SetRowViewModel value, $Res Function(_SetRowViewModel) _then) = __$SetRowViewModelCopyWithImpl;
 @override @useResult
 $Res call({
- int position, PlannedSetValues? plannedValues, String? plannedSetIdInSnapshot, ExecutedSet? executedSet, bool isNextLogTarget, ActualSetValues? suggestedActualValues
+ int position, PlannedSetValues? plannedValues, String? plannedSetIdInSnapshot, ExecutedSet? executedSet, bool isLoggable, ActualSetValues? suggestedActualValues
 });
 
 
@@ -304,13 +314,13 @@ class __$SetRowViewModelCopyWithImpl<$Res>
 
 /// Create a copy of SetRowViewModel
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? position = null,Object? plannedValues = freezed,Object? plannedSetIdInSnapshot = freezed,Object? executedSet = freezed,Object? isNextLogTarget = null,Object? suggestedActualValues = freezed,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? position = null,Object? plannedValues = freezed,Object? plannedSetIdInSnapshot = freezed,Object? executedSet = freezed,Object? isLoggable = null,Object? suggestedActualValues = freezed,}) {
   return _then(_SetRowViewModel(
 position: null == position ? _self.position : position // ignore: cast_nullable_to_non_nullable
 as int,plannedValues: freezed == plannedValues ? _self.plannedValues : plannedValues // ignore: cast_nullable_to_non_nullable
 as PlannedSetValues?,plannedSetIdInSnapshot: freezed == plannedSetIdInSnapshot ? _self.plannedSetIdInSnapshot : plannedSetIdInSnapshot // ignore: cast_nullable_to_non_nullable
 as String?,executedSet: freezed == executedSet ? _self.executedSet : executedSet // ignore: cast_nullable_to_non_nullable
-as ExecutedSet?,isNextLogTarget: null == isNextLogTarget ? _self.isNextLogTarget : isNextLogTarget // ignore: cast_nullable_to_non_nullable
+as ExecutedSet?,isLoggable: null == isLoggable ? _self.isLoggable : isLoggable // ignore: cast_nullable_to_non_nullable
 as bool,suggestedActualValues: freezed == suggestedActualValues ? _self.suggestedActualValues : suggestedActualValues // ignore: cast_nullable_to_non_nullable
 as ActualSetValues?,
   ));

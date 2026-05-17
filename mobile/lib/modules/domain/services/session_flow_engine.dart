@@ -79,6 +79,24 @@ class SessionFlowEngine {
     return _buildState(updatedSession);
   }
 
+  /// Locks an `unfinished` exercise into `completed` even when fewer than
+  /// the planned number of sets have been logged. Sets already logged
+  /// remain attached. Mirrors [skipExercise] semantically (terminal state)
+  /// but preserves the executed work.
+  Future<SessionState> markExerciseDone({
+    required String sessionExerciseId,
+  }) async {
+    final session = await _repository.getSessionByExerciseId(sessionExerciseId);
+    final exercise = session.sessionExercises.firstWhere(
+      (SessionExercise e) => e.id == sessionExerciseId,
+    );
+    _assertUnfinished(exercise);
+    final updatedSession = await _repository.markExerciseDone(
+      sessionExerciseId: sessionExerciseId,
+    );
+    return _buildState(updatedSession);
+  }
+
   /// Replaces an unfinished exercise with a substitute.
   Future<SessionState> replaceExercise({
     required String sessionExerciseId,

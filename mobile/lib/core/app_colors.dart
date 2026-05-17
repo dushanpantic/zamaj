@@ -24,6 +24,7 @@ class AppColors {
     required this.exerciseCompleted,
     required this.exerciseSkipped,
     required this.exerciseReplaced,
+    required this.loggableHint,
     required this.restTimer,
     required this.restTimerOvertime,
     required this.scrim,
@@ -53,6 +54,11 @@ class AppColors {
   final Color exerciseSkipped;
   final Color exerciseReplaced;
 
+  /// Subtle accent applied to the most-recently-touched exercise's loggable
+  /// row so the user's eye returns there after a rest. Intended for use as a
+  /// low-alpha background or border tint, not full-bleed text.
+  final Color loggableHint;
+
   final Color restTimer;
   final Color restTimerOvertime;
 
@@ -79,6 +85,7 @@ class AppColors {
     exerciseCompleted: Color(0xFF22C55E),
     exerciseSkipped: Color(0xFF71717A),
     exerciseReplaced: Color(0xFFF59E0B),
+    loggableHint: Color(0xFFF97316),
     restTimer: Color(0xFFF97316),
     restTimerOvertime: Color(0xFFEF4444),
     scrim: Color(0xCC000000),
@@ -103,6 +110,7 @@ class AppColors {
     exerciseCompleted: Color(0xFF16A34A),
     exerciseSkipped: Color(0xFFA1A1AA),
     exerciseReplaced: Color(0xFFD97706),
+    loggableHint: Color(0xFFEA580C),
     restTimer: Color(0xFFEA580C),
     restTimerOvertime: Color(0xFFDC2626),
     scrim: Color(0x99000000),

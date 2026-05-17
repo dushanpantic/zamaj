@@ -13,11 +13,14 @@ enum SetRowMode {
   /// Already executed; tap to edit values.
   completed,
 
-  /// Next set to log on this exercise. Tap to expand the inline editor.
-  nextTarget,
+  /// Next chronological set on a currently-loggable exercise. Rendered with
+  /// the inline editor always expanded — one tap to log.
+  loggable,
 
-  /// Future set on this exercise — visible but not yet reachable.
-  pending,
+  /// Future set on this exercise — visible but not yet reachable (the user
+  /// must log earlier sets first to keep within-exercise progression in
+  /// order).
+  future,
 
   /// Trailing set whose planned entry no longer exists (the user logged
   /// more sets than the plan called for).
@@ -26,30 +29,34 @@ enum SetRowMode {
 
 /// One row in an exercise card's expanded body.
 ///
-/// Renders a compact "set N: planned ↔ actual" line and, when [isExpanded],
-/// an inline editor that logs (or edits) the actual values.
+/// Renders a compact "set N: planned ↔ actual" line and, when the row is in
+/// [SetRowMode.loggable], an always-expanded inline editor that logs the
+/// actual values in one tap. Completed and trailing rows reveal the editor
+/// on header tap to support after-the-fact edits.
 class SetRow extends StatefulWidget {
   const SetRow({
     super.key,
     required this.viewModel,
     required this.sessionExerciseId,
     required this.measurementType,
-    required this.isExpanded,
     required this.canMutate,
-    required this.onTapHeader,
     required this.onLogSet,
     required this.onEditSet,
+    this.highlightLoggable = false,
   });
 
   final SetRowViewModel viewModel;
   final String sessionExerciseId;
   final MeasurementType measurementType;
-  final bool isExpanded;
   final bool canMutate;
-  final VoidCallback onTapHeader;
   final void Function(ActualSetValues values, String? plannedSetIdInSnapshot)
   onLogSet;
   final void Function(String executedSetId, ActualSetValues values) onEditSet;
+
+  /// Applies a subtle accent to a loggable row so the user's eye returns to
+  /// the most recently touched exercise after a rest. Ignored for non-
+  /// loggable rows.
+  final bool highlightLoggable;
 
   SetRowMode get mode {
     final executed = viewModel.executedSet;
@@ -57,8 +64,8 @@ class SetRow extends StatefulWidget {
       return SetRowMode.trailing;
     }
     if (executed != null) return SetRowMode.completed;
-    if (viewModel.isNextLogTarget) return SetRowMode.nextTarget;
-    return SetRowMode.pending;
+    if (viewModel.isLoggable) return SetRowMode.loggable;
+    return SetRowMode.future;
   }
 
   @override
@@ -69,6 +76,10 @@ class _SetRowState extends State<SetRow> {
   late final TextEditingController _weight;
   late final TextEditingController _reps;
   late final TextEditingController _duration;
+
+  /// Tap-to-edit affordance for `completed` and `trailing` rows. Loggable
+  /// rows ignore this flag — their editor is always visible.
+  bool _editingExisting = false;
 
   @override
   void initState() {
@@ -82,14 +93,16 @@ class _SetRowState extends State<SetRow> {
   @override
   void didUpdateWidget(covariant SetRow oldWidget) {
     super.didUpdateWidget(oldWidget);
-    // Mirror focus mode: refresh the editor from the latest view model on
-    // every update, except when the user is mid-edit on this row (still
-    // expanded and the executed set hasn't changed under them).
+    // Refresh the editor from the latest view model on every update, except
+    // when the user is mid-edit on this row (executed set unchanged and the
+    // editor is still open).
     final stillEditing =
-        oldWidget.isExpanded &&
-        widget.isExpanded &&
         widget.viewModel.executedSet?.id == oldWidget.viewModel.executedSet?.id;
-    if (stillEditing) return;
+    if (stillEditing && _editingExisting) return;
+    if (widget.viewModel.executedSet?.id !=
+        oldWidget.viewModel.executedSet?.id) {
+      _editingExisting = false;
+    }
     _seedFromViewModel();
   }
 
@@ -147,6 +160,7 @@ class _SetRowState extends State<SetRow> {
       widget.onLogSet(values, widget.viewModel.plannedSetIdInSnapshot);
     } else {
       widget.onEditSet(executed.id, values);
+      setState(() => _editingExisting = false);
     }
   }
 
@@ -187,50 +201,72 @@ class _SetRowState extends State<SetRow> {
     final colors = Theme.of(context).appColors;
     const typography = AppTypography.standard;
     final mode = widget.mode;
-    final isInteractive =
+    final showEditor = switch (mode) {
+      SetRowMode.loggable => widget.canMutate,
+      SetRowMode.completed ||
+      SetRowMode.trailing => widget.canMutate && _editingExisting,
+      SetRowMode.future => false,
+    };
+    final canTapHeader =
         widget.canMutate &&
-        (mode == SetRowMode.completed ||
-            mode == SetRowMode.nextTarget ||
-            mode == SetRowMode.trailing);
+        (mode == SetRowMode.completed || mode == SetRowMode.trailing);
+    final isHighlighted =
+        mode == SetRowMode.loggable && widget.highlightLoggable;
+
+    final content = Padding(
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.md,
+        vertical: AppSpacing.xs,
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          _Header(
+            viewModel: widget.viewModel,
+            mode: mode,
+            measurementType: widget.measurementType,
+            typography: typography,
+            colors: colors,
+          ),
+          if (showEditor) ...[
+            const SizedBox(height: AppSpacing.sm),
+            _Editor(
+              measurementType: widget.measurementType,
+              weight: _weight,
+              reps: _reps,
+              duration: _duration,
+              onSubmit: _submit,
+              onChanged: () => setState(() {}),
+              canSubmit: _readValues() != null,
+              isEditingExisting: widget.viewModel.executedSet != null,
+            ),
+            const SizedBox(height: AppSpacing.xs),
+          ],
+        ],
+      ),
+    );
+
+    final decorated = isHighlighted
+        ? Container(
+            decoration: BoxDecoration(
+              color: colors.loggableHint.withValues(alpha: 0.08),
+              borderRadius: BorderRadius.circular(AppRadius.sm),
+              border: Border.all(
+                color: colors.loggableHint.withValues(alpha: 0.35),
+              ),
+            ),
+            child: content,
+          )
+        : content;
 
     return Material(
       color: Colors.transparent,
       child: InkWell(
-        onTap: isInteractive ? widget.onTapHeader : null,
+        onTap: canTapHeader
+            ? () => setState(() => _editingExisting = !_editingExisting)
+            : null,
         borderRadius: BorderRadius.circular(AppRadius.sm),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(
-            horizontal: AppSpacing.md,
-            vertical: AppSpacing.xs,
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              _Header(
-                viewModel: widget.viewModel,
-                mode: mode,
-                measurementType: widget.measurementType,
-                typography: typography,
-                colors: colors,
-              ),
-              if (widget.isExpanded && isInteractive) ...[
-                const SizedBox(height: AppSpacing.sm),
-                _Editor(
-                  measurementType: widget.measurementType,
-                  mode: mode,
-                  weight: _weight,
-                  reps: _reps,
-                  duration: _duration,
-                  onSubmit: _submit,
-                  onChanged: () => setState(() {}),
-                  canSubmit: _readValues() != null,
-                  isEditingExisting: widget.viewModel.executedSet != null,
-                ),
-                const SizedBox(height: AppSpacing.xs),
-              ],
-            ],
-          ),
-        ),
+        child: decorated,
       ),
     );
   }
@@ -310,8 +346,8 @@ class _Header extends StatelessWidget {
       };
     }
     return switch (mode) {
-      SetRowMode.nextTarget => 'Tap to log',
-      SetRowMode.pending => '—',
+      SetRowMode.loggable => 'Tap to log',
+      SetRowMode.future => '—',
       SetRowMode.completed => '—',
       SetRowMode.trailing => '—',
     };
@@ -337,12 +373,12 @@ class _StatusIcon extends StatelessWidget {
         color: colors.exerciseCompleted,
         size: 18,
       ),
-      SetRowMode.nextTarget => Icon(
+      SetRowMode.loggable => Icon(
         Icons.radio_button_unchecked,
         color: colors.primary,
         size: 18,
       ),
-      SetRowMode.pending => Icon(
+      SetRowMode.future => Icon(
         Icons.circle_outlined,
         color: colors.onSurfaceMuted,
         size: 18,
@@ -354,7 +390,6 @@ class _StatusIcon extends StatelessWidget {
 class _Editor extends StatelessWidget {
   const _Editor({
     required this.measurementType,
-    required this.mode,
     required this.weight,
     required this.reps,
     required this.duration,
@@ -365,7 +400,6 @@ class _Editor extends StatelessWidget {
   });
 
   final MeasurementType measurementType;
-  final SetRowMode mode;
   final TextEditingController weight;
   final TextEditingController reps;
   final TextEditingController duration;

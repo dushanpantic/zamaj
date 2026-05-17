@@ -34,21 +34,6 @@ class WorkoutOverviewScreen extends StatefulWidget {
 }
 
 class _WorkoutOverviewScreenState extends State<WorkoutOverviewScreen> {
-  /// Per-exercise: which set row is currently expanded (only one at a time
-  /// per exercise to keep the card compact). Lives in widget state because
-  /// it's pure UI/editor focus, not session truth.
-  final Map<String, int> _expandedSetPositions = {};
-
-  void _toggleSetExpansion(String sessionExerciseId, int position) {
-    setState(() {
-      if (_expandedSetPositions[sessionExerciseId] == position) {
-        _expandedSetPositions.remove(sessionExerciseId);
-      } else {
-        _expandedSetPositions[sessionExerciseId] = position;
-      }
-    });
-  }
-
   Future<void> _openVideo(String url) async {
     final launcher = context.read<ExternalLinkLauncher>();
     final uri = Uri.tryParse(url);
@@ -106,6 +91,22 @@ class _WorkoutOverviewScreenState extends State<WorkoutOverviewScreen> {
     );
   }
 
+  Future<void> _handleMarkDone(ExerciseViewModel viewModel) async {
+    final confirmed = await ConfirmationDialog.show(
+      context: context,
+      title: 'Mark done?',
+      body:
+          'Locks "${viewModel.plannedExerciseName}" as done with the sets '
+          'you have already logged. You can still edit those sets.',
+      confirmLabel: 'Mark done',
+      isDestructive: false,
+    );
+    if (!mounted || confirmed != true) return;
+    context.read<WorkoutOverviewBloc>().add(
+      WorkoutOverviewExerciseMarkedDone(viewModel.sessionExercise.id),
+    );
+  }
+
   Future<void> _handleUngroup(String tag) async {
     context.read<WorkoutOverviewBloc>().add(
       WorkoutOverviewSupersetUngrouped(tag),
@@ -159,22 +160,11 @@ class _WorkoutOverviewScreenState extends State<WorkoutOverviewScreen> {
     Navigator.of(context).pushNamed(SessionRoutes.focus, arguments: sessionId);
   }
 
-  static Cursor? _cursorOf(WorkoutOverviewState s) =>
-      s is WorkoutOverviewLoaded ? s.sessionState.cursor : null;
-
   @override
   Widget build(BuildContext context) {
     final colors = Theme.of(context).appColors;
 
-    return BlocConsumer<WorkoutOverviewBloc, WorkoutOverviewState>(
-      listenWhen: (p, c) => _cursorOf(p) != _cursorOf(c),
-      listener: (context, state) {
-        final cursor = _cursorOf(state);
-        if (cursor is! ActiveCursor) return;
-        setState(() {
-          _expandedSetPositions[cursor.sessionExerciseId] = cursor.setIndex;
-        });
-      },
+    return BlocBuilder<WorkoutOverviewBloc, WorkoutOverviewState>(
       builder: (context, state) {
         return Scaffold(
           backgroundColor: colors.background,
@@ -233,10 +223,9 @@ class _WorkoutOverviewScreenState extends State<WorkoutOverviewScreen> {
       ),
       WorkoutOverviewLoaded() => _LoadedBody(
         state: state,
-        expandedSetPositions: _expandedSetPositions,
-        onToggleSetExpansion: _toggleSetExpansion,
         onReplace: _handleReplace,
         onSkip: _handleSkip,
+        onMarkDone: _handleMarkDone,
         onUngroup: _handleUngroup,
         onOpenVideo: _openVideo,
         onAddNote: _handleAddNote,
@@ -249,10 +238,9 @@ class _WorkoutOverviewScreenState extends State<WorkoutOverviewScreen> {
 class _LoadedBody extends StatelessWidget {
   const _LoadedBody({
     required this.state,
-    required this.expandedSetPositions,
-    required this.onToggleSetExpansion,
     required this.onReplace,
     required this.onSkip,
+    required this.onMarkDone,
     required this.onUngroup,
     required this.onOpenVideo,
     required this.onAddNote,
@@ -260,11 +248,9 @@ class _LoadedBody extends StatelessWidget {
   });
 
   final WorkoutOverviewLoaded state;
-  final Map<String, int> expandedSetPositions;
-  final void Function(String sessionExerciseId, int position)
-  onToggleSetExpansion;
   final void Function(ExerciseViewModel) onReplace;
   final void Function(ExerciseViewModel) onSkip;
+  final void Function(ExerciseViewModel) onMarkDone;
   final void Function(String tag) onUngroup;
   final void Function(String url) onOpenVideo;
   final VoidCallback onAddNote;
@@ -317,10 +303,9 @@ class _LoadedBody extends StatelessWidget {
                     child: _GroupBuilder(
                       group: state.groups[groupIndex],
                       state: state,
-                      expandedSetPositions: expandedSetPositions,
-                      onToggleSetExpansion: onToggleSetExpansion,
                       onReplace: onReplace,
                       onSkip: onSkip,
+                      onMarkDone: onMarkDone,
                       onUngroup: onUngroup,
                       onOpenVideo: onOpenVideo,
                       canMutate: canMutate,
@@ -384,10 +369,9 @@ class _GroupBuilder extends StatelessWidget {
   const _GroupBuilder({
     required this.group,
     required this.state,
-    required this.expandedSetPositions,
-    required this.onToggleSetExpansion,
     required this.onReplace,
     required this.onSkip,
+    required this.onMarkDone,
     required this.onUngroup,
     required this.onOpenVideo,
     required this.canMutate,
@@ -395,10 +379,9 @@ class _GroupBuilder extends StatelessWidget {
 
   final SupersetGroupViewModel group;
   final WorkoutOverviewLoaded state;
-  final Map<String, int> expandedSetPositions;
-  final void Function(String, int) onToggleSetExpansion;
   final void Function(ExerciseViewModel) onReplace;
   final void Function(ExerciseViewModel) onSkip;
+  final void Function(ExerciseViewModel) onMarkDone;
   final void Function(String tag) onUngroup;
   final void Function(String url) onOpenVideo;
   final bool canMutate;
@@ -415,14 +398,12 @@ class _GroupBuilder extends StatelessWidget {
           isExpanded: state.expandedExerciseIds.contains(
             exercise.sessionExercise.id,
           ),
-          expandedSetPosition:
-              expandedSetPositions[exercise.sessionExercise.id],
           canMutate: canMutate,
+          isLastTouched:
+              state.lastTouchedSessionExerciseId == exercise.sessionExercise.id,
           onToggleExpansion: () => context.read<WorkoutOverviewBloc>().add(
             WorkoutOverviewExpansionToggled(exercise.sessionExercise.id),
           ),
-          onToggleSetExpansion: (pos) =>
-              onToggleSetExpansion(exercise.sessionExercise.id, pos),
           onLogSet: (values, plannedSetId) {
             Haptics.tap();
             context.read<WorkoutOverviewBloc>().add(
@@ -441,6 +422,7 @@ class _GroupBuilder extends StatelessWidget {
                 ),
               ),
           onSkipPressed: () => onSkip(exercise),
+          onMarkDonePressed: () => onMarkDone(exercise),
           onReplacePressed: () => onReplace(exercise),
           onOpenVideo: onOpenVideo,
           showDragHandle: true,
@@ -450,13 +432,12 @@ class _GroupBuilder extends StatelessWidget {
         tag: tag,
         exercises: exercises,
         expandedExerciseIds: state.expandedExerciseIds,
-        expandedSetPositions: expandedSetPositions,
         canMutate: canMutate,
+        lastTouchedSessionExerciseId: state.lastTouchedSessionExerciseId,
         onUngroupPressed: () => onUngroup(tag),
         onToggleExpansion: (id) => context.read<WorkoutOverviewBloc>().add(
           WorkoutOverviewExpansionToggled(id),
         ),
-        onToggleSetExpansion: onToggleSetExpansion,
         onLogSet: (id, values, plannedId) {
           Haptics.tap();
           context.read<WorkoutOverviewBloc>().add(
@@ -476,6 +457,8 @@ class _GroupBuilder extends StatelessWidget {
             ),
         onSkipPressed: (id) =>
             onSkip(exercises.firstWhere((e) => e.sessionExercise.id == id)),
+        onMarkDonePressed: (id) =>
+            onMarkDone(exercises.firstWhere((e) => e.sessionExercise.id == id)),
         onReplacePressed: (id) =>
             onReplace(exercises.firstWhere((e) => e.sessionExercise.id == id)),
         onOpenVideo: onOpenVideo,
@@ -732,8 +715,7 @@ class _BottomActionBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colors = Theme.of(context).appColors;
-    final cursor = state.sessionState.cursor;
-    final hasActiveSet = cursor is ActiveCursor;
+    final hasOpenTarget = state.sessionState.openTargets.isNotEmpty;
     final canMutate = !state.isEnded && !state.mutationInFlight;
 
     return SafeArea(
@@ -770,7 +752,7 @@ class _BottomActionBar extends StatelessWidget {
             Expanded(
               flex: 2,
               child: FilledButton.icon(
-                onPressed: hasActiveSet && !state.isEnded ? onFocusMode : null,
+                onPressed: hasOpenTarget && !state.isEnded ? onFocusMode : null,
                 icon: const Icon(Icons.center_focus_strong, size: 18),
                 label: const Text('Focus'),
               ),

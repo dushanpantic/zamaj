@@ -15,7 +15,13 @@ abstract class SetRowViewModel with _$SetRowViewModel {
     required PlannedSetValues? plannedValues,
     required String? plannedSetIdInSnapshot,
     required ExecutedSet? executedSet,
-    required bool isNextLogTarget,
+
+    /// True when this row is the next chronological slot to log on a
+    /// loggable exercise — equivalent to `position == executedSets.length`
+    /// for an exercise present in [SessionState.openTargets]. UI renders
+    /// loggable rows pre-expanded with an inline editor; all other unlogged
+    /// rows render as inert "future" rows.
+    required bool isLoggable,
     ActualSetValues? suggestedActualValues,
   }) = _SetRowViewModel;
 }

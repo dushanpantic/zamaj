@@ -23,8 +23,11 @@ abstract class ExerciseViewModel with _$ExerciseViewModel {
     required ExerciseMetadata plannedMetadata,
     required int? plannedRestSeconds,
     required List<SetRowViewModel> setRows,
-    required bool isCursorTarget,
-    required int? cursorSetIndex,
+
+    /// True when this exercise has at least one row in [setRows] flagged as
+    /// `isLoggable` — i.e. the user can log a new set on it right now.
+    /// Derived from the engine's [SessionState.openTargets] projection.
+    required bool isLoggable,
     required MeasurementType effectiveMeasurementType,
   }) = _ExerciseViewModel;
 }

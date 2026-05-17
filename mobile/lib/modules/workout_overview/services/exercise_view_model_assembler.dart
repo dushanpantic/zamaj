@@ -7,7 +7,10 @@ import 'package:zamaj/modules/workout_overview/services/planned_summary_formatte
 abstract final class ExerciseViewModelAssembler {
   static List<SupersetGroupViewModel> assemble(SessionState sessionState) {
     final session = sessionState.session;
-    final cursor = sessionState.cursor;
+    final loggableSetIndexByExerciseId = <String, int>{
+      for (final t in sessionState.openTargets)
+        t.sessionExerciseId: t.plannedSetIndex,
+    };
 
     final plannedById = <String, Exercise>{
       for (final group in session.snapshot.workoutDay.exerciseGroups)
@@ -18,7 +21,8 @@ abstract final class ExerciseViewModelAssembler {
       ..sort((a, b) => a.position.compareTo(b.position));
 
     final viewModels = <ExerciseViewModel>[
-      for (final ex in sorted) _buildViewModel(ex, plannedById, cursor),
+      for (final ex in sorted)
+        _buildViewModel(ex, plannedById, loggableSetIndexByExerciseId[ex.id]),
     ];
 
     return _groupByAdjacentSupersetTag(viewModels, sorted);
@@ -27,7 +31,7 @@ abstract final class ExerciseViewModelAssembler {
   static ExerciseViewModel _buildViewModel(
     SessionExercise sessionExercise,
     Map<String, Exercise> plannedById,
-    Cursor cursor,
+    int? loggableSetIndex,
   ) {
     final planned = plannedById[sessionExercise.plannedExerciseIdInSnapshot];
     if (planned == null) {
@@ -36,10 +40,6 @@ abstract final class ExerciseViewModelAssembler {
         id: sessionExercise.plannedExerciseIdInSnapshot,
       );
     }
-    final isCursorTarget =
-        cursor is ActiveCursor &&
-        cursor.sessionExerciseId == sessionExercise.id;
-    final cursorSetIndex = isCursorTarget ? cursor.setIndex : null;
     final effectiveMt = switch (sessionExercise.state) {
       ReplacedState(:final substitute) => substitute.measurementType,
       _ => planned.measurementType,
@@ -51,9 +51,8 @@ abstract final class ExerciseViewModelAssembler {
       plannedMetadata: planned.metadata,
       plannedRestSeconds: planned.plannedRestSeconds,
       plannedExerciseName: planned.name,
-      setRows: _buildSetRows(sessionExercise, planned, cursor),
-      isCursorTarget: isCursorTarget,
-      cursorSetIndex: cursorSetIndex,
+      setRows: _buildSetRows(sessionExercise, planned, loggableSetIndex),
+      isLoggable: loggableSetIndex != null,
       effectiveMeasurementType: effectiveMt,
     );
   }
@@ -95,7 +94,7 @@ abstract final class ExerciseViewModelAssembler {
   static List<SetRowViewModel> _buildSetRows(
     SessionExercise sessionExercise,
     Exercise plannedExercise,
-    Cursor cursor,
+    int? loggableSetIndex,
   ) {
     // executedSets is already in chronological order (mapper sorts by the
     // dense ExecutedSet.position). Planned sets live on the template side
@@ -133,10 +132,7 @@ abstract final class ExerciseViewModelAssembler {
           plannedValues: planned,
           plannedSetIdInSnapshot: plannedSetIdAt(i),
           executedSet: exec,
-          isNextLogTarget:
-              cursor is ActiveCursor &&
-              cursor.sessionExerciseId == sessionExercise.id &&
-              cursor.setIndex == i,
+          isLoggable: loggableSetIndex != null && loggableSetIndex == i,
           suggestedActualValues: exec == null && executed.isNotEmpty
               ? executed.last.actualValues
               : null,

@@ -16,16 +16,16 @@ class SupersetCard extends StatelessWidget {
     required this.tag,
     required this.exercises,
     required this.expandedExerciseIds,
-    required this.expandedSetPositions,
     required this.canMutate,
     required this.onUngroupPressed,
     required this.onToggleExpansion,
-    required this.onToggleSetExpansion,
     required this.onLogSet,
     required this.onEditSet,
     required this.onSkipPressed,
+    required this.onMarkDonePressed,
     required this.onReplacePressed,
     required this.onOpenVideo,
+    this.lastTouchedSessionExerciseId,
     this.showDragHandle = false,
     this.isDropTarget = false,
   });
@@ -33,12 +33,9 @@ class SupersetCard extends StatelessWidget {
   final String tag;
   final List<ExerciseViewModel> exercises;
   final Set<String> expandedExerciseIds;
-  final Map<String, int> expandedSetPositions;
   final bool canMutate;
   final VoidCallback onUngroupPressed;
   final void Function(String sessionExerciseId) onToggleExpansion;
-  final void Function(String sessionExerciseId, int setPosition)
-  onToggleSetExpansion;
   final void Function(
     String sessionExerciseId,
     ActualSetValues values,
@@ -47,8 +44,10 @@ class SupersetCard extends StatelessWidget {
   onLogSet;
   final void Function(String executedSetId, ActualSetValues values) onEditSet;
   final void Function(String sessionExerciseId) onSkipPressed;
+  final void Function(String sessionExerciseId) onMarkDonePressed;
   final void Function(String sessionExerciseId) onReplacePressed;
   final void Function(String videoUrl) onOpenVideo;
+  final String? lastTouchedSessionExerciseId;
   final bool showDragHandle;
   final bool isDropTarget;
 
@@ -120,18 +119,19 @@ class SupersetCard extends StatelessWidget {
               isExpanded: expandedExerciseIds.contains(
                 exercises[i].sessionExercise.id,
               ),
-              expandedSetPosition:
-                  expandedSetPositions[exercises[i].sessionExercise.id],
               canMutate: canMutate,
+              isLastTouched:
+                  lastTouchedSessionExerciseId ==
+                  exercises[i].sessionExercise.id,
               onToggleExpansion: () =>
                   onToggleExpansion(exercises[i].sessionExercise.id),
-              onToggleSetExpansion: (pos) =>
-                  onToggleSetExpansion(exercises[i].sessionExercise.id, pos),
               onLogSet: (values, plannedId) =>
                   onLogSet(exercises[i].sessionExercise.id, values, plannedId),
               onEditSet: onEditSet,
               onSkipPressed: () =>
                   onSkipPressed(exercises[i].sessionExercise.id),
+              onMarkDonePressed: () =>
+                  onMarkDonePressed(exercises[i].sessionExercise.id),
               onReplacePressed: () =>
                   onReplacePressed(exercises[i].sessionExercise.id),
               onOpenVideo: onOpenVideo,

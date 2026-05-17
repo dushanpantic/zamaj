@@ -8,7 +8,7 @@ import 'package:zamaj/modules/workout_overview/services/exercise_view_model_asse
 
 void main() {
   group('ExerciseViewModelAssembler.assemble', () {
-    test('one standalone unfinished exercise → cursor target on set 0', () {
+    test('one standalone unfinished exercise → row 0 loggable', () {
       final session = _sessionFromGroups([
         _standalone(
           'ex-1',
@@ -19,7 +19,9 @@ void main() {
       ]);
       final state = SessionState(
         session: session,
-        openTargets: const [],
+        openTargets: const [
+          LogTarget(sessionExerciseId: 'se-ex-1', plannedSetIndex: 0),
+        ],
         isComplete: false,
         cursor: const Cursor.active(sessionExerciseId: 'se-ex-1', setIndex: 0),
       );
@@ -29,72 +31,84 @@ void main() {
       expect(groups, hasLength(1));
       expect(groups.single, isA<SingleGroupViewModel>());
       final vm = groups.single.allExercises.single;
-      expect(vm.isCursorTarget, isTrue);
-      expect(vm.cursorSetIndex, 0);
+      expect(vm.isLoggable, isTrue);
       expect(vm.setRows, hasLength(3));
-      expect(vm.setRows[0].isNextLogTarget, isTrue);
-      expect(vm.setRows[1].isNextLogTarget, isFalse);
-      expect(vm.setRows[2].isNextLogTarget, isFalse);
+      expect(vm.setRows[0].isLoggable, isTrue);
+      expect(vm.setRows[1].isLoggable, isFalse);
+      expect(vm.setRows[2].isLoggable, isFalse);
     });
 
-    test('mixed standalone + superset preserved in position order', () {
-      final session = _sessionFromGroups([
-        _standalone(
-          'a',
-          state: const ExerciseState.unfinished(),
-          plannedSetCount: 2,
-        ),
-        _standalone(
-          'b',
-          state: const ExerciseState.unfinished(),
-          plannedSetCount: 2,
-          supersetTag: 'tag-x',
-        ),
-        _standalone(
-          'c',
-          state: const ExerciseState.unfinished(),
-          plannedSetCount: 2,
-          supersetTag: 'tag-x',
-        ),
-        _standalone(
-          'd',
-          state: const ExerciseState.unfinished(),
-          plannedSetCount: 2,
-        ),
-      ]);
-      final state = SessionState(
-        session: session,
-        openTargets: const [],
-        isComplete: false,
-        cursor: const Cursor.active(sessionExerciseId: 'se-a', setIndex: 0),
-      );
+    test(
+      'mixed standalone + superset preserved in position order, all loggable',
+      () {
+        final session = _sessionFromGroups([
+          _standalone(
+            'a',
+            state: const ExerciseState.unfinished(),
+            plannedSetCount: 2,
+          ),
+          _standalone(
+            'b',
+            state: const ExerciseState.unfinished(),
+            plannedSetCount: 2,
+            supersetTag: 'tag-x',
+          ),
+          _standalone(
+            'c',
+            state: const ExerciseState.unfinished(),
+            plannedSetCount: 2,
+            supersetTag: 'tag-x',
+          ),
+          _standalone(
+            'd',
+            state: const ExerciseState.unfinished(),
+            plannedSetCount: 2,
+          ),
+        ]);
+        final state = SessionState(
+          session: session,
+          openTargets: const [
+            LogTarget(sessionExerciseId: 'se-a', plannedSetIndex: 0),
+            LogTarget(sessionExerciseId: 'se-b', plannedSetIndex: 0),
+            LogTarget(sessionExerciseId: 'se-c', plannedSetIndex: 0),
+            LogTarget(sessionExerciseId: 'se-d', plannedSetIndex: 0),
+          ],
+          isComplete: false,
+          cursor: const Cursor.active(sessionExerciseId: 'se-a', setIndex: 0),
+        );
 
-      final groups = ExerciseViewModelAssembler.assemble(state);
+        final groups = ExerciseViewModelAssembler.assemble(state);
 
-      expect(groups, hasLength(3));
-      expect(groups[0], isA<SingleGroupViewModel>());
-      expect(
-        groups[0].allExercises.map(
-          (ExerciseViewModel e) => e.sessionExercise.id,
-        ),
-        ['se-a'],
-      );
-      expect(groups[1], isA<SupersetGroup>());
-      expect((groups[1] as SupersetGroup).tag, 'tag-x');
-      expect(
-        groups[1].allExercises.map(
-          (ExerciseViewModel e) => e.sessionExercise.id,
-        ),
-        ['se-b', 'se-c'],
-      );
-      expect(groups[2], isA<SingleGroupViewModel>());
-      expect(
-        groups[2].allExercises.map(
-          (ExerciseViewModel e) => e.sessionExercise.id,
-        ),
-        ['se-d'],
-      );
-    });
+        expect(groups, hasLength(3));
+        expect(groups[0], isA<SingleGroupViewModel>());
+        expect(
+          groups[0].allExercises.map(
+            (ExerciseViewModel e) => e.sessionExercise.id,
+          ),
+          ['se-a'],
+        );
+        expect(groups[1], isA<SupersetGroup>());
+        expect((groups[1] as SupersetGroup).tag, 'tag-x');
+        expect(
+          groups[1].allExercises.map(
+            (ExerciseViewModel e) => e.sessionExercise.id,
+          ),
+          ['se-b', 'se-c'],
+        );
+        expect(groups[2], isA<SingleGroupViewModel>());
+        expect(
+          groups[2].allExercises.map(
+            (ExerciseViewModel e) => e.sessionExercise.id,
+          ),
+          ['se-d'],
+        );
+
+        // Both members of the superset should be loggable simultaneously —
+        // the core point of the redesign.
+        expect(groups[1].allExercises.first.isLoggable, isTrue);
+        expect(groups[1].allExercises.last.isLoggable, isTrue);
+      },
+    );
 
     test('replaced exercise → effectiveMeasurementType = substitute\'s', () {
       final session = _sessionFromGroups([
@@ -118,7 +132,9 @@ void main() {
       ]);
       final state = SessionState(
         session: session,
-        openTargets: const [],
+        openTargets: const [
+          LogTarget(sessionExerciseId: 'se-a', plannedSetIndex: 0),
+        ],
         isComplete: false,
         cursor: const Cursor.active(sessionExerciseId: 'se-a', setIndex: 0),
       );
@@ -135,34 +151,38 @@ void main() {
       );
     });
 
-    test('completed exercise → no cursor target', () {
-      final session = _sessionFromGroups([
-        _standalone(
-          'a',
-          state: const ExerciseState.completed(),
-          plannedSetCount: 2,
-          executedSetCount: 2,
-        ),
-        _standalone(
-          'b',
-          state: const ExerciseState.unfinished(),
-          plannedSetCount: 2,
-        ),
-      ]);
-      final state = SessionState(
-        session: session,
-        openTargets: const [],
-        isComplete: false,
-        cursor: const Cursor.active(sessionExerciseId: 'se-b', setIndex: 0),
-      );
+    test(
+      'completed exercise → not loggable, unfinished exercise → loggable',
+      () {
+        final session = _sessionFromGroups([
+          _standalone(
+            'a',
+            state: const ExerciseState.completed(),
+            plannedSetCount: 2,
+            executedSetCount: 2,
+          ),
+          _standalone(
+            'b',
+            state: const ExerciseState.unfinished(),
+            plannedSetCount: 2,
+          ),
+        ]);
+        final state = SessionState(
+          session: session,
+          openTargets: const [
+            LogTarget(sessionExerciseId: 'se-b', plannedSetIndex: 0),
+          ],
+          isComplete: false,
+          cursor: const Cursor.active(sessionExerciseId: 'se-b', setIndex: 0),
+        );
 
-      final groups = ExerciseViewModelAssembler.assemble(state);
-      expect(groups[0].allExercises.single.isCursorTarget, isFalse);
-      expect(groups[0].allExercises.single.cursorSetIndex, isNull);
-      expect(groups[1].allExercises.single.isCursorTarget, isTrue);
-    });
+        final groups = ExerciseViewModelAssembler.assemble(state);
+        expect(groups[0].allExercises.single.isLoggable, isFalse);
+        expect(groups[1].allExercises.single.isLoggable, isTrue);
+      },
+    );
 
-    test('cursor.completed → no isCursorTarget anywhere', () {
+    test('empty openTargets → no exercise is loggable', () {
       final session = _sessionFromGroups([
         _standalone(
           'a',
@@ -179,17 +199,16 @@ void main() {
       final state = SessionState(
         session: session,
         openTargets: const [],
-        isComplete: false,
+        isComplete: true,
         cursor: const Cursor.completed(),
       );
 
       final groups = ExerciseViewModelAssembler.assemble(state);
       for (final g in groups) {
         for (final ex in g.allExercises) {
-          expect(ex.isCursorTarget, isFalse);
-          expect(ex.cursorSetIndex, isNull);
+          expect(ex.isLoggable, isFalse);
           for (final r in ex.setRows) {
-            expect(r.isNextLogTarget, isFalse);
+            expect(r.isLoggable, isFalse);
           }
         }
       }
@@ -208,7 +227,7 @@ void main() {
       final state = SessionState(
         session: session,
         openTargets: const [],
-        isComplete: false,
+        isComplete: true,
         cursor: const Cursor.completed(),
       );
 
@@ -233,7 +252,11 @@ void main() {
       ]);
       final state = SessionState(
         session: session,
-        openTargets: const [],
+        openTargets: const [
+          LogTarget(sessionExerciseId: 'se-a', plannedSetIndex: 0),
+          LogTarget(sessionExerciseId: 'se-b', plannedSetIndex: 0),
+          LogTarget(sessionExerciseId: 'se-c', plannedSetIndex: 0),
+        ],
         isComplete: false,
         cursor: const Cursor.active(sessionExerciseId: 'se-a', setIndex: 0),
       );
@@ -253,7 +276,9 @@ void main() {
       ]);
       final state = SessionState(
         session: session,
-        openTargets: const [],
+        openTargets: const [
+          LogTarget(sessionExerciseId: 'se-a', plannedSetIndex: 0),
+        ],
         isComplete: false,
         cursor: const Cursor.active(sessionExerciseId: 'se-a', setIndex: 0),
       );
@@ -263,6 +288,37 @@ void main() {
       ).single.allExercises.single;
       expect(vm.plannedSummary, '100kg 4×8');
     });
+
+    test(
+      'partial progress: row N loggable only when executedSets.length == N',
+      () {
+        final session = _sessionFromGroups([
+          _standalone(
+            'a',
+            state: const ExerciseState.unfinished(),
+            plannedSetCount: 3,
+            executedSetCount: 1,
+          ),
+        ]);
+        final state = SessionState(
+          session: session,
+          openTargets: const [
+            LogTarget(sessionExerciseId: 'se-a', plannedSetIndex: 1),
+          ],
+          isComplete: false,
+          cursor: const Cursor.active(sessionExerciseId: 'se-a', setIndex: 1),
+        );
+
+        final vm = ExerciseViewModelAssembler.assemble(
+          state,
+        ).single.allExercises.single;
+        expect(vm.isLoggable, isTrue);
+        expect(vm.setRows[0].isLoggable, isFalse);
+        expect(vm.setRows[0].executedSet, isNotNull);
+        expect(vm.setRows[1].isLoggable, isTrue);
+        expect(vm.setRows[2].isLoggable, isFalse);
+      },
+    );
   });
 }
 

@@ -51,6 +51,7 @@ final class WorkoutOverviewLoaded extends WorkoutOverviewState {
     required this.expandedExerciseIds,
     this.mutationInFlight = false,
     this.lastTransientError,
+    this.lastTouchedSessionExerciseId,
   });
 
   /// Authoritative snapshot of the session from the engine. Every other
@@ -63,9 +64,10 @@ final class WorkoutOverviewLoaded extends WorkoutOverviewState {
 
   /// Pure UI state: which exercise cards are currently expanded.
   ///
-  /// Auto-managed by the bloc: opening a session always expands the cursor
-  /// target so the user lands on the next set to log; everything else
-  /// starts collapsed.
+  /// Auto-managed by the bloc: every loggable exercise (one present in
+  /// [SessionState.openTargets]) is auto-expanded on every refresh so the
+  /// user can always see and tap the next-set editor; the user can still
+  /// expand or collapse other cards manually.
   final Set<String> expandedExerciseIds;
 
   /// True while a mutation request is awaiting the engine. Used by the UI
@@ -76,6 +78,11 @@ final class WorkoutOverviewLoaded extends WorkoutOverviewState {
   /// when the user dismisses it or another mutation succeeds.
   final DomainError? lastTransientError;
 
+  /// Which exercise the user most recently logged or edited a set on. The
+  /// UI applies a subtle accent to that exercise's loggable row so the eye
+  /// returns to it after a rest.
+  final String? lastTouchedSessionExerciseId;
+
   bool get isEnded => sessionState.session.endedAt != null;
 
   WorkoutOverviewLoaded copyWith({
@@ -84,6 +91,7 @@ final class WorkoutOverviewLoaded extends WorkoutOverviewState {
     Set<String>? expandedExerciseIds,
     bool? mutationInFlight,
     DomainError? Function()? lastTransientError,
+    String? Function()? lastTouchedSessionExerciseId,
   }) {
     return WorkoutOverviewLoaded(
       sessionState: sessionState ?? this.sessionState,
@@ -93,6 +101,9 @@ final class WorkoutOverviewLoaded extends WorkoutOverviewState {
       lastTransientError: lastTransientError != null
           ? lastTransientError()
           : this.lastTransientError,
+      lastTouchedSessionExerciseId: lastTouchedSessionExerciseId != null
+          ? lastTouchedSessionExerciseId()
+          : this.lastTouchedSessionExerciseId,
     );
   }
 
@@ -103,5 +114,6 @@ final class WorkoutOverviewLoaded extends WorkoutOverviewState {
     expandedExerciseIds,
     mutationInFlight,
     lastTransientError,
+    lastTouchedSessionExerciseId,
   ];
 }
