@@ -1,4 +1,4 @@
-// Feature: session-flow-engine, Property 3: Cursor consistency after mutations
+// Feature: session-flow-engine, Property 3: openTargets consistency after mutations
 // Feature: session-flow-engine, Property 6: Set completion records correct values and timestamp
 // Feature: session-flow-engine, Property 7: Last set transitions exercise to completed
 // Feature: session-flow-engine, Property 8: Measurement type validation
@@ -32,43 +32,46 @@ import '../../support/generators.dart';
 
 void main() {
   // **Validates: Requirements 4.5, 8.5**
-  group('Property 3: Cursor consistency after mutations', () {
-    test('returned cursor always equals computeCursor(returnedSession) '
-        'after any successful mutation', () async {
-      const iterations = 100;
-      final masterSeed = Random().nextInt(1 << 32);
+  group('Property 3: openTargets consistency after mutations', () {
+    test(
+      'returned openTargets always equals computeOpenTargets(returnedSession) '
+      'after any successful mutation',
+      () async {
+        const iterations = 100;
+        final masterSeed = Random().nextInt(1 << 32);
 
-      for (var i = 0; i < iterations; i++) {
-        final rng = Random(masterSeed + i);
-        final session = anyCursorableSession(rng);
-        final fakeClock = Clock.fixed(anyUtcDateTime(rng));
-        final repo = FakeSessionRepository(clock: fakeClock);
-        repo.seedSession(session);
+        for (var i = 0; i < iterations; i++) {
+          final rng = Random(masterSeed + i);
+          final session = anySessionWithLoggableTargets(rng);
+          final fakeClock = Clock.fixed(anyUtcDateTime(rng));
+          final repo = FakeSessionRepository(clock: fakeClock);
+          repo.seedSession(session);
 
-        final engine = SessionFlowEngine(repository: repo);
+          final engine = SessionFlowEngine(repository: repo);
 
-        final mutation = _pickMutation(rng, session, engine);
-        if (mutation == null) continue;
+          final mutation = _pickMutation(rng, session, engine);
+          if (mutation == null) continue;
 
-        final SessionState result;
-        try {
-          result = await mutation();
-        } on Exception {
-          continue;
+          final SessionState result;
+          try {
+            result = await mutation();
+          } on Exception {
+            continue;
+          }
+
+          final expectedTargets = engine.computeOpenTargets(result.session);
+
+          expect(
+            result.openTargets,
+            equals(expectedTargets),
+            reason:
+                'iteration $i (seed ${masterSeed + i}): '
+                'returned openTargets must equal '
+                'computeOpenTargets(returnedSession)',
+          );
         }
-
-        final expectedTargets = engine.computeOpenTargets(result.session);
-
-        expect(
-          result.openTargets,
-          equals(expectedTargets),
-          reason:
-              'iteration $i (seed ${masterSeed + i}): '
-              'returned openTargets must equal '
-              'computeOpenTargets(returnedSession)',
-        );
-      }
-    });
+      },
+    );
   });
 
   // **Validates: Requirements 5.1, 18.2, 18.3, 18.4**
@@ -80,7 +83,7 @@ void main() {
 
       for (var i = 0; i < iterations; i++) {
         final rng = Random(masterSeed + i);
-        final session = anyCursorableSession(rng);
+        final session = anySessionWithLoggableTargets(rng);
         final fixedTime = anyUtcDateTime(rng);
         final fakeClock = Clock.fixed(fixedTime);
         final repo = FakeSessionRepository(clock: fakeClock);
@@ -206,7 +209,7 @@ void main() {
 
       for (var i = 0; i < iterations; i++) {
         final rng = Random(masterSeed + i);
-        final session = anyCursorableSession(rng);
+        final session = anySessionWithLoggableTargets(rng);
         final fakeClock = Clock.fixed(anyUtcDateTime(rng));
         final repo = FakeSessionRepository(clock: fakeClock);
         repo.seedSession(session);
@@ -336,13 +339,13 @@ void main() {
   // **Validates: Requirements 7.1, 7.2, 7.4**
   group('Property 11: Skip transitions to skipped', () {
     test('skipExercise transitions unfinished exercise to skipped '
-        'and cursor advances past it', () async {
+        'and openTargets no longer includes it', () async {
       const iterations = 100;
       final masterSeed = Random().nextInt(1 << 32);
 
       for (var i = 0; i < iterations; i++) {
         final rng = Random(masterSeed + i);
-        final session = anyCursorableSession(rng);
+        final session = anySessionWithLoggableTargets(rng);
         final fakeClock = Clock.fixed(anyUtcDateTime(rng));
         final repo = FakeSessionRepository(clock: fakeClock);
         repo.seedSession(session);
@@ -429,7 +432,7 @@ void main() {
 
         for (var i = 0; i < iterations; i++) {
           final rng = Random(masterSeed + i);
-          final session = anyCursorableSession(rng);
+          final session = anySessionWithLoggableTargets(rng);
           final fakeClock = Clock.fixed(anyUtcDateTime(rng));
           final repo = FakeSessionRepository(clock: fakeClock);
           repo.seedSession(session);

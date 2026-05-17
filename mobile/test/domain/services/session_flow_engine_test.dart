@@ -30,7 +30,7 @@ void main() {
 
   group('startSession edge cases', () {
     test('empty workout day produces a session with no exercises and '
-        'a completed cursor', () async {
+        'no open targets', () async {
       final s = setup();
       final workoutDay = WorkoutDay(
         id: 'wd-empty',

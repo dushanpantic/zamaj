@@ -10,7 +10,6 @@ import 'package:zamaj/modules/domain/models/session.dart';
 import 'package:zamaj/modules/domain/models/session_exercise.dart';
 import 'package:zamaj/modules/domain/models/workout_set.dart';
 import 'package:zamaj/modules/domain/repositories/session_repository.dart';
-import 'package:zamaj/modules/domain/services/cursor.dart';
 import 'package:zamaj/modules/domain/services/log_target.dart';
 import 'package:zamaj/modules/domain/services/session_state.dart';
 
@@ -506,26 +505,10 @@ class SessionFlowEngine {
   }
 
   SessionState _buildState(Session session) {
-    final openTargets = computeOpenTargets(session);
-    final isComplete = isSessionComplete(session);
-    final cursor = openTargets.isEmpty
-        ? const Cursor.completed()
-        : Cursor.active(
-            sessionExerciseId: openTargets.first.sessionExerciseId,
-            setIndex: openTargets.first.plannedSetIndex,
-          );
-    final suggestedValues = openTargets.isEmpty
-        ? null
-        : suggestValuesFor(
-            session: session,
-            sessionExerciseId: openTargets.first.sessionExerciseId,
-          );
     return SessionState(
       session: session,
-      openTargets: openTargets,
-      isComplete: isComplete,
-      cursor: cursor,
-      suggestedValues: suggestedValues,
+      openTargets: computeOpenTargets(session),
+      isComplete: isSessionComplete(session),
     );
   }
 

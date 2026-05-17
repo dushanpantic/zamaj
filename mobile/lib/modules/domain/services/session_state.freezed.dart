@@ -20,12 +20,7 @@ mixin _$SessionState {
  List<LogTarget> get openTargets;/// True when every exercise is in a terminal state with its planned-set
 /// quota satisfied (`completed`, `skipped`, or `replaced` with all
 /// substitute sets logged).
- bool get isComplete;/// Back-compat shim derived from [openTargets]: the first open target as
-/// an [ActiveCursor], or [Cursor.completed] when the list is empty.
-/// Removed once the UI moves to consuming [openTargets] directly.
- Cursor get cursor;/// Back-compat shim: [SessionFlowEngine.suggestValuesFor] applied to the
-/// first open target. Removed alongside [cursor].
- ActualSetValues? get suggestedValues;
+ bool get isComplete;
 /// Create a copy of SessionState
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -36,16 +31,16 @@ $SessionStateCopyWith<SessionState> get copyWith => _$SessionStateCopyWithImpl<S
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is SessionState&&(identical(other.session, session) || other.session == session)&&const DeepCollectionEquality().equals(other.openTargets, openTargets)&&(identical(other.isComplete, isComplete) || other.isComplete == isComplete)&&(identical(other.cursor, cursor) || other.cursor == cursor)&&(identical(other.suggestedValues, suggestedValues) || other.suggestedValues == suggestedValues));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is SessionState&&(identical(other.session, session) || other.session == session)&&const DeepCollectionEquality().equals(other.openTargets, openTargets)&&(identical(other.isComplete, isComplete) || other.isComplete == isComplete));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,session,const DeepCollectionEquality().hash(openTargets),isComplete,cursor,suggestedValues);
+int get hashCode => Object.hash(runtimeType,session,const DeepCollectionEquality().hash(openTargets),isComplete);
 
 @override
 String toString() {
-  return 'SessionState(session: $session, openTargets: $openTargets, isComplete: $isComplete, cursor: $cursor, suggestedValues: $suggestedValues)';
+  return 'SessionState(session: $session, openTargets: $openTargets, isComplete: $isComplete)';
 }
 
 
@@ -56,11 +51,11 @@ abstract mixin class $SessionStateCopyWith<$Res>  {
   factory $SessionStateCopyWith(SessionState value, $Res Function(SessionState) _then) = _$SessionStateCopyWithImpl;
 @useResult
 $Res call({
- Session session, List<LogTarget> openTargets, bool isComplete, Cursor cursor, ActualSetValues? suggestedValues
+ Session session, List<LogTarget> openTargets, bool isComplete
 });
 
 
-$SessionCopyWith<$Res> get session;$CursorCopyWith<$Res> get cursor;$ActualSetValuesCopyWith<$Res>? get suggestedValues;
+$SessionCopyWith<$Res> get session;
 
 }
 /// @nodoc
@@ -73,14 +68,12 @@ class _$SessionStateCopyWithImpl<$Res>
 
 /// Create a copy of SessionState
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? session = null,Object? openTargets = null,Object? isComplete = null,Object? cursor = null,Object? suggestedValues = freezed,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? session = null,Object? openTargets = null,Object? isComplete = null,}) {
   return _then(_self.copyWith(
 session: null == session ? _self.session : session // ignore: cast_nullable_to_non_nullable
 as Session,openTargets: null == openTargets ? _self.openTargets : openTargets // ignore: cast_nullable_to_non_nullable
 as List<LogTarget>,isComplete: null == isComplete ? _self.isComplete : isComplete // ignore: cast_nullable_to_non_nullable
-as bool,cursor: null == cursor ? _self.cursor : cursor // ignore: cast_nullable_to_non_nullable
-as Cursor,suggestedValues: freezed == suggestedValues ? _self.suggestedValues : suggestedValues // ignore: cast_nullable_to_non_nullable
-as ActualSetValues?,
+as bool,
   ));
 }
 /// Create a copy of SessionState
@@ -91,27 +84,6 @@ $SessionCopyWith<$Res> get session {
   
   return $SessionCopyWith<$Res>(_self.session, (value) {
     return _then(_self.copyWith(session: value));
-  });
-}/// Create a copy of SessionState
-/// with the given fields replaced by the non-null parameter values.
-@override
-@pragma('vm:prefer-inline')
-$CursorCopyWith<$Res> get cursor {
-  
-  return $CursorCopyWith<$Res>(_self.cursor, (value) {
-    return _then(_self.copyWith(cursor: value));
-  });
-}/// Create a copy of SessionState
-/// with the given fields replaced by the non-null parameter values.
-@override
-@pragma('vm:prefer-inline')
-$ActualSetValuesCopyWith<$Res>? get suggestedValues {
-    if (_self.suggestedValues == null) {
-    return null;
-  }
-
-  return $ActualSetValuesCopyWith<$Res>(_self.suggestedValues!, (value) {
-    return _then(_self.copyWith(suggestedValues: value));
   });
 }
 }
@@ -195,10 +167,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( Session session,  List<LogTarget> openTargets,  bool isComplete,  Cursor cursor,  ActualSetValues? suggestedValues)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( Session session,  List<LogTarget> openTargets,  bool isComplete)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _SessionState() when $default != null:
-return $default(_that.session,_that.openTargets,_that.isComplete,_that.cursor,_that.suggestedValues);case _:
+return $default(_that.session,_that.openTargets,_that.isComplete);case _:
   return orElse();
 
 }
@@ -216,10 +188,10 @@ return $default(_that.session,_that.openTargets,_that.isComplete,_that.cursor,_t
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( Session session,  List<LogTarget> openTargets,  bool isComplete,  Cursor cursor,  ActualSetValues? suggestedValues)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( Session session,  List<LogTarget> openTargets,  bool isComplete)  $default,) {final _that = this;
 switch (_that) {
 case _SessionState():
-return $default(_that.session,_that.openTargets,_that.isComplete,_that.cursor,_that.suggestedValues);case _:
+return $default(_that.session,_that.openTargets,_that.isComplete);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -236,10 +208,10 @@ return $default(_that.session,_that.openTargets,_that.isComplete,_that.cursor,_t
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( Session session,  List<LogTarget> openTargets,  bool isComplete,  Cursor cursor,  ActualSetValues? suggestedValues)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( Session session,  List<LogTarget> openTargets,  bool isComplete)?  $default,) {final _that = this;
 switch (_that) {
 case _SessionState() when $default != null:
-return $default(_that.session,_that.openTargets,_that.isComplete,_that.cursor,_that.suggestedValues);case _:
+return $default(_that.session,_that.openTargets,_that.isComplete);case _:
   return null;
 
 }
@@ -251,7 +223,7 @@ return $default(_that.session,_that.openTargets,_that.isComplete,_that.cursor,_t
 
 
 class _SessionState implements SessionState {
-  const _SessionState({required this.session, required final  List<LogTarget> openTargets, required this.isComplete, required this.cursor, this.suggestedValues}): _openTargets = openTargets;
+  const _SessionState({required this.session, required final  List<LogTarget> openTargets, required this.isComplete}): _openTargets = openTargets;
   
 
 @override final  Session session;
@@ -272,13 +244,6 @@ class _SessionState implements SessionState {
 /// quota satisfied (`completed`, `skipped`, or `replaced` with all
 /// substitute sets logged).
 @override final  bool isComplete;
-/// Back-compat shim derived from [openTargets]: the first open target as
-/// an [ActiveCursor], or [Cursor.completed] when the list is empty.
-/// Removed once the UI moves to consuming [openTargets] directly.
-@override final  Cursor cursor;
-/// Back-compat shim: [SessionFlowEngine.suggestValuesFor] applied to the
-/// first open target. Removed alongside [cursor].
-@override final  ActualSetValues? suggestedValues;
 
 /// Create a copy of SessionState
 /// with the given fields replaced by the non-null parameter values.
@@ -290,16 +255,16 @@ _$SessionStateCopyWith<_SessionState> get copyWith => __$SessionStateCopyWithImp
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _SessionState&&(identical(other.session, session) || other.session == session)&&const DeepCollectionEquality().equals(other._openTargets, _openTargets)&&(identical(other.isComplete, isComplete) || other.isComplete == isComplete)&&(identical(other.cursor, cursor) || other.cursor == cursor)&&(identical(other.suggestedValues, suggestedValues) || other.suggestedValues == suggestedValues));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _SessionState&&(identical(other.session, session) || other.session == session)&&const DeepCollectionEquality().equals(other._openTargets, _openTargets)&&(identical(other.isComplete, isComplete) || other.isComplete == isComplete));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,session,const DeepCollectionEquality().hash(_openTargets),isComplete,cursor,suggestedValues);
+int get hashCode => Object.hash(runtimeType,session,const DeepCollectionEquality().hash(_openTargets),isComplete);
 
 @override
 String toString() {
-  return 'SessionState(session: $session, openTargets: $openTargets, isComplete: $isComplete, cursor: $cursor, suggestedValues: $suggestedValues)';
+  return 'SessionState(session: $session, openTargets: $openTargets, isComplete: $isComplete)';
 }
 
 
@@ -310,11 +275,11 @@ abstract mixin class _$SessionStateCopyWith<$Res> implements $SessionStateCopyWi
   factory _$SessionStateCopyWith(_SessionState value, $Res Function(_SessionState) _then) = __$SessionStateCopyWithImpl;
 @override @useResult
 $Res call({
- Session session, List<LogTarget> openTargets, bool isComplete, Cursor cursor, ActualSetValues? suggestedValues
+ Session session, List<LogTarget> openTargets, bool isComplete
 });
 
 
-@override $SessionCopyWith<$Res> get session;@override $CursorCopyWith<$Res> get cursor;@override $ActualSetValuesCopyWith<$Res>? get suggestedValues;
+@override $SessionCopyWith<$Res> get session;
 
 }
 /// @nodoc
@@ -327,14 +292,12 @@ class __$SessionStateCopyWithImpl<$Res>
 
 /// Create a copy of SessionState
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? session = null,Object? openTargets = null,Object? isComplete = null,Object? cursor = null,Object? suggestedValues = freezed,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? session = null,Object? openTargets = null,Object? isComplete = null,}) {
   return _then(_SessionState(
 session: null == session ? _self.session : session // ignore: cast_nullable_to_non_nullable
 as Session,openTargets: null == openTargets ? _self._openTargets : openTargets // ignore: cast_nullable_to_non_nullable
 as List<LogTarget>,isComplete: null == isComplete ? _self.isComplete : isComplete // ignore: cast_nullable_to_non_nullable
-as bool,cursor: null == cursor ? _self.cursor : cursor // ignore: cast_nullable_to_non_nullable
-as Cursor,suggestedValues: freezed == suggestedValues ? _self.suggestedValues : suggestedValues // ignore: cast_nullable_to_non_nullable
-as ActualSetValues?,
+as bool,
   ));
 }
 
@@ -346,27 +309,6 @@ $SessionCopyWith<$Res> get session {
   
   return $SessionCopyWith<$Res>(_self.session, (value) {
     return _then(_self.copyWith(session: value));
-  });
-}/// Create a copy of SessionState
-/// with the given fields replaced by the non-null parameter values.
-@override
-@pragma('vm:prefer-inline')
-$CursorCopyWith<$Res> get cursor {
-  
-  return $CursorCopyWith<$Res>(_self.cursor, (value) {
-    return _then(_self.copyWith(cursor: value));
-  });
-}/// Create a copy of SessionState
-/// with the given fields replaced by the non-null parameter values.
-@override
-@pragma('vm:prefer-inline')
-$ActualSetValuesCopyWith<$Res>? get suggestedValues {
-    if (_self.suggestedValues == null) {
-    return null;
-  }
-
-  return $ActualSetValuesCopyWith<$Res>(_self.suggestedValues!, (value) {
-    return _then(_self.copyWith(suggestedValues: value));
   });
 }
 }

@@ -3,9 +3,8 @@ import 'package:zamaj/core/app_spacing.dart';
 import 'package:zamaj/core/app_theme.dart';
 import 'package:zamaj/core/app_typography.dart';
 
-/// End-of-workout panel shown when the cursor has exhausted all
-/// actionable exercises. The user can pop back to the overview screen to
-/// review and end the session there.
+/// End-of-workout panel shown when no loggable exercises remain. The user
+/// can pop back to the overview screen to review and end the session there.
 class FocusWorkoutCompleteView extends StatelessWidget {
   const FocusWorkoutCompleteView({
     super.key,

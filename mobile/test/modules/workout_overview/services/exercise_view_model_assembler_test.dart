@@ -23,7 +23,6 @@ void main() {
           LogTarget(sessionExerciseId: 'se-ex-1', plannedSetIndex: 0),
         ],
         isComplete: false,
-        cursor: const Cursor.active(sessionExerciseId: 'se-ex-1', setIndex: 0),
       );
 
       final groups = ExerciseViewModelAssembler.assemble(state);
@@ -74,7 +73,6 @@ void main() {
             LogTarget(sessionExerciseId: 'se-d', plannedSetIndex: 0),
           ],
           isComplete: false,
-          cursor: const Cursor.active(sessionExerciseId: 'se-a', setIndex: 0),
         );
 
         final groups = ExerciseViewModelAssembler.assemble(state);
@@ -136,7 +134,6 @@ void main() {
           LogTarget(sessionExerciseId: 'se-a', plannedSetIndex: 0),
         ],
         isComplete: false,
-        cursor: const Cursor.active(sessionExerciseId: 'se-a', setIndex: 0),
       );
 
       final groups = ExerciseViewModelAssembler.assemble(state);
@@ -173,7 +170,6 @@ void main() {
             LogTarget(sessionExerciseId: 'se-b', plannedSetIndex: 0),
           ],
           isComplete: false,
-          cursor: const Cursor.active(sessionExerciseId: 'se-b', setIndex: 0),
         );
 
         final groups = ExerciseViewModelAssembler.assemble(state);
@@ -200,7 +196,6 @@ void main() {
         session: session,
         openTargets: const [],
         isComplete: true,
-        cursor: const Cursor.completed(),
       );
 
       final groups = ExerciseViewModelAssembler.assemble(state);
@@ -228,7 +223,6 @@ void main() {
         session: session,
         openTargets: const [],
         isComplete: true,
-        cursor: const Cursor.completed(),
       );
 
       final groups = ExerciseViewModelAssembler.assemble(state);
@@ -258,7 +252,6 @@ void main() {
           LogTarget(sessionExerciseId: 'se-c', plannedSetIndex: 0),
         ],
         isComplete: false,
-        cursor: const Cursor.active(sessionExerciseId: 'se-a', setIndex: 0),
       );
 
       final groups = ExerciseViewModelAssembler.assemble(state);
@@ -280,7 +273,6 @@ void main() {
           LogTarget(sessionExerciseId: 'se-a', plannedSetIndex: 0),
         ],
         isComplete: false,
-        cursor: const Cursor.active(sessionExerciseId: 'se-a', setIndex: 0),
       );
 
       final vm = ExerciseViewModelAssembler.assemble(
@@ -306,7 +298,6 @@ void main() {
             LogTarget(sessionExerciseId: 'se-a', plannedSetIndex: 1),
           ],
           isComplete: false,
-          cursor: const Cursor.active(sessionExerciseId: 'se-a', setIndex: 1),
         );
 
         final vm = ExerciseViewModelAssembler.assemble(

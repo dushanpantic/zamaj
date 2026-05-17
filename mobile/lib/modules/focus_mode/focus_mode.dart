@@ -1,7 +1,7 @@
 /// Focus-mode module.
 ///
-/// Owns the execution screen (`SessionRoutes.focus`): single-set workout
-/// engine view that resumes at the cursor, edits actual values with bump
+/// Owns the execution screen (`SessionRoutes.focus`): single-exercise or
+/// superset-group workout engine view that edits actual values with bump
 /// buttons / numeric entry / time-based stopwatch, completes sets, and runs
 /// the inline rest timer.
 library;

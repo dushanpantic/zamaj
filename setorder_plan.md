@@ -292,7 +292,7 @@ a single feature branch but with clear commits per phase.
    loggable rows, drop the cursor-driven expansion logic, add the
    "Mark done" menu entry.
 5. (COMPLETED) **Focus Mode UI.** Superset-aware layout; "switch exercise" affordance.
-6. **Cleanup.** Delete `Cursor` files, `cursor.dart`, the freezed
+6. (COMPLETED) **Cleanup.** Delete `Cursor` files, `cursor.dart`, the freezed
    generated artifacts, and any imports. Confirm
    `tool/check_offline_imports.sh` and `tool/ci.sh` are green.
 

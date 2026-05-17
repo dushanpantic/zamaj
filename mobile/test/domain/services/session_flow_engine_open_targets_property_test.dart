@@ -80,13 +80,14 @@ void main() {
     final engine = SessionFlowEngine(repository: repo);
 
     for (var i = 0; i < iterations; i++) {
-      final session = anyCursorableSession(rng);
+      final session = anySessionWithLoggableTargets(rng);
       final targets = engine.computeOpenTargets(session);
 
       expect(
         targets,
         isNotEmpty,
-        reason: 'iteration $i: anyCursorableSession should produce targets',
+        reason:
+            'iteration $i: anySessionWithLoggableTargets should produce targets',
       );
 
       for (final target in targets) {
@@ -111,7 +112,7 @@ void main() {
     final engine = SessionFlowEngine(repository: repo);
 
     for (var i = 0; i < iterations; i++) {
-      final session = anyCursorableSession(rng);
+      final session = anySessionWithLoggableTargets(rng);
       final targets = engine.computeOpenTargets(session);
       final positions = targets
           .map(

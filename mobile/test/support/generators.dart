@@ -21,7 +21,6 @@ import 'package:zamaj/modules/domain/models/session_snapshot.dart';
 import 'package:zamaj/modules/domain/models/substitute_exercise.dart';
 import 'package:zamaj/modules/domain/models/workout_day.dart';
 import 'package:zamaj/modules/domain/models/workout_set.dart';
-import 'package:zamaj/modules/domain/services/cursor.dart';
 import 'package:zamaj/modules/domain/services/log_target.dart';
 import 'package:zamaj/modules/domain/services/session_state.dart';
 
@@ -1067,7 +1066,7 @@ Session anySessionWithStates(
   );
 }
 
-Session anyCursorableSession(Random rng) {
+Session anySessionWithLoggableTargets(Random rng) {
   final exerciseCount = 1 + rng.nextInt(5);
   final unfinishedIndex = rng.nextInt(exerciseCount);
 
@@ -1163,18 +1162,10 @@ Session anyEndedSession(Random rng) {
 
 SessionState anySessionStateForOverview(Random rng) {
   final session = anySessionForEngine(rng);
-  final openTargets = _openTargetsForSession(session);
-  final cursor = openTargets.isEmpty
-      ? const Cursor.completed()
-      : Cursor.active(
-          sessionExerciseId: openTargets.first.sessionExerciseId,
-          setIndex: openTargets.first.plannedSetIndex,
-        );
   return SessionState(
     session: session,
-    openTargets: openTargets,
+    openTargets: _openTargetsForSession(session),
     isComplete: _isSessionComplete(session),
-    cursor: cursor,
   );
 }
 

@@ -119,7 +119,7 @@ void main() {
 
   group('SessionFlowEngine.deleteExecutedSet', () {
     test('deleting a set on a still-unfinished exercise keeps it unfinished '
-        'and rewinds the cursor by one', () async {
+        'and rewinds the open target by one', () async {
       final s = setup();
       s.repo.seedWorkoutDay(buildWorkoutDay());
       final started = await s.engine.startSession(workoutDayId: 'wd-1');
@@ -157,7 +157,7 @@ void main() {
     });
 
     test('deleting the last set of a completed exercise reverts it to '
-        'unfinished and returns the cursor to it', () async {
+        'unfinished and re-opens a target on it', () async {
       final s = setup();
       s.repo.seedWorkoutDay(buildWorkoutDay());
       final started = await s.engine.startSession(workoutDayId: 'wd-1');
