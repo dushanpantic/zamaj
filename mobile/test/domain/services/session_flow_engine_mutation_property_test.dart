@@ -24,7 +24,6 @@ import 'package:zamaj/modules/domain/models/session_snapshot.dart';
 import 'package:zamaj/modules/domain/models/substitute_exercise.dart';
 import 'package:zamaj/modules/domain/models/workout_day.dart';
 import 'package:zamaj/modules/domain/models/workout_set.dart';
-import 'package:zamaj/modules/domain/services/cursor.dart';
 import 'package:zamaj/modules/domain/services/session_flow_engine.dart';
 import 'package:zamaj/modules/domain/services/session_state.dart';
 
@@ -58,14 +57,15 @@ void main() {
           continue;
         }
 
-        final expectedCursor = engine.computeCursor(result.session);
+        final expectedTargets = engine.computeOpenTargets(result.session);
 
         expect(
-          result.cursor,
-          equals(expectedCursor),
+          result.openTargets,
+          equals(expectedTargets),
           reason:
               'iteration $i (seed ${masterSeed + i}): '
-              'returned cursor must equal computeCursor(returnedSession)',
+              'returned openTargets must equal '
+              'computeOpenTargets(returnedSession)',
         );
       }
     });
@@ -87,12 +87,12 @@ void main() {
         repo.seedSession(session);
 
         final engine = SessionFlowEngine(repository: repo);
-        final cursor = engine.computeCursor(session);
+        final targets = engine.computeOpenTargets(session);
 
-        if (cursor is! ActiveCursor) continue;
+        if (targets.isEmpty) continue;
 
         final activeExercise = session.sessionExercises.firstWhere(
-          (SessionExercise e) => e.id == cursor.sessionExerciseId,
+          (SessionExercise e) => e.id == targets.first.sessionExerciseId,
         );
 
         final planned = _lookupPlannedExercise(activeExercise, session);
@@ -212,12 +212,12 @@ void main() {
         repo.seedSession(session);
 
         final engine = SessionFlowEngine(repository: repo);
-        final cursor = engine.computeCursor(session);
+        final targets = engine.computeOpenTargets(session);
 
-        if (cursor is! ActiveCursor) continue;
+        if (targets.isEmpty) continue;
 
         final activeExercise = session.sessionExercises.firstWhere(
-          (SessionExercise e) => e.id == cursor.sessionExerciseId,
+          (SessionExercise e) => e.id == targets.first.sessionExerciseId,
         );
 
         final planned = _lookupPlannedExercise(activeExercise, session);
@@ -304,12 +304,12 @@ void main() {
         repo.seedSession(session);
 
         final engine = SessionFlowEngine(repository: repo);
-        final cursor = engine.computeCursor(session);
+        final targets = engine.computeOpenTargets(session);
 
-        if (cursor is! ActiveCursor) continue;
+        if (targets.isEmpty) continue;
 
         final activeExercise = session.sessionExercises.firstWhere(
-          (SessionExercise e) => e.id == cursor.sessionExerciseId,
+          (SessionExercise e) => e.id == targets.first.sessionExerciseId,
         );
 
         if (activeExercise.state is! ReplacedState) continue;
@@ -368,46 +368,51 @@ void main() {
               'exercise state must be skipped after skipExercise',
         );
 
-        final cursor = result.cursor;
-        switch (cursor) {
-          case ActiveCursor(:final sessionExerciseId):
-            expect(
-              sessionExerciseId,
-              isNot(equals(target.id)),
-              reason:
-                  'iteration $i (seed ${masterSeed + i}): '
-                  'cursor must not point to the skipped exercise',
-            );
-            final cursorExercise = result.session.sessionExercises.firstWhere(
-              (e) => e.id == sessionExerciseId,
-            );
-            expect(
-              cursorExercise.state is UnfinishedState ||
-                  cursorExercise.state is ReplacedState,
-              isTrue,
-              reason:
-                  'iteration $i (seed ${masterSeed + i}): '
-                  'cursor must point to an unfinished or replaced exercise',
-            );
-          case CompletedCursor():
-            final hasUnfinishedRemaining = result.session.sessionExercises.any((
-              e,
-            ) {
-              if (e.id == target.id) return false;
-              if (e.state is! UnfinishedState && e.state is! ReplacedState) {
-                return false;
-              }
-              final plannedSetCount = _lookupPlannedSetCount(e, result.session);
-              return e.executedSets.length < plannedSetCount;
-            });
-            expect(
-              hasUnfinishedRemaining,
-              isFalse,
-              reason:
-                  'iteration $i (seed ${masterSeed + i}): '
-                  'cursor is completed but there are still exercises '
-                  'with sets remaining',
-            );
+        final openTargetIds = result.openTargets
+            .map((t) => t.sessionExerciseId)
+            .toSet();
+
+        expect(
+          openTargetIds,
+          isNot(contains(target.id)),
+          reason:
+              'iteration $i (seed ${masterSeed + i}): '
+              'openTargets must not include the skipped exercise',
+        );
+
+        for (final t in result.openTargets) {
+          final ex = result.session.sessionExercises.firstWhere(
+            (e) => e.id == t.sessionExerciseId,
+          );
+          expect(
+            ex.state is UnfinishedState || ex.state is ReplacedState,
+            isTrue,
+            reason:
+                'iteration $i (seed ${masterSeed + i}): '
+                'every openTarget must point at an unfinished or '
+                'replaced exercise',
+          );
+        }
+
+        if (result.openTargets.isEmpty) {
+          final hasUnfinishedRemaining = result.session.sessionExercises.any((
+            e,
+          ) {
+            if (e.id == target.id) return false;
+            if (e.state is! UnfinishedState && e.state is! ReplacedState) {
+              return false;
+            }
+            final plannedSetCount = _lookupPlannedSetCount(e, result.session);
+            return e.executedSets.length < plannedSetCount;
+          });
+          expect(
+            hasUnfinishedRemaining,
+            isFalse,
+            reason:
+                'iteration $i (seed ${masterSeed + i}): '
+                'openTargets is empty but there are still exercises '
+                'with sets remaining',
+          );
         }
       }
     });
@@ -819,10 +824,10 @@ Future<SessionState> Function()? _pickMutation(
 
   final mutations = <Future<SessionState> Function()>[];
 
-  final cursor = engine.computeCursor(session);
-  if (cursor is ActiveCursor) {
+  final targets = engine.computeOpenTargets(session);
+  if (targets.isNotEmpty) {
     final activeExercise = session.sessionExercises.firstWhere(
-      (SessionExercise e) => e.id == cursor.sessionExerciseId,
+      (SessionExercise e) => e.id == targets.first.sessionExerciseId,
     );
     final planned = _lookupPlannedExercise(activeExercise, session);
     final effectiveMt = switch (activeExercise.state) {

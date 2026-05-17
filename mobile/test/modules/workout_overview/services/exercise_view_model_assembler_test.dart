@@ -19,6 +19,8 @@ void main() {
       ]);
       final state = SessionState(
         session: session,
+        openTargets: const [],
+        isComplete: false,
         cursor: const Cursor.active(sessionExerciseId: 'se-ex-1', setIndex: 0),
       );
 
@@ -62,6 +64,8 @@ void main() {
       ]);
       final state = SessionState(
         session: session,
+        openTargets: const [],
+        isComplete: false,
         cursor: const Cursor.active(sessionExerciseId: 'se-a', setIndex: 0),
       );
 
@@ -114,6 +118,8 @@ void main() {
       ]);
       final state = SessionState(
         session: session,
+        openTargets: const [],
+        isComplete: false,
         cursor: const Cursor.active(sessionExerciseId: 'se-a', setIndex: 0),
       );
 
@@ -145,6 +151,8 @@ void main() {
       ]);
       final state = SessionState(
         session: session,
+        openTargets: const [],
+        isComplete: false,
         cursor: const Cursor.active(sessionExerciseId: 'se-b', setIndex: 0),
       );
 
@@ -170,6 +178,8 @@ void main() {
       ]);
       final state = SessionState(
         session: session,
+        openTargets: const [],
+        isComplete: false,
         cursor: const Cursor.completed(),
       );
 
@@ -197,6 +207,8 @@ void main() {
       ]);
       final state = SessionState(
         session: session,
+        openTargets: const [],
+        isComplete: false,
         cursor: const Cursor.completed(),
       );
 
@@ -221,6 +233,8 @@ void main() {
       ]);
       final state = SessionState(
         session: session,
+        openTargets: const [],
+        isComplete: false,
         cursor: const Cursor.active(sessionExerciseId: 'se-a', setIndex: 0),
       );
 
@@ -239,6 +253,8 @@ void main() {
       ]);
       final state = SessionState(
         session: session,
+        openTargets: const [],
+        isComplete: false,
         cursor: const Cursor.active(sessionExerciseId: 'se-a', setIndex: 0),
       );
 

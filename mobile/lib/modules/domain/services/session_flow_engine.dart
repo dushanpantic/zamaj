@@ -11,12 +11,14 @@ import 'package:zamaj/modules/domain/models/session_exercise.dart';
 import 'package:zamaj/modules/domain/models/workout_set.dart';
 import 'package:zamaj/modules/domain/repositories/session_repository.dart';
 import 'package:zamaj/modules/domain/services/cursor.dart';
+import 'package:zamaj/modules/domain/services/log_target.dart';
 import 'package:zamaj/modules/domain/services/session_state.dart';
 
 /// Stateless service that orchestrates workout session execution.
 ///
 /// Every mutation round-trips through the [SessionRepository], recomputes the
-/// [Cursor], and returns a fresh [SessionState] to the caller.
+/// per-exercise [LogTarget] projection, and returns a fresh [SessionState] to
+/// the caller.
 class SessionFlowEngine {
   SessionFlowEngine({required SessionRepository repository})
     : _repository = repository;
@@ -66,7 +68,7 @@ class SessionFlowEngine {
     return _buildState(updatedSession);
   }
 
-  /// Skips an unfinished exercise, advancing the cursor past it.
+  /// Skips an unfinished exercise.
   Future<SessionState> skipExercise({required String sessionExerciseId}) async {
     final session = await _repository.getSessionByExerciseId(sessionExerciseId);
     final exercise = session.sessionExercises.firstWhere(
@@ -153,31 +155,33 @@ class SessionFlowEngine {
     return _buildState(updatedSession);
   }
 
-  /// Computes the current cursor position for a session.
+  /// Computes the list of currently-loggable [LogTarget]s for a session.
   ///
-  /// Iterates exercises in position order and returns the first unfinished or
-  /// replaced exercise that still has sets remaining. Returns
-  /// [Cursor.completed] when all exercises are in a terminal state.
-  Cursor computeCursor(Session session) {
+  /// One target per exercise in `unfinished` or `replaced` state whose
+  /// `executedSets.length < plannedSetCount`, sorted by exercise position.
+  /// Each target's `plannedSetIndex == exercise.executedSets.length`, i.e. the
+  /// next chronological slot for that exercise. Returns an empty list when no
+  /// exercise can be logged to.
+  ///
+  /// Exercises in `completed` state are NOT returned: appending an "extra set"
+  /// to a completed exercise is allowed by [completeSet] but is an explicit
+  /// UI-driven affordance, not a default suggestion.
+  List<LogTarget> computeOpenTargets(Session session) {
     final sorted = List<SessionExercise>.of(session.sessionExercises)
       ..sort((a, b) => a.position.compareTo(b.position));
 
+    final targets = <LogTarget>[];
     for (final exercise in sorted) {
       switch (exercise.state) {
         case UnfinishedState():
-          final plannedSetCount = _lookupPlannedSetCount(exercise, session);
-          if (exercise.executedSets.length < plannedSetCount) {
-            return Cursor.active(
-              sessionExerciseId: exercise.id,
-              setIndex: exercise.executedSets.length,
-            );
-          }
         case ReplacedState():
           final plannedSetCount = _lookupPlannedSetCount(exercise, session);
           if (exercise.executedSets.length < plannedSetCount) {
-            return Cursor.active(
-              sessionExerciseId: exercise.id,
-              setIndex: exercise.executedSets.length,
+            targets.add(
+              LogTarget(
+                sessionExerciseId: exercise.id,
+                plannedSetIndex: exercise.executedSets.length,
+              ),
             );
           }
         case CompletedState():
@@ -185,43 +189,37 @@ class SessionFlowEngine {
           continue;
       }
     }
-
-    return const Cursor.completed();
+    return targets;
   }
 
-  /// Suggests actual values for the current cursor position.
+  /// Suggests actual values for the next set on [sessionExerciseId].
   ///
-  /// Returns `null` when the cursor is completed. Otherwise returns values
-  /// based on the last executed set (if any) or the planned values from the
-  /// snapshot.
-  ActualSetValues? suggestValues({
+  /// Returns the last executed set's actual values when at least one set
+  /// exists; otherwise returns the planned values converted to an
+  /// [ActualSetValues] (ranges seed with the upper bound). Throws
+  /// [NotFoundError] when the exercise id is unknown.
+  ActualSetValues suggestValuesFor({
     required Session session,
-    required Cursor cursor,
+    required String sessionExerciseId,
   }) {
-    switch (cursor) {
-      case CompletedCursor():
-        return null;
-      case ActiveCursor(:final sessionExerciseId, :final setIndex):
-        final exercise = session.sessionExercises.firstWhere(
-          (e) => e.id == sessionExerciseId,
-          orElse: () => throw NotFoundError(
-            entityType: 'SessionExercise',
-            id: sessionExerciseId,
-          ),
-        );
+    final exercise = session.sessionExercises.firstWhere(
+      (e) => e.id == sessionExerciseId,
+      orElse: () => throw NotFoundError(
+        entityType: 'SessionExercise',
+        id: sessionExerciseId,
+      ),
+    );
 
-        if (setIndex > 0) {
-          final lastSet = exercise.executedSets.last;
-          return lastSet.actualValues;
-        }
-
-        final plannedValues = _lookupPlannedValuesAtPosition(
-          exercise,
-          session,
-          position: 0,
-        );
-        return _convertPlannedToActual(plannedValues);
+    if (exercise.executedSets.isNotEmpty) {
+      return exercise.executedSets.last.actualValues;
     }
+
+    final plannedValues = _lookupPlannedValuesAtPosition(
+      exercise,
+      session,
+      position: 0,
+    );
+    return _convertPlannedToActual(plannedValues);
   }
 
   /// Adds freeform extra work to the session.
@@ -271,7 +269,12 @@ class SessionFlowEngine {
     return _buildState(updatedSession);
   }
 
-  /// Completes the current set with actual values.
+  /// Completes a set on [sessionExerciseId] with [actualValues].
+  ///
+  /// Loggable states are `unfinished`, `replaced`, and `completed` (the last
+  /// covers the "extra set on a finished exercise" affordance). Logging on a
+  /// `skipped` exercise throws [OrderingError]. Cross-exercise ordering is
+  /// unrestricted — the caller picks which loggable exercise to append to.
   Future<SessionState> completeSet({
     required String sessionExerciseId,
     required ActualSetValues actualValues,
@@ -286,15 +289,6 @@ class SessionFlowEngine {
       );
     }
 
-    final cursor = computeCursor(session);
-    if (cursor is CompletedCursor) {
-      throw ValidationError(
-        entityId: sessionExerciseId,
-        invariant: 'cursor_not_terminal',
-        message: 'Cannot complete set when all exercises are done',
-      );
-    }
-
     final exercise = session.sessionExercises.firstWhere(
       (e) => e.id == sessionExerciseId,
       orElse: () => throw NotFoundError(
@@ -302,6 +296,14 @@ class SessionFlowEngine {
         id: sessionExerciseId,
       ),
     );
+
+    if (exercise.state is SkippedState) {
+      throw OrderingError(
+        sessionExerciseId: sessionExerciseId,
+        currentState: exercise.state.discriminator,
+        message: 'Cannot complete set on skipped exercise $sessionExerciseId',
+      );
+    }
 
     final effectiveMeasurementType = _effectiveMeasurementType(
       exercise,
@@ -486,10 +488,24 @@ class SessionFlowEngine {
   }
 
   SessionState _buildState(Session session) {
-    final cursor = computeCursor(session);
-    final suggestedValues = suggestValues(session: session, cursor: cursor);
+    final openTargets = computeOpenTargets(session);
+    final isComplete = isSessionComplete(session);
+    final cursor = openTargets.isEmpty
+        ? const Cursor.completed()
+        : Cursor.active(
+            sessionExerciseId: openTargets.first.sessionExerciseId,
+            setIndex: openTargets.first.plannedSetIndex,
+          );
+    final suggestedValues = openTargets.isEmpty
+        ? null
+        : suggestValuesFor(
+            session: session,
+            sessionExerciseId: openTargets.first.sessionExerciseId,
+          );
     return SessionState(
       session: session,
+      openTargets: openTargets,
+      isComplete: isComplete,
       cursor: cursor,
       suggestedValues: suggestedValues,
     );

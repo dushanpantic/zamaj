@@ -25,6 +25,7 @@ export 'models/workout_set.dart';
 export 'repositories/program_repository.dart';
 export 'repositories/session_repository.dart';
 export 'services/cursor.dart';
+export 'services/log_target.dart';
 export 'services/session_export_formatter.dart';
 export 'services/session_flow_engine.dart';
 export 'services/session_state.dart';

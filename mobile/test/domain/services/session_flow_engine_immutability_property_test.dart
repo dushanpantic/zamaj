@@ -9,7 +9,6 @@ import 'package:zamaj/modules/domain/models/exercise.dart';
 import 'package:zamaj/modules/domain/models/exercise_state.dart';
 import 'package:zamaj/modules/domain/models/session.dart';
 import 'package:zamaj/modules/domain/models/session_exercise.dart';
-import 'package:zamaj/modules/domain/services/cursor.dart';
 import 'package:zamaj/modules/domain/services/session_flow_engine.dart';
 
 import '../../support/fake_session_repository.dart';
@@ -176,50 +175,52 @@ void main() {
       }
     });
 
-    test(
-      'completeSet throws ValidationError when cursor is completed',
-      () async {
-        final masterSeed = Random().nextInt(1 << 32);
+    test('completeSet on a skipped exercise throws OrderingError', () async {
+      final masterSeed = Random().nextInt(1 << 32);
 
-        for (var i = 0; i < iterations; i++) {
-          final rng = Random(masterSeed + i);
-          final session = _anyAllTerminalSession(rng);
-          final activeSession = session.copyWith(endedAt: null);
+      for (var i = 0; i < iterations; i++) {
+        final rng = Random(masterSeed + i);
+        final session = _anyAllTerminalSession(rng);
+        final activeSession = session.copyWith(endedAt: null);
 
-          final fakeClock = Clock.fixed(anyUtcDateTime(rng));
-          final repo = FakeSessionRepository(clock: fakeClock);
-          repo.seedSession(activeSession);
+        final skipped = activeSession.sessionExercises
+            .where((e) => e.state is SkippedState)
+            .toList();
+        if (skipped.isEmpty) continue;
 
-          final engine = SessionFlowEngine(repository: repo);
-          final cursor = engine.computeCursor(activeSession);
+        final fakeClock = Clock.fixed(anyUtcDateTime(rng));
+        final repo = FakeSessionRepository(clock: fakeClock);
+        repo.seedSession(activeSession);
 
-          expect(
-            cursor,
-            equals(const Cursor.completed()),
-            reason: 'iteration $i: precondition — cursor must be completed',
-          );
+        final engine = SessionFlowEngine(repository: repo);
 
-          final exercise = activeSession.sessionExercises.first;
-          final planned = _lookupPlannedExercise(exercise, activeSession);
-          final effectiveMt = switch (exercise.state) {
-            ReplacedState(:final substitute) => substitute.measurementType,
-            _ => planned.measurementType,
-          };
-          final values = anyActualSetValuesForMeasurement(rng, effectiveMt);
+        final target = skipped[rng.nextInt(skipped.length)];
+        final planned = _lookupPlannedExercise(target, activeSession);
+        final values = anyActualSetValuesForMeasurement(
+          rng,
+          planned.measurementType,
+        );
 
-          expect(
-            () => engine.completeSet(
-              sessionExerciseId: exercise.id,
-              actualValues: values,
-            ),
-            throwsA(isA<ValidationError>()),
-            reason:
-                'iteration $i (seed ${masterSeed + i}): '
-                'completeSet with terminal cursor must throw ValidationError',
-          );
-        }
-      },
-    );
+        expect(
+          () => engine.completeSet(
+            sessionExerciseId: target.id,
+            actualValues: values,
+          ),
+          throwsA(
+            isA<OrderingError>()
+                .having(
+                  (e) => e.sessionExerciseId,
+                  'sessionExerciseId',
+                  target.id,
+                )
+                .having((e) => e.currentState, 'currentState', 'skipped'),
+          ),
+          reason:
+              'iteration $i (seed ${masterSeed + i}): '
+              'completeSet on a skipped exercise must throw OrderingError',
+        );
+      }
+    });
   });
 }
 

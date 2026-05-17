@@ -22,6 +22,7 @@ import 'package:zamaj/modules/domain/models/substitute_exercise.dart';
 import 'package:zamaj/modules/domain/models/workout_day.dart';
 import 'package:zamaj/modules/domain/models/workout_set.dart';
 import 'package:zamaj/modules/domain/services/cursor.dart';
+import 'package:zamaj/modules/domain/services/log_target.dart';
 import 'package:zamaj/modules/domain/services/session_state.dart';
 
 String anyUuidV4(Random rng) {
@@ -1155,32 +1156,64 @@ Session anyEndedSession(Random rng) {
 
 SessionState anySessionStateForOverview(Random rng) {
   final session = anySessionForEngine(rng);
-  return SessionState(session: session, cursor: _cursorForSession(session));
+  final openTargets = _openTargetsForSession(session);
+  final cursor = openTargets.isEmpty
+      ? const Cursor.completed()
+      : Cursor.active(
+          sessionExerciseId: openTargets.first.sessionExerciseId,
+          setIndex: openTargets.first.plannedSetIndex,
+        );
+  return SessionState(
+    session: session,
+    openTargets: openTargets,
+    isComplete: _isSessionComplete(session),
+    cursor: cursor,
+  );
 }
 
-Cursor _cursorForSession(Session session) {
+List<LogTarget> _openTargetsForSession(Session session) {
   final sorted = List<SessionExercise>.of(session.sessionExercises)
     ..sort((a, b) => a.position.compareTo(b.position));
+  final targets = <LogTarget>[];
   for (final ex in sorted) {
     final state = ex.state;
     if (state is UnfinishedState) {
       final planned = _findPlannedExerciseInSnapshot(ex, session);
       if (ex.executedSets.length < planned.sets.length) {
-        return Cursor.active(
-          sessionExerciseId: ex.id,
-          setIndex: ex.executedSets.length,
+        targets.add(
+          LogTarget(
+            sessionExerciseId: ex.id,
+            plannedSetIndex: ex.executedSets.length,
+          ),
         );
       }
     } else if (state is ReplacedState) {
       if (ex.executedSets.length < state.substitute.setCount) {
-        return Cursor.active(
-          sessionExerciseId: ex.id,
-          setIndex: ex.executedSets.length,
+        targets.add(
+          LogTarget(
+            sessionExerciseId: ex.id,
+            plannedSetIndex: ex.executedSets.length,
+          ),
         );
       }
     }
   }
-  return const Cursor.completed();
+  return targets;
+}
+
+bool _isSessionComplete(Session session) {
+  for (final ex in session.sessionExercises) {
+    switch (ex.state) {
+      case CompletedState():
+      case SkippedState():
+        continue;
+      case ReplacedState(:final substitute):
+        if (ex.executedSets.length < substitute.setCount) return false;
+      case UnfinishedState():
+        return false;
+    }
+  }
+  return true;
 }
 
 Exercise _findPlannedExerciseInSnapshot(

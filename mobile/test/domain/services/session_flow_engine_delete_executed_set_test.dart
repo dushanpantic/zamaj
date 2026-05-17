@@ -12,7 +12,7 @@ import 'package:zamaj/modules/domain/models/planned_set_values.dart';
 import 'package:zamaj/modules/domain/models/rep_target.dart';
 import 'package:zamaj/modules/domain/models/workout_day.dart';
 import 'package:zamaj/modules/domain/models/workout_set.dart';
-import 'package:zamaj/modules/domain/services/cursor.dart';
+import 'package:zamaj/modules/domain/services/log_target.dart';
 import 'package:zamaj/modules/domain/services/session_flow_engine.dart';
 
 import '../../support/fake_session_repository.dart';
@@ -132,8 +132,8 @@ void main() {
         actualValues: const ActualSetValues.repBased(weightKg: 80, reps: 5),
       );
       expect(
-        afterFirst.cursor,
-        Cursor.active(sessionExerciseId: benchId, setIndex: 1),
+        afterFirst.openTargets.first,
+        LogTarget(sessionExerciseId: benchId, plannedSetIndex: 1),
       );
 
       final setId = afterFirst.session.sessionExercises
@@ -151,8 +151,8 @@ void main() {
       expect(bench.state, const ExerciseState.unfinished());
       expect(bench.executedSets, isEmpty);
       expect(
-        afterDelete.cursor,
-        Cursor.active(sessionExerciseId: benchId, setIndex: 0),
+        afterDelete.openTargets.first,
+        LogTarget(sessionExerciseId: benchId, plannedSetIndex: 0),
       );
     });
 
@@ -181,8 +181,8 @@ void main() {
       );
       expect(bench.state, const ExerciseState.completed());
       expect(
-        afterSecond.cursor,
-        Cursor.active(sessionExerciseId: squatId, setIndex: 0),
+        afterSecond.openTargets.first,
+        LogTarget(sessionExerciseId: squatId, plannedSetIndex: 0),
       );
 
       final lastSetId = bench.executedSets.last.id;
@@ -195,8 +195,8 @@ void main() {
       expect(benchAfter.state, const ExerciseState.unfinished());
       expect(benchAfter.executedSets, hasLength(1));
       expect(
-        afterDelete.cursor,
-        Cursor.active(sessionExerciseId: benchId, setIndex: 1),
+        afterDelete.openTargets.first,
+        LogTarget(sessionExerciseId: benchId, plannedSetIndex: 1),
       );
     });
 

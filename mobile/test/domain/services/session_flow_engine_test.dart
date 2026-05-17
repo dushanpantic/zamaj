@@ -13,7 +13,7 @@ import 'package:zamaj/modules/domain/models/rep_target.dart';
 import 'package:zamaj/modules/domain/models/session_exercise.dart';
 import 'package:zamaj/modules/domain/models/workout_day.dart';
 import 'package:zamaj/modules/domain/models/workout_set.dart';
-import 'package:zamaj/modules/domain/services/cursor.dart';
+import 'package:zamaj/modules/domain/services/log_target.dart';
 import 'package:zamaj/modules/domain/services/session_flow_engine.dart';
 
 import '../../support/fake_session_repository.dart';
@@ -46,8 +46,8 @@ void main() {
       final result = await s.engine.startSession(workoutDayId: workoutDay.id);
 
       expect(result.session.sessionExercises, isEmpty);
-      expect(result.cursor, equals(const Cursor.completed()));
-      expect(result.suggestedValues, isNull);
+      expect(result.openTargets, isEmpty);
+      expect(result.isComplete, isTrue);
       expect(s.engine.isSessionComplete(result.session), isTrue);
     });
 
@@ -74,13 +74,13 @@ void main() {
         isA<UnfinishedState>(),
       );
       expect(
-        started.cursor,
-        equals(
-          Cursor.active(
+        started.openTargets,
+        equals([
+          LogTarget(
             sessionExerciseId: started.session.sessionExercises.single.id,
-            setIndex: 0,
+            plannedSetIndex: 0,
           ),
-        ),
+        ]),
       );
 
       final completed = await s.engine.completeSet(
@@ -95,7 +95,8 @@ void main() {
         updatedExercise.executedSets.single.actualValues,
         equals(const ActualSetValues.repBased(weightKg: 60, reps: 5)),
       );
-      expect(completed.cursor, equals(const Cursor.completed()));
+      expect(completed.openTargets, isEmpty);
+      expect(completed.isComplete, isTrue);
       expect(s.engine.isSessionComplete(completed.session), isTrue);
     });
   });
@@ -420,8 +421,12 @@ void main() {
       final plankId = started.session.sessionExercises[2].id;
 
       expect(
-        started.cursor,
-        equals(Cursor.active(sessionExerciseId: benchId, setIndex: 0)),
+        started.openTargets.first,
+        equals(LogTarget(sessionExerciseId: benchId, plannedSetIndex: 0)),
+      );
+      expect(
+        started.openTargets.map((t) => t.sessionExerciseId).toList(),
+        equals([benchId, ohpId, plankId]),
       );
 
       var state = await s.engine.completeSet(
@@ -429,8 +434,8 @@ void main() {
         actualValues: const ActualSetValues.repBased(weightKg: 80, reps: 5),
       );
       expect(
-        state.cursor,
-        equals(Cursor.active(sessionExerciseId: benchId, setIndex: 1)),
+        state.openTargets.first,
+        equals(LogTarget(sessionExerciseId: benchId, plannedSetIndex: 1)),
       );
 
       state = await s.engine.completeSet(
@@ -442,8 +447,8 @@ void main() {
         equals(const ExerciseState.completed()),
       );
       expect(
-        state.cursor,
-        equals(Cursor.active(sessionExerciseId: ohpId, setIndex: 0)),
+        state.openTargets.first,
+        equals(LogTarget(sessionExerciseId: ohpId, plannedSetIndex: 0)),
       );
 
       state = await s.engine.skipExercise(sessionExerciseId: ohpId);
@@ -452,8 +457,8 @@ void main() {
         equals(const ExerciseState.skipped()),
       );
       expect(
-        state.cursor,
-        equals(Cursor.active(sessionExerciseId: plankId, setIndex: 0)),
+        state.openTargets.map((t) => t.sessionExerciseId).toList(),
+        equals([plankId]),
       );
 
       state = await s.engine.replaceExercise(
@@ -475,8 +480,8 @@ void main() {
         equals('Wall Sit'),
       );
       expect(
-        state.cursor,
-        equals(Cursor.active(sessionExerciseId: plankId, setIndex: 0)),
+        state.openTargets,
+        equals([LogTarget(sessionExerciseId: plankId, plannedSetIndex: 0)]),
       );
 
       state = await s.engine.completeSet(
@@ -488,7 +493,8 @@ void main() {
         actualValues: const ActualSetValues.timeBased(durationSeconds: 40),
       );
 
-      expect(state.cursor, equals(const Cursor.completed()));
+      expect(state.openTargets, isEmpty);
+      expect(state.isComplete, isTrue);
       expect(s.engine.isSessionComplete(state.session), isTrue);
 
       final finalExercises = state.session.sessionExercises;
@@ -533,7 +539,10 @@ void main() {
       );
 
       expect(
-        state.suggestedValues,
+        s.engine.suggestValuesFor(
+          session: state.session,
+          sessionExerciseId: pressId,
+        ),
         equals(const ActualSetValues.timeBased(durationSeconds: 25)),
       );
       final replaced =
@@ -570,7 +579,10 @@ void main() {
       );
 
       expect(
-        state.suggestedValues,
+        s.engine.suggestValuesFor(
+          session: state.session,
+          sessionExerciseId: benchId,
+        ),
         equals(const ActualSetValues.repBased(weightKg: 0, reps: 12)),
       );
     });
@@ -608,54 +620,208 @@ void main() {
       );
 
       expect(
-        afterFirst.suggestedValues,
+        s.engine.suggestValuesFor(
+          session: afterFirst.session,
+          sessionExerciseId: squatId,
+        ),
         equals(const ActualSetValues.repBased(weightKg: 70, reps: 12)),
       );
     });
 
-    test(
-      'substitute with smaller setCount advances cursor and completes session',
-      () async {
-        final s = setup();
-        final workoutDay = _buildWorkoutDay(
-          id: 'wd-shorter',
-          exerciseSpecs: [
-            _ExerciseSpec(
-              name: 'Bench Press',
-              measurementType: const MeasurementType.repBased(),
-              setCount: 4,
-            ),
-          ],
-        );
-        s.repo.seedWorkoutDay(workoutDay);
-        final started = await s.engine.startSession(
-          workoutDayId: workoutDay.id,
-        );
-        final benchId = started.session.sessionExercises.single.id;
-
-        await s.engine.replaceExercise(
-          sessionExerciseId: benchId,
-          substituteName: 'Push-Up',
-          substituteMeasurementType: const MeasurementType.repBased(),
-          substitutePlannedValues: PlannedSetValues.repBased(
-            weightKg: 0,
-            repTarget: RepTarget.fixed(reps: 15),
+    test('substitute with smaller setCount completes the session', () async {
+      final s = setup();
+      final workoutDay = _buildWorkoutDay(
+        id: 'wd-shorter',
+        exerciseSpecs: [
+          _ExerciseSpec(
+            name: 'Bench Press',
+            measurementType: const MeasurementType.repBased(),
+            setCount: 4,
           ),
-          substituteSetCount: 2,
-        );
-        await s.engine.completeSet(
-          sessionExerciseId: benchId,
-          actualValues: const ActualSetValues.repBased(weightKg: 0, reps: 15),
-        );
-        final afterSecond = await s.engine.completeSet(
-          sessionExerciseId: benchId,
-          actualValues: const ActualSetValues.repBased(weightKg: 0, reps: 12),
-        );
+        ],
+      );
+      s.repo.seedWorkoutDay(workoutDay);
+      final started = await s.engine.startSession(workoutDayId: workoutDay.id);
+      final benchId = started.session.sessionExercises.single.id;
 
-        expect(afterSecond.cursor, equals(const Cursor.completed()));
-        expect(s.engine.isSessionComplete(afterSecond.session), isTrue);
-      },
-    );
+      await s.engine.replaceExercise(
+        sessionExerciseId: benchId,
+        substituteName: 'Push-Up',
+        substituteMeasurementType: const MeasurementType.repBased(),
+        substitutePlannedValues: PlannedSetValues.repBased(
+          weightKg: 0,
+          repTarget: RepTarget.fixed(reps: 15),
+        ),
+        substituteSetCount: 2,
+      );
+      await s.engine.completeSet(
+        sessionExerciseId: benchId,
+        actualValues: const ActualSetValues.repBased(weightKg: 0, reps: 15),
+      );
+      final afterSecond = await s.engine.completeSet(
+        sessionExerciseId: benchId,
+        actualValues: const ActualSetValues.repBased(weightKg: 0, reps: 12),
+      );
+
+      expect(afterSecond.openTargets, isEmpty);
+      expect(afterSecond.isComplete, isTrue);
+      expect(s.engine.isSessionComplete(afterSecond.session), isTrue);
+    });
+  });
+
+  group('per-exercise completeSet semantics', () {
+    test('cross-exercise out-of-order: alternating logs append correctly to '
+        'each exercise', () async {
+      final s = setup();
+      final workoutDay = _buildWorkoutDay(
+        id: 'wd-alt',
+        exerciseSpecs: [
+          _ExerciseSpec(
+            name: 'Bench',
+            measurementType: const MeasurementType.repBased(),
+            setCount: 3,
+          ),
+          _ExerciseSpec(
+            name: 'Lat Pulldown',
+            measurementType: const MeasurementType.repBased(),
+            setCount: 3,
+          ),
+        ],
+      );
+      s.repo.seedWorkoutDay(workoutDay);
+      final started = await s.engine.startSession(workoutDayId: workoutDay.id);
+      final benchId = started.session.sessionExercises[0].id;
+      final latId = started.session.sessionExercises[1].id;
+
+      // bench, lat, bench, bench, lat, lat — the motivating scenario.
+      var state = await s.engine.completeSet(
+        sessionExerciseId: benchId,
+        actualValues: const ActualSetValues.repBased(weightKg: 80, reps: 5),
+      );
+      state = await s.engine.completeSet(
+        sessionExerciseId: latId,
+        actualValues: const ActualSetValues.repBased(weightKg: 50, reps: 10),
+      );
+      state = await s.engine.completeSet(
+        sessionExerciseId: benchId,
+        actualValues: const ActualSetValues.repBased(weightKg: 80, reps: 5),
+      );
+      state = await s.engine.completeSet(
+        sessionExerciseId: benchId,
+        actualValues: const ActualSetValues.repBased(weightKg: 80, reps: 4),
+      );
+      state = await s.engine.completeSet(
+        sessionExerciseId: latId,
+        actualValues: const ActualSetValues.repBased(weightKg: 50, reps: 10),
+      );
+      state = await s.engine.completeSet(
+        sessionExerciseId: latId,
+        actualValues: const ActualSetValues.repBased(weightKg: 50, reps: 8),
+      );
+
+      final bench = _findExercise(state.session.sessionExercises, benchId);
+      final lat = _findExercise(state.session.sessionExercises, latId);
+      expect(bench.executedSets, hasLength(3));
+      expect(lat.executedSets, hasLength(3));
+      // ExecutedSet.position is dense chronological per exercise.
+      expect(
+        bench.executedSets.map((e) => e.position).toList(),
+        equals([0, 1, 2]),
+      );
+      expect(
+        lat.executedSets.map((e) => e.position).toList(),
+        equals([0, 1, 2]),
+      );
+      expect(bench.state, equals(const ExerciseState.completed()));
+      expect(lat.state, equals(const ExerciseState.completed()));
+      expect(state.isComplete, isTrue);
+    });
+
+    test('completeSet on a completed exercise appends an extra set without '
+        'changing state', () async {
+      final s = setup();
+      final workoutDay = _buildWorkoutDay(
+        id: 'wd-extra',
+        exerciseSpecs: [
+          _ExerciseSpec(
+            name: 'Bench',
+            measurementType: const MeasurementType.repBased(),
+            setCount: 1,
+          ),
+          _ExerciseSpec(
+            name: 'Row',
+            measurementType: const MeasurementType.repBased(),
+            setCount: 1,
+          ),
+        ],
+      );
+      s.repo.seedWorkoutDay(workoutDay);
+      final started = await s.engine.startSession(workoutDayId: workoutDay.id);
+      final benchId = started.session.sessionExercises[0].id;
+
+      var state = await s.engine.completeSet(
+        sessionExerciseId: benchId,
+        actualValues: const ActualSetValues.repBased(weightKg: 80, reps: 5),
+      );
+      expect(
+        _findExercise(state.session.sessionExercises, benchId).state,
+        equals(const ExerciseState.completed()),
+      );
+
+      state = await s.engine.completeSet(
+        sessionExerciseId: benchId,
+        actualValues: const ActualSetValues.repBased(weightKg: 85, reps: 3),
+      );
+      final bench = _findExercise(state.session.sessionExercises, benchId);
+      expect(bench.state, equals(const ExerciseState.completed()));
+      expect(bench.executedSets, hasLength(2));
+      expect(
+        bench.executedSets.last.actualValues,
+        equals(const ActualSetValues.repBased(weightKg: 85, reps: 3)),
+      );
+      // openTargets reflects only loggable (non-terminal) exercises; the
+      // completed-with-extras case is a UI affordance, not a default target.
+      expect(
+        state.openTargets.map((t) => t.sessionExerciseId),
+        isNot(contains(benchId)),
+      );
+    });
+
+    test('completeSet on a skipped exercise throws OrderingError', () async {
+      final s = setup();
+      final workoutDay = _buildWorkoutDay(
+        id: 'wd-skip',
+        exerciseSpecs: [
+          _ExerciseSpec(
+            name: 'Bench',
+            measurementType: const MeasurementType.repBased(),
+            setCount: 2,
+          ),
+          _ExerciseSpec(
+            name: 'Row',
+            measurementType: const MeasurementType.repBased(),
+            setCount: 2,
+          ),
+        ],
+      );
+      s.repo.seedWorkoutDay(workoutDay);
+      final started = await s.engine.startSession(workoutDayId: workoutDay.id);
+      final benchId = started.session.sessionExercises[0].id;
+
+      await s.engine.skipExercise(sessionExerciseId: benchId);
+
+      expect(
+        () => s.engine.completeSet(
+          sessionExerciseId: benchId,
+          actualValues: const ActualSetValues.repBased(weightKg: 80, reps: 5),
+        ),
+        throwsA(
+          isA<OrderingError>()
+              .having((e) => e.sessionExerciseId, 'sessionExerciseId', benchId)
+              .having((e) => e.currentState, 'currentState', 'skipped'),
+        ),
+      );
+    });
   });
 }
 

@@ -1,4 +1,4 @@
-// Feature: session-flow-engine, Property 2: Cursor computation correctness
+// Feature: session-flow-engine, Property 2: openTargets projection correctness
 import 'dart:math';
 
 import 'package:clock/clock.dart';
@@ -6,7 +6,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:zamaj/modules/domain/models/exercise_state.dart';
 import 'package:zamaj/modules/domain/models/session.dart';
 import 'package:zamaj/modules/domain/models/session_exercise.dart';
-import 'package:zamaj/modules/domain/services/cursor.dart';
+import 'package:zamaj/modules/domain/services/log_target.dart';
 import 'package:zamaj/modules/domain/services/session_flow_engine.dart';
 
 import '../../support/fake_session_repository.dart';
@@ -15,30 +15,29 @@ import '../../support/generators.dart';
 void main() {
   const iterations = 100;
 
-  // **Validates: Requirements 2.2, 4.1, 4.2, 4.3, 4.4**
-  test(
-    'cursor points to first unfinished/replaced exercise with sets remaining',
-    () {
-      final rng = Random(7742);
-      final clock = Clock.fixed(DateTime.utc(2024));
-      final repo = FakeSessionRepository(clock: clock);
-      final engine = SessionFlowEngine(repository: repo);
+  // **Validates: Requirements 2.2, 4.1, 4.2, 4.3, 4.4** (re-expressed against
+  // openTargets after the cursor removal in the set-order redesign).
+  test('openTargets lists every loggable exercise in position order with '
+      'plannedSetIndex == executedSets.length', () {
+    final rng = Random(7742);
+    final clock = Clock.fixed(DateTime.utc(2024));
+    final repo = FakeSessionRepository(clock: clock);
+    final engine = SessionFlowEngine(repository: repo);
 
-      for (var i = 0; i < iterations; i++) {
-        final session = anySessionForEngine(rng);
-        final cursor = engine.computeCursor(session);
-        final expected = _expectedCursor(session);
+    for (var i = 0; i < iterations; i++) {
+      final session = anySessionForEngine(rng);
+      final targets = engine.computeOpenTargets(session);
+      final expected = _expectedOpenTargets(session);
 
-        expect(
-          cursor,
-          equals(expected),
-          reason: 'iteration $i: session ${session.id}',
-        );
-      }
-    },
-  );
+      expect(
+        targets,
+        equals(expected),
+        reason: 'iteration $i: session ${session.id}',
+      );
+    }
+  });
 
-  test('cursor is completed when all exercises are terminal', () {
+  test('openTargets is empty when all exercises are terminal', () {
     final rng = Random(8853);
     final clock = Clock.fixed(DateTime.utc(2024));
     final repo = FakeSessionRepository(clock: clock);
@@ -63,17 +62,18 @@ void main() {
       final allTerminal = _allExercisesTerminal(session);
 
       if (allTerminal) {
-        final cursor = engine.computeCursor(session);
+        final targets = engine.computeOpenTargets(session);
         expect(
-          cursor,
-          equals(const Cursor.completed()),
-          reason: 'iteration $i: all terminal but cursor not completed',
+          targets,
+          isEmpty,
+          reason: 'iteration $i: all terminal but openTargets is not empty',
         );
       }
     }
   });
 
-  test('cursor setIndex equals executedSets.length of target exercise', () {
+  test('each LogTarget.plannedSetIndex equals executedSets.length of its '
+      'exercise', () {
     final rng = Random(3319);
     final clock = Clock.fixed(DateTime.utc(2024));
     final repo = FakeSessionRepository(clock: clock);
@@ -81,86 +81,77 @@ void main() {
 
     for (var i = 0; i < iterations; i++) {
       final session = anyCursorableSession(rng);
-      final cursor = engine.computeCursor(session);
+      final targets = engine.computeOpenTargets(session);
 
-      switch (cursor) {
-        case ActiveCursor(:final sessionExerciseId, :final setIndex):
-          final exercise = session.sessionExercises.firstWhere(
-            (e) => e.id == sessionExerciseId,
-          );
-          expect(
-            setIndex,
-            equals(exercise.executedSets.length),
-            reason: 'iteration $i: setIndex should equal executedSets.length',
-          );
-        case CompletedCursor():
-          fail(
-            'iteration $i: expected active cursor from anyCursorableSession',
-          );
+      expect(
+        targets,
+        isNotEmpty,
+        reason: 'iteration $i: anyCursorableSession should produce targets',
+      );
+
+      for (final target in targets) {
+        final exercise = session.sessionExercises.firstWhere(
+          (e) => e.id == target.sessionExerciseId,
+        );
+        expect(
+          target.plannedSetIndex,
+          equals(exercise.executedSets.length),
+          reason:
+              'iteration $i: plannedSetIndex should equal '
+              'executedSets.length for ${target.sessionExerciseId}',
+        );
       }
     }
   });
 
-  test(
-    'cursor targets exercise in position order (no earlier unfinished exists)',
-    () {
-      final rng = Random(5501);
-      final clock = Clock.fixed(DateTime.utc(2024));
-      final repo = FakeSessionRepository(clock: clock);
-      final engine = SessionFlowEngine(repository: repo);
+  test('openTargets order matches exercise position order', () {
+    final rng = Random(5501);
+    final clock = Clock.fixed(DateTime.utc(2024));
+    final repo = FakeSessionRepository(clock: clock);
+    final engine = SessionFlowEngine(repository: repo);
 
-      for (var i = 0; i < iterations; i++) {
-        final session = anyCursorableSession(rng);
-        final cursor = engine.computeCursor(session);
+    for (var i = 0; i < iterations; i++) {
+      final session = anyCursorableSession(rng);
+      final targets = engine.computeOpenTargets(session);
+      final positions = targets
+          .map(
+            (t) => session.sessionExercises
+                .firstWhere((e) => e.id == t.sessionExerciseId)
+                .position,
+          )
+          .toList();
+      final sortedPositions = List<int>.of(positions)..sort();
 
-        switch (cursor) {
-          case ActiveCursor(:final sessionExerciseId):
-            final sorted = List<SessionExercise>.of(session.sessionExercises)
-              ..sort((a, b) => a.position.compareTo(b.position));
-
-            final targetExercise = sorted.firstWhere(
-              (e) => e.id == sessionExerciseId,
-            );
-
-            for (final exercise in sorted) {
-              if (exercise.position >= targetExercise.position) break;
-              final isCandidate = _isCursorCandidate(exercise, session);
-              expect(
-                isCandidate,
-                isFalse,
-                reason:
-                    'iteration $i: exercise at position ${exercise.position} '
-                    'is a cursor candidate but cursor points to position '
-                    '${targetExercise.position}',
-              );
-            }
-          case CompletedCursor():
-            fail(
-              'iteration $i: expected active cursor from anyCursorableSession',
-            );
-        }
-      }
-    },
-  );
+      expect(
+        positions,
+        equals(sortedPositions),
+        reason:
+            'iteration $i: openTargets must be in ascending exercise '
+            'position order',
+      );
+    }
+  });
 }
 
-Cursor _expectedCursor(Session session) {
+List<LogTarget> _expectedOpenTargets(Session session) {
   final sorted = List<SessionExercise>.of(session.sessionExercises)
     ..sort((a, b) => a.position.compareTo(b.position));
 
+  final out = <LogTarget>[];
   for (final exercise in sorted) {
-    if (_isCursorCandidate(exercise, session)) {
-      return Cursor.active(
-        sessionExerciseId: exercise.id,
-        setIndex: exercise.executedSets.length,
+    if (_isLoggable(exercise, session)) {
+      out.add(
+        LogTarget(
+          sessionExerciseId: exercise.id,
+          plannedSetIndex: exercise.executedSets.length,
+        ),
       );
     }
   }
-
-  return const Cursor.completed();
+  return out;
 }
 
-bool _isCursorCandidate(SessionExercise exercise, Session session) {
+bool _isLoggable(SessionExercise exercise, Session session) {
   switch (exercise.state) {
     case UnfinishedState():
       final plannedSetCount = _lookupPlannedSetCount(exercise, session);
