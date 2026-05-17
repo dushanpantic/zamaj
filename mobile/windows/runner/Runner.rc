@@ -90,12 +90,12 @@ BEGIN
         BLOCK "040904e4"
         BEGIN
             VALUE "CompanyName", "app" "\0"
-            VALUE "FileDescription", "zamaj" "\0"
+            VALUE "FileDescription", "Zamaj" "\0"
             VALUE "FileVersion", VERSION_AS_STRING "\0"
             VALUE "InternalName", "zamaj" "\0"
             VALUE "LegalCopyright", "Copyright (C) 2026 app. All rights reserved." "\0"
             VALUE "OriginalFilename", "zamaj.exe" "\0"
-            VALUE "ProductName", "zamaj" "\0"
+            VALUE "ProductName", "Zamaj" "\0"
             VALUE "ProductVersion", VERSION_AS_STRING "\0"
         END
     END

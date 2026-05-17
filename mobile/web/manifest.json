@@ -1,6 +1,6 @@
 {
-    "name": "zamaj",
-    "short_name": "zamaj",
+    "name": "Zamaj",
+    "short_name": "Zamaj",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#0175C2",
