@@ -62,10 +62,7 @@ class DayRecommendationBadge extends StatelessWidget {
     }
     final daysSince = _wholeDaysBetween(lastCompleted, now);
     if (daysSince <= 0) {
-      return const _Recommendation(
-        _RecommendationKind.rested,
-        'Rested today',
-      );
+      return const _Recommendation(_RecommendationKind.rested, 'Rested today');
     }
     if (daysSince <= 2) {
       return const _Recommendation(_RecommendationKind.soon, 'Soon');

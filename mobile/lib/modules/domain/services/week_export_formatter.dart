@@ -45,5 +45,4 @@ abstract final class WeekExportFormatter {
     if (byEnded != 0) return byEnded;
     return a.id.compareTo(b.id);
   }
-
 }

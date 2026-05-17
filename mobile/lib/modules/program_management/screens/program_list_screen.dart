@@ -142,9 +142,8 @@ class _ProgramListScreenState extends State<ProgramListScreen> {
                                       );
                                     }
                                   },
-                                  onEdit: (program) => _navigateToEditor(
-                                    programId: program.id,
-                                  ),
+                                  onEdit: (program) =>
+                                      _navigateToEditor(programId: program.id),
                                   onDeleteRequested: (program) =>
                                       _onDeleteRequested(program.id),
                                 ),

@@ -317,7 +317,7 @@ Session _sessionFromGroups(List<_ExerciseSpec> specs) {
           plannedValues: switch (spec.plannedMeasurement) {
             RepBasedMeasurement() => PlannedSetValues.repBased(
               weightKg: spec.weightKg,
-              reps: spec.reps,
+              repTarget: RepTarget.fixed(reps: spec.reps),
             ),
             TimeBasedMeasurement() => const PlannedSetValues.timeBased(
               durationSeconds: 30,
@@ -385,7 +385,7 @@ Session _sessionFromGroups(List<_ExerciseSpec> specs) {
             actualValues: switch (effectiveMt) {
               RepBasedMeasurement() => PlannedSetValues.repBased(
                 weightKg: spec.weightKg,
-                reps: spec.reps,
+                repTarget: RepTarget.fixed(reps: spec.reps),
               ).toActual(),
               TimeBasedMeasurement() => const ActualSetValues.timeBased(
                 durationSeconds: 30,
@@ -424,10 +424,14 @@ Session _sessionFromGroups(List<_ExerciseSpec> specs) {
 
 extension on PlannedSetValues {
   ActualSetValues toActual() => switch (this) {
-    PlannedRepBased(:final weightKg, :final reps) => ActualSetValues.repBased(
-      weightKg: weightKg,
-      reps: reps,
-    ),
+    PlannedRepBased(:final weightKg, :final repTarget) =>
+      ActualSetValues.repBased(
+        weightKg: weightKg,
+        reps: switch (repTarget) {
+          RepTargetFixed(:final reps) => reps,
+          RepTargetRange(:final maxReps) => maxReps,
+        },
+      ),
     PlannedTimeBased(:final durationSeconds) => ActualSetValues.timeBased(
       durationSeconds: durationSeconds,
     ),

@@ -8,6 +8,7 @@ import 'package:zamaj/modules/domain/models/exercise_metadata.dart';
 import 'package:zamaj/modules/domain/models/exercise_state.dart';
 import 'package:zamaj/modules/domain/models/measurement_type.dart';
 import 'package:zamaj/modules/domain/models/planned_set_values.dart';
+import 'package:zamaj/modules/domain/models/rep_target.dart';
 import 'package:zamaj/modules/domain/models/substitute_exercise.dart';
 import 'package:zamaj/modules/domain/models/workout_set.dart';
 
@@ -75,7 +76,10 @@ void main() {
         exerciseId: '44444444-4444-4444-8444-444444444444',
         position: 0,
         measurementType: mt,
-        plannedValues: const PlannedSetValues.repBased(weightKg: 80.0, reps: 8),
+        plannedValues: PlannedSetValues.repBased(
+          weightKg: 80.0,
+          repTarget: RepTarget.fixed(reps: 8),
+        ),
         createdAt: t0,
         updatedAt: t0,
         schemaVersion: 1,
@@ -109,9 +113,9 @@ void main() {
           exerciseId: '44444444-4444-4444-8444-444444444444',
           position: 0,
           measurementType: mt,
-          plannedValues: const PlannedSetValues.repBased(
+          plannedValues: PlannedSetValues.repBased(
             weightKg: 80.0,
-            reps: 8,
+            repTarget: RepTarget.fixed(reps: 8),
           ),
           createdAt: t0,
           updatedAt: t0,

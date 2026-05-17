@@ -1,3 +1,4 @@
+import 'package:zamaj/core/rep_target_formatter.dart';
 import 'package:zamaj/core/weight_formatter.dart';
 import 'package:zamaj/modules/domain/domain.dart';
 
@@ -13,8 +14,8 @@ abstract final class PlannedSummaryFormatter {
     if (!allSame) return '${sets.length} sets';
 
     return switch (first) {
-      PlannedRepBased(:final weightKg, :final reps) =>
-        '${WeightFormatter.formatKg(weightKg)}kg ${sets.length}×$reps',
+      PlannedRepBased(:final weightKg, :final repTarget) =>
+        '${WeightFormatter.formatKg(weightKg)}kg ${sets.length}×${RepTargetFormatter.format(repTarget)}',
       PlannedTimeBased(:final durationSeconds, :final weightKg) =>
         weightKg == null
             ? '${sets.length}×${durationSeconds}s'

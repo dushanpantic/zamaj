@@ -12,6 +12,7 @@ import 'package:zamaj/modules/domain/models/exercise_group_kind.dart';
 import 'package:zamaj/modules/domain/models/exercise_metadata.dart';
 import 'package:zamaj/modules/domain/models/measurement_type.dart';
 import 'package:zamaj/modules/domain/models/planned_set_values.dart';
+import 'package:zamaj/modules/domain/models/rep_target.dart';
 import 'package:zamaj/modules/persistence/repositories/drift_program_repository.dart';
 
 import '../support/in_memory_app_database.dart';
@@ -158,23 +159,23 @@ void main() {
 
         await repo.createSet(
           exerciseId: exercise.id,
-          plannedValues: const PlannedSetValues.repBased(
+          plannedValues: PlannedSetValues.repBased(
             weightKg: 100,
-            reps: 5,
+            repTarget: RepTarget.fixed(reps: 5),
           ),
         );
         final s2 = await repo.createSet(
           exerciseId: exercise.id,
-          plannedValues: const PlannedSetValues.repBased(
+          plannedValues: PlannedSetValues.repBased(
             weightKg: 100,
-            reps: 5,
+            repTarget: RepTarget.fixed(reps: 5),
           ),
         );
         await repo.createSet(
           exerciseId: exercise.id,
-          plannedValues: const PlannedSetValues.repBased(
+          plannedValues: PlannedSetValues.repBased(
             weightKg: 100,
-            reps: 5,
+            repTarget: RepTarget.fixed(reps: 5),
           ),
         );
 
@@ -182,9 +183,9 @@ void main() {
 
         final s4 = await repo.createSet(
           exerciseId: exercise.id,
-          plannedValues: const PlannedSetValues.repBased(
+          plannedValues: PlannedSetValues.repBased(
             weightKg: 100,
-            reps: 5,
+            repTarget: RepTarget.fixed(reps: 5),
           ),
         );
         expect(s4.id, isNotNull);

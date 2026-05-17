@@ -435,10 +435,14 @@ class ExerciseEditorBloc
 
   PlannedSetDraft _setToDraft(WorkoutSet set) {
     final values = switch (set.plannedValues) {
-      PlannedRepBased(:final weightKg, :final reps) =>
+      PlannedRepBased(:final weightKg, :final repTarget) =>
         PlannedSetDraftValues.repBased(
           weightInput: weightKg.toString(),
-          repsInput: reps.toString(),
+          repsInput: switch (repTarget) {
+            RepTargetFixed(:final reps) => reps.toString(),
+            RepTargetRange(:final minReps, :final maxReps) =>
+              '$minReps-$maxReps',
+          },
         ),
       PlannedTimeBased(:final durationSeconds, :final weightKg) =>
         PlannedSetDraftValues.timeBased(
@@ -483,9 +487,12 @@ class ExerciseEditorBloc
           return switch (result) {
             Valid(:final value) => PlannedSetValues.repBased(
               weightKg: value.weightKg,
-              reps: value.reps,
+              repTarget: value.repTarget,
             ),
-            Invalid() => const PlannedSetValues.repBased(weightKg: 0, reps: 0),
+            Invalid() => PlannedSetValues.repBased(
+              weightKg: 0,
+              repTarget: RepTarget.fixed(reps: 0),
+            ),
           };
         }(),
       (
@@ -515,7 +522,10 @@ class ExerciseEditorBloc
       (PlannedSetDraftRepBased(), TimeBasedMeasurement()) =>
         const PlannedSetValues.timeBased(durationSeconds: 0),
       (PlannedSetDraftTimeBased(), RepBasedMeasurement()) =>
-        const PlannedSetValues.repBased(weightKg: 0, reps: 0),
+        PlannedSetValues.repBased(
+          weightKg: 0,
+          repTarget: RepTarget.fixed(reps: 0),
+        ),
     };
   }
 

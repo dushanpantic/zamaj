@@ -5,6 +5,7 @@ import 'package:zamaj/modules/domain/models/exercise_metadata.dart';
 import 'package:zamaj/modules/domain/models/exercise_state.dart';
 import 'package:zamaj/modules/domain/models/measurement_type.dart';
 import 'package:zamaj/modules/domain/models/planned_set_values.dart';
+import 'package:zamaj/modules/domain/models/rep_target.dart';
 import 'package:zamaj/modules/domain/models/session.dart';
 import 'package:zamaj/modules/domain/models/session_exercise.dart';
 import 'package:zamaj/modules/domain/models/workout_set.dart';
@@ -556,10 +557,16 @@ class SessionFlowEngine {
 
   ActualSetValues _convertPlannedToActual(PlannedSetValues planned) {
     return switch (planned) {
-      PlannedRepBased(:final weightKg, :final reps) => ActualSetValues.repBased(
-        weightKg: weightKg,
-        reps: reps,
-      ),
+      PlannedRepBased(:final weightKg, :final repTarget) =>
+        ActualSetValues.repBased(
+          weightKg: weightKg,
+          // Seed with the upper bound for ranges — the optimistic target.
+          // Lifters can dial down with the bump buttons before logging.
+          reps: switch (repTarget) {
+            RepTargetFixed(:final reps) => reps,
+            RepTargetRange(:final maxReps) => maxReps,
+          },
+        ),
       PlannedTimeBased(:final durationSeconds, :final weightKg) =>
         ActualSetValues.timeBased(
           durationSeconds: durationSeconds,

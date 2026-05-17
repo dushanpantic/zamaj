@@ -1,3 +1,4 @@
+import 'package:zamaj/core/rep_target_formatter.dart';
 import 'package:zamaj/core/weight_formatter.dart';
 import 'package:zamaj/modules/program_management/services/text_plan/plan_draft.dart';
 
@@ -47,8 +48,8 @@ abstract final class PlanPrettyPrinter {
         ? ' ${plannedRestSeconds}s'
         : '';
     return switch (set) {
-      PlanDraftSetRepBased(:final count, :final reps, :final weightKg) =>
-        '${count}x$reps ${WeightFormatter.formatKg(weightKg)}kg$restSuffix',
+      PlanDraftSetRepBased(:final count, :final repTarget, :final weightKg) =>
+        '${count}x${RepTargetFormatter.format(repTarget)} ${WeightFormatter.formatKg(weightKg)}kg$restSuffix',
       PlanDraftSetTimeBased(
         :final count,
         :final durationSeconds,

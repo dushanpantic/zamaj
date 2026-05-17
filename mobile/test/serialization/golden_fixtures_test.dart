@@ -14,6 +14,7 @@ import 'package:zamaj/modules/domain/models/extra_work.dart';
 import 'package:zamaj/modules/domain/models/measurement_type.dart';
 import 'package:zamaj/modules/domain/models/planned_set_values.dart';
 import 'package:zamaj/modules/domain/models/program.dart';
+import 'package:zamaj/modules/domain/models/rep_target.dart';
 import 'package:zamaj/modules/domain/models/session.dart';
 import 'package:zamaj/modules/domain/models/session_exercise.dart';
 import 'package:zamaj/modules/domain/models/session_note.dart';
@@ -84,9 +85,9 @@ void main() {
       final substitute = SubstituteExercise(
         name: 'Dumbbell Press',
         measurementType: const MeasurementType.repBased(),
-        plannedValues: const PlannedSetValues.repBased(
+        plannedValues: PlannedSetValues.repBased(
           weightKg: 22.5,
-          reps: 10,
+          repTarget: RepTarget.fixed(reps: 10),
         ),
         setCount: 3,
         metadata: null,
@@ -97,12 +98,41 @@ void main() {
       );
     });
 
-    test('PlannedSetValues.repBased', () {
+    test('RepTarget.fixed', () {
+      expect(
+        _encode(RepTarget.fixed(reps: 10).toJson()),
+        equals(_golden('rep_target_fixed')),
+      );
+    });
+
+    test('RepTarget.range', () {
+      expect(
+        _encode(RepTarget.range(minReps: 6, maxReps: 8).toJson()),
+        equals(_golden('rep_target_range')),
+      );
+    });
+
+    test('PlannedSetValues.repBased (fixed)', () {
       expect(
         _encode(
-          const PlannedSetValues.repBased(weightKg: 60.0, reps: 10).toJson(),
+          PlannedSetValues.repBased(
+            weightKg: 60.0,
+            repTarget: RepTarget.fixed(reps: 10),
+          ).toJson(),
         ),
         equals(_golden('planned_set_values_rep_based')),
+      );
+    });
+
+    test('PlannedSetValues.repBased (range)', () {
+      expect(
+        _encode(
+          PlannedSetValues.repBased(
+            weightKg: 60.0,
+            repTarget: RepTarget.range(minReps: 6, maxReps: 8),
+          ).toJson(),
+        ),
+        equals(_golden('planned_set_values_rep_based_range')),
       );
     });
 
@@ -162,7 +192,10 @@ void main() {
         exerciseId: exerciseId,
         position: 0,
         measurementType: const MeasurementType.repBased(),
-        plannedValues: const PlannedSetValues.repBased(weightKg: 80.0, reps: 8),
+        plannedValues: PlannedSetValues.repBased(
+          weightKg: 80.0,
+          repTarget: RepTarget.fixed(reps: 8),
+        ),
         createdAt: t0,
         updatedAt: t0,
         schemaVersion: 1,
@@ -262,9 +295,9 @@ void main() {
       final substitute = SubstituteExercise(
         name: 'Dumbbell Press',
         measurementType: const MeasurementType.repBased(),
-        plannedValues: const PlannedSetValues.repBased(
+        plannedValues: PlannedSetValues.repBased(
           weightKg: 22.5,
-          reps: 10,
+          repTarget: RepTarget.fixed(reps: 10),
         ),
         setCount: 3,
         metadata: const ExerciseMetadata(notes: 'Use 30kg dumbbells'),

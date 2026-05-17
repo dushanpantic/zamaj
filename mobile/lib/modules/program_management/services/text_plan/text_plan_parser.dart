@@ -1,3 +1,4 @@
+import 'package:zamaj/modules/domain/models/rep_target.dart';
 import 'package:zamaj/modules/program_management/services/text_plan/parse_result.dart';
 import 'package:zamaj/modules/program_management/services/text_plan/plan_draft.dart';
 import 'package:zamaj/modules/program_management/services/text_plan/plan_parse_error.dart';
@@ -248,7 +249,7 @@ bool _isSetLine(String trimmed) {
       _setsByTimePattern.hasMatch(firstToken);
 }
 
-final _setsByRepsPattern = RegExp(r'^\d+[xX×]\d+$');
+final _setsByRepsPattern = RegExp(r'^\d+[xX×]\d+(?:[-–]\d+)?$');
 final _setsByTimePattern = RegExp(r'^\d+[xX×]\d+[sS]$');
 
 sealed class _Classification {}
@@ -308,7 +309,9 @@ void _attachPlannedSet(
   String rawLine,
 ) {
   final setToken = tokens.first;
-  final multMatch = RegExp(r'^(\d+)([xX×])(\d+)$').firstMatch(setToken);
+  final multMatch = RegExp(
+    r'^(\d+)([xX×])(\d+)(?:[-–](\d+))?$',
+  ).firstMatch(setToken);
   final timeMatch = RegExp(r'^(\d+)([xX×])(\d+)[sS]$').firstMatch(setToken);
 
   if (multMatch == null && timeMatch == null) return;
@@ -348,7 +351,28 @@ void _attachPlannedSet(
   }
 
   final count = int.parse(multMatch!.group(1)!);
-  final rhs = int.parse(multMatch.group(3)!);
+  final rhsMin = int.parse(multMatch.group(3)!);
+  final rhsMaxStr = multMatch.group(4);
+  final rhsMax = rhsMaxStr != null ? int.parse(rhsMaxStr) : null;
+  final repTarget = rhsMax == null || rhsMax == rhsMin
+      ? RepTarget.fixed(reps: rhsMin)
+      : (rhsMax > rhsMin
+            ? RepTarget.range(minReps: rhsMin, maxReps: rhsMax)
+            : null);
+
+  if (repTarget == null) {
+    // Malformed range (max < min) — surface as a parse warning and skip.
+    exercise.warnings.add(
+      PlanParseWarning(
+        line: lineNumber,
+        column: _columnOfToken(rawLine, setToken),
+        code: PlanParseWarningCode.unrecognizedTrailingToken,
+        offendingToken: setToken,
+        exerciseDraftId: exercise.draftId,
+      ),
+    );
+    return;
+  }
 
   final remaining = tokens.skip(1).toList();
 
@@ -367,7 +391,7 @@ void _attachPlannedSet(
       final weight = double.parse(weightMatch.group(1)!);
       parsedSet = PlanDraftSet.repBased(
         count: count,
-        reps: rhs,
+        repTarget: repTarget,
         weightKg: weight,
       );
       final trailingTokens = remaining.skip(1).toList();
@@ -406,7 +430,11 @@ void _attachPlannedSet(
       restSeconds = restResult.restSeconds;
       warnings.addAll(restResult.warnings);
     } else {
-      parsedSet = PlanDraftSet.repBased(count: count, reps: rhs, weightKg: 0.0);
+      parsedSet = PlanDraftSet.repBased(
+        count: count,
+        repTarget: repTarget,
+        weightKg: 0.0,
+      );
       final restResult = _parseRestTokens(
         remaining,
         lineNumber,
@@ -417,7 +445,11 @@ void _attachPlannedSet(
       warnings.addAll(restResult.warnings);
     }
   } else {
-    parsedSet = PlanDraftSet.repBased(count: count, reps: rhs, weightKg: 0.0);
+    parsedSet = PlanDraftSet.repBased(
+      count: count,
+      repTarget: repTarget,
+      weightKg: 0.0,
+    );
   }
 
   exercise.sets.add(parsedSet);

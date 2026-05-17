@@ -1,5 +1,6 @@
 import 'dart:math';
 
+import 'package:zamaj/modules/domain/models/rep_target.dart';
 import 'package:zamaj/modules/program_management/services/text_plan/plan_draft.dart';
 import 'package:zamaj/modules/program_management/services/text_plan/plan_parse_warning.dart';
 import 'package:zamaj/modules/program_management/services/text_plan/plan_pretty_printer.dart';
@@ -51,9 +52,20 @@ PlanDraftExercise _anyExercise(Random rng, String draftId) {
 PlanDraftSet _anyRepBasedSet(Random rng) {
   final halfKgs = rng.nextInt(2001);
   final weightKg = halfKgs * 0.5;
-  final reps = rng.nextInt(1000);
   final count = 1 + rng.nextInt(10);
-  return PlanDraftSet.repBased(count: count, reps: reps, weightKg: weightKg);
+  final RepTarget repTarget;
+  if (rng.nextBool()) {
+    repTarget = RepTarget.fixed(reps: rng.nextInt(1000));
+  } else {
+    final min = rng.nextInt(900);
+    final max = min + 1 + rng.nextInt(99);
+    repTarget = RepTarget.range(minReps: min, maxReps: max);
+  }
+  return PlanDraftSet.repBased(
+    count: count,
+    repTarget: repTarget,
+    weightKg: weightKg,
+  );
 }
 
 PlanDraftSet _anyTimeBasedSet(Random rng) {

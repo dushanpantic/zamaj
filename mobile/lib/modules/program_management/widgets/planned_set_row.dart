@@ -173,11 +173,13 @@ class _RepBasedFieldsState extends State<_RepBasedFields> {
         Expanded(
           child: TextField(
             controller: _repsController,
-            keyboardType: TextInputType.number,
-            inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+            keyboardType: TextInputType.text,
+            inputFormatters: [
+              FilteringTextInputFormatter.allow(RegExp(r'[0-9\-–]')),
+            ],
             style: typography.bodySmall.copyWith(color: colors.onSurface),
             decoration: const InputDecoration(
-              labelText: 'Reps',
+              labelText: 'Reps (or range, e.g. 6-8)',
               contentPadding: EdgeInsets.symmetric(
                 horizontal: AppSpacing.md,
                 vertical: AppSpacing.sm,

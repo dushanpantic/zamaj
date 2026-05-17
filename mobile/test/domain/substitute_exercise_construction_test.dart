@@ -2,6 +2,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:zamaj/modules/domain/errors.dart';
 import 'package:zamaj/modules/domain/models/measurement_type.dart';
 import 'package:zamaj/modules/domain/models/planned_set_values.dart';
+import 'package:zamaj/modules/domain/models/rep_target.dart';
 import 'package:zamaj/modules/domain/models/substitute_exercise.dart';
 
 void main() {
@@ -11,7 +12,10 @@ void main() {
         () => SubstituteExercise(
           name: 'Bench',
           measurementType: const MeasurementType.repBased(),
-          plannedValues: const PlannedSetValues.repBased(weightKg: 20, reps: 5),
+          plannedValues: PlannedSetValues.repBased(
+            weightKg: 20,
+            repTarget: RepTarget.fixed(reps: 5),
+          ),
           setCount: 0,
         ),
         throwsA(
@@ -26,7 +30,10 @@ void main() {
         () => SubstituteExercise(
           name: 'Bench',
           measurementType: const MeasurementType.repBased(),
-          plannedValues: const PlannedSetValues.repBased(weightKg: 20, reps: 5),
+          plannedValues: PlannedSetValues.repBased(
+            weightKg: 20,
+            repTarget: RepTarget.fixed(reps: 5),
+          ),
           setCount: -1,
         ),
         throwsA(isA<ValidationError>()),
@@ -56,7 +63,10 @@ void main() {
         () => SubstituteExercise(
           name: 'Plank',
           measurementType: const MeasurementType.timeBased(),
-          plannedValues: const PlannedSetValues.repBased(weightKg: 0, reps: 5),
+          plannedValues: PlannedSetValues.repBased(
+            weightKg: 0,
+            repTarget: RepTarget.fixed(reps: 5),
+          ),
           setCount: 2,
         ),
         throwsA(isA<ValidationError>()),
@@ -67,9 +77,9 @@ void main() {
       final sub = SubstituteExercise(
         name: 'Cable Fly',
         measurementType: const MeasurementType.repBased(),
-        plannedValues: const PlannedSetValues.repBased(
+        plannedValues: PlannedSetValues.repBased(
           weightKg: 12.5,
-          reps: 12,
+          repTarget: RepTarget.fixed(reps: 12),
         ),
         setCount: 4,
       );
@@ -91,7 +101,10 @@ void main() {
       final original = SubstituteExercise(
         name: 'Goblet Squat',
         measurementType: const MeasurementType.repBased(),
-        plannedValues: const PlannedSetValues.repBased(weightKg: 16, reps: 10),
+        plannedValues: PlannedSetValues.repBased(
+          weightKg: 16,
+          repTarget: RepTarget.fixed(reps: 10),
+        ),
         setCount: 5,
       );
       final json = original.toJson();

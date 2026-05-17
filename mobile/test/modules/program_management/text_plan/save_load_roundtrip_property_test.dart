@@ -74,8 +74,17 @@ void main() {
           );
 
           final reparsed = (result as PlanParseSuccess).draft;
-          final originalStripped = _stripWarnings(original);
-          final reparsedStripped = _stripWarnings(reparsed);
+          // The persistence + reconstruction round trip can't distinguish
+          // two adjacent identical sets (e.g. `6x96s` then `7x96s`) from
+          // their merged form (`13x96s`), since both serialize to N
+          // identical WorkoutSet rows. Normalize both sides through the
+          // same collapse pass so the property checks semantic equality.
+          final originalStripped = _collapseAdjacentSets(
+            _stripWarnings(original),
+          );
+          final reparsedStripped = _collapseAdjacentSets(
+            _stripWarnings(reparsed),
+          );
 
           expect(
             reparsedStripped,
@@ -151,10 +160,10 @@ List<PlanDraftSet> _groupSetsIntoPlannedSets(List<WorkoutSet> sets) {
 bool _plannedValuesEqual(PlannedSetValues a, PlannedSetValues b) {
   return switch ((a, b)) {
     (
-      PlannedRepBased(weightKg: final wA, reps: final rA),
-      PlannedRepBased(weightKg: final wB, reps: final rB),
+      PlannedRepBased(weightKg: final wA, repTarget: final tA),
+      PlannedRepBased(weightKg: final wB, repTarget: final tB),
     ) =>
-      wA == wB && rA == rB,
+      wA == wB && tA == tB,
     (
       PlannedTimeBased(durationSeconds: final dA),
       PlannedTimeBased(durationSeconds: final dB),
@@ -166,9 +175,9 @@ bool _plannedValuesEqual(PlannedSetValues a, PlannedSetValues b) {
 
 PlanDraftSet _toPlanDraftSet(PlannedSetValues values, int count) {
   return switch (values) {
-    PlannedRepBased(:final weightKg, :final reps) => PlanDraftSet.repBased(
+    PlannedRepBased(:final weightKg, :final repTarget) => PlanDraftSet.repBased(
       count: count,
-      reps: reps,
+      repTarget: repTarget,
       weightKg: weightKg,
     ),
     PlannedTimeBased(:final durationSeconds) => PlanDraftSet.timeBased(
@@ -209,3 +218,88 @@ PlanDraftExercise _stripExerciseWarnings(PlanDraftExercise exercise) {
     warnings: const <PlanParseWarning>[],
   );
 }
+
+/// Collapses adjacent [PlanDraftSet]s that share the same payload (modulo
+/// `count`) into a single set whose `count` is the sum. Mirrors the
+/// information-loss that the persistence round trip imposes when N
+/// identical sets are stored as N separate rows.
+PlanDraft _collapseAdjacentSets(PlanDraft draft) {
+  return PlanDraft(
+    programName: draft.programName,
+    workoutDays: [
+      for (final day in draft.workoutDays)
+        PlanDraftWorkoutDay(
+          name: day.name,
+          groups: [
+            for (final group in day.groups)
+              PlanDraftGroup(
+                exercises: [
+                  for (final exercise in group.exercises)
+                    PlanDraftExercise(
+                      draftId: exercise.draftId,
+                      name: exercise.name,
+                      plannedRestSeconds: exercise.plannedRestSeconds,
+                      notes: exercise.notes,
+                      videoUrl: exercise.videoUrl,
+                      sets: _mergeAdjacent(exercise.sets),
+                      warnings: exercise.warnings,
+                    ),
+                ],
+              ),
+          ],
+        ),
+    ],
+  );
+}
+
+List<PlanDraftSet> _mergeAdjacent(List<PlanDraftSet> sets) {
+  if (sets.isEmpty) return const [];
+  final out = <PlanDraftSet>[];
+  for (final set in sets) {
+    if (out.isEmpty) {
+      out.add(set);
+      continue;
+    }
+    final prev = out.last;
+    if (_payloadEqual(prev, set)) {
+      out[out.length - 1] = _withCount(prev, _countOf(prev) + _countOf(set));
+    } else {
+      out.add(set);
+    }
+  }
+  return out;
+}
+
+int _countOf(PlanDraftSet s) => switch (s) {
+  PlanDraftSetRepBased(:final count) => count,
+  PlanDraftSetTimeBased(:final count) => count,
+};
+
+PlanDraftSet _withCount(PlanDraftSet s, int count) => switch (s) {
+  PlanDraftSetRepBased(:final repTarget, :final weightKg) =>
+    PlanDraftSet.repBased(
+      count: count,
+      repTarget: repTarget,
+      weightKg: weightKg,
+    ),
+  PlanDraftSetTimeBased(:final durationSeconds, :final weightKg) =>
+    PlanDraftSet.timeBased(
+      count: count,
+      durationSeconds: durationSeconds,
+      weightKg: weightKg,
+    ),
+};
+
+bool _payloadEqual(PlanDraftSet a, PlanDraftSet b) => switch ((a, b)) {
+  (
+    PlanDraftSetRepBased(repTarget: final tA, weightKg: final wA),
+    PlanDraftSetRepBased(repTarget: final tB, weightKg: final wB),
+  ) =>
+    tA == tB && wA == wB,
+  (
+    PlanDraftSetTimeBased(durationSeconds: final dA, weightKg: final wA),
+    PlanDraftSetTimeBased(durationSeconds: final dB, weightKg: final wB),
+  ) =>
+    dA == dB && wA == wB,
+  _ => false,
+};

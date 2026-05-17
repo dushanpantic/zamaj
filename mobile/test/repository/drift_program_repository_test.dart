@@ -7,6 +7,7 @@ import 'package:zamaj/modules/domain/models/exercise_group_kind.dart';
 import 'package:zamaj/modules/domain/models/exercise_metadata.dart';
 import 'package:zamaj/modules/domain/models/measurement_type.dart';
 import 'package:zamaj/modules/domain/models/planned_set_values.dart';
+import 'package:zamaj/modules/domain/models/rep_target.dart';
 import 'package:zamaj/modules/persistence/database/app_database.dart';
 import 'package:zamaj/modules/persistence/repositories/drift_program_repository.dart';
 
@@ -74,7 +75,10 @@ void main() {
       );
       await repo.createSet(
         exerciseId: group.exercises.first.id,
-        plannedValues: const PlannedSetValues.repBased(weightKg: 80, reps: 5),
+        plannedValues: PlannedSetValues.repBased(
+          weightKg: 80,
+          repTarget: RepTarget.fixed(reps: 5),
+        ),
       );
 
       await repo.deleteProgram(program.id);
@@ -122,9 +126,9 @@ void main() {
         );
         await repo.createSet(
           exerciseId: group.exercises.first.id,
-          plannedValues: const PlannedSetValues.repBased(
+          plannedValues: PlannedSetValues.repBased(
             weightKg: 100,
-            reps: 3,
+            repTarget: RepTarget.fixed(reps: 3),
           ),
         );
 
@@ -235,7 +239,10 @@ void main() {
       final exercise = await makeExercise();
       await repo.createSet(
         exerciseId: exercise.id,
-        plannedValues: const PlannedSetValues.repBased(weightKg: 60, reps: 8),
+        plannedValues: PlannedSetValues.repBased(
+          weightKg: 60,
+          repTarget: RepTarget.fixed(reps: 8),
+        ),
       );
 
       expect(
@@ -317,7 +324,10 @@ void main() {
       );
       await repo.createSet(
         exerciseId: group.exercises.first.id,
-        plannedValues: const PlannedSetValues.repBased(weightKg: 0, reps: 10),
+        plannedValues: PlannedSetValues.repBased(
+          weightKg: 0,
+          repTarget: RepTarget.fixed(reps: 10),
+        ),
       );
 
       final loaded = await repo.getWorkoutDay(day.id);
@@ -399,11 +409,17 @@ void main() {
       final exercise = await makeExercise();
       final s1 = await repo.createSet(
         exerciseId: exercise.id,
-        plannedValues: const PlannedSetValues.repBased(weightKg: 20, reps: 10),
+        plannedValues: PlannedSetValues.repBased(
+          weightKg: 20,
+          repTarget: RepTarget.fixed(reps: 10),
+        ),
       );
       final s2 = await repo.createSet(
         exerciseId: exercise.id,
-        plannedValues: const PlannedSetValues.repBased(weightKg: 22.5, reps: 8),
+        plannedValues: PlannedSetValues.repBased(
+          weightKg: 22.5,
+          repTarget: RepTarget.fixed(reps: 8),
+        ),
       );
 
       await repo.reorderSets(exercise.id, [s2.id, s1.id]);

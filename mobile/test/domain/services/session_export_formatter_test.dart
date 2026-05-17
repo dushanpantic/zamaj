@@ -105,9 +105,9 @@ void main() {
               substitute: SubstituteExercise(
                 name: 'Cable Fly',
                 measurementType: const MeasurementType.repBased(),
-                plannedValues: const PlannedSetValues.repBased(
+                plannedValues: PlannedSetValues.repBased(
                   weightKg: 20,
-                  reps: 12,
+                  repTarget: RepTarget.fixed(reps: 12),
                 ),
                 setCount: 3,
               ),
@@ -325,7 +325,10 @@ Exercise _buildExercise(_ExerciseSpec spec, int idx) {
           exerciseId: 'ex-$idx',
           position: i,
           measurementType: spec.measurementType,
-          plannedValues: PlannedSetValues.repBased(weightKg: kg, reps: reps),
+          plannedValues: PlannedSetValues.repBased(
+            weightKg: kg,
+            repTarget: RepTarget.fixed(reps: reps),
+          ),
           createdAt: t,
           updatedAt: t,
           schemaVersion: 1,

@@ -13,6 +13,7 @@ import 'package:zamaj/modules/domain/models/extra_work.dart';
 import 'package:zamaj/modules/domain/models/measurement_type.dart';
 import 'package:zamaj/modules/domain/models/planned_set_values.dart';
 import 'package:zamaj/modules/domain/models/program.dart';
+import 'package:zamaj/modules/domain/models/rep_target.dart';
 import 'package:zamaj/modules/domain/models/session.dart';
 import 'package:zamaj/modules/domain/models/session_exercise.dart';
 import 'package:zamaj/modules/domain/models/session_note.dart';
@@ -88,11 +89,21 @@ ExerciseState anyExerciseState(Random rng) {
   }
 }
 
+RepTarget anyRepTarget(Random rng) {
+  if (rng.nextBool()) {
+    return RepTarget.fixed(reps: rng.nextInt(30));
+  }
+  final min = rng.nextInt(25);
+  // +1 ensures max > min so we always land in valid range territory.
+  final max = min + 1 + rng.nextInt(30 - min);
+  return RepTarget.range(minReps: min, maxReps: max);
+}
+
 PlannedSetValues anyPlannedSetValues(Random rng) {
   if (rng.nextBool()) {
     return PlannedSetValues.repBased(
       weightKg: _anyWeightKg(rng),
-      reps: rng.nextInt(30),
+      repTarget: anyRepTarget(rng),
     );
   }
   return PlannedSetValues.timeBased(
@@ -108,7 +119,7 @@ PlannedSetValues anyPlannedSetValuesForMeasurement(
   return mt.when(
     repBased: () => PlannedSetValues.repBased(
       weightKg: _anyWeightKg(rng),
-      reps: rng.nextInt(30),
+      repTarget: anyRepTarget(rng),
     ),
     timeBased: () => PlannedSetValues.timeBased(
       durationSeconds: rng.nextInt(300),

@@ -7,6 +7,7 @@ import 'package:zamaj/modules/domain/models/exercise_group_kind.dart';
 import 'package:zamaj/modules/domain/models/exercise_metadata.dart';
 import 'package:zamaj/modules/domain/models/measurement_type.dart';
 import 'package:zamaj/modules/domain/models/planned_set_values.dart';
+import 'package:zamaj/modules/domain/models/rep_target.dart';
 import 'package:zamaj/modules/domain/models/workout_day.dart' as domain;
 import 'package:zamaj/modules/domain/models/workout_set.dart' as domain;
 import 'package:zamaj/modules/persistence/database/app_database.dart';
@@ -54,9 +55,9 @@ void main() {
                   exerciseId: plannedExerciseId,
                   position: 0,
                   measurementType: const MeasurementType.repBased(),
-                  plannedValues: const PlannedSetValues.repBased(
+                  plannedValues: PlannedSetValues.repBased(
                     weightKg: 60.0,
-                    reps: 8,
+                    repTarget: RepTarget.fixed(reps: 8),
                   ),
                   createdAt: DateTime.fromMillisecondsSinceEpoch(
                     1700000000000,

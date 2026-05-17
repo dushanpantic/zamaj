@@ -4,6 +4,7 @@ import 'package:zamaj/core/app_colors.dart';
 import 'package:zamaj/core/app_spacing.dart';
 import 'package:zamaj/core/app_theme.dart';
 import 'package:zamaj/core/app_typography.dart';
+import 'package:zamaj/core/rep_target_formatter.dart';
 import 'package:zamaj/core/weight_formatter.dart';
 import 'package:zamaj/modules/domain/domain.dart';
 import 'package:zamaj/modules/workout_overview/models/set_row_view_model.dart';
@@ -114,8 +115,14 @@ class _SetRowState extends State<SetRow> {
 
   static ActualSetValues? _plannedAsActual(PlannedSetValues? planned) =>
       switch (planned) {
-        PlannedRepBased(:final weightKg, :final reps) =>
-          ActualSetValues.repBased(weightKg: weightKg, reps: reps),
+        PlannedRepBased(:final weightKg, :final repTarget) =>
+          ActualSetValues.repBased(
+            weightKg: weightKg,
+            reps: switch (repTarget) {
+              RepTargetFixed(:final reps) => reps,
+              RepTargetRange(:final maxReps) => maxReps,
+            },
+          ),
         PlannedTimeBased(:final durationSeconds, :final weightKg) =>
           ActualSetValues.timeBased(
             durationSeconds: durationSeconds,
@@ -282,8 +289,8 @@ class _Header extends StatelessWidget {
   String _plannedLabel(PlannedSetValues? planned, MeasurementType mt) {
     if (planned == null) return '—';
     return switch (planned) {
-      PlannedRepBased(:final weightKg, :final reps) =>
-        '${WeightFormatter.formatKg(weightKg)}kg × $reps',
+      PlannedRepBased(:final weightKg, :final repTarget) =>
+        '${WeightFormatter.formatKg(weightKg)}kg × ${RepTargetFormatter.format(repTarget)}',
       PlannedTimeBased(:final durationSeconds, :final weightKg) =>
         weightKg == null
             ? '${durationSeconds}s'

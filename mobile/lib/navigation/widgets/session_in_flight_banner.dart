@@ -61,17 +61,9 @@ class _ActiveBanner extends StatelessWidget {
           height: _height,
           child: Row(
             children: [
-              Container(
-                width: 4,
-                height: _height,
-                color: colors.primary,
-              ),
+              Container(width: 4, height: _height, color: colors.primary),
               const SizedBox(width: AppSpacing.md),
-              Icon(
-                Icons.fitness_center,
-                color: colors.primary,
-                size: 20,
-              ),
+              Icon(Icons.fitness_center, color: colors.primary, size: 20),
               const SizedBox(width: AppSpacing.md),
               Expanded(
                 child: Column(
@@ -102,11 +94,7 @@ class _ActiveBanner extends StatelessWidget {
                 style: typography.label.copyWith(color: colors.primary),
               ),
               const SizedBox(width: AppSpacing.sm),
-              Icon(
-                Icons.arrow_forward,
-                color: colors.primary,
-                size: 18,
-              ),
+              Icon(Icons.arrow_forward, color: colors.primary, size: 18),
               const SizedBox(width: AppSpacing.lg),
             ],
           ),

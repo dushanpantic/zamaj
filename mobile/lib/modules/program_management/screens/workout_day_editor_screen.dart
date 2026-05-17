@@ -271,7 +271,9 @@ class _NameField extends StatelessWidget {
         errorText: isValid || controller.text.isEmpty
             ? null
             : 'Name must be 1–100 characters',
-        errorStyle: AppTypography.standard.caption.copyWith(color: colors.error),
+        errorStyle: AppTypography.standard.caption.copyWith(
+          color: colors.error,
+        ),
       ),
       maxLength: 100,
       buildCounter:

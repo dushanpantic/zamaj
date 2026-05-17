@@ -1,1 +1,1 @@
-{"name":"Dumbbell Press","measurementType":{"type":"repBased"},"plannedValues":{"weightKg":22.5,"reps":10,"type":"repBased"},"setCount":3,"metadata":{"notes":"Use 30kg dumbbells"}}
+{"name":"Dumbbell Press","measurementType":{"type":"repBased"},"plannedValues":{"weightKg":22.5,"repTarget":{"reps":10,"type":"fixed"},"type":"repBased"},"setCount":3,"metadata":{"notes":"Use 30kg dumbbells"}}

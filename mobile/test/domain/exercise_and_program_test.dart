@@ -7,6 +7,7 @@ import 'package:zamaj/modules/domain/models/exercise_metadata.dart';
 import 'package:zamaj/modules/domain/models/measurement_type.dart';
 import 'package:zamaj/modules/domain/models/planned_set_values.dart';
 import 'package:zamaj/modules/domain/models/program.dart';
+import 'package:zamaj/modules/domain/models/rep_target.dart';
 import 'package:zamaj/modules/domain/models/workout_set.dart';
 
 import '../support/generators.dart';
@@ -47,17 +48,17 @@ void main() {
           makeSet(
             exerciseId: exerciseId,
             measurementType: const MeasurementType.repBased(),
-            plannedValues: const PlannedSetValues.repBased(
+            plannedValues: PlannedSetValues.repBased(
               weightKg: 80.0,
-              reps: 8,
+              repTarget: RepTarget.fixed(reps: 8),
             ),
           ),
           makeSet(
             exerciseId: exerciseId,
             measurementType: const MeasurementType.repBased(),
-            plannedValues: const PlannedSetValues.repBased(
+            plannedValues: PlannedSetValues.repBased(
               weightKg: 80.0,
-              reps: 8,
+              repTarget: RepTarget.fixed(reps: 8),
             ),
           ),
         ],
@@ -124,9 +125,9 @@ void main() {
       final goodSet = makeSet(
         exerciseId: exerciseId,
         measurementType: const MeasurementType.repBased(),
-        plannedValues: const PlannedSetValues.repBased(
+        plannedValues: PlannedSetValues.repBased(
           weightKg: 60.0,
-          reps: 10,
+          repTarget: RepTarget.fixed(reps: 10),
         ),
       );
       final badSet = makeSet(

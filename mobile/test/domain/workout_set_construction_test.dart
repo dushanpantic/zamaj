@@ -4,6 +4,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:zamaj/modules/domain/errors.dart';
 import 'package:zamaj/modules/domain/models/measurement_type.dart';
 import 'package:zamaj/modules/domain/models/planned_set_values.dart';
+import 'package:zamaj/modules/domain/models/rep_target.dart';
 import 'package:zamaj/modules/domain/models/workout_set.dart';
 
 import '../support/generators.dart';
@@ -70,9 +71,9 @@ void main() {
             exerciseId: anyUuidV4(rng),
             position: 0,
             measurementType: const MeasurementType.timeBased(),
-            plannedValues: const PlannedSetValues.repBased(
+            plannedValues: PlannedSetValues.repBased(
               weightKg: 60.0,
-              reps: 10,
+              repTarget: RepTarget.fixed(reps: 10),
             ),
             createdAt: now,
             updatedAt: now,
@@ -99,7 +100,7 @@ void main() {
             measurementType: const MeasurementType.repBased(),
             plannedValues: PlannedSetValues.repBased(
               weightKg: negativeWeight,
-              reps: 5,
+              repTarget: RepTarget.fixed(reps: 5),
             ),
             createdAt: now,
             updatedAt: now,
@@ -125,7 +126,10 @@ void main() {
             exerciseId: anyUuidV4(rng),
             position: 0,
             measurementType: const MeasurementType.repBased(),
-            plannedValues: PlannedSetValues.repBased(weightKg: weight, reps: 5),
+            plannedValues: PlannedSetValues.repBased(
+              weightKg: weight,
+              repTarget: RepTarget.fixed(reps: 5),
+            ),
             createdAt: now,
             updatedAt: now,
             schemaVersion: 1,
@@ -137,28 +141,14 @@ void main() {
     });
 
     test('negative reps throws ValidationError', () {
+      // Reps non-negativity is enforced by [RepTarget]'s own constructor, so
+      // the failure surfaces before [WorkoutSet] can attach its own id.
       final rng = Random(48);
       for (var i = 0; i < 100; i++) {
-        final id = anyUuidV4(rng);
-        final now = anyUtcDateTime(rng);
         final negativeReps = -(1 + rng.nextInt(50));
-
         final error = _expectValidationError(
-          () => WorkoutSet(
-            id: id,
-            exerciseId: anyUuidV4(rng),
-            position: 0,
-            measurementType: const MeasurementType.repBased(),
-            plannedValues: PlannedSetValues.repBased(
-              weightKg: 60.0,
-              reps: negativeReps,
-            ),
-            createdAt: now,
-            updatedAt: now,
-            schemaVersion: 1,
-          ),
+          () => RepTarget.fixed(reps: negativeReps),
         );
-        expect(error.entityId, equals(id));
         expect(error.invariant, equals('reps_non_negative'));
       }
     });
@@ -197,7 +187,10 @@ void main() {
         exerciseId: anyUuidV4(rng),
         position: 0,
         measurementType: const MeasurementType.repBased(),
-        plannedValues: const PlannedSetValues.repBased(weightKg: 0.0, reps: 0),
+        plannedValues: PlannedSetValues.repBased(
+          weightKg: 0.0,
+          repTarget: RepTarget.fixed(reps: 0),
+        ),
         createdAt: now,
         updatedAt: now,
         schemaVersion: 1,

@@ -11,31 +11,8 @@ part 'workout_set.g.dart';
 abstract class WorkoutSet with _$WorkoutSet {
   WorkoutSet._() {
     switch ((measurementType, plannedValues)) {
-      case (
-        RepBasedMeasurement(),
-        PlannedRepBased(:final weightKg, :final reps),
-      ):
-        if (weightKg < 0) {
-          throw ValidationError(
-            entityId: id,
-            invariant: 'weightKg_non_negative',
-            message: 'weightKg must be >= 0, got $weightKg',
-          );
-        }
-        if ((weightKg * 2).roundToDouble() != weightKg * 2) {
-          throw ValidationError(
-            entityId: id,
-            invariant: 'weightKg_half_kg_resolution',
-            message: 'weightKg must be a multiple of 0.5, got $weightKg',
-          );
-        }
-        if (reps < 0) {
-          throw ValidationError(
-            entityId: id,
-            invariant: 'reps_non_negative',
-            message: 'reps must be >= 0, got $reps',
-          );
-        }
+      case (RepBasedMeasurement(), PlannedRepBased(:final weightKg)):
+        _validateWeight(weightKg, id: id);
       case (
         TimeBasedMeasurement(),
         PlannedTimeBased(:final durationSeconds, :final weightKg),
@@ -48,20 +25,7 @@ abstract class WorkoutSet with _$WorkoutSet {
           );
         }
         if (weightKg != null) {
-          if (weightKg < 0) {
-            throw ValidationError(
-              entityId: id,
-              invariant: 'weightKg_non_negative',
-              message: 'weightKg must be >= 0, got $weightKg',
-            );
-          }
-          if ((weightKg * 2).roundToDouble() != weightKg * 2) {
-            throw ValidationError(
-              entityId: id,
-              invariant: 'weightKg_half_kg_resolution',
-              message: 'weightKg must be a multiple of 0.5, got $weightKg',
-            );
-          }
+          _validateWeight(weightKg, id: id);
         }
       case (RepBasedMeasurement(), _):
         throw ValidationError(
@@ -97,4 +61,21 @@ abstract class WorkoutSet with _$WorkoutSet {
         json,
         'WorkoutSet',
       );
+}
+
+void _validateWeight(double weightKg, {required String id}) {
+  if (weightKg < 0) {
+    throw ValidationError(
+      entityId: id,
+      invariant: 'weightKg_non_negative',
+      message: 'weightKg must be >= 0, got $weightKg',
+    );
+  }
+  if ((weightKg * 2).roundToDouble() != weightKg * 2) {
+    throw ValidationError(
+      entityId: id,
+      invariant: 'weightKg_half_kg_resolution',
+      message: 'weightKg must be a multiple of 0.5, got $weightKg',
+    );
+  }
 }

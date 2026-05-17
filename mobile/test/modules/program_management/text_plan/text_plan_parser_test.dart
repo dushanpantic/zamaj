@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
+import 'package:zamaj/modules/domain/models/rep_target.dart';
 import 'package:zamaj/modules/program_management/services/text_plan/parse_result.dart';
 import 'package:zamaj/modules/program_management/services/text_plan/plan_draft.dart';
 import 'package:zamaj/modules/program_management/services/text_plan/plan_parse_error.dart';
@@ -42,8 +43,63 @@ void main() {
       expect(set, isA<PlanDraftSetRepBased>());
       final repSet = set as PlanDraftSetRepBased;
       expect(repSet.count, equals(4));
-      expect(repSet.reps, equals(8));
+      expect(repSet.repTarget, equals(RepTarget.fixed(reps: 8)));
       expect(repSet.weightKg, equals(100.0));
+    });
+  });
+
+  group('TextPlanParser — rep-range plan', () {
+    test('parses ASCII-dash range (4x6-8)', () {
+      final input = _readGolden('rep_range_plan.txt');
+      final result = TextPlanParser.parse(input);
+      expect(result, isA<PlanParseSuccess>());
+      final success = result as PlanParseSuccess;
+      expect(success.warnings, isEmpty);
+      final set =
+          success
+                  .draft
+                  .workoutDays
+                  .first
+                  .groups
+                  .first
+                  .exercises
+                  .first
+                  .sets
+                  .first
+              as PlanDraftSetRepBased;
+      expect(set.count, equals(4));
+      expect(set.repTarget, equals(RepTarget.range(minReps: 6, maxReps: 8)));
+      expect(set.weightKg, equals(60.0));
+    });
+
+    test('parses en-dash range (4x6–8)', () {
+      final input = _readGolden('rep_range_endash_plan.txt');
+      final result = TextPlanParser.parse(input);
+      expect(result, isA<PlanParseSuccess>());
+      final set =
+          (result as PlanParseSuccess)
+                  .draft
+                  .workoutDays
+                  .first
+                  .groups
+                  .first
+                  .exercises
+                  .first
+                  .sets
+                  .first
+              as PlanDraftSetRepBased;
+      expect(set.repTarget, equals(RepTarget.range(minReps: 6, maxReps: 8)));
+    });
+
+    test('inverted range (4x8-6) emits a warning and skips the set', () {
+      const input = 'Plan\n\nDay 1\nBench Press\n4x8-6 60kg\n';
+      final result = TextPlanParser.parse(input);
+      expect(result, isA<PlanParseSuccess>());
+      final success = result as PlanParseSuccess;
+      expect(success.warnings, isNotEmpty);
+      final exercise =
+          success.draft.workoutDays.first.groups.first.exercises.first;
+      expect(exercise.sets, isEmpty);
     });
   });
 
@@ -107,7 +163,7 @@ void main() {
       expect(bench.sets, hasLength(1));
       final benchSet = bench.sets.first as PlanDraftSetRepBased;
       expect(benchSet.count, equals(4));
-      expect(benchSet.reps, equals(8));
+      expect(benchSet.repTarget, equals(RepTarget.fixed(reps: 8)));
       expect(benchSet.weightKg, equals(100.0));
 
       final rows = group.exercises[1];
@@ -116,7 +172,7 @@ void main() {
       expect(rows.sets, hasLength(1));
       final rowsSet = rows.sets.first as PlanDraftSetRepBased;
       expect(rowsSet.count, equals(4));
-      expect(rowsSet.reps, equals(8));
+      expect(rowsSet.repTarget, equals(RepTarget.fixed(reps: 8)));
       expect(rowsSet.weightKg, equals(80.0));
     });
   });
@@ -139,7 +195,7 @@ void main() {
 
       final set = exercise.sets.first as PlanDraftSetRepBased;
       expect(set.count, equals(4));
-      expect(set.reps, equals(8));
+      expect(set.repTarget, equals(RepTarget.fixed(reps: 8)));
       expect(set.weightKg, equals(100.0));
     });
 

@@ -148,7 +148,10 @@ WorkoutSet _repSet(
     exerciseId: 'ex-1',
     position: position,
     measurementType: const MeasurementType.repBased(),
-    plannedValues: PlannedSetValues.repBased(weightKg: weightKg, reps: reps),
+    plannedValues: PlannedSetValues.repBased(
+      weightKg: weightKg,
+      repTarget: RepTarget.fixed(reps: reps),
+    ),
     createdAt: now,
     updatedAt: now,
     schemaVersion: 1,

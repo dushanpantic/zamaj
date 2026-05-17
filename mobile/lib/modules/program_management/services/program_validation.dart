@@ -1,3 +1,5 @@
+import 'package:zamaj/modules/domain/models/rep_target.dart';
+
 sealed class ValidationResult<T> {
   const ValidationResult();
 }
@@ -38,7 +40,8 @@ abstract final class ProgramValidation {
     return Valid(trimmed);
   }
 
-  static ValidationResult<({double weightKg, int reps})> validateRepBasedSet({
+  static ValidationResult<({double weightKg, RepTarget repTarget})>
+  validateRepBasedSet({
     required String weightInput,
     required String repsInput,
   }) {
@@ -49,16 +52,44 @@ abstract final class ProgramValidation {
     final remainder = (weightParsed * 2).round() - (weightParsed * 2);
     if (remainder.abs() > 1e-9) return const Invalid('weight_not_half_kg');
 
-    final repsParsed = int.tryParse(repsInput);
+    final repTargetResult = parseRepTarget(repsInput);
+    return switch (repTargetResult) {
+      Valid(:final value) => Valid((weightKg: weightParsed, repTarget: value)),
+      Invalid(:final reason) => Invalid(reason),
+    };
+  }
+
+  /// Parses a rep-target input string into a [RepTarget].
+  ///
+  /// Accepts a single integer (`"8"`) or a hyphen / en-dash separated
+  /// range (`"6-8"`, `"6 - 8"`, `"6–8"`). The range form requires
+  /// `min < max`; equal bounds are rejected (callers can express a fixed
+  /// value with a single integer instead).
+  static ValidationResult<RepTarget> parseRepTarget(String input) {
+    final trimmed = input.trim();
+    if (trimmed.isEmpty) return const Invalid('reps_invalid');
+
+    final rangeMatch = RegExp(r'^(\d+)\s*[-–]\s*(\d+)$').firstMatch(trimmed);
+    if (rangeMatch != null) {
+      final min = int.tryParse(rangeMatch.group(1)!);
+      final max = int.tryParse(rangeMatch.group(2)!);
+      if (min == null || max == null) return const Invalid('range_invalid');
+      if (min < 0 || max < 0) return const Invalid('reps_out_of_range');
+      if (min > 999 || max > 999) return const Invalid('reps_out_of_range');
+      if (max < min) return const Invalid('range_invalid');
+      if (min == max) return Valid(RepTarget.fixed(reps: min));
+      return Valid(RepTarget.range(minReps: min, maxReps: max));
+    }
+
+    final repsParsed = int.tryParse(trimmed);
     if (repsParsed == null) {
-      final repsDouble = double.tryParse(repsInput);
+      final repsDouble = double.tryParse(trimmed);
       if (repsDouble == null) return const Invalid('reps_invalid');
       return const Invalid('reps_not_whole');
     }
     if (repsParsed < 0) return const Invalid('reps_out_of_range');
     if (repsParsed > 999) return const Invalid('reps_out_of_range');
-
-    return Valid((weightKg: weightParsed, reps: repsParsed));
+    return Valid(RepTarget.fixed(reps: repsParsed));
   }
 
   static ValidationResult<int> validateTimeBasedSet(String durationInput) {

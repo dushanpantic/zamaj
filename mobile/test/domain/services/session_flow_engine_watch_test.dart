@@ -8,6 +8,7 @@ import 'package:zamaj/modules/domain/models/exercise_metadata.dart';
 import 'package:zamaj/modules/domain/models/exercise_state.dart';
 import 'package:zamaj/modules/domain/models/measurement_type.dart';
 import 'package:zamaj/modules/domain/models/planned_set_values.dart';
+import 'package:zamaj/modules/domain/models/rep_target.dart';
 import 'package:zamaj/modules/domain/models/workout_day.dart';
 import 'package:zamaj/modules/domain/models/workout_set.dart';
 import 'package:zamaj/modules/domain/services/session_flow_engine.dart';
@@ -56,9 +57,9 @@ void main() {
                   exerciseId: 'ex-a',
                   position: 0,
                   measurementType: const MeasurementType.repBased(),
-                  plannedValues: const PlannedSetValues.repBased(
+                  plannedValues: PlannedSetValues.repBased(
                     weightKg: 80,
-                    reps: 5,
+                    repTarget: RepTarget.fixed(reps: 5),
                   ),
                   createdAt: t,
                   updatedAt: t,
@@ -93,9 +94,9 @@ void main() {
                   exerciseId: 'ex-b',
                   position: 0,
                   measurementType: const MeasurementType.repBased(),
-                  plannedValues: const PlannedSetValues.repBased(
+                  plannedValues: PlannedSetValues.repBased(
                     weightKg: 100,
-                    reps: 5,
+                    repTarget: RepTarget.fixed(reps: 5),
                   ),
                   createdAt: t,
                   updatedAt: t,
@@ -264,9 +265,9 @@ void main() {
       sessionExerciseId: exA,
       substituteName: 'Push-Up',
       substituteMeasurementType: const MeasurementType.repBased(),
-      substitutePlannedValues: const PlannedSetValues.repBased(
+      substitutePlannedValues: PlannedSetValues.repBased(
         weightKg: 0,
-        reps: 10,
+        repTarget: RepTarget.fixed(reps: 10),
       ),
       substituteSetCount: 3,
     );

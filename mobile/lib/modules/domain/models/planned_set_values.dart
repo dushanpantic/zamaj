@@ -1,5 +1,6 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:zamaj/core/deserialization.dart';
+import 'package:zamaj/modules/domain/models/rep_target.dart';
 
 part 'planned_set_values.freezed.dart';
 part 'planned_set_values.g.dart';
@@ -8,7 +9,7 @@ part 'planned_set_values.g.dart';
 sealed class PlannedSetValues with _$PlannedSetValues {
   const factory PlannedSetValues.repBased({
     required double weightKg,
-    required int reps,
+    required RepTarget repTarget,
   }) = PlannedRepBased;
 
   const factory PlannedSetValues.timeBased({

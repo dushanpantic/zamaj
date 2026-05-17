@@ -3,6 +3,7 @@ import 'package:zamaj/core/canonical_json.dart';
 import 'package:zamaj/modules/domain/models/exercise_group_kind.dart';
 import 'package:zamaj/modules/domain/models/measurement_type.dart';
 import 'package:zamaj/modules/domain/models/planned_set_values.dart';
+import 'package:zamaj/modules/domain/models/rep_target.dart';
 import 'package:zamaj/modules/persistence/database/app_database.dart';
 import 'package:zamaj/modules/persistence/mappers/workout_day_mapper.dart';
 
@@ -21,9 +22,9 @@ void main() {
   final measurementJson = const MeasurementType.repBased().toJson();
   final measurementPayload = CanonicalJson.encode(measurementJson);
 
-  final plannedJson = const PlannedSetValues.repBased(
+  final plannedJson = PlannedSetValues.repBased(
     weightKg: 60.0,
-    reps: 8,
+    repTarget: RepTarget.fixed(reps: 8),
   ).toJson();
   final plannedPayload = CanonicalJson.encode(plannedJson);
 

@@ -114,10 +114,6 @@ class AppTypography {
       height: 1.2,
       letterSpacing: 0.5,
     ),
-    badge: TextStyle(
-      fontSize: 12,
-      fontWeight: FontWeight.w600,
-      height: 1.2,
-    ),
+    badge: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, height: 1.2),
   );
 }

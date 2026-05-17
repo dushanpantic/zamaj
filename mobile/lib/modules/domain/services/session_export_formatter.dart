@@ -1,4 +1,5 @@
 import 'package:zamaj/core/date_formatter.dart';
+import 'package:zamaj/core/rep_target_formatter.dart';
 import 'package:zamaj/core/weight_formatter.dart';
 import 'package:zamaj/modules/domain/models/actual_set_values.dart';
 import 'package:zamaj/modules/domain/models/executed_set.dart';
@@ -191,8 +192,8 @@ abstract final class SessionExportFormatter {
       return sets.map(_renderPlannedValues).join(', ');
     }
     return switch (first) {
-      PlannedRepBased(:final weightKg, :final reps) =>
-        '${WeightFormatter.formatKg(weightKg)}kg ${sets.length} × $reps',
+      PlannedRepBased(:final weightKg, :final repTarget) =>
+        '${WeightFormatter.formatKg(weightKg)}kg ${sets.length} × ${RepTargetFormatter.format(repTarget)}',
       PlannedTimeBased(:final durationSeconds, :final weightKg) =>
         weightKg == null
             ? '${sets.length} × ${durationSeconds}s'
@@ -203,8 +204,8 @@ abstract final class SessionExportFormatter {
 
   static String _renderPlannedValues(WorkoutSet s) {
     return switch (s.plannedValues) {
-      PlannedRepBased(:final weightKg, :final reps) =>
-        '${WeightFormatter.formatKg(weightKg)}kg × $reps',
+      PlannedRepBased(:final weightKg, :final repTarget) =>
+        '${WeightFormatter.formatKg(weightKg)}kg × ${RepTargetFormatter.format(repTarget)}',
       PlannedTimeBased(:final durationSeconds, :final weightKg) =>
         weightKg == null
             ? '${durationSeconds}s'
@@ -214,8 +215,8 @@ abstract final class SessionExportFormatter {
 
   static String _substitutePlanSummary(SubstituteExercise sub) {
     return switch (sub.plannedValues) {
-      PlannedRepBased(:final weightKg, :final reps) =>
-        '${WeightFormatter.formatKg(weightKg)}kg ${sub.setCount} × $reps',
+      PlannedRepBased(:final weightKg, :final repTarget) =>
+        '${WeightFormatter.formatKg(weightKg)}kg ${sub.setCount} × ${RepTargetFormatter.format(repTarget)}',
       PlannedTimeBased(:final durationSeconds, :final weightKg) =>
         weightKg == null
             ? '${sub.setCount} × ${durationSeconds}s'
@@ -223,5 +224,4 @@ abstract final class SessionExportFormatter {
                   '${sub.setCount} × ${durationSeconds}s',
     };
   }
-
 }

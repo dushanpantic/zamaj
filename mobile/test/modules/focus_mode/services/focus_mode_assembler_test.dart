@@ -21,9 +21,9 @@ void main() {
   }) {
     final t = DateTime.utc(2024);
     final plannedValues = switch (benchMeasurement) {
-      RepBasedMeasurement() => const PlannedSetValues.repBased(
+      RepBasedMeasurement() => PlannedSetValues.repBased(
         weightKg: 100,
-        reps: 8,
+        repTarget: RepTarget.fixed(reps: 8),
       ),
       TimeBasedMeasurement() => const PlannedSetValues.timeBased(
         durationSeconds: 30,
@@ -89,9 +89,9 @@ void main() {
                   exerciseId: 'ex-row',
                   position: 0,
                   measurementType: const MeasurementType.repBased(),
-                  plannedValues: const PlannedSetValues.repBased(
+                  plannedValues: PlannedSetValues.repBased(
                     weightKg: 60,
-                    reps: 10,
+                    repTarget: RepTarget.fixed(reps: 10),
                   ),
                   createdAt: t,
                   updatedAt: t,

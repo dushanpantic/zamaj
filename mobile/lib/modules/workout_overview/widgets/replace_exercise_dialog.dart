@@ -142,9 +142,12 @@ class _ReplaceExerciseDialogState extends State<ReplaceExerciseDialog> {
 
   void _seedFieldsFor(PlannedSetValues values) {
     switch (values) {
-      case PlannedRepBased(:final weightKg, :final reps):
+      case PlannedRepBased(:final weightKg, :final repTarget):
         _weight.text = WeightFormatter.formatKg(weightKg);
-        _reps.text = reps.toString();
+        _reps.text = switch (repTarget) {
+          RepTargetFixed(:final reps) => reps.toString(),
+          RepTargetRange(:final minReps, :final maxReps) => '$minReps-$maxReps',
+        };
       case PlannedTimeBased(:final durationSeconds, :final weightKg):
         _duration.text = durationSeconds.toString();
         _weight.text = weightKg == null
@@ -157,11 +160,15 @@ class _ReplaceExerciseDialogState extends State<ReplaceExerciseDialog> {
     switch (_measurementType) {
       case RepBasedMeasurement():
         final weight = double.tryParse(_weight.text.trim());
-        final reps = int.tryParse(_reps.text.trim());
-        if (weight == null || reps == null) return null;
-        if (weight < 0 || reps < 0) return null;
+        if (weight == null) return null;
+        if (weight < 0) return null;
         if ((weight * 2).roundToDouble() != weight * 2) return null;
-        return PlannedSetValues.repBased(weightKg: weight, reps: reps);
+        final repTarget = _parseRepsField(_reps.text);
+        if (repTarget == null) return null;
+        return PlannedSetValues.repBased(
+          weightKg: weight,
+          repTarget: repTarget,
+        );
       case TimeBasedMeasurement():
         final seconds = int.tryParse(_duration.text.trim());
         if (seconds == null || seconds < 0) return null;
@@ -222,6 +229,24 @@ class _ReplaceExerciseDialogState extends State<ReplaceExerciseDialog> {
           _weight.text = '';
       }
     });
+  }
+
+  static RepTarget? _parseRepsField(String raw) {
+    final trimmed = raw.trim();
+    if (trimmed.isEmpty) return null;
+    final rangeMatch = RegExp(r'^(\d+)\s*[-–]\s*(\d+)$').firstMatch(trimmed);
+    if (rangeMatch != null) {
+      final min = int.tryParse(rangeMatch.group(1)!);
+      final max = int.tryParse(rangeMatch.group(2)!);
+      if (min == null || max == null) return null;
+      if (min < 0 || max < 0 || min > 999 || max > 999) return null;
+      if (max < min) return null;
+      if (min == max) return RepTarget.fixed(reps: min);
+      return RepTarget.range(minReps: min, maxReps: max);
+    }
+    final fixed = int.tryParse(trimmed);
+    if (fixed == null || fixed < 0 || fixed > 999) return null;
+    return RepTarget.fixed(reps: fixed);
   }
 
   @override
@@ -353,10 +378,12 @@ class _PlannedFields extends StatelessWidget {
             Expanded(
               child: TextField(
                 controller: repsController,
-                keyboardType: TextInputType.number,
-                inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                keyboardType: TextInputType.text,
+                inputFormatters: [
+                  FilteringTextInputFormatter.allow(RegExp(r'[0-9\-–]')),
+                ],
                 style: numeric,
-                decoration: const InputDecoration(labelText: 'Reps'),
+                decoration: const InputDecoration(labelText: 'Reps (or range)'),
                 onChanged: (_) => onChanged(),
               ),
             ),

@@ -45,9 +45,9 @@ void main() {
                     exerciseId: 'ex-bench',
                     position: i,
                     measurementType: const MeasurementType.repBased(),
-                    plannedValues: const PlannedSetValues.repBased(
+                    plannedValues: PlannedSetValues.repBased(
                       weightKg: 100,
-                      reps: 8,
+                      repTarget: RepTarget.fixed(reps: 8),
                     ),
                     createdAt: t,
                     updatedAt: t,

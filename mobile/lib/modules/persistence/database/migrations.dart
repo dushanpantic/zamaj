@@ -29,6 +29,39 @@ abstract final class AppMigrations {
     if (from < 6) {
       await _denseExecutedSetPositions(db);
     }
+    if (from < 7) {
+      // Rep-target rollout: rewrite of planned_set JSON shape. Existing data
+      // dropped — single-install app, no compat layer.
+      await _wipeAllDomainTables(db);
+    }
+  }
+
+  /// Deletes every row from the domain-data tables. Used by the v6→v7
+  /// destructive migration to drop programs and session history whose
+  /// `planned_values_payload_json` / snapshot blobs use the pre-RepTarget
+  /// wire format.
+  ///
+  /// Order matters when foreign keys are enforced: delete the leaves first,
+  /// then their parents.
+  static Future<void> _wipeAllDomainTables(AppDatabase db) async {
+    const tables = [
+      'executed_sets',
+      'session_notes',
+      'extra_work_items',
+      'session_exercises',
+      'sessions',
+      'sets',
+      'exercises',
+      'exercise_groups',
+      'workout_days',
+      'program_workout_days',
+      'programs',
+    ];
+    for (final table in tables) {
+      if (await _tableExists(db, table)) {
+        await db.customStatement('DELETE FROM $table');
+      }
+    }
   }
 
   /// Rewrites `executed_sets.position` from the legacy LexoRank-style values

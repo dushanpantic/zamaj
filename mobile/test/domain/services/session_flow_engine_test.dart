@@ -9,6 +9,7 @@ import 'package:zamaj/modules/domain/models/exercise_metadata.dart';
 import 'package:zamaj/modules/domain/models/exercise_state.dart';
 import 'package:zamaj/modules/domain/models/measurement_type.dart';
 import 'package:zamaj/modules/domain/models/planned_set_values.dart';
+import 'package:zamaj/modules/domain/models/rep_target.dart';
 import 'package:zamaj/modules/domain/models/session_exercise.dart';
 import 'package:zamaj/modules/domain/models/workout_day.dart';
 import 'package:zamaj/modules/domain/models/workout_set.dart';
@@ -158,9 +159,9 @@ void main() {
             sessionExerciseId: 'missing-ex',
             substituteName: 'sub',
             substituteMeasurementType: const MeasurementType.repBased(),
-            substitutePlannedValues: const PlannedSetValues.repBased(
+            substitutePlannedValues: PlannedSetValues.repBased(
               weightKg: 20,
-              reps: 8,
+              repTarget: RepTarget.fixed(reps: 8),
             ),
             substituteSetCount: 3,
           ),
@@ -561,9 +562,9 @@ void main() {
         sessionExerciseId: benchId,
         substituteName: 'Push-Up',
         substituteMeasurementType: const MeasurementType.repBased(),
-        substitutePlannedValues: const PlannedSetValues.repBased(
+        substitutePlannedValues: PlannedSetValues.repBased(
           weightKg: 0,
-          reps: 12,
+          repTarget: RepTarget.fixed(reps: 12),
         ),
         substituteSetCount: 3,
       );
@@ -595,9 +596,9 @@ void main() {
         sessionExerciseId: squatId,
         substituteName: 'Leg Press',
         substituteMeasurementType: const MeasurementType.repBased(),
-        substitutePlannedValues: const PlannedSetValues.repBased(
+        substitutePlannedValues: PlannedSetValues.repBased(
           weightKg: 60,
-          reps: 10,
+          repTarget: RepTarget.fixed(reps: 10),
         ),
         substituteSetCount: 3,
       );
@@ -636,9 +637,9 @@ void main() {
           sessionExerciseId: benchId,
           substituteName: 'Push-Up',
           substituteMeasurementType: const MeasurementType.repBased(),
-          substitutePlannedValues: const PlannedSetValues.repBased(
+          substitutePlannedValues: PlannedSetValues.repBased(
             weightKg: 0,
-            reps: 15,
+            repTarget: RepTarget.fixed(reps: 15),
           ),
           substituteSetCount: 2,
         );
@@ -682,7 +683,10 @@ WorkoutDay _buildWorkoutDay({
     final exerciseId = 'exercise-$id-$i';
 
     final planned = spec.measurementType is RepBasedMeasurement
-        ? const PlannedSetValues.repBased(weightKg: 50, reps: 5)
+        ? PlannedSetValues.repBased(
+            weightKg: 50,
+            repTarget: RepTarget.fixed(reps: 5),
+          )
         : const PlannedSetValues.timeBased(durationSeconds: 30);
 
     final sets = List.generate(spec.setCount, (j) {

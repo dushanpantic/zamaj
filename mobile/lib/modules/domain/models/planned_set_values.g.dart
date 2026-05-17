@@ -10,7 +10,10 @@ PlannedRepBased _$PlannedRepBasedFromJson(Map<String, dynamic> json) =>
     $checkedCreate('PlannedRepBased', json, ($checkedConvert) {
       final val = PlannedRepBased(
         weightKg: $checkedConvert('weightKg', (v) => (v as num).toDouble()),
-        reps: $checkedConvert('reps', (v) => (v as num).toInt()),
+        repTarget: $checkedConvert(
+          'repTarget',
+          (v) => RepTarget.fromJson(v as Map<String, dynamic>),
+        ),
         $type: $checkedConvert('type', (v) => v as String?),
       );
       return val;
@@ -19,7 +22,7 @@ PlannedRepBased _$PlannedRepBasedFromJson(Map<String, dynamic> json) =>
 Map<String, dynamic> _$PlannedRepBasedToJson(PlannedRepBased instance) =>
     <String, dynamic>{
       'weightKg': instance.weightKg,
-      'reps': instance.reps,
+      'repTarget': instance.repTarget.toJson(),
       'type': instance.$type,
     };
 

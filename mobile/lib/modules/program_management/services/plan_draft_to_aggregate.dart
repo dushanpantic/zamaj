@@ -76,7 +76,7 @@ abstract final class PlanDraftToAggregate {
     Uuid idGenerator,
   ) {
     return switch (set) {
-      PlanDraftSetRepBased(:final count, :final reps, :final weightKg) =>
+      PlanDraftSetRepBased(:final count, :final repTarget, :final weightKg) =>
         List.generate(
           count,
           (_) => PlannedSetDraft(
@@ -84,7 +84,11 @@ abstract final class PlanDraftToAggregate {
             persistedId: null,
             values: PlannedSetDraftValues.repBased(
               weightInput: WeightFormatter.formatKg(weightKg),
-              repsInput: reps.toString(),
+              repsInput: switch (repTarget) {
+                RepTargetFixed(:final reps) => reps.toString(),
+                RepTargetRange(:final minReps, :final maxReps) =>
+                  '$minReps-$maxReps',
+              },
             ),
           ),
         ),

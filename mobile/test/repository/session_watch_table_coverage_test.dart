@@ -5,6 +5,7 @@ import 'package:zamaj/modules/domain/models/exercise_group_kind.dart';
 import 'package:zamaj/modules/domain/models/exercise_metadata.dart';
 import 'package:zamaj/modules/domain/models/measurement_type.dart';
 import 'package:zamaj/modules/domain/models/planned_set_values.dart';
+import 'package:zamaj/modules/domain/models/rep_target.dart';
 import 'package:zamaj/modules/domain/models/session.dart';
 import 'package:zamaj/modules/persistence/repositories/drift_program_repository.dart';
 import 'package:zamaj/modules/persistence/repositories/drift_session_repository.dart';
@@ -56,7 +57,10 @@ void main() {
       final exerciseId = reloaded!.exerciseGroups.single.exercises.single.id;
       await programRepo.createSet(
         exerciseId: exerciseId,
-        plannedValues: const PlannedSetValues.repBased(weightKg: 100, reps: 5),
+        plannedValues: PlannedSetValues.repBased(
+          weightKg: 100,
+          repTarget: RepTarget.fixed(reps: 5),
+        ),
       );
 
       // ── sessions table ────────────────────────────────────────────────
@@ -115,9 +119,9 @@ void main() {
         sessionExerciseId: sessionExId,
         substituteName: 'Goblet Squat',
         substituteMeasurementType: const MeasurementType.repBased(),
-        substitutePlannedValues: const PlannedSetValues.repBased(
+        substitutePlannedValues: PlannedSetValues.repBased(
           weightKg: 20,
-          reps: 8,
+          repTarget: RepTarget.fixed(reps: 8),
         ),
         substituteSetCount: 3,
       );

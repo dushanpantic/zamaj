@@ -4,6 +4,7 @@ import 'package:zamaj/core/app_spacing.dart';
 import 'package:zamaj/core/app_theme.dart';
 import 'package:zamaj/core/app_typography.dart';
 import 'package:zamaj/core/haptics.dart';
+import 'package:zamaj/core/rep_target_formatter.dart';
 import 'package:zamaj/core/weight_formatter.dart';
 import 'package:zamaj/modules/domain/domain.dart';
 import 'package:zamaj/modules/focus_mode/bloc/bloc.dart';
@@ -261,10 +262,7 @@ class _PinnedActionBar extends StatelessWidget {
             ),
           if (state.undoable != null) ...[
             const SizedBox(height: AppSpacing.xs),
-            _UndoLastSetButton(
-              undoable: state.undoable!,
-              enabled: canMutate,
-            ),
+            _UndoLastSetButton(undoable: state.undoable!, enabled: canMutate),
           ],
         ],
       ),
@@ -422,8 +420,8 @@ class _PlannedAndLast extends StatelessWidget {
   String _formatPlanned(PlannedSetValues? values, String summary) {
     if (values == null) return summary;
     return switch (values) {
-      PlannedRepBased(:final weightKg, :final reps) =>
-        '${WeightFormatter.formatKg(weightKg)}kg × $reps',
+      PlannedRepBased(:final weightKg, :final repTarget) =>
+        '${WeightFormatter.formatKg(weightKg)}kg × ${RepTargetFormatter.format(repTarget)}',
       PlannedTimeBased(:final durationSeconds, :final weightKg) =>
         weightKg == null
             ? '${durationSeconds}s'

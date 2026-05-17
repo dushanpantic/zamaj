@@ -641,7 +641,7 @@ class WorkoutDayEditorBloc
       PlannedSetDraftRepBased(:final weightInput, :final repsInput) =>
         PlannedSetValues.repBased(
           weightKg: double.tryParse(weightInput) ?? 0.0,
-          reps: int.tryParse(repsInput) ?? 0,
+          repTarget: _parseRepTargetOrZero(repsInput),
         ),
       PlannedSetDraftTimeBased(:final durationInput, :final weightInput) =>
         PlannedSetValues.timeBased(
@@ -649,6 +649,18 @@ class WorkoutDayEditorBloc
           weightKg: _parseOptionalWeight(weightInput),
         ),
     };
+  }
+
+  static RepTarget _parseRepTargetOrZero(String input) {
+    final trimmed = input.trim();
+    final rangeMatch = RegExp(r'^(\d+)\s*[-–]\s*(\d+)$').firstMatch(trimmed);
+    if (rangeMatch != null) {
+      final min = int.tryParse(rangeMatch.group(1)!) ?? 0;
+      final max = int.tryParse(rangeMatch.group(2)!) ?? 0;
+      if (max > min) return RepTarget.range(minReps: min, maxReps: max);
+      return RepTarget.fixed(reps: min);
+    }
+    return RepTarget.fixed(reps: int.tryParse(trimmed) ?? 0);
   }
 
   List<String> _liveGroupIdOrder(WorkoutDayDraft draft, WorkoutDay reloaded) {
@@ -709,10 +721,14 @@ class WorkoutDayEditorBloc
 
   static PlannedSetDraftValues _toSetDraftValues(PlannedSetValues values) {
     return switch (values) {
-      PlannedRepBased(:final weightKg, :final reps) =>
+      PlannedRepBased(:final weightKg, :final repTarget) =>
         PlannedSetDraftValues.repBased(
           weightInput: weightKg.toString(),
-          repsInput: reps.toString(),
+          repsInput: switch (repTarget) {
+            RepTargetFixed(:final reps) => reps.toString(),
+            RepTargetRange(:final minReps, :final maxReps) =>
+              '$minReps-$maxReps',
+          },
         ),
       PlannedTimeBased(:final durationSeconds, :final weightKg) =>
         PlannedSetDraftValues.timeBased(

@@ -1233,10 +1233,10 @@ return timeBased(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>({TResult Function( int count,  int reps,  double weightKg)?  repBased,TResult Function( int count,  int durationSeconds,  double? weightKg)?  timeBased,required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>({TResult Function( int count,  RepTarget repTarget,  double weightKg)?  repBased,TResult Function( int count,  int durationSeconds,  double? weightKg)?  timeBased,required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case PlanDraftSetRepBased() when repBased != null:
-return repBased(_that.count,_that.reps,_that.weightKg);case PlanDraftSetTimeBased() when timeBased != null:
+return repBased(_that.count,_that.repTarget,_that.weightKg);case PlanDraftSetTimeBased() when timeBased != null:
 return timeBased(_that.count,_that.durationSeconds,_that.weightKg);case _:
   return orElse();
 
@@ -1255,10 +1255,10 @@ return timeBased(_that.count,_that.durationSeconds,_that.weightKg);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>({required TResult Function( int count,  int reps,  double weightKg)  repBased,required TResult Function( int count,  int durationSeconds,  double? weightKg)  timeBased,}) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>({required TResult Function( int count,  RepTarget repTarget,  double weightKg)  repBased,required TResult Function( int count,  int durationSeconds,  double? weightKg)  timeBased,}) {final _that = this;
 switch (_that) {
 case PlanDraftSetRepBased():
-return repBased(_that.count,_that.reps,_that.weightKg);case PlanDraftSetTimeBased():
+return repBased(_that.count,_that.repTarget,_that.weightKg);case PlanDraftSetTimeBased():
 return timeBased(_that.count,_that.durationSeconds,_that.weightKg);}
 }
 /// A variant of `when` that fallback to returning `null`
@@ -1273,10 +1273,10 @@ return timeBased(_that.count,_that.durationSeconds,_that.weightKg);}
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>({TResult? Function( int count,  int reps,  double weightKg)?  repBased,TResult? Function( int count,  int durationSeconds,  double? weightKg)?  timeBased,}) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>({TResult? Function( int count,  RepTarget repTarget,  double weightKg)?  repBased,TResult? Function( int count,  int durationSeconds,  double? weightKg)?  timeBased,}) {final _that = this;
 switch (_that) {
 case PlanDraftSetRepBased() when repBased != null:
-return repBased(_that.count,_that.reps,_that.weightKg);case PlanDraftSetTimeBased() when timeBased != null:
+return repBased(_that.count,_that.repTarget,_that.weightKg);case PlanDraftSetTimeBased() when timeBased != null:
 return timeBased(_that.count,_that.durationSeconds,_that.weightKg);case _:
   return null;
 
@@ -1289,11 +1289,11 @@ return timeBased(_that.count,_that.durationSeconds,_that.weightKg);case _:
 
 
 class PlanDraftSetRepBased implements PlanDraftSet {
-  const PlanDraftSetRepBased({required this.count, required this.reps, required this.weightKg});
+  const PlanDraftSetRepBased({required this.count, required this.repTarget, required this.weightKg});
   
 
 @override final  int count;
- final  int reps;
+ final  RepTarget repTarget;
 @override final  double weightKg;
 
 /// Create a copy of PlanDraftSet
@@ -1306,16 +1306,16 @@ $PlanDraftSetRepBasedCopyWith<PlanDraftSetRepBased> get copyWith => _$PlanDraftS
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is PlanDraftSetRepBased&&(identical(other.count, count) || other.count == count)&&(identical(other.reps, reps) || other.reps == reps)&&(identical(other.weightKg, weightKg) || other.weightKg == weightKg));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is PlanDraftSetRepBased&&(identical(other.count, count) || other.count == count)&&(identical(other.repTarget, repTarget) || other.repTarget == repTarget)&&(identical(other.weightKg, weightKg) || other.weightKg == weightKg));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,count,reps,weightKg);
+int get hashCode => Object.hash(runtimeType,count,repTarget,weightKg);
 
 @override
 String toString() {
-  return 'PlanDraftSet.repBased(count: $count, reps: $reps, weightKg: $weightKg)';
+  return 'PlanDraftSet.repBased(count: $count, repTarget: $repTarget, weightKg: $weightKg)';
 }
 
 
@@ -1326,11 +1326,11 @@ abstract mixin class $PlanDraftSetRepBasedCopyWith<$Res> implements $PlanDraftSe
   factory $PlanDraftSetRepBasedCopyWith(PlanDraftSetRepBased value, $Res Function(PlanDraftSetRepBased) _then) = _$PlanDraftSetRepBasedCopyWithImpl;
 @override @useResult
 $Res call({
- int count, int reps, double weightKg
+ int count, RepTarget repTarget, double weightKg
 });
 
 
-
+$RepTargetCopyWith<$Res> get repTarget;
 
 }
 /// @nodoc
@@ -1343,16 +1343,25 @@ class _$PlanDraftSetRepBasedCopyWithImpl<$Res>
 
 /// Create a copy of PlanDraftSet
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? count = null,Object? reps = null,Object? weightKg = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? count = null,Object? repTarget = null,Object? weightKg = null,}) {
   return _then(PlanDraftSetRepBased(
 count: null == count ? _self.count : count // ignore: cast_nullable_to_non_nullable
-as int,reps: null == reps ? _self.reps : reps // ignore: cast_nullable_to_non_nullable
-as int,weightKg: null == weightKg ? _self.weightKg : weightKg // ignore: cast_nullable_to_non_nullable
+as int,repTarget: null == repTarget ? _self.repTarget : repTarget // ignore: cast_nullable_to_non_nullable
+as RepTarget,weightKg: null == weightKg ? _self.weightKg : weightKg // ignore: cast_nullable_to_non_nullable
 as double,
   ));
 }
 
-
+/// Create a copy of PlanDraftSet
+/// with the given fields replaced by the non-null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$RepTargetCopyWith<$Res> get repTarget {
+  
+  return $RepTargetCopyWith<$Res>(_self.repTarget, (value) {
+    return _then(_self.copyWith(repTarget: value));
+  });
+}
 }
 
 /// @nodoc

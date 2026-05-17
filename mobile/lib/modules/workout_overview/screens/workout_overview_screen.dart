@@ -808,7 +808,9 @@ class _LoadedAppBarTitle extends StatelessWidget {
           children: [
             Text(
               '${counts.done} of ${counts.total}',
-              style: typography.numericSm.copyWith(color: colors.onSurfaceMuted),
+              style: typography.numericSm.copyWith(
+                color: colors.onSurfaceMuted,
+              ),
             ),
             Text(
               '  ·  ',

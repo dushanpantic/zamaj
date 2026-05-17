@@ -61,9 +61,9 @@ class _PlanImportScreenState extends State<PlanImportScreen> {
     final text = data?.text;
     if (text == null || text.isEmpty) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Clipboard is empty')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Clipboard is empty')));
       return;
     }
     _controller.text = text;
@@ -127,9 +127,8 @@ class _PlanImportScreenState extends State<PlanImportScreen> {
                   const SizedBox(height: AppSpacing.md),
                   _ExampleDisclosure(
                     expanded: _exampleExpanded,
-                    onToggle: () => setState(
-                      () => _exampleExpanded = !_exampleExpanded,
-                    ),
+                    onToggle: () =>
+                        setState(() => _exampleExpanded = !_exampleExpanded),
                     onUseExample: isParsing ? null : _useExample,
                   ),
                   const SizedBox(height: AppSpacing.lg),

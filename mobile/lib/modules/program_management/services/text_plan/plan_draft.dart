@@ -1,4 +1,5 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
+import 'package:zamaj/modules/domain/models/rep_target.dart';
 import 'package:zamaj/modules/program_management/services/text_plan/plan_parse_warning.dart';
 
 part 'plan_draft.freezed.dart';
@@ -42,7 +43,7 @@ abstract class PlanDraftExercise with _$PlanDraftExercise {
 sealed class PlanDraftSet with _$PlanDraftSet {
   const factory PlanDraftSet.repBased({
     required int count,
-    required int reps,
+    required RepTarget repTarget,
     required double weightKg,
   }) = PlanDraftSetRepBased;
 

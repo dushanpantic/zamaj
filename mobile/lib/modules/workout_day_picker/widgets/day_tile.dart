@@ -67,7 +67,9 @@ class DayTile extends StatelessWidget {
                         overflow: TextOverflow.ellipsis,
                       ),
                     ),
-                    if (viewModel.status case DayTileLoaded(:final summary)) ...[
+                    if (viewModel.status case DayTileLoaded(
+                      :final summary,
+                    )) ...[
                       const SizedBox(width: AppSpacing.sm),
                       DayRecommendationBadge(
                         summary: summary,
