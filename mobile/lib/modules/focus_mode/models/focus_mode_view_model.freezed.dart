@@ -14,28 +14,28 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$FocusModeViewModel {
 
- String get sessionId; String get workoutDayName; String get sessionExerciseId; String get displayExerciseName; ExerciseMetadata? get displayMetadata; MeasurementType get effectiveMeasurementType;/// 0-based index of the set the user is about to log. Matches
-/// `Cursor.active.setIndex`.
- int get currentSetIndex;/// Number of planned sets on the planned exercise. May be 0 for
-/// snapshot-only planned exercises that were stripped of sets.
- int get totalPlannedSets;/// Always equals `executedSets.length` for the cursor exercise.
- int get completedSetsCount;/// Planned values for the current set index, or null if the cursor is
-/// past the planned set list (extra sets being logged on a replaced
-/// exercise).
+ String get sessionExerciseId; String get displayExerciseName; ExerciseMetadata? get displayMetadata; MeasurementType get effectiveMeasurementType;/// 0-based index of the set the user is about to log on this exercise.
+/// Equals `executedSets.length` for loggable panels; equals
+/// `plannedSetCount` for completed panels (past the last planned slot).
+ int get currentSetIndex;/// Number of planned sets for this exercise. May be 0 for snapshot-only
+/// planned exercises that were stripped of sets.
+ int get totalPlannedSets;/// Always equals `executedSets.length` for the panel exercise.
+ int get completedSetsCount;/// Planned values for the current set index, or null when the panel is
+/// past the planned set list (e.g. completed, or extra sets on a
+/// replaced exercise).
  PlannedSetValues? get currentPlannedValues;/// Pre-formatted "100kg 4 × 8" summary of all planned sets.
  String get plannedSummary;/// Identity of the planned set being targeted; copied onto the logged
 /// [ExecutedSet] when known.
- String? get currentPlannedSetIdInSnapshot;/// Actual values from the last completed set, used to show "Last: …"
-/// and to seed the editor. Null when [currentSetIndex] == 0.
- ActualSetValues? get lastExecutedValues;/// Display name of the next exercise after the cursor (skipping
-/// non-actionable states), or null if none remain.
- String? get upNextExerciseName;/// Coach-defined rest, propagated from the planned exercise. Drives the
-/// inline rest-timer planned/remaining display.
- int? get plannedRestSeconds;/// True if the cursor exercise is currently in `replaced` state. Drives
-/// the "Replaced from …" annotation.
+ String? get currentPlannedSetIdInSnapshot;/// Actual values from the last completed set on this exercise.
+ ActualSetValues? get lastExecutedValues;/// Coach-defined rest, propagated from the planned exercise. Drives the
+/// shared rest-timer's planned/remaining display.
+ int? get plannedRestSeconds;/// True if the panel exercise is currently in `replaced` state.
  bool get isReplaced;/// Original planned exercise name; relevant when [isReplaced] is true
 /// so the UI can show "Replaced from <plannedName>".
- String get plannedExerciseName;
+ String get plannedExerciseName;/// True when the user can still log a working set on this exercise —
+/// i.e. state is `unfinished` or `replaced` and `executedSets.length <
+/// plannedSetCount`. False for completed/skipped panels.
+ bool get isLoggable;
 /// Create a copy of FocusModeViewModel
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -46,16 +46,16 @@ $FocusModeViewModelCopyWith<FocusModeViewModel> get copyWith => _$FocusModeViewM
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is FocusModeViewModel&&(identical(other.sessionId, sessionId) || other.sessionId == sessionId)&&(identical(other.workoutDayName, workoutDayName) || other.workoutDayName == workoutDayName)&&(identical(other.sessionExerciseId, sessionExerciseId) || other.sessionExerciseId == sessionExerciseId)&&(identical(other.displayExerciseName, displayExerciseName) || other.displayExerciseName == displayExerciseName)&&(identical(other.displayMetadata, displayMetadata) || other.displayMetadata == displayMetadata)&&(identical(other.effectiveMeasurementType, effectiveMeasurementType) || other.effectiveMeasurementType == effectiveMeasurementType)&&(identical(other.currentSetIndex, currentSetIndex) || other.currentSetIndex == currentSetIndex)&&(identical(other.totalPlannedSets, totalPlannedSets) || other.totalPlannedSets == totalPlannedSets)&&(identical(other.completedSetsCount, completedSetsCount) || other.completedSetsCount == completedSetsCount)&&(identical(other.currentPlannedValues, currentPlannedValues) || other.currentPlannedValues == currentPlannedValues)&&(identical(other.plannedSummary, plannedSummary) || other.plannedSummary == plannedSummary)&&(identical(other.currentPlannedSetIdInSnapshot, currentPlannedSetIdInSnapshot) || other.currentPlannedSetIdInSnapshot == currentPlannedSetIdInSnapshot)&&(identical(other.lastExecutedValues, lastExecutedValues) || other.lastExecutedValues == lastExecutedValues)&&(identical(other.upNextExerciseName, upNextExerciseName) || other.upNextExerciseName == upNextExerciseName)&&(identical(other.plannedRestSeconds, plannedRestSeconds) || other.plannedRestSeconds == plannedRestSeconds)&&(identical(other.isReplaced, isReplaced) || other.isReplaced == isReplaced)&&(identical(other.plannedExerciseName, plannedExerciseName) || other.plannedExerciseName == plannedExerciseName));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is FocusModeViewModel&&(identical(other.sessionExerciseId, sessionExerciseId) || other.sessionExerciseId == sessionExerciseId)&&(identical(other.displayExerciseName, displayExerciseName) || other.displayExerciseName == displayExerciseName)&&(identical(other.displayMetadata, displayMetadata) || other.displayMetadata == displayMetadata)&&(identical(other.effectiveMeasurementType, effectiveMeasurementType) || other.effectiveMeasurementType == effectiveMeasurementType)&&(identical(other.currentSetIndex, currentSetIndex) || other.currentSetIndex == currentSetIndex)&&(identical(other.totalPlannedSets, totalPlannedSets) || other.totalPlannedSets == totalPlannedSets)&&(identical(other.completedSetsCount, completedSetsCount) || other.completedSetsCount == completedSetsCount)&&(identical(other.currentPlannedValues, currentPlannedValues) || other.currentPlannedValues == currentPlannedValues)&&(identical(other.plannedSummary, plannedSummary) || other.plannedSummary == plannedSummary)&&(identical(other.currentPlannedSetIdInSnapshot, currentPlannedSetIdInSnapshot) || other.currentPlannedSetIdInSnapshot == currentPlannedSetIdInSnapshot)&&(identical(other.lastExecutedValues, lastExecutedValues) || other.lastExecutedValues == lastExecutedValues)&&(identical(other.plannedRestSeconds, plannedRestSeconds) || other.plannedRestSeconds == plannedRestSeconds)&&(identical(other.isReplaced, isReplaced) || other.isReplaced == isReplaced)&&(identical(other.plannedExerciseName, plannedExerciseName) || other.plannedExerciseName == plannedExerciseName)&&(identical(other.isLoggable, isLoggable) || other.isLoggable == isLoggable));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,sessionId,workoutDayName,sessionExerciseId,displayExerciseName,displayMetadata,effectiveMeasurementType,currentSetIndex,totalPlannedSets,completedSetsCount,currentPlannedValues,plannedSummary,currentPlannedSetIdInSnapshot,lastExecutedValues,upNextExerciseName,plannedRestSeconds,isReplaced,plannedExerciseName);
+int get hashCode => Object.hash(runtimeType,sessionExerciseId,displayExerciseName,displayMetadata,effectiveMeasurementType,currentSetIndex,totalPlannedSets,completedSetsCount,currentPlannedValues,plannedSummary,currentPlannedSetIdInSnapshot,lastExecutedValues,plannedRestSeconds,isReplaced,plannedExerciseName,isLoggable);
 
 @override
 String toString() {
-  return 'FocusModeViewModel(sessionId: $sessionId, workoutDayName: $workoutDayName, sessionExerciseId: $sessionExerciseId, displayExerciseName: $displayExerciseName, displayMetadata: $displayMetadata, effectiveMeasurementType: $effectiveMeasurementType, currentSetIndex: $currentSetIndex, totalPlannedSets: $totalPlannedSets, completedSetsCount: $completedSetsCount, currentPlannedValues: $currentPlannedValues, plannedSummary: $plannedSummary, currentPlannedSetIdInSnapshot: $currentPlannedSetIdInSnapshot, lastExecutedValues: $lastExecutedValues, upNextExerciseName: $upNextExerciseName, plannedRestSeconds: $plannedRestSeconds, isReplaced: $isReplaced, plannedExerciseName: $plannedExerciseName)';
+  return 'FocusModeViewModel(sessionExerciseId: $sessionExerciseId, displayExerciseName: $displayExerciseName, displayMetadata: $displayMetadata, effectiveMeasurementType: $effectiveMeasurementType, currentSetIndex: $currentSetIndex, totalPlannedSets: $totalPlannedSets, completedSetsCount: $completedSetsCount, currentPlannedValues: $currentPlannedValues, plannedSummary: $plannedSummary, currentPlannedSetIdInSnapshot: $currentPlannedSetIdInSnapshot, lastExecutedValues: $lastExecutedValues, plannedRestSeconds: $plannedRestSeconds, isReplaced: $isReplaced, plannedExerciseName: $plannedExerciseName, isLoggable: $isLoggable)';
 }
 
 
@@ -66,7 +66,7 @@ abstract mixin class $FocusModeViewModelCopyWith<$Res>  {
   factory $FocusModeViewModelCopyWith(FocusModeViewModel value, $Res Function(FocusModeViewModel) _then) = _$FocusModeViewModelCopyWithImpl;
 @useResult
 $Res call({
- String sessionId, String workoutDayName, String sessionExerciseId, String displayExerciseName, ExerciseMetadata? displayMetadata, MeasurementType effectiveMeasurementType, int currentSetIndex, int totalPlannedSets, int completedSetsCount, PlannedSetValues? currentPlannedValues, String plannedSummary, String? currentPlannedSetIdInSnapshot, ActualSetValues? lastExecutedValues, String? upNextExerciseName, int? plannedRestSeconds, bool isReplaced, String plannedExerciseName
+ String sessionExerciseId, String displayExerciseName, ExerciseMetadata? displayMetadata, MeasurementType effectiveMeasurementType, int currentSetIndex, int totalPlannedSets, int completedSetsCount, PlannedSetValues? currentPlannedValues, String plannedSummary, String? currentPlannedSetIdInSnapshot, ActualSetValues? lastExecutedValues, int? plannedRestSeconds, bool isReplaced, String plannedExerciseName, bool isLoggable
 });
 
 
@@ -83,11 +83,9 @@ class _$FocusModeViewModelCopyWithImpl<$Res>
 
 /// Create a copy of FocusModeViewModel
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? sessionId = null,Object? workoutDayName = null,Object? sessionExerciseId = null,Object? displayExerciseName = null,Object? displayMetadata = freezed,Object? effectiveMeasurementType = null,Object? currentSetIndex = null,Object? totalPlannedSets = null,Object? completedSetsCount = null,Object? currentPlannedValues = freezed,Object? plannedSummary = null,Object? currentPlannedSetIdInSnapshot = freezed,Object? lastExecutedValues = freezed,Object? upNextExerciseName = freezed,Object? plannedRestSeconds = freezed,Object? isReplaced = null,Object? plannedExerciseName = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? sessionExerciseId = null,Object? displayExerciseName = null,Object? displayMetadata = freezed,Object? effectiveMeasurementType = null,Object? currentSetIndex = null,Object? totalPlannedSets = null,Object? completedSetsCount = null,Object? currentPlannedValues = freezed,Object? plannedSummary = null,Object? currentPlannedSetIdInSnapshot = freezed,Object? lastExecutedValues = freezed,Object? plannedRestSeconds = freezed,Object? isReplaced = null,Object? plannedExerciseName = null,Object? isLoggable = null,}) {
   return _then(_self.copyWith(
-sessionId: null == sessionId ? _self.sessionId : sessionId // ignore: cast_nullable_to_non_nullable
-as String,workoutDayName: null == workoutDayName ? _self.workoutDayName : workoutDayName // ignore: cast_nullable_to_non_nullable
-as String,sessionExerciseId: null == sessionExerciseId ? _self.sessionExerciseId : sessionExerciseId // ignore: cast_nullable_to_non_nullable
+sessionExerciseId: null == sessionExerciseId ? _self.sessionExerciseId : sessionExerciseId // ignore: cast_nullable_to_non_nullable
 as String,displayExerciseName: null == displayExerciseName ? _self.displayExerciseName : displayExerciseName // ignore: cast_nullable_to_non_nullable
 as String,displayMetadata: freezed == displayMetadata ? _self.displayMetadata : displayMetadata // ignore: cast_nullable_to_non_nullable
 as ExerciseMetadata?,effectiveMeasurementType: null == effectiveMeasurementType ? _self.effectiveMeasurementType : effectiveMeasurementType // ignore: cast_nullable_to_non_nullable
@@ -98,11 +96,11 @@ as int,currentPlannedValues: freezed == currentPlannedValues ? _self.currentPlan
 as PlannedSetValues?,plannedSummary: null == plannedSummary ? _self.plannedSummary : plannedSummary // ignore: cast_nullable_to_non_nullable
 as String,currentPlannedSetIdInSnapshot: freezed == currentPlannedSetIdInSnapshot ? _self.currentPlannedSetIdInSnapshot : currentPlannedSetIdInSnapshot // ignore: cast_nullable_to_non_nullable
 as String?,lastExecutedValues: freezed == lastExecutedValues ? _self.lastExecutedValues : lastExecutedValues // ignore: cast_nullable_to_non_nullable
-as ActualSetValues?,upNextExerciseName: freezed == upNextExerciseName ? _self.upNextExerciseName : upNextExerciseName // ignore: cast_nullable_to_non_nullable
-as String?,plannedRestSeconds: freezed == plannedRestSeconds ? _self.plannedRestSeconds : plannedRestSeconds // ignore: cast_nullable_to_non_nullable
+as ActualSetValues?,plannedRestSeconds: freezed == plannedRestSeconds ? _self.plannedRestSeconds : plannedRestSeconds // ignore: cast_nullable_to_non_nullable
 as int?,isReplaced: null == isReplaced ? _self.isReplaced : isReplaced // ignore: cast_nullable_to_non_nullable
 as bool,plannedExerciseName: null == plannedExerciseName ? _self.plannedExerciseName : plannedExerciseName // ignore: cast_nullable_to_non_nullable
-as String,
+as String,isLoggable: null == isLoggable ? _self.isLoggable : isLoggable // ignore: cast_nullable_to_non_nullable
+as bool,
   ));
 }
 /// Create a copy of FocusModeViewModel
@@ -232,10 +230,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String sessionId,  String workoutDayName,  String sessionExerciseId,  String displayExerciseName,  ExerciseMetadata? displayMetadata,  MeasurementType effectiveMeasurementType,  int currentSetIndex,  int totalPlannedSets,  int completedSetsCount,  PlannedSetValues? currentPlannedValues,  String plannedSummary,  String? currentPlannedSetIdInSnapshot,  ActualSetValues? lastExecutedValues,  String? upNextExerciseName,  int? plannedRestSeconds,  bool isReplaced,  String plannedExerciseName)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String sessionExerciseId,  String displayExerciseName,  ExerciseMetadata? displayMetadata,  MeasurementType effectiveMeasurementType,  int currentSetIndex,  int totalPlannedSets,  int completedSetsCount,  PlannedSetValues? currentPlannedValues,  String plannedSummary,  String? currentPlannedSetIdInSnapshot,  ActualSetValues? lastExecutedValues,  int? plannedRestSeconds,  bool isReplaced,  String plannedExerciseName,  bool isLoggable)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _FocusModeViewModel() when $default != null:
-return $default(_that.sessionId,_that.workoutDayName,_that.sessionExerciseId,_that.displayExerciseName,_that.displayMetadata,_that.effectiveMeasurementType,_that.currentSetIndex,_that.totalPlannedSets,_that.completedSetsCount,_that.currentPlannedValues,_that.plannedSummary,_that.currentPlannedSetIdInSnapshot,_that.lastExecutedValues,_that.upNextExerciseName,_that.plannedRestSeconds,_that.isReplaced,_that.plannedExerciseName);case _:
+return $default(_that.sessionExerciseId,_that.displayExerciseName,_that.displayMetadata,_that.effectiveMeasurementType,_that.currentSetIndex,_that.totalPlannedSets,_that.completedSetsCount,_that.currentPlannedValues,_that.plannedSummary,_that.currentPlannedSetIdInSnapshot,_that.lastExecutedValues,_that.plannedRestSeconds,_that.isReplaced,_that.plannedExerciseName,_that.isLoggable);case _:
   return orElse();
 
 }
@@ -253,10 +251,10 @@ return $default(_that.sessionId,_that.workoutDayName,_that.sessionExerciseId,_th
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String sessionId,  String workoutDayName,  String sessionExerciseId,  String displayExerciseName,  ExerciseMetadata? displayMetadata,  MeasurementType effectiveMeasurementType,  int currentSetIndex,  int totalPlannedSets,  int completedSetsCount,  PlannedSetValues? currentPlannedValues,  String plannedSummary,  String? currentPlannedSetIdInSnapshot,  ActualSetValues? lastExecutedValues,  String? upNextExerciseName,  int? plannedRestSeconds,  bool isReplaced,  String plannedExerciseName)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String sessionExerciseId,  String displayExerciseName,  ExerciseMetadata? displayMetadata,  MeasurementType effectiveMeasurementType,  int currentSetIndex,  int totalPlannedSets,  int completedSetsCount,  PlannedSetValues? currentPlannedValues,  String plannedSummary,  String? currentPlannedSetIdInSnapshot,  ActualSetValues? lastExecutedValues,  int? plannedRestSeconds,  bool isReplaced,  String plannedExerciseName,  bool isLoggable)  $default,) {final _that = this;
 switch (_that) {
 case _FocusModeViewModel():
-return $default(_that.sessionId,_that.workoutDayName,_that.sessionExerciseId,_that.displayExerciseName,_that.displayMetadata,_that.effectiveMeasurementType,_that.currentSetIndex,_that.totalPlannedSets,_that.completedSetsCount,_that.currentPlannedValues,_that.plannedSummary,_that.currentPlannedSetIdInSnapshot,_that.lastExecutedValues,_that.upNextExerciseName,_that.plannedRestSeconds,_that.isReplaced,_that.plannedExerciseName);case _:
+return $default(_that.sessionExerciseId,_that.displayExerciseName,_that.displayMetadata,_that.effectiveMeasurementType,_that.currentSetIndex,_that.totalPlannedSets,_that.completedSetsCount,_that.currentPlannedValues,_that.plannedSummary,_that.currentPlannedSetIdInSnapshot,_that.lastExecutedValues,_that.plannedRestSeconds,_that.isReplaced,_that.plannedExerciseName,_that.isLoggable);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -273,10 +271,10 @@ return $default(_that.sessionId,_that.workoutDayName,_that.sessionExerciseId,_th
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String sessionId,  String workoutDayName,  String sessionExerciseId,  String displayExerciseName,  ExerciseMetadata? displayMetadata,  MeasurementType effectiveMeasurementType,  int currentSetIndex,  int totalPlannedSets,  int completedSetsCount,  PlannedSetValues? currentPlannedValues,  String plannedSummary,  String? currentPlannedSetIdInSnapshot,  ActualSetValues? lastExecutedValues,  String? upNextExerciseName,  int? plannedRestSeconds,  bool isReplaced,  String plannedExerciseName)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String sessionExerciseId,  String displayExerciseName,  ExerciseMetadata? displayMetadata,  MeasurementType effectiveMeasurementType,  int currentSetIndex,  int totalPlannedSets,  int completedSetsCount,  PlannedSetValues? currentPlannedValues,  String plannedSummary,  String? currentPlannedSetIdInSnapshot,  ActualSetValues? lastExecutedValues,  int? plannedRestSeconds,  bool isReplaced,  String plannedExerciseName,  bool isLoggable)?  $default,) {final _that = this;
 switch (_that) {
 case _FocusModeViewModel() when $default != null:
-return $default(_that.sessionId,_that.workoutDayName,_that.sessionExerciseId,_that.displayExerciseName,_that.displayMetadata,_that.effectiveMeasurementType,_that.currentSetIndex,_that.totalPlannedSets,_that.completedSetsCount,_that.currentPlannedValues,_that.plannedSummary,_that.currentPlannedSetIdInSnapshot,_that.lastExecutedValues,_that.upNextExerciseName,_that.plannedRestSeconds,_that.isReplaced,_that.plannedExerciseName);case _:
+return $default(_that.sessionExerciseId,_that.displayExerciseName,_that.displayMetadata,_that.effectiveMeasurementType,_that.currentSetIndex,_that.totalPlannedSets,_that.completedSetsCount,_that.currentPlannedValues,_that.plannedSummary,_that.currentPlannedSetIdInSnapshot,_that.lastExecutedValues,_that.plannedRestSeconds,_that.isReplaced,_that.plannedExerciseName,_that.isLoggable);case _:
   return null;
 
 }
@@ -288,47 +286,45 @@ return $default(_that.sessionId,_that.workoutDayName,_that.sessionExerciseId,_th
 
 
 class _FocusModeViewModel implements FocusModeViewModel {
-  const _FocusModeViewModel({required this.sessionId, required this.workoutDayName, required this.sessionExerciseId, required this.displayExerciseName, required this.displayMetadata, required this.effectiveMeasurementType, required this.currentSetIndex, required this.totalPlannedSets, required this.completedSetsCount, required this.currentPlannedValues, required this.plannedSummary, required this.currentPlannedSetIdInSnapshot, required this.lastExecutedValues, required this.upNextExerciseName, required this.plannedRestSeconds, required this.isReplaced, required this.plannedExerciseName});
+  const _FocusModeViewModel({required this.sessionExerciseId, required this.displayExerciseName, required this.displayMetadata, required this.effectiveMeasurementType, required this.currentSetIndex, required this.totalPlannedSets, required this.completedSetsCount, required this.currentPlannedValues, required this.plannedSummary, required this.currentPlannedSetIdInSnapshot, required this.lastExecutedValues, required this.plannedRestSeconds, required this.isReplaced, required this.plannedExerciseName, required this.isLoggable});
   
 
-@override final  String sessionId;
-@override final  String workoutDayName;
 @override final  String sessionExerciseId;
 @override final  String displayExerciseName;
 @override final  ExerciseMetadata? displayMetadata;
 @override final  MeasurementType effectiveMeasurementType;
-/// 0-based index of the set the user is about to log. Matches
-/// `Cursor.active.setIndex`.
+/// 0-based index of the set the user is about to log on this exercise.
+/// Equals `executedSets.length` for loggable panels; equals
+/// `plannedSetCount` for completed panels (past the last planned slot).
 @override final  int currentSetIndex;
-/// Number of planned sets on the planned exercise. May be 0 for
-/// snapshot-only planned exercises that were stripped of sets.
+/// Number of planned sets for this exercise. May be 0 for snapshot-only
+/// planned exercises that were stripped of sets.
 @override final  int totalPlannedSets;
-/// Always equals `executedSets.length` for the cursor exercise.
+/// Always equals `executedSets.length` for the panel exercise.
 @override final  int completedSetsCount;
-/// Planned values for the current set index, or null if the cursor is
-/// past the planned set list (extra sets being logged on a replaced
-/// exercise).
+/// Planned values for the current set index, or null when the panel is
+/// past the planned set list (e.g. completed, or extra sets on a
+/// replaced exercise).
 @override final  PlannedSetValues? currentPlannedValues;
 /// Pre-formatted "100kg 4 × 8" summary of all planned sets.
 @override final  String plannedSummary;
 /// Identity of the planned set being targeted; copied onto the logged
 /// [ExecutedSet] when known.
 @override final  String? currentPlannedSetIdInSnapshot;
-/// Actual values from the last completed set, used to show "Last: …"
-/// and to seed the editor. Null when [currentSetIndex] == 0.
+/// Actual values from the last completed set on this exercise.
 @override final  ActualSetValues? lastExecutedValues;
-/// Display name of the next exercise after the cursor (skipping
-/// non-actionable states), or null if none remain.
-@override final  String? upNextExerciseName;
 /// Coach-defined rest, propagated from the planned exercise. Drives the
-/// inline rest-timer planned/remaining display.
+/// shared rest-timer's planned/remaining display.
 @override final  int? plannedRestSeconds;
-/// True if the cursor exercise is currently in `replaced` state. Drives
-/// the "Replaced from …" annotation.
+/// True if the panel exercise is currently in `replaced` state.
 @override final  bool isReplaced;
 /// Original planned exercise name; relevant when [isReplaced] is true
 /// so the UI can show "Replaced from <plannedName>".
 @override final  String plannedExerciseName;
+/// True when the user can still log a working set on this exercise —
+/// i.e. state is `unfinished` or `replaced` and `executedSets.length <
+/// plannedSetCount`. False for completed/skipped panels.
+@override final  bool isLoggable;
 
 /// Create a copy of FocusModeViewModel
 /// with the given fields replaced by the non-null parameter values.
@@ -340,16 +336,16 @@ _$FocusModeViewModelCopyWith<_FocusModeViewModel> get copyWith => __$FocusModeVi
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _FocusModeViewModel&&(identical(other.sessionId, sessionId) || other.sessionId == sessionId)&&(identical(other.workoutDayName, workoutDayName) || other.workoutDayName == workoutDayName)&&(identical(other.sessionExerciseId, sessionExerciseId) || other.sessionExerciseId == sessionExerciseId)&&(identical(other.displayExerciseName, displayExerciseName) || other.displayExerciseName == displayExerciseName)&&(identical(other.displayMetadata, displayMetadata) || other.displayMetadata == displayMetadata)&&(identical(other.effectiveMeasurementType, effectiveMeasurementType) || other.effectiveMeasurementType == effectiveMeasurementType)&&(identical(other.currentSetIndex, currentSetIndex) || other.currentSetIndex == currentSetIndex)&&(identical(other.totalPlannedSets, totalPlannedSets) || other.totalPlannedSets == totalPlannedSets)&&(identical(other.completedSetsCount, completedSetsCount) || other.completedSetsCount == completedSetsCount)&&(identical(other.currentPlannedValues, currentPlannedValues) || other.currentPlannedValues == currentPlannedValues)&&(identical(other.plannedSummary, plannedSummary) || other.plannedSummary == plannedSummary)&&(identical(other.currentPlannedSetIdInSnapshot, currentPlannedSetIdInSnapshot) || other.currentPlannedSetIdInSnapshot == currentPlannedSetIdInSnapshot)&&(identical(other.lastExecutedValues, lastExecutedValues) || other.lastExecutedValues == lastExecutedValues)&&(identical(other.upNextExerciseName, upNextExerciseName) || other.upNextExerciseName == upNextExerciseName)&&(identical(other.plannedRestSeconds, plannedRestSeconds) || other.plannedRestSeconds == plannedRestSeconds)&&(identical(other.isReplaced, isReplaced) || other.isReplaced == isReplaced)&&(identical(other.plannedExerciseName, plannedExerciseName) || other.plannedExerciseName == plannedExerciseName));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _FocusModeViewModel&&(identical(other.sessionExerciseId, sessionExerciseId) || other.sessionExerciseId == sessionExerciseId)&&(identical(other.displayExerciseName, displayExerciseName) || other.displayExerciseName == displayExerciseName)&&(identical(other.displayMetadata, displayMetadata) || other.displayMetadata == displayMetadata)&&(identical(other.effectiveMeasurementType, effectiveMeasurementType) || other.effectiveMeasurementType == effectiveMeasurementType)&&(identical(other.currentSetIndex, currentSetIndex) || other.currentSetIndex == currentSetIndex)&&(identical(other.totalPlannedSets, totalPlannedSets) || other.totalPlannedSets == totalPlannedSets)&&(identical(other.completedSetsCount, completedSetsCount) || other.completedSetsCount == completedSetsCount)&&(identical(other.currentPlannedValues, currentPlannedValues) || other.currentPlannedValues == currentPlannedValues)&&(identical(other.plannedSummary, plannedSummary) || other.plannedSummary == plannedSummary)&&(identical(other.currentPlannedSetIdInSnapshot, currentPlannedSetIdInSnapshot) || other.currentPlannedSetIdInSnapshot == currentPlannedSetIdInSnapshot)&&(identical(other.lastExecutedValues, lastExecutedValues) || other.lastExecutedValues == lastExecutedValues)&&(identical(other.plannedRestSeconds, plannedRestSeconds) || other.plannedRestSeconds == plannedRestSeconds)&&(identical(other.isReplaced, isReplaced) || other.isReplaced == isReplaced)&&(identical(other.plannedExerciseName, plannedExerciseName) || other.plannedExerciseName == plannedExerciseName)&&(identical(other.isLoggable, isLoggable) || other.isLoggable == isLoggable));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,sessionId,workoutDayName,sessionExerciseId,displayExerciseName,displayMetadata,effectiveMeasurementType,currentSetIndex,totalPlannedSets,completedSetsCount,currentPlannedValues,plannedSummary,currentPlannedSetIdInSnapshot,lastExecutedValues,upNextExerciseName,plannedRestSeconds,isReplaced,plannedExerciseName);
+int get hashCode => Object.hash(runtimeType,sessionExerciseId,displayExerciseName,displayMetadata,effectiveMeasurementType,currentSetIndex,totalPlannedSets,completedSetsCount,currentPlannedValues,plannedSummary,currentPlannedSetIdInSnapshot,lastExecutedValues,plannedRestSeconds,isReplaced,plannedExerciseName,isLoggable);
 
 @override
 String toString() {
-  return 'FocusModeViewModel(sessionId: $sessionId, workoutDayName: $workoutDayName, sessionExerciseId: $sessionExerciseId, displayExerciseName: $displayExerciseName, displayMetadata: $displayMetadata, effectiveMeasurementType: $effectiveMeasurementType, currentSetIndex: $currentSetIndex, totalPlannedSets: $totalPlannedSets, completedSetsCount: $completedSetsCount, currentPlannedValues: $currentPlannedValues, plannedSummary: $plannedSummary, currentPlannedSetIdInSnapshot: $currentPlannedSetIdInSnapshot, lastExecutedValues: $lastExecutedValues, upNextExerciseName: $upNextExerciseName, plannedRestSeconds: $plannedRestSeconds, isReplaced: $isReplaced, plannedExerciseName: $plannedExerciseName)';
+  return 'FocusModeViewModel(sessionExerciseId: $sessionExerciseId, displayExerciseName: $displayExerciseName, displayMetadata: $displayMetadata, effectiveMeasurementType: $effectiveMeasurementType, currentSetIndex: $currentSetIndex, totalPlannedSets: $totalPlannedSets, completedSetsCount: $completedSetsCount, currentPlannedValues: $currentPlannedValues, plannedSummary: $plannedSummary, currentPlannedSetIdInSnapshot: $currentPlannedSetIdInSnapshot, lastExecutedValues: $lastExecutedValues, plannedRestSeconds: $plannedRestSeconds, isReplaced: $isReplaced, plannedExerciseName: $plannedExerciseName, isLoggable: $isLoggable)';
 }
 
 
@@ -360,7 +356,7 @@ abstract mixin class _$FocusModeViewModelCopyWith<$Res> implements $FocusModeVie
   factory _$FocusModeViewModelCopyWith(_FocusModeViewModel value, $Res Function(_FocusModeViewModel) _then) = __$FocusModeViewModelCopyWithImpl;
 @override @useResult
 $Res call({
- String sessionId, String workoutDayName, String sessionExerciseId, String displayExerciseName, ExerciseMetadata? displayMetadata, MeasurementType effectiveMeasurementType, int currentSetIndex, int totalPlannedSets, int completedSetsCount, PlannedSetValues? currentPlannedValues, String plannedSummary, String? currentPlannedSetIdInSnapshot, ActualSetValues? lastExecutedValues, String? upNextExerciseName, int? plannedRestSeconds, bool isReplaced, String plannedExerciseName
+ String sessionExerciseId, String displayExerciseName, ExerciseMetadata? displayMetadata, MeasurementType effectiveMeasurementType, int currentSetIndex, int totalPlannedSets, int completedSetsCount, PlannedSetValues? currentPlannedValues, String plannedSummary, String? currentPlannedSetIdInSnapshot, ActualSetValues? lastExecutedValues, int? plannedRestSeconds, bool isReplaced, String plannedExerciseName, bool isLoggable
 });
 
 
@@ -377,11 +373,9 @@ class __$FocusModeViewModelCopyWithImpl<$Res>
 
 /// Create a copy of FocusModeViewModel
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? sessionId = null,Object? workoutDayName = null,Object? sessionExerciseId = null,Object? displayExerciseName = null,Object? displayMetadata = freezed,Object? effectiveMeasurementType = null,Object? currentSetIndex = null,Object? totalPlannedSets = null,Object? completedSetsCount = null,Object? currentPlannedValues = freezed,Object? plannedSummary = null,Object? currentPlannedSetIdInSnapshot = freezed,Object? lastExecutedValues = freezed,Object? upNextExerciseName = freezed,Object? plannedRestSeconds = freezed,Object? isReplaced = null,Object? plannedExerciseName = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? sessionExerciseId = null,Object? displayExerciseName = null,Object? displayMetadata = freezed,Object? effectiveMeasurementType = null,Object? currentSetIndex = null,Object? totalPlannedSets = null,Object? completedSetsCount = null,Object? currentPlannedValues = freezed,Object? plannedSummary = null,Object? currentPlannedSetIdInSnapshot = freezed,Object? lastExecutedValues = freezed,Object? plannedRestSeconds = freezed,Object? isReplaced = null,Object? plannedExerciseName = null,Object? isLoggable = null,}) {
   return _then(_FocusModeViewModel(
-sessionId: null == sessionId ? _self.sessionId : sessionId // ignore: cast_nullable_to_non_nullable
-as String,workoutDayName: null == workoutDayName ? _self.workoutDayName : workoutDayName // ignore: cast_nullable_to_non_nullable
-as String,sessionExerciseId: null == sessionExerciseId ? _self.sessionExerciseId : sessionExerciseId // ignore: cast_nullable_to_non_nullable
+sessionExerciseId: null == sessionExerciseId ? _self.sessionExerciseId : sessionExerciseId // ignore: cast_nullable_to_non_nullable
 as String,displayExerciseName: null == displayExerciseName ? _self.displayExerciseName : displayExerciseName // ignore: cast_nullable_to_non_nullable
 as String,displayMetadata: freezed == displayMetadata ? _self.displayMetadata : displayMetadata // ignore: cast_nullable_to_non_nullable
 as ExerciseMetadata?,effectiveMeasurementType: null == effectiveMeasurementType ? _self.effectiveMeasurementType : effectiveMeasurementType // ignore: cast_nullable_to_non_nullable
@@ -392,11 +386,11 @@ as int,currentPlannedValues: freezed == currentPlannedValues ? _self.currentPlan
 as PlannedSetValues?,plannedSummary: null == plannedSummary ? _self.plannedSummary : plannedSummary // ignore: cast_nullable_to_non_nullable
 as String,currentPlannedSetIdInSnapshot: freezed == currentPlannedSetIdInSnapshot ? _self.currentPlannedSetIdInSnapshot : currentPlannedSetIdInSnapshot // ignore: cast_nullable_to_non_nullable
 as String?,lastExecutedValues: freezed == lastExecutedValues ? _self.lastExecutedValues : lastExecutedValues // ignore: cast_nullable_to_non_nullable
-as ActualSetValues?,upNextExerciseName: freezed == upNextExerciseName ? _self.upNextExerciseName : upNextExerciseName // ignore: cast_nullable_to_non_nullable
-as String?,plannedRestSeconds: freezed == plannedRestSeconds ? _self.plannedRestSeconds : plannedRestSeconds // ignore: cast_nullable_to_non_nullable
+as ActualSetValues?,plannedRestSeconds: freezed == plannedRestSeconds ? _self.plannedRestSeconds : plannedRestSeconds // ignore: cast_nullable_to_non_nullable
 as int?,isReplaced: null == isReplaced ? _self.isReplaced : isReplaced // ignore: cast_nullable_to_non_nullable
 as bool,plannedExerciseName: null == plannedExerciseName ? _self.plannedExerciseName : plannedExerciseName // ignore: cast_nullable_to_non_nullable
-as String,
+as String,isLoggable: null == isLoggable ? _self.isLoggable : isLoggable // ignore: cast_nullable_to_non_nullable
+as bool,
   ));
 }
 

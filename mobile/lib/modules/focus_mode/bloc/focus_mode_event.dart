@@ -9,16 +9,32 @@ sealed class FocusModeEvent extends Equatable {
 }
 
 final class FocusModeOpened extends FocusModeEvent {
-  const FocusModeOpened(this.sessionId);
+  const FocusModeOpened({
+    required this.sessionId,
+    required this.anchorSessionExerciseId,
+  });
 
   final String sessionId;
+  final String anchorSessionExerciseId;
 
   @override
-  List<Object?> get props => [sessionId];
+  List<Object?> get props => [sessionId, anchorSessionExerciseId];
 }
 
 final class FocusModeRetried extends FocusModeEvent {
   const FocusModeRetried();
+}
+
+/// Switches the focused group to the one containing
+/// [anchorSessionExerciseId]. Drafts for the new panels seed from the
+/// engine's last-set suggestion.
+final class FocusModeGroupSwitched extends FocusModeEvent {
+  const FocusModeGroupSwitched(this.anchorSessionExerciseId);
+
+  final String anchorSessionExerciseId;
+
+  @override
+  List<Object?> get props => [anchorSessionExerciseId];
 }
 
 /// Internal events ingest emissions from the engine's session watch-stream.
@@ -53,54 +69,82 @@ final class FocusModeErrorDismissed extends FocusModeEvent {
 // Editing the current draft -------------------------------------------------
 
 final class FocusModeWeightBumped extends FocusModeEvent {
-  const FocusModeWeightBumped(this.delta);
+  const FocusModeWeightBumped({
+    required this.sessionExerciseId,
+    required this.delta,
+  });
+  final String sessionExerciseId;
   final double delta;
   @override
-  List<Object?> get props => [delta];
+  List<Object?> get props => [sessionExerciseId, delta];
 }
 
 final class FocusModeRepsBumped extends FocusModeEvent {
-  const FocusModeRepsBumped(this.delta);
+  const FocusModeRepsBumped({
+    required this.sessionExerciseId,
+    required this.delta,
+  });
+  final String sessionExerciseId;
   final int delta;
   @override
-  List<Object?> get props => [delta];
+  List<Object?> get props => [sessionExerciseId, delta];
 }
 
 final class FocusModeDurationBumped extends FocusModeEvent {
-  const FocusModeDurationBumped(this.delta);
+  const FocusModeDurationBumped({
+    required this.sessionExerciseId,
+    required this.delta,
+  });
+  final String sessionExerciseId;
   final int delta;
   @override
-  List<Object?> get props => [delta];
+  List<Object?> get props => [sessionExerciseId, delta];
 }
 
 final class FocusModeWeightEdited extends FocusModeEvent {
-  const FocusModeWeightEdited(this.weightKg);
+  const FocusModeWeightEdited({
+    required this.sessionExerciseId,
+    required this.weightKg,
+  });
+
+  final String sessionExerciseId;
 
   /// `null` clears the weight on a time-based draft. On a rep-based draft
   /// `null` is treated as `0`.
   final double? weightKg;
   @override
-  List<Object?> get props => [weightKg];
+  List<Object?> get props => [sessionExerciseId, weightKg];
 }
 
 final class FocusModeRepsEdited extends FocusModeEvent {
-  const FocusModeRepsEdited(this.reps);
+  const FocusModeRepsEdited({
+    required this.sessionExerciseId,
+    required this.reps,
+  });
+  final String sessionExerciseId;
   final int reps;
   @override
-  List<Object?> get props => [reps];
+  List<Object?> get props => [sessionExerciseId, reps];
 }
 
 final class FocusModeDurationEdited extends FocusModeEvent {
-  const FocusModeDurationEdited(this.seconds);
+  const FocusModeDurationEdited({
+    required this.sessionExerciseId,
+    required this.seconds,
+  });
+  final String sessionExerciseId;
   final int seconds;
   @override
-  List<Object?> get props => [seconds];
+  List<Object?> get props => [sessionExerciseId, seconds];
 }
 
 // Stopwatch (time-based current set) ---------------------------------------
 
 final class FocusModeStopwatchStarted extends FocusModeEvent {
-  const FocusModeStopwatchStarted();
+  const FocusModeStopwatchStarted(this.sessionExerciseId);
+  final String sessionExerciseId;
+  @override
+  List<Object?> get props => [sessionExerciseId];
 }
 
 final class FocusModeStopwatchStopped extends FocusModeEvent {
@@ -114,21 +158,35 @@ final class FocusModeStopwatchTicked extends FocusModeEvent {
 // Set completion + undo -----------------------------------------------------
 
 final class FocusModeSetCompleted extends FocusModeEvent {
-  const FocusModeSetCompleted();
+  const FocusModeSetCompleted(this.sessionExerciseId);
+  final String sessionExerciseId;
+  @override
+  List<Object?> get props => [sessionExerciseId];
 }
 
 final class FocusModeUndoRequested extends FocusModeEvent {
   const FocusModeUndoRequested();
 }
 
-// Per-exercise actions accessible from the focus AppBar menu ---------------
+// Per-exercise actions accessible from the focus AppBar / panel menu -------
 
 final class FocusModeExerciseSkipped extends FocusModeEvent {
-  const FocusModeExerciseSkipped();
+  const FocusModeExerciseSkipped(this.sessionExerciseId);
+  final String sessionExerciseId;
+  @override
+  List<Object?> get props => [sessionExerciseId];
+}
+
+final class FocusModeExerciseMarkedDone extends FocusModeEvent {
+  const FocusModeExerciseMarkedDone(this.sessionExerciseId);
+  final String sessionExerciseId;
+  @override
+  List<Object?> get props => [sessionExerciseId];
 }
 
 final class FocusModeExerciseReplaced extends FocusModeEvent {
   const FocusModeExerciseReplaced({
+    required this.sessionExerciseId,
     required this.substituteName,
     required this.substituteMeasurementType,
     required this.substitutePlannedValues,
@@ -136,6 +194,7 @@ final class FocusModeExerciseReplaced extends FocusModeEvent {
     this.substituteMetadata,
   });
 
+  final String sessionExerciseId;
   final String substituteName;
   final MeasurementType substituteMeasurementType;
   final PlannedSetValues substitutePlannedValues;
@@ -144,6 +203,7 @@ final class FocusModeExerciseReplaced extends FocusModeEvent {
 
   @override
   List<Object?> get props => [
+    sessionExerciseId,
     substituteName,
     substituteMeasurementType,
     substitutePlannedValues,

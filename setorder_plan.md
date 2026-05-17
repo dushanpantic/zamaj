@@ -291,7 +291,7 @@ a single feature branch but with clear commits per phase.
 4. (COMPLETED) **Workout Overview UI.** Switch `SetRowMode` semantics, auto-expand all
    loggable rows, drop the cursor-driven expansion logic, add the
    "Mark done" menu entry.
-5. **Focus Mode UI.** Superset-aware layout; "switch exercise" affordance.
+5. (COMPLETED) **Focus Mode UI.** Superset-aware layout; "switch exercise" affordance.
 6. **Cleanup.** Delete `Cursor` files, `cursor.dart`, the freezed
    generated artifacts, and any imports. Confirm
    `tool/check_offline_imports.sh` and `tool/ci.sh` are green.

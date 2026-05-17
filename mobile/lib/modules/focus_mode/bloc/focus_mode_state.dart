@@ -1,6 +1,6 @@
 import 'package:equatable/equatable.dart';
 import 'package:zamaj/modules/domain/domain.dart';
-import 'package:zamaj/modules/focus_mode/models/focus_mode_view_model.dart';
+import 'package:zamaj/modules/focus_mode/models/focus_mode_group_view_model.dart';
 import 'package:zamaj/modules/focus_mode/models/rest_timer_view_model.dart';
 import 'package:zamaj/modules/focus_mode/models/stopwatch_view_model.dart';
 import 'package:zamaj/modules/focus_mode/models/undoable_set.dart';
@@ -44,9 +44,9 @@ final class FocusModeLoadFailure extends FocusModeState {
   List<Object?> get props => [sessionId, error];
 }
 
-/// All planned-and-actionable exercises have terminated. The cursor is
-/// completed; the bloc keeps the latest [sessionState] for context (and so
-/// the "End session" affordance on workout-overview still makes sense).
+/// Every actionable exercise has terminated. The bloc keeps the latest
+/// [sessionState] for context (e.g. so the "End session" affordance on
+/// workout-overview still makes sense).
 final class FocusModeWorkoutComplete extends FocusModeState {
   const FocusModeWorkoutComplete({
     required this.sessionState,
@@ -63,38 +63,49 @@ final class FocusModeWorkoutComplete extends FocusModeState {
 final class FocusModeReady extends FocusModeState {
   const FocusModeReady({
     required this.sessionState,
-    required this.viewModel,
-    required this.draft,
+    required this.anchorSessionExerciseId,
+    required this.groupViewModel,
+    required this.drafts,
     required this.stopwatch,
+    this.activeStopwatchExerciseId,
     this.restTimer,
     this.undoable,
     this.mutationInFlight = false,
     this.lastTransientError,
   });
 
-  /// Authoritative engine-emitted session state. Every other field is
-  /// derived from this or held as pure UI state.
+  /// Authoritative engine-emitted session state.
   final SessionState sessionState;
 
-  /// Display projection of the cursor target, built by
-  /// [FocusModeAssembler.assemble].
-  final FocusModeViewModel viewModel;
+  /// Identifies which group is focused — any exercise id within the visible
+  /// group works; the assembler resolves it to the same panels regardless.
+  final String anchorSessionExerciseId;
 
-  /// Current editable actual values. Initially seeded from
-  /// [SessionState.suggestedValues] and re-seeded on cursor advance, then
-  /// mutated locally as the user bumps/edits.
-  final ActualSetValues draft;
+  /// Display projection of the focused group + its panels, built by
+  /// [FocusModeAssembler.assemble].
+  final FocusModeGroupViewModel groupViewModel;
+
+  /// Editable actual values per panel, keyed by `sessionExerciseId`. Seeded
+  /// on group switch and re-seeded for the just-completed exercise after a
+  /// successful set log.
+  final Map<String, ActualSetValues> drafts;
 
   /// Per-set stopwatch (time-based only). Always present; idle when not
-  /// running. Rep-based screens simply ignore it.
+  /// running. Tied to [activeStopwatchExerciseId] when running.
   final StopwatchViewModel stopwatch;
 
-  /// Rest timer state. Null between sets (before the first completion and
-  /// after the rest is skipped/the next set is started).
+  /// Session-exercise id whose panel owns the running stopwatch. Null when
+  /// [stopwatch.isRunning] is false.
+  final String? activeStopwatchExerciseId;
+
+  /// Rest timer state. Null between sets and after the rest is
+  /// skipped/the next set is started. Global to the screen — the same
+  /// timer is shared across panels in a superset.
   final RestTimerViewModel? restTimer;
 
-  /// Reference to the most-recently logged set in this focus session for
-  /// the UI's undo snackbar. Cleared on dismissal / new mutation / undo.
+  /// Reference to the most-recently logged set in this focused group for
+  /// the undo affordance. Scoped to the group so a stale "Undo on X" never
+  /// targets an exercise the user already navigated away from.
   final UndoableSet? undoable;
 
   /// True while an engine mutation is in flight. Used to suppress double
@@ -103,11 +114,16 @@ final class FocusModeReady extends FocusModeState {
 
   final DomainError? lastTransientError;
 
+  ActualSetValues? draftFor(String sessionExerciseId) =>
+      drafts[sessionExerciseId];
+
   FocusModeReady copyWith({
     SessionState? sessionState,
-    FocusModeViewModel? viewModel,
-    ActualSetValues? draft,
+    String? anchorSessionExerciseId,
+    FocusModeGroupViewModel? groupViewModel,
+    Map<String, ActualSetValues>? drafts,
     StopwatchViewModel? stopwatch,
+    String? Function()? activeStopwatchExerciseId,
     RestTimerViewModel? Function()? restTimer,
     UndoableSet? Function()? undoable,
     bool? mutationInFlight,
@@ -115,9 +131,14 @@ final class FocusModeReady extends FocusModeState {
   }) {
     return FocusModeReady(
       sessionState: sessionState ?? this.sessionState,
-      viewModel: viewModel ?? this.viewModel,
-      draft: draft ?? this.draft,
+      anchorSessionExerciseId:
+          anchorSessionExerciseId ?? this.anchorSessionExerciseId,
+      groupViewModel: groupViewModel ?? this.groupViewModel,
+      drafts: drafts ?? this.drafts,
       stopwatch: stopwatch ?? this.stopwatch,
+      activeStopwatchExerciseId: activeStopwatchExerciseId != null
+          ? activeStopwatchExerciseId()
+          : this.activeStopwatchExerciseId,
       restTimer: restTimer != null ? restTimer() : this.restTimer,
       undoable: undoable != null ? undoable() : this.undoable,
       mutationInFlight: mutationInFlight ?? this.mutationInFlight,
@@ -130,9 +151,11 @@ final class FocusModeReady extends FocusModeState {
   @override
   List<Object?> get props => [
     sessionState,
-    viewModel,
-    draft,
+    anchorSessionExerciseId,
+    groupViewModel,
+    drafts,
     stopwatch,
+    activeStopwatchExerciseId,
     restTimer,
     undoable,
     mutationInFlight,

@@ -4,6 +4,8 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:zamaj/modules/domain/domain.dart';
 import 'package:zamaj/modules/focus_mode/bloc/focus_mode_event.dart';
 import 'package:zamaj/modules/focus_mode/bloc/focus_mode_state.dart';
+import 'package:zamaj/modules/focus_mode/models/focus_mode_group_view_model.dart';
+import 'package:zamaj/modules/focus_mode/models/focus_mode_view_model.dart';
 import 'package:zamaj/modules/focus_mode/models/rest_timer_view_model.dart';
 import 'package:zamaj/modules/focus_mode/models/stopwatch_view_model.dart';
 import 'package:zamaj/modules/focus_mode/models/undoable_set.dart';
@@ -13,20 +15,21 @@ import 'package:zamaj/modules/focus_mode/services/increment_rules.dart';
 /// Owns the execution screen's runtime state.
 ///
 /// Responsibilities:
-///   - Hydrate from the engine on open / refresh
-///   - Maintain a local editable [draft] of actual values for the current
-///     set; reseed whenever the cursor advances
+///   - Hydrate from the engine on open / refresh and on group switch
+///   - Maintain a per-panel editable [drafts] map; reseed on group switch
+///     and after the matching panel's set is logged
 ///   - Run the rest timer and per-set stopwatch as Timer.periodic streams
 ///     (an internal-only signal — tests can drive the same ticks by
 ///     adding `FocusModeRestTicked` / `FocusModeStopwatchTicked` directly)
 ///   - Dispatch engine mutations (completeSet / deleteExecutedSet / skip /
-///     replace) and surface their results
+///     markDone / replace) targeted at a specific panel
 class FocusModeBloc extends Bloc<FocusModeEvent, FocusModeState> {
   FocusModeBloc({required SessionFlowEngine sessionFlowEngine})
     : _engine = sessionFlowEngine,
       super(const FocusModeInitial()) {
     on<FocusModeOpened>(_onOpened);
     on<FocusModeRetried>(_onRetried);
+    on<FocusModeGroupSwitched>(_onGroupSwitched);
     on<InternalFocusSessionPushed>(_onSessionPushed);
     on<InternalFocusSessionMissing>(_onSessionMissing);
     on<InternalFocusSessionFailed>(_onSessionFailed);
@@ -47,6 +50,7 @@ class FocusModeBloc extends Bloc<FocusModeEvent, FocusModeState> {
     on<FocusModeUndoRequested>(_onUndoRequested);
 
     on<FocusModeExerciseSkipped>(_onExerciseSkipped);
+    on<FocusModeExerciseMarkedDone>(_onExerciseMarkedDone);
     on<FocusModeExerciseReplaced>(_onExerciseReplaced);
 
     on<FocusModeRestTicked>(_onRestTicked);
@@ -62,6 +66,7 @@ class FocusModeBloc extends Bloc<FocusModeEvent, FocusModeState> {
   Timer? _stopwatchTicker;
   StreamSubscription<SessionState?>? _streamSub;
   String? _watchedSessionId;
+  String? _pendingAnchorId;
 
   @override
   Future<void> close() async {
@@ -78,6 +83,7 @@ class FocusModeBloc extends Bloc<FocusModeEvent, FocusModeState> {
     Emitter<FocusModeState> emit,
   ) async {
     emit(FocusModeLoading(event.sessionId));
+    _pendingAnchorId = event.anchorSessionExerciseId;
     await _subscribe(event.sessionId);
   }
 
@@ -86,8 +92,26 @@ class FocusModeBloc extends Bloc<FocusModeEvent, FocusModeState> {
     Emitter<FocusModeState> emit,
   ) async {
     final sessionId = _sessionIdOrNull();
-    if (sessionId == null) return;
-    add(FocusModeOpened(sessionId));
+    final anchor = _currentAnchorOrNull() ?? _pendingAnchorId;
+    if (sessionId == null || anchor == null) return;
+    add(FocusModeOpened(sessionId: sessionId, anchorSessionExerciseId: anchor));
+  }
+
+  Future<void> _onGroupSwitched(
+    FocusModeGroupSwitched event,
+    Emitter<FocusModeState> emit,
+  ) async {
+    final current = state;
+    if (current is! FocusModeReady) return;
+    _stopStopwatchTicker();
+    _stopRestTicker();
+    emit(
+      _assembleFromSessionState(
+        current.sessionState,
+        anchor: event.anchorSessionExerciseId,
+        priorDrafts: const {},
+      ),
+    );
   }
 
   Future<void> _subscribe(String sessionId) async {
@@ -167,31 +191,23 @@ class FocusModeBloc extends Bloc<FocusModeEvent, FocusModeState> {
   ) async {
     final current = state;
     if (current is! FocusModeReady) return;
-    final draft = current.draft;
-    switch (draft) {
-      case ActualRepBased():
-        emit(
-          current.copyWith(
-            draft: ActualSetValues.repBased(
-              weightKg: IncrementRules.bumpWeight(draft.weightKg, event.delta),
-              reps: draft.reps,
-            ),
-          ),
-        );
-      case ActualTimeBased():
-        final next = IncrementRules.bumpWeight(
-          draft.weightKg ?? 0,
-          event.delta,
-        );
-        emit(
-          current.copyWith(
-            draft: ActualSetValues.timeBased(
-              durationSeconds: draft.durationSeconds,
-              weightKg: next,
-            ),
-          ),
-        );
-    }
+    final draft = current.draftFor(event.sessionExerciseId);
+    if (draft == null) return;
+    final next = switch (draft) {
+      ActualRepBased() => ActualSetValues.repBased(
+        weightKg: IncrementRules.bumpWeight(draft.weightKg, event.delta),
+        reps: draft.reps,
+      ),
+      ActualTimeBased() => ActualSetValues.timeBased(
+        durationSeconds: draft.durationSeconds,
+        weightKg: IncrementRules.bumpWeight(draft.weightKg ?? 0, event.delta),
+      ),
+    };
+    emit(
+      current.copyWith(
+        drafts: _replaceDraft(current.drafts, event.sessionExerciseId, next),
+      ),
+    );
   }
 
   Future<void> _onRepsBumped(
@@ -200,13 +216,17 @@ class FocusModeBloc extends Bloc<FocusModeEvent, FocusModeState> {
   ) async {
     final current = state;
     if (current is! FocusModeReady) return;
-    final draft = current.draft;
+    final draft = current.draftFor(event.sessionExerciseId);
     if (draft is! ActualRepBased) return;
     emit(
       current.copyWith(
-        draft: ActualSetValues.repBased(
-          weightKg: draft.weightKg,
-          reps: IncrementRules.bumpReps(draft.reps, event.delta),
+        drafts: _replaceDraft(
+          current.drafts,
+          event.sessionExerciseId,
+          ActualSetValues.repBased(
+            weightKg: draft.weightKg,
+            reps: IncrementRules.bumpReps(draft.reps, event.delta),
+          ),
         ),
       ),
     );
@@ -218,14 +238,19 @@ class FocusModeBloc extends Bloc<FocusModeEvent, FocusModeState> {
   ) async {
     final current = state;
     if (current is! FocusModeReady) return;
-    final draft = current.draft;
+    final draft = current.draftFor(event.sessionExerciseId);
     if (draft is! ActualTimeBased) return;
     emit(
       current.copyWith(
-        draft: ActualSetValues.timeBased(
-          durationSeconds: IncrementRules.bumpDuration(
-            draft.durationSeconds,
-            event.delta,
+        drafts: _replaceDraft(
+          current.drafts,
+          event.sessionExerciseId,
+          ActualSetValues.timeBased(
+            durationSeconds: IncrementRules.bumpDuration(
+              draft.durationSeconds,
+              event.delta,
+            ),
+            weightKg: draft.weightKg,
           ),
         ),
       ),
@@ -238,30 +263,26 @@ class FocusModeBloc extends Bloc<FocusModeEvent, FocusModeState> {
   ) async {
     final current = state;
     if (current is! FocusModeReady) return;
-    final draft = current.draft;
+    final draft = current.draftFor(event.sessionExerciseId);
+    if (draft == null) return;
     final raw = event.weightKg;
     final rounded = raw == null ? null : (raw * 2).round() / 2;
     final clamped = rounded == null ? null : (rounded < 0 ? 0.0 : rounded);
-    switch (draft) {
-      case ActualRepBased():
-        emit(
-          current.copyWith(
-            draft: ActualSetValues.repBased(
-              weightKg: clamped ?? 0,
-              reps: draft.reps,
-            ),
-          ),
-        );
-      case ActualTimeBased():
-        emit(
-          current.copyWith(
-            draft: ActualSetValues.timeBased(
-              durationSeconds: draft.durationSeconds,
-              weightKg: clamped,
-            ),
-          ),
-        );
-    }
+    final next = switch (draft) {
+      ActualRepBased() => ActualSetValues.repBased(
+        weightKg: clamped ?? 0,
+        reps: draft.reps,
+      ),
+      ActualTimeBased() => ActualSetValues.timeBased(
+        durationSeconds: draft.durationSeconds,
+        weightKg: clamped,
+      ),
+    };
+    emit(
+      current.copyWith(
+        drafts: _replaceDraft(current.drafts, event.sessionExerciseId, next),
+      ),
+    );
   }
 
   Future<void> _onRepsEdited(
@@ -270,14 +291,15 @@ class FocusModeBloc extends Bloc<FocusModeEvent, FocusModeState> {
   ) async {
     final current = state;
     if (current is! FocusModeReady) return;
-    final draft = current.draft;
+    final draft = current.draftFor(event.sessionExerciseId);
     if (draft is! ActualRepBased) return;
     final clamped = event.reps < 0 ? 0 : event.reps;
     emit(
       current.copyWith(
-        draft: ActualSetValues.repBased(
-          weightKg: draft.weightKg,
-          reps: clamped,
+        drafts: _replaceDraft(
+          current.drafts,
+          event.sessionExerciseId,
+          ActualSetValues.repBased(weightKg: draft.weightKg, reps: clamped),
         ),
       ),
     );
@@ -289,12 +311,19 @@ class FocusModeBloc extends Bloc<FocusModeEvent, FocusModeState> {
   ) async {
     final current = state;
     if (current is! FocusModeReady) return;
-    final draft = current.draft;
+    final draft = current.draftFor(event.sessionExerciseId);
     if (draft is! ActualTimeBased) return;
     final clamped = event.seconds < 0 ? 0 : event.seconds;
     emit(
       current.copyWith(
-        draft: ActualSetValues.timeBased(durationSeconds: clamped),
+        drafts: _replaceDraft(
+          current.drafts,
+          event.sessionExerciseId,
+          ActualSetValues.timeBased(
+            durationSeconds: clamped,
+            weightKg: draft.weightKg,
+          ),
+        ),
       ),
     );
   }
@@ -307,14 +336,15 @@ class FocusModeBloc extends Bloc<FocusModeEvent, FocusModeState> {
   ) async {
     final current = state;
     if (current is! FocusModeReady) return;
-    if (current.viewModel.effectiveMeasurementType is! TimeBasedMeasurement) {
-      return;
-    }
+    final panel = _findPanel(current, event.sessionExerciseId);
+    if (panel == null) return;
+    if (panel.effectiveMeasurementType is! TimeBasedMeasurement) return;
     _stopRestTicker();
     _startStopwatchTicker();
     emit(
       current.copyWith(
         stopwatch: const StopwatchViewModel(isRunning: true, elapsedSeconds: 0),
+        activeStopwatchExerciseId: () => event.sessionExerciseId,
         restTimer: () => null,
       ),
     );
@@ -327,15 +357,22 @@ class FocusModeBloc extends Bloc<FocusModeEvent, FocusModeState> {
     final current = state;
     if (current is! FocusModeReady) return;
     if (!current.stopwatch.isRunning) return;
+    final exerciseId = current.activeStopwatchExerciseId;
+    if (exerciseId == null) return;
     final next = current.stopwatch.elapsedSeconds + 1;
-    final draft = current.draft;
+    final draft = current.draftFor(exerciseId);
     final newDraft = draft is ActualTimeBased
-        ? ActualSetValues.timeBased(durationSeconds: next)
+        ? ActualSetValues.timeBased(
+            durationSeconds: next,
+            weightKg: draft.weightKg,
+          )
         : draft;
     emit(
       current.copyWith(
         stopwatch: StopwatchViewModel(isRunning: true, elapsedSeconds: next),
-        draft: newDraft,
+        drafts: newDraft == null
+            ? current.drafts
+            : _replaceDraft(current.drafts, exerciseId, newDraft),
       ),
     );
   }
@@ -354,6 +391,7 @@ class FocusModeBloc extends Bloc<FocusModeEvent, FocusModeState> {
           isRunning: false,
           elapsedSeconds: current.stopwatch.elapsedSeconds,
         ),
+        activeStopwatchExerciseId: () => null,
       ),
     );
   }
@@ -367,35 +405,41 @@ class FocusModeBloc extends Bloc<FocusModeEvent, FocusModeState> {
     final current = state;
     if (current is! FocusModeReady) return;
     if (current.mutationInFlight) return;
-    _stopStopwatchTicker();
+    final panel = _findPanel(current, event.sessionExerciseId);
+    if (panel == null || !panel.isLoggable) return;
+    final draft = current.draftFor(event.sessionExerciseId);
+    if (draft == null) return;
+    if (current.activeStopwatchExerciseId == event.sessionExerciseId) {
+      _stopStopwatchTicker();
+    }
 
     emit(current.copyWith(mutationInFlight: true));
     try {
       final next = await _engine.completeSet(
-        sessionExerciseId: current.viewModel.sessionExerciseId,
-        actualValues: current.draft,
-        plannedSetIdInSnapshot: current.viewModel.currentPlannedSetIdInSnapshot,
+        sessionExerciseId: event.sessionExerciseId,
+        actualValues: draft,
+        plannedSetIdInSnapshot: panel.currentPlannedSetIdInSnapshot,
       );
       final justLoggedSetId = _newestExecutedSetId(
         sessionState: next,
-        sessionExerciseId: current.viewModel.sessionExerciseId,
+        sessionExerciseId: event.sessionExerciseId,
       );
       final undoable = justLoggedSetId == null
           ? null
           : UndoableSet(
               executedSetId: justLoggedSetId,
-              sessionExerciseId: current.viewModel.sessionExerciseId,
-              exerciseDisplayName: current.viewModel.displayExerciseName,
+              sessionExerciseId: event.sessionExerciseId,
+              exerciseDisplayName: panel.displayExerciseName,
             );
-      emit(
-        _assembleAfterMutation(
-          next,
-          undoable: undoable,
-          restTimer: _restTimerForNewSet(next),
-        ),
+      final reassembled = _assembleAfterMutation(
+        next,
+        priorDrafts: current.drafts,
+        completedExerciseId: event.sessionExerciseId,
+        undoable: undoable,
+        restTimer: _restTimerFromPanel(panel),
       );
-      if (state is FocusModeReady &&
-          (state as FocusModeReady).restTimer != null) {
+      emit(reassembled);
+      if (reassembled is FocusModeReady && reassembled.restTimer != null) {
         _startRestTicker();
       }
     } on DomainError catch (e) {
@@ -428,7 +472,15 @@ class FocusModeBloc extends Bloc<FocusModeEvent, FocusModeState> {
         executedSetId: undoable.executedSetId,
       );
       _stopRestTicker();
-      emit(_assembleAfterMutation(next, undoable: null, restTimer: null));
+      emit(
+        _assembleAfterMutation(
+          next,
+          priorDrafts: current is FocusModeReady ? current.drafts : const {},
+          completedExerciseId: undoable.sessionExerciseId,
+          undoable: null,
+          restTimer: null,
+        ),
+      );
     } on DomainError catch (e) {
       final latest = state;
       if (latest is FocusModeReady) {
@@ -451,10 +503,50 @@ class FocusModeBloc extends Bloc<FocusModeEvent, FocusModeState> {
     emit(current.copyWith(mutationInFlight: true, undoable: () => null));
     try {
       final next = await _engine.skipExercise(
-        sessionExerciseId: current.viewModel.sessionExerciseId,
+        sessionExerciseId: event.sessionExerciseId,
       );
       _stopRestTicker();
-      emit(_assembleAfterMutation(next, undoable: null, restTimer: null));
+      emit(
+        _assembleAfterMutation(
+          next,
+          priorDrafts: current.drafts,
+          completedExerciseId: event.sessionExerciseId,
+          undoable: null,
+          restTimer: null,
+        ),
+      );
+    } on DomainError catch (e) {
+      final latest = state;
+      if (latest is FocusModeReady) {
+        emit(
+          latest.copyWith(mutationInFlight: false, lastTransientError: () => e),
+        );
+      }
+    }
+  }
+
+  Future<void> _onExerciseMarkedDone(
+    FocusModeExerciseMarkedDone event,
+    Emitter<FocusModeState> emit,
+  ) async {
+    final current = state;
+    if (current is! FocusModeReady) return;
+    if (current.mutationInFlight) return;
+    emit(current.copyWith(mutationInFlight: true, undoable: () => null));
+    try {
+      final next = await _engine.markExerciseDone(
+        sessionExerciseId: event.sessionExerciseId,
+      );
+      _stopRestTicker();
+      emit(
+        _assembleAfterMutation(
+          next,
+          priorDrafts: current.drafts,
+          completedExerciseId: event.sessionExerciseId,
+          undoable: null,
+          restTimer: null,
+        ),
+      );
     } on DomainError catch (e) {
       final latest = state;
       if (latest is FocusModeReady) {
@@ -475,7 +567,7 @@ class FocusModeBloc extends Bloc<FocusModeEvent, FocusModeState> {
     emit(current.copyWith(mutationInFlight: true, undoable: () => null));
     try {
       final next = await _engine.replaceExercise(
-        sessionExerciseId: current.viewModel.sessionExerciseId,
+        sessionExerciseId: event.sessionExerciseId,
         substituteName: event.substituteName,
         substituteMeasurementType: event.substituteMeasurementType,
         substitutePlannedValues: event.substitutePlannedValues,
@@ -483,7 +575,20 @@ class FocusModeBloc extends Bloc<FocusModeEvent, FocusModeState> {
         substituteMetadata: event.substituteMetadata,
       );
       _stopRestTicker();
-      emit(_assembleAfterMutation(next, undoable: null, restTimer: null));
+      // Drop the prior draft for the replaced exercise — its measurement
+      // type may have flipped, so the seed needs to come from the engine
+      // suggestion.
+      final priorDrafts = Map<String, ActualSetValues>.of(current.drafts)
+        ..remove(event.sessionExerciseId);
+      emit(
+        _assembleAfterMutation(
+          next,
+          priorDrafts: priorDrafts,
+          completedExerciseId: event.sessionExerciseId,
+          undoable: null,
+          restTimer: null,
+        ),
+      );
     } on DomainError catch (e) {
       final latest = state;
       if (latest is FocusModeReady) {
@@ -591,92 +696,185 @@ class FocusModeBloc extends Bloc<FocusModeEvent, FocusModeState> {
 
   // ---------------- Helpers ----------------
 
-  FocusModeState _assemble(SessionState sessionState) {
-    final vm = FocusModeAssembler.assemble(sessionState);
-    if (vm == null) {
+  FocusModeState _assembleFromSessionState(
+    SessionState sessionState, {
+    required String anchor,
+    required Map<String, ActualSetValues> priorDrafts,
+  }) {
+    if (sessionState.isComplete) {
       return FocusModeWorkoutComplete(sessionState: sessionState);
     }
-    final draft = _seedDraft(sessionState, vm.effectiveMeasurementType);
+    final group = FocusModeAssembler.assemble(
+      sessionState,
+      anchorSessionExerciseId: anchor,
+    );
+    if (group == null) {
+      final fallback = FocusModeAssembler.findNextAnchorAfter(
+        sessionState,
+        completedAnchorId: anchor,
+      );
+      if (fallback == null) {
+        return FocusModeWorkoutComplete(sessionState: sessionState);
+      }
+      return _assembleFromSessionState(
+        sessionState,
+        anchor: fallback,
+        priorDrafts: priorDrafts,
+      );
+    }
+    final drafts = _seedDrafts(
+      sessionState,
+      group: group,
+      priorDrafts: priorDrafts,
+    );
     return FocusModeReady(
       sessionState: sessionState,
-      viewModel: vm,
-      draft: draft,
+      anchorSessionExerciseId: anchor,
+      groupViewModel: group,
+      drafts: drafts,
       stopwatch: StopwatchViewModel.idle(),
     );
   }
 
   FocusModeState _reassembleAfterRefresh(SessionState sessionState) {
     final current = state;
-    final vm = FocusModeAssembler.assemble(sessionState);
-    if (vm == null) {
+    final anchor = _currentAnchorOrNull() ?? _pendingAnchorId;
+    if (anchor == null) {
       return FocusModeWorkoutComplete(sessionState: sessionState);
     }
-    if (current is! FocusModeReady) {
-      return _assemble(sessionState);
+    if (current is FocusModeReady) {
+      // Preserve drafts on a passive refresh. The group view model may
+      // shift (e.g. another panel finished elsewhere); the assembler picks
+      // the same anchor's group.
+      final group = FocusModeAssembler.assemble(
+        sessionState,
+        anchorSessionExerciseId: anchor,
+      );
+      if (group == null) {
+        // Anchor's group disappeared (everything skipped).
+        return _assembleFromSessionState(
+          sessionState,
+          anchor: anchor,
+          priorDrafts: current.drafts,
+        );
+      }
+      final drafts = _seedDrafts(
+        sessionState,
+        group: group,
+        priorDrafts: current.drafts,
+      );
+      return current.copyWith(
+        sessionState: sessionState,
+        groupViewModel: group,
+        drafts: drafts,
+      );
     }
-    final cursorChanged =
-        current.viewModel.sessionExerciseId != vm.sessionExerciseId ||
-        current.viewModel.currentSetIndex != vm.currentSetIndex ||
-        current.viewModel.effectiveMeasurementType !=
-            vm.effectiveMeasurementType ||
-        current.viewModel.currentPlannedValues != vm.currentPlannedValues;
-    final draft = cursorChanged
-        ? _seedDraft(sessionState, vm.effectiveMeasurementType)
-        : current.draft;
-    return current.copyWith(
-      sessionState: sessionState,
-      viewModel: vm,
-      draft: draft,
+    return _assembleFromSessionState(
+      sessionState,
+      anchor: anchor,
+      priorDrafts: const {},
     );
   }
 
-  /// Builds the new ready state after a mutation. If the cursor advanced,
-  /// the draft is re-seeded; otherwise the prior draft is preserved.
+  /// Builds the new state after a mutation targeted at [completedExerciseId].
+  ///
+  /// If the current anchor's group is fully terminal after the mutation, the
+  /// bloc auto-advances to the next group with open targets; if none remain,
+  /// it transitions to [FocusModeWorkoutComplete].
   FocusModeState _assembleAfterMutation(
     SessionState sessionState, {
+    required Map<String, ActualSetValues> priorDrafts,
+    required String completedExerciseId,
     required UndoableSet? undoable,
     required RestTimerViewModel? restTimer,
   }) {
-    final vm = FocusModeAssembler.assemble(sessionState);
-    if (vm == null) {
+    if (sessionState.isComplete) {
       return FocusModeWorkoutComplete(sessionState: sessionState);
     }
-    final current = state;
-    final priorDraft = current is FocusModeReady ? current.draft : null;
-    final priorVm = current is FocusModeReady ? current.viewModel : null;
-    final cursorChanged =
-        priorVm == null ||
-        priorVm.sessionExerciseId != vm.sessionExerciseId ||
-        priorVm.currentSetIndex != vm.currentSetIndex ||
-        priorVm.effectiveMeasurementType != vm.effectiveMeasurementType ||
-        priorVm.currentPlannedValues != vm.currentPlannedValues;
-    final draft = cursorChanged || priorDraft == null
-        ? _seedDraft(sessionState, vm.effectiveMeasurementType)
-        : priorDraft;
+    final anchor = _currentAnchorOrNull() ?? completedExerciseId;
+    final group = FocusModeAssembler.assemble(
+      sessionState,
+      anchorSessionExerciseId: anchor,
+    );
+    final hasLoggableInGroup = group?.panels.any((p) => p.isLoggable) ?? false;
+
+    String? effectiveAnchor = anchor;
+    FocusModeGroupViewModel? effectiveGroup = group;
+    if (group == null || !hasLoggableInGroup) {
+      final next = FocusModeAssembler.findNextAnchorAfter(
+        sessionState,
+        completedAnchorId: anchor,
+      );
+      if (next == null) {
+        return FocusModeWorkoutComplete(sessionState: sessionState);
+      }
+      effectiveAnchor = next;
+      effectiveGroup = FocusModeAssembler.assemble(
+        sessionState,
+        anchorSessionExerciseId: next,
+      );
+    }
+    if (effectiveGroup == null) {
+      return FocusModeWorkoutComplete(sessionState: sessionState);
+    }
+
+    // Drop the just-completed exercise's draft from `priorDrafts` so that
+    // it re-seeds from the engine suggestion (last set's actuals).
+    final cleared = Map<String, ActualSetValues>.of(priorDrafts)
+      ..remove(completedExerciseId);
+    final drafts = _seedDrafts(
+      sessionState,
+      group: effectiveGroup,
+      priorDrafts: cleared,
+    );
     return FocusModeReady(
       sessionState: sessionState,
-      viewModel: vm,
-      draft: draft,
+      anchorSessionExerciseId: effectiveAnchor,
+      groupViewModel: effectiveGroup,
+      drafts: drafts,
       stopwatch: StopwatchViewModel.idle(),
       restTimer: restTimer,
       undoable: undoable,
     );
   }
 
-  ActualSetValues _seedDraft(
-    SessionState sessionState,
-    MeasurementType measurementType,
-  ) {
-    final suggested = sessionState.suggestedValues;
-    if (suggested != null) {
-      final matches = switch ((measurementType, suggested)) {
-        (RepBasedMeasurement(), ActualRepBased()) => true,
-        (TimeBasedMeasurement(), ActualTimeBased()) => true,
-        _ => false,
-      };
-      if (matches) return suggested;
+  Map<String, ActualSetValues> _seedDrafts(
+    SessionState sessionState, {
+    required FocusModeGroupViewModel group,
+    required Map<String, ActualSetValues> priorDrafts,
+  }) {
+    final next = <String, ActualSetValues>{};
+    for (final panel in group.panels) {
+      if (!panel.isLoggable) continue;
+      final prior = priorDrafts[panel.sessionExerciseId];
+      if (prior != null && _matches(prior, panel.effectiveMeasurementType)) {
+        next[panel.sessionExerciseId] = prior;
+        continue;
+      }
+      next[panel.sessionExerciseId] = _seedFromEngine(
+        sessionState,
+        panel: panel,
+      );
     }
-    return switch (measurementType) {
+    return next;
+  }
+
+  ActualSetValues _seedFromEngine(
+    SessionState sessionState, {
+    required FocusModeViewModel panel,
+  }) {
+    try {
+      final suggested = _engine.suggestValuesFor(
+        session: sessionState.session,
+        sessionExerciseId: panel.sessionExerciseId,
+      );
+      if (_matches(suggested, panel.effectiveMeasurementType)) {
+        return suggested;
+      }
+    } on NotFoundError {
+      // fall through to zero seed
+    }
+    return switch (panel.effectiveMeasurementType) {
       RepBasedMeasurement() => const ActualSetValues.repBased(
         weightKg: 0,
         reps: 0,
@@ -687,24 +885,39 @@ class FocusModeBloc extends Bloc<FocusModeEvent, FocusModeState> {
     };
   }
 
-  RestTimerViewModel? _restTimerForNewSet(SessionState sessionState) {
-    final vm = FocusModeAssembler.assemble(sessionState);
-    final priorVm = state is FocusModeReady
-        ? (state as FocusModeReady).viewModel
-        : null;
-    // If the cursor is completed (whole workout done) or hasn't advanced
-    // (e.g. extra sets on a replaced exercise), still surface a rest timer
-    // using the planned rest from the just-completed exercise.
-    final planned = priorVm?.plannedRestSeconds ?? vm?.plannedRestSeconds;
-    if (vm == null && planned == null) {
-      return null;
-    }
+  bool _matches(ActualSetValues values, MeasurementType measurementType) {
+    return switch ((measurementType, values)) {
+      (RepBasedMeasurement(), ActualRepBased()) => true,
+      (TimeBasedMeasurement(), ActualTimeBased()) => true,
+      _ => false,
+    };
+  }
+
+  RestTimerViewModel? _restTimerFromPanel(FocusModeViewModel panel) {
     return RestTimerViewModel(
-      plannedSeconds: planned,
+      plannedSeconds: panel.plannedRestSeconds,
       elapsedSeconds: 0,
       extensionSeconds: 0,
       isPaused: false,
     );
+  }
+
+  FocusModeViewModel? _findPanel(
+    FocusModeReady ready,
+    String sessionExerciseId,
+  ) {
+    for (final panel in ready.groupViewModel.panels) {
+      if (panel.sessionExerciseId == sessionExerciseId) return panel;
+    }
+    return null;
+  }
+
+  Map<String, ActualSetValues> _replaceDraft(
+    Map<String, ActualSetValues> drafts,
+    String sessionExerciseId,
+    ActualSetValues next,
+  ) {
+    return Map<String, ActualSetValues>.of(drafts)..[sessionExerciseId] = next;
   }
 
   String? _newestExecutedSetId({
@@ -753,5 +966,10 @@ class FocusModeBloc extends Bloc<FocusModeEvent, FocusModeState> {
     FocusModeNotFound(:final sessionId) => sessionId,
     FocusModeLoadFailure(:final sessionId) => sessionId,
     FocusModeInitial() => _watchedSessionId,
+  };
+
+  String? _currentAnchorOrNull() => switch (state) {
+    FocusModeReady(:final anchorSessionExerciseId) => anchorSessionExerciseId,
+    _ => null,
   };
 }

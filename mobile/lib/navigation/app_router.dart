@@ -4,6 +4,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:zamaj/modules/domain/domain.dart';
 import 'package:zamaj/modules/export/navigation/export_router.dart';
 import 'package:zamaj/modules/focus_mode/bloc/bloc.dart';
+import 'package:zamaj/modules/focus_mode/models/focus_mode_args.dart';
 import 'package:zamaj/modules/focus_mode/screens/focus_mode_screen.dart';
 import 'package:zamaj/modules/program_management/navigation/program_management_router.dart';
 import 'package:zamaj/modules/workout_day_picker/bloc/bloc.dart';
@@ -56,13 +57,18 @@ abstract final class AppRouter {
   }
 
   static Route<dynamic> _sessionFocusRoute(RouteSettings settings) {
-    final sessionId = settings.arguments! as String;
+    final args = settings.arguments! as FocusModeArgs;
     return MaterialPageRoute<void>(
       settings: settings,
       builder: (context) => BlocProvider(
         create: (_) =>
             FocusModeBloc(sessionFlowEngine: context.read<SessionFlowEngine>())
-              ..add(FocusModeOpened(sessionId)),
+              ..add(
+                FocusModeOpened(
+                  sessionId: args.sessionId,
+                  anchorSessionExerciseId: args.anchorSessionExerciseId,
+                ),
+              ),
         child: const FocusModeScreen(),
       ),
     );

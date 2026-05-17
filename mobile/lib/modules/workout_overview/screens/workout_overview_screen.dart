@@ -7,6 +7,7 @@ import 'package:zamaj/core/app_theme.dart';
 import 'package:zamaj/core/app_typography.dart';
 import 'package:zamaj/core/haptics.dart';
 import 'package:zamaj/modules/domain/domain.dart';
+import 'package:zamaj/modules/focus_mode/models/focus_mode_args.dart';
 import 'package:zamaj/modules/program_management/services/domain_error_presenter.dart';
 import 'package:zamaj/modules/program_management/services/external_link_launcher.dart';
 import 'package:zamaj/modules/program_management/widgets/confirmation_dialog.dart';
@@ -156,8 +157,16 @@ class _WorkoutOverviewScreenState extends State<WorkoutOverviewScreen> {
     );
   }
 
-  void _handleOpenFocusMode(String sessionId) {
-    Navigator.of(context).pushNamed(SessionRoutes.focus, arguments: sessionId);
+  void _handleOpenFocusMode(WorkoutOverviewLoaded state) {
+    final openTargets = state.sessionState.openTargets;
+    if (openTargets.isEmpty) return;
+    Navigator.of(context).pushNamed(
+      SessionRoutes.focus,
+      arguments: FocusModeArgs(
+        sessionId: state.sessionState.session.id,
+        anchorSessionExerciseId: openTargets.first.sessionExerciseId,
+      ),
+    );
   }
 
   @override
@@ -191,8 +200,7 @@ class _WorkoutOverviewScreenState extends State<WorkoutOverviewScreen> {
                   state: state,
                   onAddNote: _handleAddNote,
                   onAddExtraWork: _handleAddExtraWork,
-                  onFocusMode: () =>
-                      _handleOpenFocusMode(state.sessionState.session.id),
+                  onFocusMode: () => _handleOpenFocusMode(state),
                 )
               : null,
         );

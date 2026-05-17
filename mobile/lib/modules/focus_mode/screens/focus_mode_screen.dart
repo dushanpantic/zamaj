@@ -9,7 +9,9 @@ import 'package:zamaj/core/weight_formatter.dart';
 import 'package:zamaj/modules/domain/domain.dart';
 import 'package:zamaj/modules/focus_mode/bloc/bloc.dart';
 import 'package:zamaj/modules/focus_mode/models/focus_mode_view_model.dart';
+import 'package:zamaj/modules/focus_mode/models/stopwatch_view_model.dart';
 import 'package:zamaj/modules/focus_mode/models/undoable_set.dart';
+import 'package:zamaj/modules/focus_mode/services/focus_mode_assembler.dart';
 import 'package:zamaj/modules/focus_mode/widgets/focus_complete_button.dart';
 import 'package:zamaj/modules/focus_mode/widgets/focus_rep_based_panel.dart';
 import 'package:zamaj/modules/focus_mode/widgets/focus_rest_timer_bar.dart';
@@ -22,8 +24,10 @@ import 'package:zamaj/modules/program_management/services/external_link_launcher
 import 'package:zamaj/modules/program_management/widgets/confirmation_dialog.dart';
 import 'package:zamaj/modules/workout_overview/widgets/replace_exercise_dialog.dart';
 
-/// Top-level execution screen. Single-exercise layout that always renders
-/// the cursor target; advances automatically as the bloc reassembles.
+/// Top-level execution screen. Renders the focused group as one or more
+/// panels stacked vertically; each panel owns its own editor and LOG SET
+/// button. The rest timer and the "switch exercise" affordance in the app
+/// bar are shared across panels.
 class FocusModeScreen extends StatefulWidget {
   const FocusModeScreen({super.key});
 
@@ -87,12 +91,14 @@ class _FocusModeScreenState extends State<FocusModeScreen> {
       FocusModeLoadFailure() => 'Focus',
       FocusModeWorkoutComplete(:final sessionState) =>
         sessionState.session.snapshot.workoutDay.name,
-      FocusModeReady(:final viewModel) => viewModel.workoutDayName,
+      FocusModeReady(:final groupViewModel) => groupViewModel.workoutDayName,
     };
     final ready = state is FocusModeReady ? state : null;
     return AppBar(
       title: Text(title),
-      actions: [if (ready != null) _ExerciseActionsMenu(state: ready)],
+      actions: [
+        if (ready != null) ...[_SwitchExerciseButton(state: ready)],
+      ],
     );
   }
 
@@ -123,9 +129,8 @@ class _ReadyBody extends StatelessWidget {
   Widget build(BuildContext context) {
     final colors = Theme.of(context).appColors;
     const typography = AppTypography.standard;
-    final vm = state.viewModel;
+    final group = state.groupViewModel;
     final canMutate = !state.mutationInFlight;
-    final isResting = state.restTimer != null;
 
     return Stack(
       children: [
@@ -151,26 +156,28 @@ class _ReadyBody extends StatelessWidget {
                       ),
                       const SizedBox(height: AppSpacing.sm),
                     ],
-                    _ExerciseHeader(viewModel: vm),
-                    const SizedBox(height: AppSpacing.sm),
-                    FocusSetProgress(
-                      completed: vm.completedSetsCount,
-                      total: vm.totalPlannedSets,
-                      currentIndex: vm.currentSetIndex,
-                    ),
+                    if (group.supersetTag != null) ...[
+                      _SupersetHeader(panels: group.panels),
+                      const SizedBox(height: AppSpacing.md),
+                    ],
+                    for (var i = 0; i < group.panels.length; i++) ...[
+                      _PanelCard(
+                        state: state,
+                        panel: group.panels[i],
+                        canMutate: canMutate,
+                      ),
+                      if (i < group.panels.length - 1)
+                        const SizedBox(height: AppSpacing.md),
+                    ],
                     const SizedBox(height: AppSpacing.lg),
-                    _PlannedAndLast(viewModel: vm),
-                    const SizedBox(height: AppSpacing.lg),
-                    _CurrentValuesPanel(state: state, canMutate: canMutate),
-                    const SizedBox(height: AppSpacing.lg),
-                    if (vm.upNextExerciseName != null)
+                    if (group.upNextGroupLabel != null)
                       FocusUpNext(
                         label: 'Up next',
-                        detail: vm.upNextExerciseName!,
+                        detail: group.upNextGroupLabel!,
                       )
                     else
                       Text(
-                        'Last exercise in this session',
+                        'Last group in this session',
                         style: typography.caption.copyWith(
                           color: colors.onSurfaceMuted,
                         ),
@@ -179,11 +186,7 @@ class _ReadyBody extends StatelessWidget {
                 ),
               ),
             ),
-            _PinnedActionBar(
-              state: state,
-              canMutate: canMutate,
-              isResting: isResting,
-            ),
+            _PinnedBottomBar(state: state, canMutate: canMutate),
           ],
         ),
         if (state.mutationInFlight)
@@ -198,71 +201,103 @@ class _ReadyBody extends StatelessWidget {
   }
 }
 
-/// Pinned bottom action bar. Always reachable with the thumb during a working
-/// set so the COMPLETE button never scrolls out of view. During rest, the
-/// timer takes visual focus and COMPLETE is demoted to a secondary "Skip rest"
-/// affordance — finishing the rest is the only logical next step.
-class _PinnedActionBar extends StatelessWidget {
-  const _PinnedActionBar({
-    required this.state,
-    required this.canMutate,
-    required this.isResting,
-  });
+/// Header above the panel stack for superset groups. Shows the participating
+/// exercise names so the user has a one-glance summary of what they're
+/// alternating between.
+class _SupersetHeader extends StatelessWidget {
+  const _SupersetHeader({required this.panels});
 
-  final FocusModeReady state;
-  final bool canMutate;
-  final bool isResting;
+  final List<FocusModeViewModel> panels;
 
   @override
   Widget build(BuildContext context) {
     final colors = Theme.of(context).appColors;
-    final bloc = context.read<FocusModeBloc>();
-    final vm = state.viewModel;
+    const typography = AppTypography.standard;
+    return Row(
+      children: [
+        Icon(Icons.link, size: 18, color: colors.onSurfaceMuted),
+        const SizedBox(width: AppSpacing.xs),
+        Expanded(
+          child: Text(
+            'Superset — ${panels.map((p) => p.displayExerciseName).join(' + ')}',
+            style: typography.label.copyWith(color: colors.onSurfaceMuted),
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+          ),
+        ),
+      ],
+    );
+  }
+}
 
+/// One panel in the focused group. Owns its own editor + LOG SET button.
+/// Loggable panels render a full editor; completed panels show a compact
+/// "done" indicator with an action menu.
+class _PanelCard extends StatelessWidget {
+  const _PanelCard({
+    required this.state,
+    required this.panel,
+    required this.canMutate,
+  });
+
+  final FocusModeReady state;
+  final FocusModeViewModel panel;
+  final bool canMutate;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = Theme.of(context).appColors;
+    final isLoggable = panel.isLoggable;
     return Container(
+      key: ValueKey('panel-${panel.sessionExerciseId}'),
+      padding: const EdgeInsets.all(AppSpacing.md),
       decoration: BoxDecoration(
-        color: colors.background,
-        border: Border(top: BorderSide(color: colors.outline)),
-      ),
-      padding: const EdgeInsets.fromLTRB(
-        AppSpacing.lg,
-        AppSpacing.md,
-        AppSpacing.lg,
-        AppSpacing.md,
+        color: colors.surface.withValues(alpha: 0.4),
+        borderRadius: BorderRadius.circular(AppRadius.lg),
+        border: Border.all(
+          color: isLoggable
+              ? colors.outline
+              : colors.outline.withValues(alpha: 0.4),
+        ),
       ),
       child: Column(
-        mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          if (isResting) ...[
-            FocusRestTimerBar(
-              timer: state.restTimer!,
-              onPauseToggle: () => bloc.add(
-                state.restTimer!.isPaused
-                    ? const FocusModeRestResumed()
-                    : const FocusModeRestPaused(),
-              ),
-              onExtend: () => bloc.add(const FocusModeRestExtended()),
-              onSkip: () => bloc.add(const FocusModeRestSkipped()),
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(child: _PanelHeader(panel: panel)),
+              if (isLoggable)
+                _PanelActionsMenu(state: state, panel: panel)
+              else
+                Icon(
+                  Icons.check_circle,
+                  color: colors.exerciseCompleted,
+                  size: 22,
+                ),
+            ],
+          ),
+          const SizedBox(height: AppSpacing.sm),
+          FocusSetProgress(
+            completed: panel.completedSetsCount,
+            total: panel.totalPlannedSets,
+            currentIndex: panel.currentSetIndex,
+          ),
+          const SizedBox(height: AppSpacing.md),
+          _PlannedAndLast(panel: panel),
+          if (isLoggable) ...[
+            const SizedBox(height: AppSpacing.md),
+            _CurrentValuesPanel(
+              state: state,
+              panel: panel,
+              canMutate: canMutate,
             ),
-            const SizedBox(height: AppSpacing.sm),
-            _SkipRestButton(
-              enabled: canMutate,
-              onPressed: () => bloc.add(const FocusModeRestSkipped()),
+            const SizedBox(height: AppSpacing.md),
+            _PanelCompleteButton(
+              state: state,
+              panel: panel,
+              canMutate: canMutate,
             ),
-          ] else
-            FocusCompleteButton(
-              onPressed: () => bloc.add(const FocusModeSetCompleted()),
-              label: 'COMPLETE SET',
-              subLabel: vm.totalPlannedSets > 0
-                  ? 'Set ${vm.currentSetIndex + 1}'
-                        '${vm.totalPlannedSets > 0 ? ' of ${vm.totalPlannedSets}' : ''}'
-                  : null,
-              enabled: canMutate,
-            ),
-          if (state.undoable != null) ...[
-            const SizedBox(height: AppSpacing.xs),
-            _UndoLastSetButton(undoable: state.undoable!, enabled: canMutate),
           ],
         ],
       ),
@@ -270,70 +305,10 @@ class _PinnedActionBar extends StatelessWidget {
   }
 }
 
-/// Secondary CTA shown beneath the rest timer. While resting, COMPLETE is
-/// demoted; this is the only forward action so it stays prominent (filled
-/// tonal) but visually subordinate to the live timer above.
-class _SkipRestButton extends StatelessWidget {
-  const _SkipRestButton({required this.enabled, required this.onPressed});
+class _PanelHeader extends StatelessWidget {
+  const _PanelHeader({required this.panel});
 
-  final bool enabled;
-  final VoidCallback onPressed;
-
-  @override
-  Widget build(BuildContext context) {
-    final colors = Theme.of(context).appColors;
-    return SizedBox(
-      width: double.infinity,
-      height: AppSpacing.touchMin,
-      child: FilledButton.tonalIcon(
-        onPressed: enabled ? onPressed : null,
-        icon: const Icon(Icons.skip_next, size: 20),
-        label: const Text('Skip rest → next set'),
-        style: FilledButton.styleFrom(
-          backgroundColor: colors.surfaceVariant,
-          foregroundColor: colors.onSurface,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(AppRadius.lg),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _UndoLastSetButton extends StatelessWidget {
-  const _UndoLastSetButton({required this.undoable, required this.enabled});
-
-  final UndoableSet undoable;
-  final bool enabled;
-
-  @override
-  Widget build(BuildContext context) {
-    final colors = Theme.of(context).appColors;
-    return Align(
-      alignment: Alignment.centerLeft,
-      child: TextButton.icon(
-        onPressed: enabled
-            ? () => context.read<FocusModeBloc>().add(
-                const FocusModeUndoRequested(),
-              )
-            : null,
-        icon: const Icon(Icons.undo),
-        label: Text('Undo last set on ${undoable.exerciseDisplayName}'),
-        style: TextButton.styleFrom(
-          foregroundColor: colors.onSurfaceMuted,
-          minimumSize: const Size(0, AppSpacing.touchMin),
-          padding: const EdgeInsets.symmetric(horizontal: AppSpacing.sm),
-        ),
-      ),
-    );
-  }
-}
-
-class _ExerciseHeader extends StatelessWidget {
-  const _ExerciseHeader({required this.viewModel});
-
-  final FocusModeViewModel viewModel;
+  final FocusModeViewModel panel;
 
   @override
   Widget build(BuildContext context) {
@@ -343,15 +318,15 @@ class _ExerciseHeader extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          viewModel.displayExerciseName,
-          style: typography.displaySmall.copyWith(color: colors.onBackground),
+          panel.displayExerciseName,
+          style: typography.titleSmall.copyWith(color: colors.onBackground),
           maxLines: 2,
           overflow: TextOverflow.ellipsis,
         ),
-        if (viewModel.isReplaced) ...[
+        if (panel.isReplaced) ...[
           const SizedBox(height: AppSpacing.xs),
           Text(
-            'Replaced from "${viewModel.plannedExerciseName}"',
+            'Replaced from "${panel.plannedExerciseName}"',
             style: typography.caption.copyWith(color: colors.exerciseReplaced),
           ),
         ],
@@ -361,19 +336,19 @@ class _ExerciseHeader extends StatelessWidget {
 }
 
 class _PlannedAndLast extends StatelessWidget {
-  const _PlannedAndLast({required this.viewModel});
+  const _PlannedAndLast({required this.panel});
 
-  final FocusModeViewModel viewModel;
+  final FocusModeViewModel panel;
 
   @override
   Widget build(BuildContext context) {
     final colors = Theme.of(context).appColors;
     const typography = AppTypography.standard;
     final plannedLabel = _formatPlanned(
-      viewModel.currentPlannedValues,
-      viewModel.plannedSummary,
+      panel.currentPlannedValues,
+      panel.plannedSummary,
     );
-    final lastLabel = _formatLast(viewModel.lastExecutedValues);
+    final lastLabel = _formatLast(panel.lastExecutedValues);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -443,69 +418,215 @@ class _PlannedAndLast extends StatelessWidget {
 }
 
 class _CurrentValuesPanel extends StatelessWidget {
-  const _CurrentValuesPanel({required this.state, required this.canMutate});
+  const _CurrentValuesPanel({
+    required this.state,
+    required this.panel,
+    required this.canMutate,
+  });
 
   final FocusModeReady state;
+  final FocusModeViewModel panel;
   final bool canMutate;
 
   @override
   Widget build(BuildContext context) {
     final bloc = context.read<FocusModeBloc>();
-    final draft = state.draft;
+    final exerciseId = panel.sessionExerciseId;
+    final draft = state.draftFor(exerciseId);
+    if (draft == null) return const SizedBox.shrink();
+    final stopwatchActive = state.activeStopwatchExerciseId == exerciseId;
     return switch (draft) {
       ActualRepBased(:final weightKg, :final reps) => FocusRepBasedPanel(
         weightKg: weightKg,
         reps: reps,
         enabled: canMutate,
-        onWeightBump: (delta) => bloc.add(FocusModeWeightBumped(delta)),
-        onRepsBump: (delta) => bloc.add(FocusModeRepsBumped(delta)),
-        onWeightCommitted: (v) => bloc.add(FocusModeWeightEdited(v)),
-        onRepsCommitted: (v) => bloc.add(FocusModeRepsEdited(v)),
+        onWeightBump: (delta) => bloc.add(
+          FocusModeWeightBumped(sessionExerciseId: exerciseId, delta: delta),
+        ),
+        onRepsBump: (delta) => bloc.add(
+          FocusModeRepsBumped(sessionExerciseId: exerciseId, delta: delta),
+        ),
+        onWeightCommitted: (v) => bloc.add(
+          FocusModeWeightEdited(sessionExerciseId: exerciseId, weightKg: v),
+        ),
+        onRepsCommitted: (v) => bloc.add(
+          FocusModeRepsEdited(sessionExerciseId: exerciseId, reps: v),
+        ),
       ),
       ActualTimeBased(:final durationSeconds, :final weightKg) =>
         FocusTimeBasedPanel(
           durationSeconds: durationSeconds,
           weightKg: weightKg,
-          stopwatch: state.stopwatch,
+          stopwatch: stopwatchActive
+              ? state.stopwatch
+              : StopwatchViewModel.idle(),
           enabled: canMutate,
-          onDurationBump: (delta) => bloc.add(FocusModeDurationBumped(delta)),
-          onDurationCommitted: (v) => bloc.add(FocusModeDurationEdited(v)),
-          onWeightBump: (delta) => bloc.add(FocusModeWeightBumped(delta)),
-          onWeightCommitted: (v) => bloc.add(FocusModeWeightEdited(v)),
-          onWeightCleared: () => bloc.add(const FocusModeWeightEdited(null)),
-          onStopwatchStart: () => bloc.add(const FocusModeStopwatchStarted()),
+          onDurationBump: (delta) => bloc.add(
+            FocusModeDurationBumped(
+              sessionExerciseId: exerciseId,
+              delta: delta,
+            ),
+          ),
+          onDurationCommitted: (v) => bloc.add(
+            FocusModeDurationEdited(sessionExerciseId: exerciseId, seconds: v),
+          ),
+          onWeightBump: (delta) => bloc.add(
+            FocusModeWeightBumped(sessionExerciseId: exerciseId, delta: delta),
+          ),
+          onWeightCommitted: (v) => bloc.add(
+            FocusModeWeightEdited(sessionExerciseId: exerciseId, weightKg: v),
+          ),
+          onWeightCleared: () => bloc.add(
+            FocusModeWeightEdited(
+              sessionExerciseId: exerciseId,
+              weightKg: null,
+            ),
+          ),
+          onStopwatchStart: () =>
+              bloc.add(FocusModeStopwatchStarted(exerciseId)),
           onStopwatchStop: () => bloc.add(const FocusModeStopwatchStopped()),
         ),
     };
   }
 }
 
-class _ExerciseActionsMenu extends StatelessWidget {
-  const _ExerciseActionsMenu({required this.state});
+class _PanelCompleteButton extends StatelessWidget {
+  const _PanelCompleteButton({
+    required this.state,
+    required this.panel,
+    required this.canMutate,
+  });
 
   final FocusModeReady state;
+  final FocusModeViewModel panel;
+  final bool canMutate;
+
+  @override
+  Widget build(BuildContext context) {
+    final bloc = context.read<FocusModeBloc>();
+    return FocusCompleteButton(
+      onPressed: () => bloc.add(FocusModeSetCompleted(panel.sessionExerciseId)),
+      label: 'LOG SET',
+      subLabel: panel.totalPlannedSets > 0
+          ? 'Set ${panel.currentSetIndex + 1} of ${panel.totalPlannedSets}'
+          : null,
+      enabled: canMutate,
+    );
+  }
+}
+
+/// Per-screen bottom bar. Shows the global rest timer when active, plus the
+/// undo affordance if a set was just logged in this group.
+class _PinnedBottomBar extends StatelessWidget {
+  const _PinnedBottomBar({required this.state, required this.canMutate});
+
+  final FocusModeReady state;
+  final bool canMutate;
 
   @override
   Widget build(BuildContext context) {
     final colors = Theme.of(context).appColors;
-    final vm = state.viewModel;
-    final videoUrl = vm.displayMetadata?.videoUrl;
+    final bloc = context.read<FocusModeBloc>();
+    final isResting = state.restTimer != null;
+    if (!isResting && state.undoable == null) {
+      return const SizedBox.shrink();
+    }
+
+    return Container(
+      decoration: BoxDecoration(
+        color: colors.background,
+        border: Border(top: BorderSide(color: colors.outline)),
+      ),
+      padding: const EdgeInsets.fromLTRB(
+        AppSpacing.lg,
+        AppSpacing.md,
+        AppSpacing.lg,
+        AppSpacing.md,
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          if (isResting) ...[
+            FocusRestTimerBar(
+              timer: state.restTimer!,
+              onPauseToggle: () => bloc.add(
+                state.restTimer!.isPaused
+                    ? const FocusModeRestResumed()
+                    : const FocusModeRestPaused(),
+              ),
+              onExtend: () => bloc.add(const FocusModeRestExtended()),
+              onSkip: () => bloc.add(const FocusModeRestSkipped()),
+            ),
+            if (state.undoable != null) const SizedBox(height: AppSpacing.xs),
+          ],
+          if (state.undoable != null)
+            _UndoLastSetButton(undoable: state.undoable!, enabled: canMutate),
+        ],
+      ),
+    );
+  }
+}
+
+class _UndoLastSetButton extends StatelessWidget {
+  const _UndoLastSetButton({required this.undoable, required this.enabled});
+
+  final UndoableSet undoable;
+  final bool enabled;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = Theme.of(context).appColors;
+    return Align(
+      alignment: Alignment.centerLeft,
+      child: TextButton.icon(
+        onPressed: enabled
+            ? () => context.read<FocusModeBloc>().add(
+                const FocusModeUndoRequested(),
+              )
+            : null,
+        icon: const Icon(Icons.undo),
+        label: Text('Undo last set on ${undoable.exerciseDisplayName}'),
+        style: TextButton.styleFrom(
+          foregroundColor: colors.onSurfaceMuted,
+          minimumSize: const Size(0, AppSpacing.touchMin),
+          padding: const EdgeInsets.symmetric(horizontal: AppSpacing.sm),
+        ),
+      ),
+    );
+  }
+}
+
+class _PanelActionsMenu extends StatelessWidget {
+  const _PanelActionsMenu({required this.state, required this.panel});
+
+  final FocusModeReady state;
+  final FocusModeViewModel panel;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = Theme.of(context).appColors;
+    final videoUrl = panel.displayMetadata?.videoUrl;
     final hasVideo = videoUrl != null && videoUrl.isNotEmpty;
-    return PopupMenuButton<_ExerciseMenuAction>(
+    final canMarkDone =
+        panel.completedSetsCount > 0 && panel.isLoggable && !panel.isReplaced;
+    return PopupMenuButton<_PanelMenuAction>(
       icon: Icon(Icons.more_vert, color: colors.onSurface),
       onSelected: (action) {
         switch (action) {
-          case _ExerciseMenuAction.replace:
+          case _PanelMenuAction.replace:
             _handleReplace(context);
-          case _ExerciseMenuAction.skip:
+          case _PanelMenuAction.skip:
             _handleSkip(context);
-          case _ExerciseMenuAction.openVideo:
+          case _PanelMenuAction.markDone:
+            _handleMarkDone(context);
+          case _PanelMenuAction.openVideo:
             if (hasVideo) _handleOpenVideo(context, videoUrl);
         }
       },
       itemBuilder: (context) => [
         const PopupMenuItem(
-          value: _ExerciseMenuAction.replace,
+          value: _PanelMenuAction.replace,
           child: ListTile(
             leading: Icon(Icons.swap_horiz),
             title: Text('Replace exercise'),
@@ -513,8 +634,18 @@ class _ExerciseActionsMenu extends StatelessWidget {
             dense: true,
           ),
         ),
+        if (canMarkDone)
+          const PopupMenuItem(
+            value: _PanelMenuAction.markDone,
+            child: ListTile(
+              leading: Icon(Icons.task_alt),
+              title: Text('Mark done'),
+              contentPadding: EdgeInsets.zero,
+              dense: true,
+            ),
+          ),
         const PopupMenuItem(
-          value: _ExerciseMenuAction.skip,
+          value: _PanelMenuAction.skip,
           child: ListTile(
             leading: Icon(Icons.skip_next),
             title: Text('Skip exercise'),
@@ -524,7 +655,7 @@ class _ExerciseActionsMenu extends StatelessWidget {
         ),
         if (hasVideo)
           const PopupMenuItem(
-            value: _ExerciseMenuAction.openVideo,
+            value: _PanelMenuAction.openVideo,
             child: ListTile(
               leading: Icon(Icons.play_circle_outline),
               title: Text('Open video'),
@@ -538,22 +669,22 @@ class _ExerciseActionsMenu extends StatelessWidget {
 
   Future<void> _handleReplace(BuildContext context) async {
     final bloc = context.read<FocusModeBloc>();
-    final vm = state.viewModel;
     final defaults = resolveReplaceExerciseDefaults(
-      sessionExerciseId: vm.sessionExerciseId,
+      sessionExerciseId: panel.sessionExerciseId,
       session: state.sessionState.session,
     );
     if (defaults == null) return;
     final result = await ReplaceExerciseDialog.show(
       context: context,
-      plannedExerciseName: vm.plannedExerciseName,
-      defaultMeasurementType: vm.effectiveMeasurementType,
+      plannedExerciseName: panel.plannedExerciseName,
+      defaultMeasurementType: panel.effectiveMeasurementType,
       defaultPlannedValues: defaults.plannedValues,
       defaultSetCount: defaults.setCount,
     );
     if (result == null) return;
     bloc.add(
       FocusModeExerciseReplaced(
+        sessionExerciseId: panel.sessionExerciseId,
         substituteName: result.name,
         substituteMeasurementType: result.measurementType,
         substitutePlannedValues: result.plannedValues,
@@ -565,18 +696,32 @@ class _ExerciseActionsMenu extends StatelessWidget {
 
   Future<void> _handleSkip(BuildContext context) async {
     final bloc = context.read<FocusModeBloc>();
-    final vm = state.viewModel;
     final confirmed = await ConfirmationDialog.show(
       context: context,
       title: 'Skip exercise?',
       body:
-          'Skipping "${vm.displayExerciseName}" marks it as not done and '
+          'Skipping "${panel.displayExerciseName}" marks it as not done and '
           'moves on. This affects this session only.',
       confirmLabel: 'Skip',
       isDestructive: true,
     );
     if (confirmed != true) return;
-    bloc.add(const FocusModeExerciseSkipped());
+    bloc.add(FocusModeExerciseSkipped(panel.sessionExerciseId));
+  }
+
+  Future<void> _handleMarkDone(BuildContext context) async {
+    final bloc = context.read<FocusModeBloc>();
+    final confirmed = await ConfirmationDialog.show(
+      context: context,
+      title: 'Mark exercise done?',
+      body:
+          'Locks "${panel.displayExerciseName}" as completed with the '
+          'sets you have so far (${panel.completedSetsCount} of '
+          '${panel.totalPlannedSets}).',
+      confirmLabel: 'Mark done',
+    );
+    if (confirmed != true) return;
+    bloc.add(FocusModeExerciseMarkedDone(panel.sessionExerciseId));
   }
 
   Future<void> _handleOpenVideo(BuildContext context, String url) async {
@@ -593,7 +738,57 @@ class _ExerciseActionsMenu extends StatelessWidget {
   }
 }
 
-enum _ExerciseMenuAction { replace, skip, openVideo }
+enum _PanelMenuAction { replace, skip, markDone, openVideo }
+
+/// App-bar action that opens a "switch to" picker, listing every other
+/// visible group in the session. Tapping an option dispatches
+/// [FocusModeGroupSwitched] and the panels refresh in place.
+class _SwitchExerciseButton extends StatelessWidget {
+  const _SwitchExerciseButton({required this.state});
+
+  final FocusModeReady state;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = Theme.of(context).appColors;
+    final options = FocusModeAssembler.listSwitchOptions(
+      state.sessionState,
+      currentAnchorId: state.anchorSessionExerciseId,
+    );
+    if (options.length <= 1) return const SizedBox.shrink();
+    return PopupMenuButton<String>(
+      tooltip: 'Switch exercise',
+      icon: Icon(Icons.swap_vert, color: colors.onSurface),
+      onSelected: (anchorId) =>
+          context.read<FocusModeBloc>().add(FocusModeGroupSwitched(anchorId)),
+      itemBuilder: (context) => [
+        for (final option in options)
+          PopupMenuItem<String>(
+            value: option.anchorSessionExerciseId,
+            enabled: !option.isCurrent,
+            child: Row(
+              children: [
+                Icon(
+                  option.isSuperset ? Icons.link : Icons.fitness_center,
+                  size: 18,
+                  color: colors.onSurfaceMuted,
+                ),
+                const SizedBox(width: AppSpacing.sm),
+                Expanded(child: Text(option.label)),
+                if (option.isCurrent) ...[
+                  const SizedBox(width: AppSpacing.sm),
+                  Text(
+                    '(current)',
+                    style: TextStyle(color: colors.onSurfaceMuted),
+                  ),
+                ],
+              ],
+            ),
+          ),
+      ],
+    );
+  }
+}
 
 class _LoadingView extends StatelessWidget {
   const _LoadingView();

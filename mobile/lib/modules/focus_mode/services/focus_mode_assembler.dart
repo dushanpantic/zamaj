@@ -1,29 +1,220 @@
 import 'package:zamaj/core/rep_target_formatter.dart';
 import 'package:zamaj/core/weight_formatter.dart';
 import 'package:zamaj/modules/domain/domain.dart';
+import 'package:zamaj/modules/focus_mode/models/focus_mode_group_view_model.dart';
 import 'package:zamaj/modules/focus_mode/models/focus_mode_view_model.dart';
 
-/// Builds the focus-mode view model from a [SessionState].
+/// Builds the focus-mode view models from a [SessionState] anchored on a
+/// session-exercise id.
 ///
-/// Returns null when the cursor is completed — the bloc transitions to a
-/// dedicated workout-complete state in that case so the assembler stays
-/// pure (no synthetic view models).
+/// Returns null when [anchorSessionExerciseId] is unknown, or when the
+/// anchor's group has no visible panels (i.e. every member is `skipped`).
+/// The bloc transitions to a dedicated workout-complete state when the
+/// session itself is complete, before calling the assembler.
 abstract final class FocusModeAssembler {
-  static FocusModeViewModel? assemble(SessionState state) {
-    final cursor = state.cursor;
-    if (cursor is! ActiveCursor) return null;
-
+  static FocusModeGroupViewModel? assemble(
+    SessionState state, {
+    required String anchorSessionExerciseId,
+  }) {
     final session = state.session;
-    final exercise = session.sessionExercises.firstWhere(
-      (e) => e.id == cursor.sessionExerciseId,
-      orElse: () => throw NotFoundError(
-        entityType: 'SessionExercise',
-        id: cursor.sessionExerciseId,
-      ),
+    final sorted = List<SessionExercise>.of(session.sessionExercises)
+      ..sort((a, b) => a.position.compareTo(b.position));
+
+    final groups = _computeGroups(sorted);
+    final groupIndex = groups.indexWhere(
+      (g) => g.any((e) => e.id == anchorSessionExerciseId),
+    );
+    if (groupIndex == -1) return null;
+    final group = groups[groupIndex];
+
+    final panels = <FocusModeViewModel>[
+      for (final exercise in group)
+        if (exercise.state is! SkippedState) _buildPanel(exercise, session),
+    ];
+    if (panels.isEmpty) return null;
+
+    final supersetTag = group.first.supersetTag;
+    final tagSharedByAll =
+        supersetTag != null && group.every((e) => e.supersetTag == supersetTag);
+
+    final upNext = _findNextGroup(
+      groups,
+      startingAfter: groupIndex,
+      session: session,
     );
 
-    final planned = _lookupPlanned(sessionExercise: exercise, session: session);
+    return FocusModeGroupViewModel(
+      sessionId: session.id,
+      workoutDayName: session.snapshot.workoutDay.name,
+      supersetTag: tagSharedByAll ? supersetTag : null,
+      panels: panels,
+      upNextGroupLabel: upNext?.label,
+      upNextGroupAnchorId: upNext?.anchorId,
+    );
+  }
 
+  /// Lists every visible group in the session for the "switch" picker.
+  ///
+  /// Groups whose members are all skipped or all completed-without-quota-met
+  /// are omitted — they wouldn't render a focusable panel. The currently
+  /// focused group (matching [currentAnchorId]) is flagged so the picker can
+  /// disable or annotate it.
+  static List<FocusModeSwitchOption> listSwitchOptions(
+    SessionState state, {
+    required String currentAnchorId,
+  }) {
+    final session = state.session;
+    final sorted = List<SessionExercise>.of(session.sessionExercises)
+      ..sort((a, b) => a.position.compareTo(b.position));
+    final groups = _computeGroups(sorted);
+
+    final options = <FocusModeSwitchOption>[];
+    for (final group in groups) {
+      final visible = group
+          .where((e) => e.state is! SkippedState)
+          .toList(growable: false);
+      if (visible.isEmpty) continue;
+      final label = _groupLabel(visible, session);
+      final isSuperset =
+          visible.length > 1 && visible.first.supersetTag != null;
+      final anchor = visible.first.id;
+      final isCurrent = group.any((e) => e.id == currentAnchorId);
+      options.add(
+        FocusModeSwitchOption(
+          anchorSessionExerciseId: anchor,
+          label: label,
+          isSuperset: isSuperset,
+          isCurrent: isCurrent,
+        ),
+      );
+    }
+    return options;
+  }
+
+  /// Returns the anchor session-exercise id the bloc should switch to after
+  /// [completedAnchorId]'s group becomes fully terminal. Falls back to the
+  /// first remaining open target in any group. Returns null when the
+  /// session is complete.
+  static String? findNextAnchorAfter(
+    SessionState state, {
+    required String completedAnchorId,
+  }) {
+    final session = state.session;
+    final sorted = List<SessionExercise>.of(session.sessionExercises)
+      ..sort((a, b) => a.position.compareTo(b.position));
+    final groups = _computeGroups(sorted);
+
+    final currentIndex = groups.indexWhere(
+      (g) => g.any((e) => e.id == completedAnchorId),
+    );
+
+    bool hasOpenTarget(List<SessionExercise> group) {
+      for (final ex in group) {
+        if (state.openTargets.any((t) => t.sessionExerciseId == ex.id)) {
+          return true;
+        }
+      }
+      return false;
+    }
+
+    if (currentIndex != -1) {
+      for (var i = currentIndex + 1; i < groups.length; i++) {
+        if (hasOpenTarget(groups[i])) {
+          return groups[i]
+              .firstWhere(
+                (e) =>
+                    state.openTargets.any((t) => t.sessionExerciseId == e.id),
+              )
+              .id;
+        }
+      }
+      for (var i = 0; i < currentIndex; i++) {
+        if (hasOpenTarget(groups[i])) {
+          return groups[i]
+              .firstWhere(
+                (e) =>
+                    state.openTargets.any((t) => t.sessionExerciseId == e.id),
+              )
+              .id;
+        }
+      }
+    } else if (state.openTargets.isNotEmpty) {
+      return state.openTargets.first.sessionExerciseId;
+    }
+    return null;
+  }
+
+  // -------------------------------------------------------------------------
+
+  static List<List<SessionExercise>> _computeGroups(
+    List<SessionExercise> sortedExercises,
+  ) {
+    final groups = <List<SessionExercise>>[];
+    var i = 0;
+    while (i < sortedExercises.length) {
+      final tag = sortedExercises[i].supersetTag;
+      if (tag == null) {
+        groups.add([sortedExercises[i]]);
+        i++;
+        continue;
+      }
+      var j = i + 1;
+      while (j < sortedExercises.length &&
+          sortedExercises[j].supersetTag == tag) {
+        j++;
+      }
+      groups.add(sortedExercises.sublist(i, j));
+      i = j;
+    }
+    return groups;
+  }
+
+  static ({String label, String anchorId})? _findNextGroup(
+    List<List<SessionExercise>> groups, {
+    required int startingAfter,
+    required Session session,
+  }) {
+    for (var i = startingAfter + 1; i < groups.length; i++) {
+      final visible = groups[i]
+          .where((e) => e.state is! SkippedState)
+          .toList(growable: false);
+      if (visible.isEmpty) continue;
+      final actionable = visible
+          .where((e) {
+            return switch (e.state) {
+              UnfinishedState() || ReplacedState() => true,
+              _ => false,
+            };
+          })
+          .toList(growable: false);
+      if (actionable.isEmpty) continue;
+      return (
+        label: _groupLabel(visible, session),
+        anchorId: actionable.first.id,
+      );
+    }
+    return null;
+  }
+
+  static String _groupLabel(List<SessionExercise> visible, Session session) {
+    if (visible.length == 1) {
+      return _displayName(visible.first, session);
+    }
+    return visible.map((e) => _displayName(e, session)).join(' + ');
+  }
+
+  static String _displayName(SessionExercise exercise, Session session) {
+    return switch (exercise.state) {
+      ReplacedState(:final substitute) => substitute.name,
+      _ => _lookupPlanned(sessionExercise: exercise, session: session).name,
+    };
+  }
+
+  static FocusModeViewModel _buildPanel(
+    SessionExercise exercise,
+    Session session,
+  ) {
+    final planned = _lookupPlanned(sessionExercise: exercise, session: session);
     final effectiveMt = switch (exercise.state) {
       ReplacedState(:final substitute) => substitute.measurementType,
       _ => planned.measurementType,
@@ -47,10 +238,12 @@ abstract final class FocusModeAssembler {
       ..sort((a, b) => a.position.compareTo(b.position));
     final lastExecuted = sortedExecuted.isEmpty ? null : sortedExecuted.last;
 
-    final upNext = _computeUpNextName(
-      session: session,
-      currentExerciseId: exercise.id,
-    );
+    final isLoggable = switch (exercise.state) {
+      UnfinishedState() ||
+      ReplacedState() => sortedExecuted.length < totalPlannedSets,
+      _ => false,
+    };
+    final currentSetIndex = sortedExecuted.length;
 
     final (
       currentPlannedValues,
@@ -58,15 +251,15 @@ abstract final class FocusModeAssembler {
       plannedSummary,
     ) = switch (exercise.state) {
       ReplacedState(:final substitute) => (
-        cursor.setIndex < substitute.setCount ? substitute.plannedValues : null,
+        currentSetIndex < substitute.setCount ? substitute.plannedValues : null,
         null,
         _summarizeSubstitute(substitute),
       ),
       _ => () {
         final sortedPlanned = List<WorkoutSet>.of(planned.sets)
           ..sort((a, b) => a.position.compareTo(b.position));
-        final currentPlanned = cursor.setIndex < sortedPlanned.length
-            ? sortedPlanned[cursor.setIndex]
+        final currentPlanned = currentSetIndex < sortedPlanned.length
+            ? sortedPlanned[currentSetIndex]
             : null;
         return (
           currentPlanned?.plannedValues,
@@ -77,23 +270,21 @@ abstract final class FocusModeAssembler {
     };
 
     return FocusModeViewModel(
-      sessionId: session.id,
-      workoutDayName: session.snapshot.workoutDay.name,
       sessionExerciseId: exercise.id,
       displayExerciseName: displayName,
       displayMetadata: displayMetadata,
       effectiveMeasurementType: effectiveMt,
-      currentSetIndex: cursor.setIndex,
+      currentSetIndex: currentSetIndex,
       totalPlannedSets: totalPlannedSets,
       completedSetsCount: sortedExecuted.length,
       currentPlannedValues: currentPlannedValues,
       plannedSummary: plannedSummary,
       currentPlannedSetIdInSnapshot: currentPlannedSetId,
       lastExecutedValues: lastExecuted?.actualValues,
-      upNextExerciseName: upNext,
       plannedRestSeconds: planned.plannedRestSeconds,
       isReplaced: isReplaced,
       plannedExerciseName: planned.name,
+      isLoggable: isLoggable,
     );
   }
 
@@ -124,35 +315,6 @@ abstract final class FocusModeAssembler {
       entityType: 'Exercise',
       id: sessionExercise.plannedExerciseIdInSnapshot,
     );
-  }
-
-  /// Finds the next actionable exercise after [currentExerciseId] in
-  /// position order. Skipped/completed exercises are passed over; the
-  /// preview is meant to answer "what am I doing next?", not show the
-  /// whole workout.
-  static String? _computeUpNextName({
-    required Session session,
-    required String currentExerciseId,
-  }) {
-    final sorted = List<SessionExercise>.of(session.sessionExercises)
-      ..sort((a, b) => a.position.compareTo(b.position));
-
-    final currentIndex = sorted.indexWhere((e) => e.id == currentExerciseId);
-    if (currentIndex == -1) return null;
-
-    for (var i = currentIndex + 1; i < sorted.length; i++) {
-      final next = sorted[i];
-      if (next.state is SkippedState) continue;
-      if (next.state is CompletedState) {
-        final planned = _lookupPlanned(sessionExercise: next, session: session);
-        if (next.executedSets.length >= planned.sets.length) continue;
-      }
-      return switch (next.state) {
-        ReplacedState(:final substitute) => substitute.name,
-        _ => _lookupPlanned(sessionExercise: next, session: session).name,
-      };
-    }
-    return null;
   }
 
   static String _summarizePlanned(Exercise plannedExercise) {
