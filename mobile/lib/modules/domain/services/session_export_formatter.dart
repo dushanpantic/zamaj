@@ -1,3 +1,4 @@
+import 'package:zamaj/core/date_formatter.dart';
 import 'package:zamaj/core/weight_formatter.dart';
 import 'package:zamaj/modules/domain/models/actual_set_values.dart';
 import 'package:zamaj/modules/domain/models/executed_set.dart';
@@ -24,7 +25,7 @@ abstract final class SessionExportFormatter {
 
     final dateInstant = session.endedAt ?? session.startedAt;
     final local = dateInstant.isUtc ? dateInstant.toLocal() : dateInstant;
-    buf.writeln(_isoDate(local));
+    buf.writeln(DateFormatter.isoDate(local));
     if (session.endedAt == null) {
       buf.writeln('(in progress)');
     }
@@ -223,10 +224,4 @@ abstract final class SessionExportFormatter {
     };
   }
 
-  static String _isoDate(DateTime d) {
-    final y = d.year.toString().padLeft(4, '0');
-    final m = d.month.toString().padLeft(2, '0');
-    final day = d.day.toString().padLeft(2, '0');
-    return '$y-$m-$day';
-  }
 }

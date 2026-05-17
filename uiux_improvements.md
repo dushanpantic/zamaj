@@ -63,7 +63,7 @@ Severity legend:
 - **Where:** [exercise_editor_screen.dart](mobile/lib/modules/program_management/screens/exercise_editor_screen.dart) — back gesture silently discards in-progress edits; only the explicit "Save" button persists
 - **Recommend (P1):** Wrap editor in `PopScope` (Flutter 3.16+). If draft differs from saved state, prompt "Discard changes?" before allowing pop. Same for `WorkoutDayEditor`, `ProgramEditor`, `PlanPreview`.
 
-### 1.10 Hard-coded font sizes override design tokens
+### 1.10 Hard-coded font sizes override design tokens ✅ DONE
 - **Where:** Many places override `fontSize:` on a `typography.*` style, defeating the purpose of `AppTypography`:
   - [focus_rep_based_panel.dart:233](mobile/lib/modules/focus_mode/widgets/focus_rep_based_panel.dart#L233) — `fontSize: 44`
   - [focus_mode_screen.dart:232](mobile/lib/modules/focus_mode/screens/focus_mode_screen.dart#L232) — `fontSize: 28`
@@ -71,38 +71,38 @@ Severity legend:
   - [exercise_card.dart:227](mobile/lib/modules/workout_overview/widgets/exercise_card.dart#L227), [276](mobile/lib/modules/workout_overview/widgets/exercise_card.dart#L276) — `fontSize: 14` / `12`
   - [workout_day_editor_screen.dart:535, 545, 558, 638](mobile/lib/modules/program_management/screens/workout_day_editor_screen.dart) — `fontSize: 14`, `12`
   - [exercise_editor_screen.dart:276](mobile/lib/modules/program_management/screens/exercise_editor_screen.dart#L276) — `fontSize: 11`
-- **Recommend (P2):** Add new semantic typography entries (e.g., `numericHero`, `numericMd`, `badge`) to `AppTypography` and remove all literal `fontSize` overrides. Once. Then they're tunable in one place.
+- **Recommend (P2):** Add new semantic typography entries (e.g., `numericHero`, `numericMd`, `badge`) to `AppTypography` and remove all literal `fontSize` overrides. Once. Then they're tunable in one place. *(`numericHero`/`numericMd`/`badge` tokens added; no remaining `fontSize:` overrides in the codebase.)*
 
-### 1.11 Hard-coded colors slip through (CLAUDE.md rule)
+### 1.11 Hard-coded colors slip through (CLAUDE.md rule) ✅ DONE
 - **Where:**
   - [plan_preview_screen.dart:83](mobile/lib/modules/program_management/screens/plan_preview_screen.dart#L83) — `Colors.black38` overlay
   - [workout_overview_screen.dart:556, 599](mobile/lib/modules/workout_overview/screens/workout_overview_screen.dart) — `Colors.transparent` (defensible, but `colors.outline.withValues(alpha: 0)` is the principled form)
-- **Recommend (P3):** Add `colors.scrim` token to `AppColors` (both palettes) and use it. Audit for any `Color(0x…)` literals in UI directories.
+- **Recommend (P3):** Add `colors.scrim` token to `AppColors` (both palettes) and use it. Audit for any `Color(0x…)` literals in UI directories. *(`scrim` token shipped in both palettes; the saving overlay in PlanPreview reads from it. Remaining `Colors.transparent` usages are inside `Material(color: ...)` ink wrappers where transparency is the intent.)*
 
 ### 1.12 Accessibility: missing semantics, tiny tap targets in some places
 - **Where:**
   - Icon-only buttons rarely have `tooltip` / `Semantics`. Examples are fine (`IconButton` has `tooltip`), but `Icon(...)` alone is announced as "image" by TalkBack.
-  - `IconButton` close on transient error banners uses `constraints: const BoxConstraints()` ([workout_overview_screen.dart:657](mobile/lib/modules/workout_overview/screens/workout_overview_screen.dart#L657), [focus_mode_screen.dart:613](mobile/lib/modules/focus_mode/screens/focus_mode_screen.dart#L613)) — collapses below the 48dp touch min defined by `AppSpacing.touchMin`.
-  - `TextButton` with `minimumSize: const Size(0, 32)` in rest-timer bar ([focus_rest_timer_bar.dart:78,87](mobile/lib/modules/focus_mode/widgets/focus_rest_timer_bar.dart)) — sweaty fingers will miss.
-- **Recommend (P1):** Audit for any interactive target < 48dp. Add `Semantics(label: ...)` to decorative-looking buttons. Hand-strength reduction is the lived reality between sets.
+  - ✅ `IconButton` close on transient error banners uses `constraints: const BoxConstraints()` ([workout_overview_screen.dart:657](mobile/lib/modules/workout_overview/screens/workout_overview_screen.dart#L657), [focus_mode_screen.dart:613](mobile/lib/modules/focus_mode/screens/focus_mode_screen.dart#L613)) — collapses below the 48dp touch min defined by `AppSpacing.touchMin`. *(Banner close buttons now use `touchMin` constraints with a "Dismiss" tooltip.)*
+  - ✅ `TextButton` with `minimumSize: const Size(0, 32)` in rest-timer bar ([focus_rest_timer_bar.dart:78,87](mobile/lib/modules/focus_mode/widgets/focus_rest_timer_bar.dart)) — sweaty fingers will miss. *(Rest-timer buttons already at `AppSpacing.touchMin`.)*
+- **Recommend (P1):** Audit for any interactive target < 48dp. Add `Semantics(label: ...)` to decorative-looking buttons. Hand-strength reduction is the lived reality between sets. *(Banner-close + rest-timer fixed. Broader `Semantics`/tooltip sweep across icon-only widgets still pending.)*
 
-### 1.13 No pull-to-refresh except on Recent Sessions
+### 1.13 No pull-to-refresh except on Recent Sessions ✅ DONE
 - **Where:** [recent_sessions_screen.dart:105](mobile/lib/modules/export/screens/recent_sessions_screen.dart#L105) has `RefreshIndicator`; [workout_day_picker_screen.dart](mobile/lib/modules/workout_day_picker/screens/workout_day_picker_screen.dart) has only an AppBar refresh icon; [program_list_screen.dart](mobile/lib/modules/program_management/screens/program_list_screen.dart) has neither.
-- **Recommend (P3):** Add `RefreshIndicator` to ProgramList and Day Picker. Mobile users expect it.
+- **Recommend (P3):** Add `RefreshIndicator` to ProgramList and Day Picker. Mobile users expect it. *(Both screens now have `RefreshIndicator`. ProgramList got a new `ProgramListRefreshed` event so the list stays visible while reloading; Day Picker reuses the existing refresh event. Day Picker's AppBar refresh icon is kept for discoverability.)*
 
-### 1.14 AppBar styling drifts
+### 1.14 AppBar styling drifts ✅ DONE
 - **Where:** [program_list_screen.dart:82-94](mobile/lib/modules/program_management/screens/program_list_screen.dart#L82-L94) sets `backgroundColor: colors.background` + `elevation: 0` explicitly; [workout_day_editor_screen.dart:203-205](mobile/lib/modules/program_management/screens/workout_day_editor_screen.dart#L203-L205) uses `colors.surface` instead. The theme already configures `AppBarTheme`, but screens overwrite it inconsistently.
-- **Recommend (P3):** Remove per-screen `AppBar` color overrides; rely on `AppBarTheme` in `AppTheme._build`. Pick one — background for flat hierarchy, surface for elevated.
+- **Recommend (P3):** Remove per-screen `AppBar` color overrides; rely on `AppBarTheme` in `AppTheme._build`. Pick one — background for flat hierarchy, surface for elevated. *(All per-screen overrides removed: ProgramList, WorkoutDayEditor, and PlanImport now inherit `AppBarTheme` (background, flat).)*
 
 ### 1.15 No global "session in flight" indicator
 - **Where:** App-level
 - **Problem:** If a user navigates away from an active session (back to Programs), there's no breadcrumb showing it's still active.
 - **Recommend (P2):** Persistent bottom `Banner` (or `MaterialBanner`) when an active session exists: "<Day name> — tap to resume". Common in Spotify, Strong, Hevy, etc.
 
-### 1.16 Confirmation dialog body text uses muted color
+### 1.16 Confirmation dialog body text uses muted color ✅ DONE
 - **Where:** [confirmation_dialog.dart:59](mobile/lib/modules/program_management/widgets/confirmation_dialog.dart#L59) — body in `colors.onSurfaceMuted`
 - **Problem:** Destructive prose ("This cannot be undone") is the least readable text in the dialog. Should be `onSurface` for full contrast; the muted look reads as advisory rather than warning.
-- **Recommend (P2):** `colors.onSurface` for body. Optionally tint with `error` only when `isDestructive`.
+- **Recommend (P2):** `colors.onSurface` for body. Optionally tint with `error` only when `isDestructive`. *(Body now uses `onSurface`. Destructive-only error tint left as future polish.)*
 
 ---
 
@@ -156,7 +156,7 @@ Severity legend:
 |---|---|---|
 | a | P1 | **Two competing gesture systems on the same tiles**: `ReorderableListView` provides the drag-to-reorder, and `LongPressDraggable` + `DragTarget` provide drag-to-create-superset. Long-press triggers the draggable; the reorder handle triggers reorder. This is the spec, but the affordance for "drag exercise A onto B = create superset" is invisible — no hint text, no shadow on drop targets until hover. Add a one-time tutorial overlay or an explicit "create superset" multi-select mode. |
 | b | P2 | Add exercise dialog ([line 943](mobile/lib/modules/program_management/screens/workout_day_editor_screen.dart#L943)) uses underline `InputDecoration` while other dialogs use the filled outlined style from `inputDecorationTheme`. Inconsistent. |
-| c | P2 | Empty-state icon is `Icons.fitness_center` (filled), but ProgramList / ProgramEditor use `Icons.fitness_center_outlined`. Pick one — outlined is more in line with M3 "default = outlined, selected = filled". |
+| c | ✅ DONE | Empty-state icon is `Icons.fitness_center` (filled), but ProgramList / ProgramEditor use `Icons.fitness_center_outlined`. Pick one — outlined is more in line with M3 "default = outlined, selected = filled". *(Switched to `Icons.fitness_center_outlined`.)* |
 | d | P2 | Swipe-left to delete an exercise → dialog → confirm → instant delete with no undo. With 4–8 exercises per day, accidental delete is common. Use undo snackbar (see 1.8). |
 | e | P3 | `_findAncestorStateOfType<_WorkoutDayEditorScreenState>` ([line 340, 351](mobile/lib/modules/program_management/screens/workout_day_editor_screen.dart)) is a code smell; affects testability of the nav flow but invisible to user. |
 | f | P2 | Superset card's inner `ReorderableListView` inside an outer `ReorderableListView` is a fragile pattern — nested scroll/drag behavior can be confusing (drag from inner can "leak" into outer). Consider a dedicated edit-superset modal instead of nested reorder. |
@@ -181,7 +181,7 @@ Severity legend:
 
 | # | Severity | Finding |
 |---|---|---|
-| a | P1 | The primary action — Start / Resume — is an **OutlinedButton** ([start_resume_action_button.dart:27](mobile/lib/modules/workout_day_picker/widgets/start_resume_action_button.dart#L27)). For the screen's top user goal, the button should be `FilledButton` (primary) and visually dominant. The Resume case in particular benefits from contrast (orange filled with white). |
+| a | ✅ DONE | The primary action — Start / Resume — is an **OutlinedButton** ([start_resume_action_button.dart:27](mobile/lib/modules/workout_day_picker/widgets/start_resume_action_button.dart#L27)). For the screen's top user goal, the button should be `FilledButton` (primary) and visually dominant. The Resume case in particular benefits from contrast (orange filled with white). *(Already a `FilledButton.icon` with `colors.primary` / `colors.onPrimary`.)* |
 | b | P2 | No "today's suggested day" surfacing. Many programs follow a weekly rotation — show a tag "Last done: 3 days ago" → green "ready" / amber "soon" / grey "future" so the user picks without thinking. (`day_tile_history_labels.dart` already provides labels — extend with a recommendation badge.) |
 | c | P2 | The AppBar refresh icon duplicates work `RefreshIndicator` could do. Add pull-to-refresh; consider hiding the AppBar refresh once added. |
 | d | P3 | The transient error `MaterialBanner` (lines 247) pushes day tiles down on appearance — no animation. Use `AnimatedSwitcher` or replace with a `SnackBar`. |
@@ -211,7 +211,7 @@ This is the **single most-used screen during a workout**. Highest stakes for one
 |---|---|---|
 | a | P1 | Entire screen is a `SingleChildScrollView`. During an active set the COMPLETE button can scroll out of view, defeating the one-handed reach goal. Pin the COMPLETE button + rest timer to the bottom in a fixed bar; let only the header / planned / panel scroll. |
 | b | P1 | No keyboard shortcut to log a set with the hardware volume rocker (a category-standard feature: Strong, Hevy, FitNotes all support it). Sweaty hands struggle with on-screen taps. Use `HardwareKeyboard.instance.addHandler` or a platform channel for volume keys. |
-| c | P1 | Rest timer bar buttons are 32px tall ([focus_rest_timer_bar.dart:78](mobile/lib/modules/focus_mode/widgets/focus_rest_timer_bar.dart#L78)) — below `AppSpacing.touchMin`. Mid-set hand tremor will misfire. Raise to 48dp. |
+| c | ✅ DONE | Rest timer bar buttons are 32px tall ([focus_rest_timer_bar.dart:78](mobile/lib/modules/focus_mode/widgets/focus_rest_timer_bar.dart#L78)) — below `AppSpacing.touchMin`. Mid-set hand tremor will misfire. Raise to 48dp. *(Already at `AppSpacing.touchMin` (48dp); banner close buttons in Overview + Focus also fixed.)* |
 | d | P2 | The COMPLETE SET button is good — large, primary. But during *rest*, it remains the focal point even though the user is waiting. When `state.restTimer != null && !timer.isOvertime`, demote COMPLETE and elevate the rest timer (or replace COMPLETE with "SKIP REST → NEXT SET"). |
 | e | P2 | "Up next: <name>" is small caption-style ([line 164](mobile/lib/modules/focus_mode/screens/focus_mode_screen.dart#L164)). It's the user's mental "what's coming?" — promote to bodySmall + an `Icons.arrow_forward` chip. |
 | f | P2 | Undo last set is a small `TextButton.icon` aligned left ([line 187](mobile/lib/modules/focus_mode/screens/focus_mode_screen.dart#L187)). Industry standard is a transient SnackBar with "UNDO" for ~5s after logging. Move this to a snackbar (the current button can stay as a fallback after the snackbar expires). |
@@ -233,7 +233,7 @@ This is the **single most-used screen during a workout**. Highest stakes for one
 | d | P2 | "Export this week" is only available when `hasWeekSessions`. There's no equivalent "Export this month" / "Export all". |
 | e | P3 | The empty state suggests "finish a workout from the day picker to see it here" — fine, but the user is already on a deep nav. Add a button "Go to day picker". |
 | f | P3 | No filter / search (e.g., find a session containing "Bench Press"). |
-| g | P3 | `_isoDate` is hand-rolled — use `intl` or extend the existing date helper for consistency with the ISO date in ProgramListTile. |
+| g | ✅ DONE | `_isoDate` is hand-rolled — use `intl` or extend the existing date helper for consistency with the ISO date in ProgramListTile. *(Single `DateFormatter.isoDate` helper in [date_formatter.dart](mobile/lib/core/date_formatter.dart) replaces four hand-rolled implementations across UI + domain export formatters.)* |
 
 ---
 
@@ -272,8 +272,8 @@ This is the **single most-used screen during a workout**. Highest stakes for one
 ### 4.3 State badges are pill chips
 - Badges (`Done`, `Skipped`, `Replaced`) are tasteful. Add `In progress` for the exercise whose cursor is active — visual feedback that the engine is "on this one".
 
-### 4.4 Numeric stability
-- `AppTypography.numeric` uses tabular figures — good. Verify it's used in **every** number-rendering location (set counts, rest seconds, weight chips). A grep for `fontFeatures` shows it's manually re-added in a few places ([workout_day_editor_screen.dart:638](mobile/lib/modules/program_management/screens/workout_day_editor_screen.dart#L638), [exercise_card.dart:275](mobile/lib/modules/workout_overview/widgets/exercise_card.dart#L275)) — those should adopt the token rather than reinventing it.
+### 4.4 Numeric stability ✅ DONE
+- `AppTypography.numeric` uses tabular figures — good. Verify it's used in **every** number-rendering location (set counts, rest seconds, weight chips). A grep for `fontFeatures` shows it's manually re-added in a few places ([workout_day_editor_screen.dart:638](mobile/lib/modules/program_management/screens/workout_day_editor_screen.dart#L638), [exercise_card.dart:275](mobile/lib/modules/workout_overview/widgets/exercise_card.dart#L275)) — those should adopt the token rather than reinventing it. *(No remaining `fontFeatures:` outside `AppTypography`.)*
 
 ### 4.5 Color encoding of "planned vs. actual"
 - Tokens `planned` (muted) and `actual` (bright) exist and are used in SetRow + Focus. Excellent semantic system. Extend to Recent Sessions tiles when summarizing — "planned 100, did 105" would benefit from the same color story.
@@ -300,7 +300,7 @@ This is the **single most-used screen during a workout**. Highest stakes for one
 2. ✅ **Session in-flight banner / bottom nav** (1.1, 1.15). Unlocks "resume anywhere". *(banner shipped; full root-level bottom nav left as a follow-up.)*
 3. **Undo snackbars for set-level destructive actions** (1.8, 2.8i, 2.9f). Cuts dialog-fatigue.
 4. ✅ **Back-press guard on editors** (1.9, 2.6b). Prevents lost work. *(Applied to ExerciseEditor + PlanPreview; ProgramEditor/WorkoutDayEditor auto-save so no guard needed.)*
-5. **Touch-target audit** (1.12, 2.9c). Accessibility floor. *(2.9c rest-timer buttons covered as part of #1.)*
+5. ✅ **Touch-target audit** (1.12, 2.9c). Accessibility floor. *(Rest-timer + transient-error banner close buttons now at `AppSpacing.touchMin`; broader Semantics/tooltip sweep on decorative icons still pending.)*
 6. ✅ **Day Picker primary button → FilledButton + recommendation badges** (2.7a–b). Front-door warmth.
 7. ✅ **Hardcoded font/color cleanup** (1.10, 1.11). Sets up the rest of the polish work.
 

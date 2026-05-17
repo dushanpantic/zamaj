@@ -56,7 +56,7 @@ class ConfirmationDialog extends StatelessWidget {
       ),
       content: Text(
         body,
-        style: typography.body.copyWith(color: colors.onSurfaceMuted),
+        style: typography.body.copyWith(color: colors.onSurface),
       ),
       actions: [
         TextButton(

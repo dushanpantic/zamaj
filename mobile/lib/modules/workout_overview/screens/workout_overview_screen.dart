@@ -652,9 +652,12 @@ class _TransientErrorBanner extends StatelessWidget {
           ),
           IconButton(
             onPressed: onDismiss,
+            tooltip: 'Dismiss',
             icon: Icon(Icons.close, color: colors.onSurfaceMuted, size: 18),
-            padding: EdgeInsets.zero,
-            constraints: const BoxConstraints(),
+            constraints: const BoxConstraints(
+              minWidth: AppSpacing.touchMin,
+              minHeight: AppSpacing.touchMin,
+            ),
           ),
         ],
       ),

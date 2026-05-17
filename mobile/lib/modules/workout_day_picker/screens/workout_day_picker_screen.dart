@@ -206,27 +206,34 @@ class _LoadedBody extends StatelessWidget {
             onDismiss: onDismissError,
           ),
         Expanded(
-          child: ListView.separated(
-            padding: const EdgeInsets.only(
-              left: AppSpacing.lg,
-              right: AppSpacing.lg,
-              top: AppSpacing.lg,
-              bottom: AppSpacing.xxxl,
-            ),
-            itemCount: state.dayViewModels.length,
-            separatorBuilder: (_, _) => const SizedBox(height: AppSpacing.sm),
-            itemBuilder: (context, index) {
-              final vm = state.dayViewModels[index];
-              return DayTile(
-                key: ValueKey(vm.workoutDay.id),
-                viewModel: vm,
-                referenceNow: state.referenceNow,
-                launchInFlightWorkoutDayId: state.launchInFlightWorkoutDayId,
-                onStartPressed: onStart,
-                onResumePressed: onResume,
-                onRetryPressed: onTileRetry,
+          child: RefreshIndicator(
+            onRefresh: () async {
+              context.read<WorkoutDayPickerBloc>().add(
+                const WorkoutDayPickerRefreshRequested(),
               );
             },
+            child: ListView.separated(
+              padding: const EdgeInsets.only(
+                left: AppSpacing.lg,
+                right: AppSpacing.lg,
+                top: AppSpacing.lg,
+                bottom: AppSpacing.xxxl,
+              ),
+              itemCount: state.dayViewModels.length,
+              separatorBuilder: (_, _) => const SizedBox(height: AppSpacing.sm),
+              itemBuilder: (context, index) {
+                final vm = state.dayViewModels[index];
+                return DayTile(
+                  key: ValueKey(vm.workoutDay.id),
+                  viewModel: vm,
+                  referenceNow: state.referenceNow,
+                  launchInFlightWorkoutDayId: state.launchInFlightWorkoutDayId,
+                  onStartPressed: onStart,
+                  onResumePressed: onResume,
+                  onRetryPressed: onTileRetry,
+                );
+              },
+            ),
           ),
         ),
       ],

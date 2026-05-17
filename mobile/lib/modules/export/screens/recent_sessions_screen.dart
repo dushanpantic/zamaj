@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:zamaj/core/app_spacing.dart';
 import 'package:zamaj/core/app_theme.dart';
 import 'package:zamaj/core/app_typography.dart';
+import 'package:zamaj/core/date_formatter.dart';
 import 'package:zamaj/modules/domain/domain.dart';
 import 'package:zamaj/modules/export/bloc/bloc.dart';
 import 'package:zamaj/modules/export/models/session_history_item.dart';
@@ -75,16 +76,8 @@ class RecentSessionsScreen extends StatelessWidget {
       text: text,
       shareSubject:
           '${state.programName} — week of '
-          '${_isoDate(state.window.start)}',
+          '${DateFormatter.isoDate(state.window.start.toLocal())}',
     );
-  }
-
-  static String _isoDate(DateTime d) {
-    final l = d.isUtc ? d.toLocal() : d;
-    final y = l.year.toString().padLeft(4, '0');
-    final m = l.month.toString().padLeft(2, '0');
-    final day = l.day.toString().padLeft(2, '0');
-    return '$y-$m-$day';
   }
 }
 

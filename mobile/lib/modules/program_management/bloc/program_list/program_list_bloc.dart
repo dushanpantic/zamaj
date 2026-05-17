@@ -13,6 +13,7 @@ class ProgramListBloc extends Bloc<ProgramListEvent, ProgramListState> {
     on<ProgramListDeleteConfirmed>(_onDeleteConfirmed);
     on<ProgramListDeleteCancelled>(_onDeleteCancelled);
     on<ProgramListRetryRequested>(_onRetryRequested);
+    on<ProgramListRefreshed>(_onRefreshed);
   }
 
   final ProgramRepository _programRepository;
@@ -69,6 +70,13 @@ class ProgramListBloc extends Bloc<ProgramListEvent, ProgramListState> {
     Emitter<ProgramListState> emit,
   ) async {
     emit(const ProgramListLoading());
+    await _loadPrograms(emit);
+  }
+
+  Future<void> _onRefreshed(
+    ProgramListRefreshed event,
+    Emitter<ProgramListState> emit,
+  ) async {
     await _loadPrograms(emit);
   }
 

@@ -1,3 +1,4 @@
+import 'package:zamaj/core/date_formatter.dart';
 import 'package:zamaj/modules/domain/models/session.dart';
 import 'package:zamaj/modules/domain/services/session_export_formatter.dart';
 
@@ -15,7 +16,7 @@ abstract final class WeekExportFormatter {
   }) {
     final buf = StringBuffer();
     final start = weekStart.isUtc ? weekStart.toLocal() : weekStart;
-    buf.write('Week of ${_isoDate(start)}');
+    buf.write('Week of ${DateFormatter.isoDate(start)}');
 
     final completed = sessions.where((s) => s.endedAt != null).toList()
       ..sort(_chronological);
@@ -45,10 +46,4 @@ abstract final class WeekExportFormatter {
     return a.id.compareTo(b.id);
   }
 
-  static String _isoDate(DateTime d) {
-    final y = d.year.toString().padLeft(4, '0');
-    final m = d.month.toString().padLeft(2, '0');
-    final day = d.day.toString().padLeft(2, '0');
-    return '$y-$m-$day';
-  }
 }

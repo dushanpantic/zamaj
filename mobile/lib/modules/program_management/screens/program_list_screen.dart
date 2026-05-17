@@ -82,9 +82,6 @@ class _ProgramListScreenState extends State<ProgramListScreen> {
       backgroundColor: colors.background,
       appBar: AppBar(
         title: const Text('Programs'),
-        backgroundColor: colors.background,
-        foregroundColor: colors.onBackground,
-        elevation: 0,
         actions: [
           IconButton(
             onPressed: _navigateToImport,
@@ -294,25 +291,30 @@ class _ProgramList extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ListView.separated(
-      padding: const EdgeInsets.only(
-        left: AppSpacing.lg,
-        right: AppSpacing.lg,
-        top: AppSpacing.lg,
-        bottom: AppSpacing.xxxl,
-      ),
-      itemCount: programs.length,
-      separatorBuilder: (_, _) => const SizedBox(height: AppSpacing.sm),
-      itemBuilder: (context, index) {
-        final program = programs[index];
-        return ProgramListTile(
-          program: program,
-          onTap: () => onTap(program),
-          onEdit: () => onEdit(program),
-          onDeleteRequested: () => onDeleteRequested(program),
-          isDeleting: program.id == deletionCandidateId,
-        );
+    return RefreshIndicator(
+      onRefresh: () async {
+        context.read<ProgramListBloc>().add(const ProgramListRefreshed());
       },
+      child: ListView.separated(
+        padding: const EdgeInsets.only(
+          left: AppSpacing.lg,
+          right: AppSpacing.lg,
+          top: AppSpacing.lg,
+          bottom: AppSpacing.xxxl,
+        ),
+        itemCount: programs.length,
+        separatorBuilder: (_, _) => const SizedBox(height: AppSpacing.sm),
+        itemBuilder: (context, index) {
+          final program = programs[index];
+          return ProgramListTile(
+            program: program,
+            onTap: () => onTap(program),
+            onEdit: () => onEdit(program),
+            onDeleteRequested: () => onDeleteRequested(program),
+            isDeleting: program.id == deletionCandidateId,
+          );
+        },
+      ),
     );
   }
 }

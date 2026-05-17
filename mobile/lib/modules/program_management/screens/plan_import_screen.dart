@@ -60,12 +60,7 @@ class _PlanImportScreenState extends State<PlanImportScreen> {
       },
       child: Scaffold(
         backgroundColor: colors.background,
-        appBar: AppBar(
-          title: const Text('Import from text'),
-          backgroundColor: colors.background,
-          foregroundColor: colors.onBackground,
-          elevation: 0,
-        ),
+        appBar: AppBar(title: const Text('Import from text')),
         body: BlocBuilder<PlanImportBloc, PlanImportState>(
           builder: (context, state) {
             final isParsing = state is PlanImportParsing;

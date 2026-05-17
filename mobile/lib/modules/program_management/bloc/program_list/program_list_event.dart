@@ -44,3 +44,10 @@ final class ProgramListRetryRequested extends ProgramListEvent {
   @override
   List<Object?> get props => [];
 }
+
+final class ProgramListRefreshed extends ProgramListEvent {
+  const ProgramListRefreshed();
+
+  @override
+  List<Object?> get props => [];
+}

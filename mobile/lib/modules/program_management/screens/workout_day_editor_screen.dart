@@ -200,9 +200,6 @@ class _EditingBody extends StatelessWidget {
     return Scaffold(
       backgroundColor: colors.background,
       appBar: AppBar(
-        backgroundColor: colors.surface,
-        foregroundColor: colors.onSurface,
-        elevation: 0,
         title: _NameField(
           controller: nameController,
           isValid: validation.isNameValid,
@@ -301,7 +298,7 @@ class _ExerciseList extends StatelessWidget {
             mainAxisSize: MainAxisSize.min,
             children: [
               Icon(
-                Icons.fitness_center,
+                Icons.fitness_center_outlined,
                 color: colors.onSurfaceMuted,
                 size: 48,
               ),

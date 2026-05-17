@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:zamaj/core/app_spacing.dart';
 import 'package:zamaj/core/app_theme.dart';
 import 'package:zamaj/core/app_typography.dart';
+import 'package:zamaj/core/date_formatter.dart';
 import 'package:zamaj/modules/domain/domain.dart';
 
 class ProgramListTile extends StatelessWidget {
@@ -130,10 +131,7 @@ class ProgramListTile extends StatelessWidget {
     );
   }
 
-  String _formatDate(DateTime date) {
-    final local = date.toLocal();
-    return '${local.year}-${local.month.toString().padLeft(2, '0')}-${local.day.toString().padLeft(2, '0')}';
-  }
+  String _formatDate(DateTime date) => DateFormatter.isoDate(date.toLocal());
 }
 
 enum _TileAction { edit, delete }
