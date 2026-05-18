@@ -115,6 +115,7 @@ class WorkoutDayMapper {
     final measurementType = switch (plannedValues) {
       PlannedRepBased() => const MeasurementType.repBased(),
       PlannedTimeBased() => const MeasurementType.timeBased(),
+      PlannedBodyweight() => const MeasurementType.bodyweight(),
     };
 
     return domain.WorkoutSet(

@@ -28,6 +28,9 @@ void main() {
       TimeBasedMeasurement() => const PlannedSetValues.timeBased(
         durationSeconds: 30,
       ),
+      BodyweightMeasurement() => PlannedSetValues.bodyweight(
+        repTarget: RepTarget.fixed(reps: 8),
+      ),
     };
     return WorkoutDay(
       id: 'wd-1',

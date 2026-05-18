@@ -589,6 +589,12 @@ class SessionFlowEngine {
           durationSeconds: durationSeconds,
           weightKg: weightKg,
         ),
+      PlannedBodyweight(:final repTarget) => ActualSetValues.bodyweight(
+        reps: switch (repTarget) {
+          RepTargetFixed(:final reps) => reps,
+          RepTargetRange(:final maxReps) => maxReps,
+        },
+      ),
     };
   }
 
@@ -610,6 +616,7 @@ class SessionFlowEngine {
     final isValid = switch ((measurementType, actualValues)) {
       (RepBasedMeasurement(), ActualRepBased()) => true,
       (TimeBasedMeasurement(), ActualTimeBased()) => true,
+      (BodyweightMeasurement(), ActualBodyweight()) => true,
       _ => false,
     };
     if (!isValid) {

@@ -45,9 +45,11 @@ DateTime anyUtcDateTime(Random rng) {
 }
 
 MeasurementType anyMeasurementType(Random rng) {
-  return rng.nextBool()
-      ? const MeasurementType.repBased()
-      : const MeasurementType.timeBased();
+  return switch (rng.nextInt(3)) {
+    0 => const MeasurementType.repBased(),
+    1 => const MeasurementType.timeBased(),
+    _ => const MeasurementType.bodyweight(),
+  };
 }
 
 ExerciseGroupKind anyExerciseGroupKind(Random rng) {
@@ -100,16 +102,17 @@ RepTarget anyRepTarget(Random rng) {
 }
 
 PlannedSetValues anyPlannedSetValues(Random rng) {
-  if (rng.nextBool()) {
-    return PlannedSetValues.repBased(
+  return switch (rng.nextInt(3)) {
+    0 => PlannedSetValues.repBased(
       weightKg: _anyWeightKg(rng),
       repTarget: anyRepTarget(rng),
-    );
-  }
-  return PlannedSetValues.timeBased(
-    durationSeconds: rng.nextInt(300),
-    weightKg: _maybeOptionalWeightKg(rng),
-  );
+    ),
+    1 => PlannedSetValues.timeBased(
+      durationSeconds: rng.nextInt(300),
+      weightKg: _maybeOptionalWeightKg(rng),
+    ),
+    _ => PlannedSetValues.bodyweight(repTarget: anyRepTarget(rng)),
+  };
 }
 
 PlannedSetValues anyPlannedSetValuesForMeasurement(
@@ -125,20 +128,22 @@ PlannedSetValues anyPlannedSetValuesForMeasurement(
       durationSeconds: rng.nextInt(300),
       weightKg: _maybeOptionalWeightKg(rng),
     ),
+    bodyweight: () => PlannedSetValues.bodyweight(repTarget: anyRepTarget(rng)),
   );
 }
 
 ActualSetValues anyActualSetValues(Random rng) {
-  if (rng.nextBool()) {
-    return ActualSetValues.repBased(
+  return switch (rng.nextInt(3)) {
+    0 => ActualSetValues.repBased(
       weightKg: _anyWeightKg(rng),
       reps: rng.nextInt(30),
-    );
-  }
-  return ActualSetValues.timeBased(
-    durationSeconds: rng.nextInt(300),
-    weightKg: _maybeOptionalWeightKg(rng),
-  );
+    ),
+    1 => ActualSetValues.timeBased(
+      durationSeconds: rng.nextInt(300),
+      weightKg: _maybeOptionalWeightKg(rng),
+    ),
+    _ => ActualSetValues.bodyweight(reps: rng.nextInt(30)),
+  };
 }
 
 ActualSetValues anyActualSetValuesForMeasurement(
@@ -154,6 +159,7 @@ ActualSetValues anyActualSetValuesForMeasurement(
       durationSeconds: rng.nextInt(300),
       weightKg: _maybeOptionalWeightKg(rng),
     ),
+    bodyweight: () => ActualSetValues.bodyweight(reps: rng.nextInt(30)),
   );
 }
 
@@ -302,7 +308,8 @@ anyInconsistentExercise(Random rng) {
   final exerciseMt = anyMeasurementType(rng);
   final mismatchedMt = exerciseMt.when(
     repBased: () => const MeasurementType.timeBased(),
-    timeBased: () => const MeasurementType.repBased(),
+    timeBased: () => const MeasurementType.bodyweight(),
+    bodyweight: () => const MeasurementType.repBased(),
   );
   final goodSet = anyWorkoutSet(rng, exerciseMt);
   final badSet = anyWorkoutSet(rng, mismatchedMt);

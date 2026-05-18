@@ -18,7 +18,7 @@ void main() {
 
   test('beforeIndex(currentIndex) and beforeIndex(currentIndex + 1) both '
       'return Noop for an unfinished dragged exercise', () {
-    final rng = Random(46);
+    final rng = Random(47);
     var exercised = 0;
 
     for (var i = 0; i < iterations; i++) {

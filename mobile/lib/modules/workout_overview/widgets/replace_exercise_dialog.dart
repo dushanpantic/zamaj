@@ -153,6 +153,11 @@ class _ReplaceExerciseDialogState extends State<ReplaceExerciseDialog> {
         _weight.text = weightKg == null
             ? ''
             : WeightFormatter.formatKg(weightKg);
+      case PlannedBodyweight(:final repTarget):
+        _reps.text = switch (repTarget) {
+          RepTargetFixed(:final reps) => reps.toString(),
+          RepTargetRange(:final minReps, :final maxReps) => '$minReps-$maxReps',
+        };
     }
   }
 
@@ -185,6 +190,10 @@ class _ReplaceExerciseDialogState extends State<ReplaceExerciseDialog> {
           durationSeconds: seconds,
           weightKg: weightKg,
         );
+      case BodyweightMeasurement():
+        final repTarget = _parseRepsField(_reps.text);
+        if (repTarget == null) return null;
+        return PlannedSetValues.bodyweight(repTarget: repTarget);
     }
   }
 
@@ -227,6 +236,8 @@ class _ReplaceExerciseDialogState extends State<ReplaceExerciseDialog> {
           // weight is optional on time-based; leave blank so the user can
           // opt-in (e.g. weighted deadhang) without being forced to type 0.
           _weight.text = '';
+        case BodyweightMeasurement():
+          _reps.text = '0';
       }
     });
   }
@@ -285,19 +296,21 @@ class _ReplaceExerciseDialogState extends State<ReplaceExerciseDialog> {
               segments: const [
                 ButtonSegment(value: 0, label: Text('Reps')),
                 ButtonSegment(value: 1, label: Text('Time')),
+                ButtonSegment(value: 2, label: Text('Bodyweight')),
               ],
               selected: {
                 switch (_measurementType) {
                   RepBasedMeasurement() => 0,
                   TimeBasedMeasurement() => 1,
+                  BodyweightMeasurement() => 2,
                 },
               },
               onSelectionChanged: (selection) {
-                _onMeasurementTypeChanged(
-                  selection.first == 0
-                      ? const MeasurementType.repBased()
-                      : const MeasurementType.timeBased(),
-                );
+                _onMeasurementTypeChanged(switch (selection.first) {
+                  0 => const MeasurementType.repBased(),
+                  1 => const MeasurementType.timeBased(),
+                  _ => const MeasurementType.bodyweight(),
+                });
               },
             ),
             const SizedBox(height: AppSpacing.lg),
@@ -446,6 +459,34 @@ class _PlannedFields extends StatelessWidget {
                 hintText: 'optional · e.g. 10 for weighted deadhang',
               ),
               onChanged: (_) => onChanged(),
+            ),
+          ],
+        );
+      case BodyweightMeasurement():
+        return Row(
+          children: [
+            Expanded(
+              child: TextField(
+                controller: repsController,
+                keyboardType: TextInputType.text,
+                inputFormatters: [
+                  FilteringTextInputFormatter.allow(RegExp(r'[0-9\-–]')),
+                ],
+                style: numeric,
+                decoration: const InputDecoration(labelText: 'Reps (or range)'),
+                onChanged: (_) => onChanged(),
+              ),
+            ),
+            const SizedBox(width: AppSpacing.sm),
+            Expanded(
+              child: TextField(
+                controller: setsController,
+                keyboardType: TextInputType.number,
+                inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                style: numeric,
+                decoration: const InputDecoration(labelText: 'Sets'),
+                onChanged: (_) => onChanged(),
+              ),
             ),
           ],
         );

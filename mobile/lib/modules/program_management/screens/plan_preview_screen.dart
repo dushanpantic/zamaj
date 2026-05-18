@@ -298,6 +298,7 @@ class _ExerciseRow extends StatelessWidget {
     final measurementLabel = exercise.measurementType.when(
       repBased: () => 'Rep-based',
       timeBased: () => 'Time-based',
+      bodyweight: () => 'Bodyweight',
     );
 
     final restLabel = exercise.plannedRestSeconds != null

@@ -17,6 +17,9 @@ sealed class PlannedSetValues with _$PlannedSetValues {
     double? weightKg,
   }) = PlannedTimeBased;
 
+  const factory PlannedSetValues.bodyweight({required RepTarget repTarget}) =
+      PlannedBodyweight;
+
   factory PlannedSetValues.fromJson(Map<String, dynamic> json) =>
       wrapDeserializationErrors(
         () => _$PlannedSetValuesFromJson(json),

@@ -71,6 +71,14 @@ abstract class ExecutedSet with _$ExecutedSet {
             );
           }
         }
+      case (BodyweightMeasurement(), ActualBodyweight(:final reps)):
+        if (reps < 0) {
+          throw ValidationError(
+            entityId: id,
+            invariant: 'reps_non_negative',
+            message: 'reps must be >= 0, got $reps',
+          );
+        }
       case (RepBasedMeasurement(), _):
         throw ValidationError(
           entityId: id,
@@ -84,6 +92,13 @@ abstract class ExecutedSet with _$ExecutedSet {
           invariant: 'actualValues_variant_mismatch',
           message:
               'measurementType is timeBased but actualValues is ${actualValues.runtimeType}',
+        );
+      case (BodyweightMeasurement(), _):
+        throw ValidationError(
+          entityId: id,
+          invariant: 'actualValues_variant_mismatch',
+          message:
+              'measurementType is bodyweight but actualValues is ${actualValues.runtimeType}',
         );
     }
   }

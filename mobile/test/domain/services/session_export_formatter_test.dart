@@ -51,6 +51,31 @@ void main() {
       expect(out, contains('95 × 6'));
     });
 
+    test('bodyweight exercise renders reps without kg', () {
+      final session = _session(
+        workoutDayName: 'Calisthenics',
+        endedAt: DateTime.utc(2026, 5, 12),
+        exercises: [
+          _ExerciseSpec(
+            name: 'Pushups',
+            measurementType: const MeasurementType.bodyweight(),
+            plannedBodyweightReps: const [8, 8, 8, 8],
+            state: const ExerciseState.completed(),
+            actualBodyweightReps: const [8, 8, 7, 6],
+          ),
+        ],
+      );
+      final out = SessionExportFormatter.format(session);
+      expect(out, contains('Pushups'));
+      expect(out, contains('Plan: 4 × 8'));
+      expect(out, contains('Done:'));
+      expect(out, contains('8 reps'));
+      expect(out, contains('7 reps'));
+      expect(out, contains('6 reps'));
+      expect(out, isNot(contains('kg')));
+      expect(out, isNot(contains('0 ×')));
+    });
+
     test('time-based exercise renders durations in seconds, no × prefix', () {
       final session = _session(
         workoutDayName: 'Core',
@@ -248,8 +273,10 @@ class _ExerciseSpec {
     required this.state,
     this.plannedRep = const [],
     this.plannedTime = const [],
+    this.plannedBodyweightReps = const [],
     this.actualRep = const [],
     this.actualTime = const [],
+    this.actualBodyweightReps = const [],
     this.supersetTag,
   });
 
@@ -258,8 +285,10 @@ class _ExerciseSpec {
   final ExerciseState state;
   final List<(double, int)> plannedRep; // (weightKg, reps)
   final List<int> plannedTime;
+  final List<int> plannedBodyweightReps;
   final List<(double, int)> actualRep;
   final List<int> actualTime;
+  final List<int> actualBodyweightReps;
   final String? supersetTag;
 }
 
@@ -335,7 +364,7 @@ Exercise _buildExercise(_ExerciseSpec spec, int idx) {
         ),
       );
     }
-  } else {
+  } else if (spec.measurementType is TimeBasedMeasurement) {
     for (var i = 0; i < spec.plannedTime.length; i++) {
       sets.add(
         WorkoutSet(
@@ -345,6 +374,23 @@ Exercise _buildExercise(_ExerciseSpec spec, int idx) {
           measurementType: spec.measurementType,
           plannedValues: PlannedSetValues.timeBased(
             durationSeconds: spec.plannedTime[i],
+          ),
+          createdAt: t,
+          updatedAt: t,
+          schemaVersion: 1,
+        ),
+      );
+    }
+  } else {
+    for (var i = 0; i < spec.plannedBodyweightReps.length; i++) {
+      sets.add(
+        WorkoutSet(
+          id: 'ws-$idx-$i',
+          exerciseId: 'ex-$idx',
+          position: i,
+          measurementType: spec.measurementType,
+          plannedValues: PlannedSetValues.bodyweight(
+            repTarget: RepTarget.fixed(reps: spec.plannedBodyweightReps[i]),
           ),
           createdAt: t,
           updatedAt: t,
@@ -387,7 +433,7 @@ SessionExercise _buildSessionExercise(_ExerciseSpec spec, int idx) {
         ),
       );
     }
-  } else {
+  } else if (spec.measurementType is TimeBasedMeasurement) {
     for (var i = 0; i < spec.actualTime.length; i++) {
       executed.add(
         ExecutedSet(
@@ -397,6 +443,24 @@ SessionExercise _buildSessionExercise(_ExerciseSpec spec, int idx) {
           measurementType: spec.measurementType,
           actualValues: ActualSetValues.timeBased(
             durationSeconds: spec.actualTime[i],
+          ),
+          completedAt: t,
+          createdAt: t,
+          updatedAt: t,
+          schemaVersion: 1,
+        ),
+      );
+    }
+  } else {
+    for (var i = 0; i < spec.actualBodyweightReps.length; i++) {
+      executed.add(
+        ExecutedSet(
+          id: 'es-$idx-$i',
+          sessionExerciseId: 'sx-$idx',
+          position: i,
+          measurementType: spec.measurementType,
+          actualValues: ActualSetValues.bodyweight(
+            reps: spec.actualBodyweightReps[i],
           ),
           completedAt: t,
           createdAt: t,

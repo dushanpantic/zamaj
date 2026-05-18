@@ -177,3 +177,17 @@ Map<String, dynamic> _$PlannedSetDraftTimeBasedToJson(
   'weightInput': instance.weightInput,
   'type': instance.$type,
 };
+
+PlannedSetDraftBodyweight _$PlannedSetDraftBodyweightFromJson(
+  Map<String, dynamic> json,
+) => $checkedCreate('PlannedSetDraftBodyweight', json, ($checkedConvert) {
+  final val = PlannedSetDraftBodyweight(
+    repsInput: $checkedConvert('repsInput', (v) => v as String),
+    $type: $checkedConvert('type', (v) => v as String?),
+  );
+  return val;
+}, fieldKeyMap: const {r'$type': 'type'});
+
+Map<String, dynamic> _$PlannedSetDraftBodyweightToJson(
+  PlannedSetDraftBodyweight instance,
+) => <String, dynamic>{'repsInput': instance.repsInput, 'type': instance.$type};

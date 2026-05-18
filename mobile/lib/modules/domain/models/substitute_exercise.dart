@@ -21,6 +21,7 @@ abstract class SubstituteExercise with _$SubstituteExercise {
     final mismatch = switch ((measurementType, plannedValues)) {
       (RepBasedMeasurement(), PlannedRepBased()) => false,
       (TimeBasedMeasurement(), PlannedTimeBased()) => false,
+      (BodyweightMeasurement(), PlannedBodyweight()) => false,
       _ => true,
     };
     if (mismatch) {

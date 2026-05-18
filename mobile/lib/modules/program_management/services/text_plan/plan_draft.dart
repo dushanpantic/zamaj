@@ -52,4 +52,9 @@ sealed class PlanDraftSet with _$PlanDraftSet {
     required int durationSeconds,
     double? weightKg,
   }) = PlanDraftSetTimeBased;
+
+  const factory PlanDraftSet.bodyweight({
+    required int count,
+    required RepTarget repTarget,
+  }) = PlanDraftSetBodyweight;
 }

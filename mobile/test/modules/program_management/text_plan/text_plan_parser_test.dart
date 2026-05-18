@@ -211,6 +211,42 @@ void main() {
     });
   });
 
+  group('TextPlanParser — bodyweight', () {
+    test('parses "4x8 bw" as a bodyweight set with no weight', () {
+      const input = 'Calisthenics\n\nDay 1\nPushups\n4x8 bw\n';
+      final result = TextPlanParser.parse(input);
+
+      expect(result, isA<PlanParseSuccess>());
+      final success = result as PlanParseSuccess;
+      expect(success.warnings, isEmpty);
+
+      final exercise =
+          success.draft.workoutDays.first.groups.first.exercises.first;
+      expect(exercise.name, equals('Pushups'));
+
+      final set = exercise.sets.first as PlanDraftSetBodyweight;
+      expect(set.count, equals(4));
+      expect(set.repTarget, equals(RepTarget.fixed(reps: 8)));
+    });
+
+    test('parses "3x6-10 bw 90s" as bodyweight with range and rest', () {
+      const input = 'Calisthenics\n\nDay 1\nPullups\n3x6-10 bw 90s\n';
+      final result = TextPlanParser.parse(input);
+
+      expect(result, isA<PlanParseSuccess>());
+      final success = result as PlanParseSuccess;
+      expect(success.warnings, isEmpty);
+
+      final exercise =
+          success.draft.workoutDays.first.groups.first.exercises.first;
+      expect(exercise.plannedRestSeconds, equals(90));
+
+      final set = exercise.sets.first as PlanDraftSetBodyweight;
+      expect(set.count, equals(3));
+      expect(set.repTarget, equals(RepTarget.range(minReps: 6, maxReps: 10)));
+    });
+  });
+
   group('TextPlanParser — orphan set line', () {
     test('set line before any day header returns orphan_set_line error', () {
       const input = '4x8 100kg\n';

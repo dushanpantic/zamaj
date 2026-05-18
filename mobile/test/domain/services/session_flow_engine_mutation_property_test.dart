@@ -1079,7 +1079,8 @@ Session _anySessionOneSetFromCompletion(Random rng) {
 MeasurementType _oppositeMeasurementType(MeasurementType mt) {
   return switch (mt) {
     RepBasedMeasurement() => const MeasurementType.timeBased(),
-    TimeBasedMeasurement() => const MeasurementType.repBased(),
+    TimeBasedMeasurement() => const MeasurementType.bodyweight(),
+    BodyweightMeasurement() => const MeasurementType.repBased(),
   };
 }
 

@@ -12,6 +12,7 @@ import 'package:zamaj/modules/focus_mode/models/focus_mode_view_model.dart';
 import 'package:zamaj/modules/focus_mode/models/stopwatch_view_model.dart';
 import 'package:zamaj/modules/focus_mode/models/undoable_set.dart';
 import 'package:zamaj/modules/focus_mode/services/focus_mode_assembler.dart';
+import 'package:zamaj/modules/focus_mode/widgets/focus_bodyweight_panel.dart';
 import 'package:zamaj/modules/focus_mode/widgets/focus_complete_button.dart';
 import 'package:zamaj/modules/focus_mode/widgets/focus_rep_based_panel.dart';
 import 'package:zamaj/modules/focus_mode/widgets/focus_rest_timer_bar.dart';
@@ -401,6 +402,8 @@ class _PlannedAndLast extends StatelessWidget {
         weightKg == null
             ? '${durationSeconds}s'
             : '${WeightFormatter.formatKg(weightKg)}kg × ${durationSeconds}s',
+      PlannedBodyweight(:final repTarget) =>
+        '× ${RepTargetFormatter.format(repTarget)}',
     };
   }
 
@@ -413,6 +416,7 @@ class _PlannedAndLast extends StatelessWidget {
         weightKg == null
             ? '${durationSeconds}s'
             : '${WeightFormatter.formatKg(weightKg)}kg × ${durationSeconds}s',
+      ActualBodyweight(:final reps) => '× $reps',
     };
   }
 }
@@ -486,6 +490,16 @@ class _CurrentValuesPanel extends StatelessWidget {
               bloc.add(FocusModeStopwatchStarted(exerciseId)),
           onStopwatchStop: () => bloc.add(const FocusModeStopwatchStopped()),
         ),
+      ActualBodyweight(:final reps) => FocusBodyweightPanel(
+        reps: reps,
+        enabled: canMutate,
+        onRepsBump: (delta) => bloc.add(
+          FocusModeRepsBumped(sessionExerciseId: exerciseId, delta: delta),
+        ),
+        onRepsCommitted: (v) => bloc.add(
+          FocusModeRepsEdited(sessionExerciseId: exerciseId, reps: v),
+        ),
+      ),
     };
   }
 }

@@ -386,8 +386,20 @@ void _attachPlannedSet(
       r'^(\d+(?:\.\d+)?)[kK][gG]$',
     ).firstMatch(secondToken);
     final durationMatch = RegExp(r'^(\d+)[sS]$').firstMatch(secondToken);
+    final isBodyweight = secondToken.toLowerCase() == 'bw';
 
-    if (weightMatch != null) {
+    if (isBodyweight) {
+      parsedSet = PlanDraftSet.bodyweight(count: count, repTarget: repTarget);
+      final trailingTokens = remaining.skip(1).toList();
+      final restResult = _parseRestTokens(
+        trailingTokens,
+        lineNumber,
+        rawLine,
+        exercise.draftId,
+      );
+      restSeconds = restResult.restSeconds;
+      warnings.addAll(restResult.warnings);
+    } else if (weightMatch != null) {
       final weight = double.parse(weightMatch.group(1)!);
       parsedSet = PlanDraftSet.repBased(
         count: count,

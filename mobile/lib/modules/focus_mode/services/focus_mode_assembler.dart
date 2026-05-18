@@ -297,6 +297,8 @@ abstract final class FocusModeAssembler {
             ? '${substitute.setCount}×${durationSeconds}s'
             : '${WeightFormatter.formatKg(weightKg)}kg '
                   '${substitute.setCount}×${durationSeconds}s',
+      PlannedBodyweight(:final repTarget) =>
+        '${substitute.setCount}×${RepTargetFormatter.format(repTarget)}',
     };
   }
 
@@ -334,6 +336,8 @@ abstract final class FocusModeAssembler {
             ? '${sets.length}×${durationSeconds}s'
             : '${WeightFormatter.formatKg(weightKg)}kg '
                   '${sets.length}×${durationSeconds}s',
+      PlannedBodyweight(:final repTarget) =>
+        '${sets.length}×${RepTargetFormatter.format(repTarget)}',
     };
   }
 }

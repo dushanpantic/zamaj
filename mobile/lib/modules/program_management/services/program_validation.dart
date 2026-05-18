@@ -92,6 +92,12 @@ abstract final class ProgramValidation {
     return Valid(RepTarget.fixed(reps: repsParsed));
   }
 
+  static ValidationResult<RepTarget> validateBodyweightSet({
+    required String repsInput,
+  }) {
+    return parseRepTarget(repsInput);
+  }
+
   static ValidationResult<int> validateTimeBasedSet(String durationInput) {
     final parsed = int.tryParse(durationInput);
     if (parsed == null) {

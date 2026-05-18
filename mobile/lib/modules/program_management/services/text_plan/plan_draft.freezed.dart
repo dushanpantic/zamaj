@@ -1096,7 +1096,7 @@ as List<PlanParseWarning>,
 /// @nodoc
 mixin _$PlanDraftSet {
 
- int get count; double? get weightKg;
+ int get count;
 /// Create a copy of PlanDraftSet
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -1107,16 +1107,16 @@ $PlanDraftSetCopyWith<PlanDraftSet> get copyWith => _$PlanDraftSetCopyWithImpl<P
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is PlanDraftSet&&(identical(other.count, count) || other.count == count)&&(identical(other.weightKg, weightKg) || other.weightKg == weightKg));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is PlanDraftSet&&(identical(other.count, count) || other.count == count));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,count,weightKg);
+int get hashCode => Object.hash(runtimeType,count);
 
 @override
 String toString() {
-  return 'PlanDraftSet(count: $count, weightKg: $weightKg)';
+  return 'PlanDraftSet(count: $count)';
 }
 
 
@@ -1127,7 +1127,7 @@ abstract mixin class $PlanDraftSetCopyWith<$Res>  {
   factory $PlanDraftSetCopyWith(PlanDraftSet value, $Res Function(PlanDraftSet) _then) = _$PlanDraftSetCopyWithImpl;
 @useResult
 $Res call({
- int count, double weightKg
+ int count
 });
 
 
@@ -1144,11 +1144,10 @@ class _$PlanDraftSetCopyWithImpl<$Res>
 
 /// Create a copy of PlanDraftSet
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? count = null,Object? weightKg = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? count = null,}) {
   return _then(_self.copyWith(
 count: null == count ? _self.count : count // ignore: cast_nullable_to_non_nullable
-as int,weightKg: null == weightKg ? _self.weightKg! : weightKg // ignore: cast_nullable_to_non_nullable
-as double,
+as int,
   ));
 }
 
@@ -1169,12 +1168,13 @@ extension PlanDraftSetPatterns on PlanDraftSet {
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeMap<TResult extends Object?>({TResult Function( PlanDraftSetRepBased value)?  repBased,TResult Function( PlanDraftSetTimeBased value)?  timeBased,required TResult orElse(),}){
+@optionalTypeArgs TResult maybeMap<TResult extends Object?>({TResult Function( PlanDraftSetRepBased value)?  repBased,TResult Function( PlanDraftSetTimeBased value)?  timeBased,TResult Function( PlanDraftSetBodyweight value)?  bodyweight,required TResult orElse(),}){
 final _that = this;
 switch (_that) {
 case PlanDraftSetRepBased() when repBased != null:
 return repBased(_that);case PlanDraftSetTimeBased() when timeBased != null:
-return timeBased(_that);case _:
+return timeBased(_that);case PlanDraftSetBodyweight() when bodyweight != null:
+return bodyweight(_that);case _:
   return orElse();
 
 }
@@ -1192,12 +1192,13 @@ return timeBased(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult map<TResult extends Object?>({required TResult Function( PlanDraftSetRepBased value)  repBased,required TResult Function( PlanDraftSetTimeBased value)  timeBased,}){
+@optionalTypeArgs TResult map<TResult extends Object?>({required TResult Function( PlanDraftSetRepBased value)  repBased,required TResult Function( PlanDraftSetTimeBased value)  timeBased,required TResult Function( PlanDraftSetBodyweight value)  bodyweight,}){
 final _that = this;
 switch (_that) {
 case PlanDraftSetRepBased():
 return repBased(_that);case PlanDraftSetTimeBased():
-return timeBased(_that);}
+return timeBased(_that);case PlanDraftSetBodyweight():
+return bodyweight(_that);}
 }
 /// A variant of `map` that fallback to returning `null`.
 ///
@@ -1211,12 +1212,13 @@ return timeBased(_that);}
 /// }
 /// ```
 
-@optionalTypeArgs TResult? mapOrNull<TResult extends Object?>({TResult? Function( PlanDraftSetRepBased value)?  repBased,TResult? Function( PlanDraftSetTimeBased value)?  timeBased,}){
+@optionalTypeArgs TResult? mapOrNull<TResult extends Object?>({TResult? Function( PlanDraftSetRepBased value)?  repBased,TResult? Function( PlanDraftSetTimeBased value)?  timeBased,TResult? Function( PlanDraftSetBodyweight value)?  bodyweight,}){
 final _that = this;
 switch (_that) {
 case PlanDraftSetRepBased() when repBased != null:
 return repBased(_that);case PlanDraftSetTimeBased() when timeBased != null:
-return timeBased(_that);case _:
+return timeBased(_that);case PlanDraftSetBodyweight() when bodyweight != null:
+return bodyweight(_that);case _:
   return null;
 
 }
@@ -1233,11 +1235,12 @@ return timeBased(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>({TResult Function( int count,  RepTarget repTarget,  double weightKg)?  repBased,TResult Function( int count,  int durationSeconds,  double? weightKg)?  timeBased,required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>({TResult Function( int count,  RepTarget repTarget,  double weightKg)?  repBased,TResult Function( int count,  int durationSeconds,  double? weightKg)?  timeBased,TResult Function( int count,  RepTarget repTarget)?  bodyweight,required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case PlanDraftSetRepBased() when repBased != null:
 return repBased(_that.count,_that.repTarget,_that.weightKg);case PlanDraftSetTimeBased() when timeBased != null:
-return timeBased(_that.count,_that.durationSeconds,_that.weightKg);case _:
+return timeBased(_that.count,_that.durationSeconds,_that.weightKg);case PlanDraftSetBodyweight() when bodyweight != null:
+return bodyweight(_that.count,_that.repTarget);case _:
   return orElse();
 
 }
@@ -1255,11 +1258,12 @@ return timeBased(_that.count,_that.durationSeconds,_that.weightKg);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>({required TResult Function( int count,  RepTarget repTarget,  double weightKg)  repBased,required TResult Function( int count,  int durationSeconds,  double? weightKg)  timeBased,}) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>({required TResult Function( int count,  RepTarget repTarget,  double weightKg)  repBased,required TResult Function( int count,  int durationSeconds,  double? weightKg)  timeBased,required TResult Function( int count,  RepTarget repTarget)  bodyweight,}) {final _that = this;
 switch (_that) {
 case PlanDraftSetRepBased():
 return repBased(_that.count,_that.repTarget,_that.weightKg);case PlanDraftSetTimeBased():
-return timeBased(_that.count,_that.durationSeconds,_that.weightKg);}
+return timeBased(_that.count,_that.durationSeconds,_that.weightKg);case PlanDraftSetBodyweight():
+return bodyweight(_that.count,_that.repTarget);}
 }
 /// A variant of `when` that fallback to returning `null`
 ///
@@ -1273,11 +1277,12 @@ return timeBased(_that.count,_that.durationSeconds,_that.weightKg);}
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>({TResult? Function( int count,  RepTarget repTarget,  double weightKg)?  repBased,TResult? Function( int count,  int durationSeconds,  double? weightKg)?  timeBased,}) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>({TResult? Function( int count,  RepTarget repTarget,  double weightKg)?  repBased,TResult? Function( int count,  int durationSeconds,  double? weightKg)?  timeBased,TResult? Function( int count,  RepTarget repTarget)?  bodyweight,}) {final _that = this;
 switch (_that) {
 case PlanDraftSetRepBased() when repBased != null:
 return repBased(_that.count,_that.repTarget,_that.weightKg);case PlanDraftSetTimeBased() when timeBased != null:
-return timeBased(_that.count,_that.durationSeconds,_that.weightKg);case _:
+return timeBased(_that.count,_that.durationSeconds,_that.weightKg);case PlanDraftSetBodyweight() when bodyweight != null:
+return bodyweight(_that.count,_that.repTarget);case _:
   return null;
 
 }
@@ -1294,7 +1299,7 @@ class PlanDraftSetRepBased implements PlanDraftSet {
 
 @override final  int count;
  final  RepTarget repTarget;
-@override final  double weightKg;
+ final  double weightKg;
 
 /// Create a copy of PlanDraftSet
 /// with the given fields replaced by the non-null parameter values.
@@ -1373,7 +1378,7 @@ class PlanDraftSetTimeBased implements PlanDraftSet {
 
 @override final  int count;
  final  int durationSeconds;
-@override final  double? weightKg;
+ final  double? weightKg;
 
 /// Create a copy of PlanDraftSet
 /// with the given fields replaced by the non-null parameter values.
@@ -1432,6 +1437,83 @@ as double?,
 }
 
 
+}
+
+/// @nodoc
+
+
+class PlanDraftSetBodyweight implements PlanDraftSet {
+  const PlanDraftSetBodyweight({required this.count, required this.repTarget});
+  
+
+@override final  int count;
+ final  RepTarget repTarget;
+
+/// Create a copy of PlanDraftSet
+/// with the given fields replaced by the non-null parameter values.
+@override @JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+$PlanDraftSetBodyweightCopyWith<PlanDraftSetBodyweight> get copyWith => _$PlanDraftSetBodyweightCopyWithImpl<PlanDraftSetBodyweight>(this, _$identity);
+
+
+
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is PlanDraftSetBodyweight&&(identical(other.count, count) || other.count == count)&&(identical(other.repTarget, repTarget) || other.repTarget == repTarget));
+}
+
+
+@override
+int get hashCode => Object.hash(runtimeType,count,repTarget);
+
+@override
+String toString() {
+  return 'PlanDraftSet.bodyweight(count: $count, repTarget: $repTarget)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class $PlanDraftSetBodyweightCopyWith<$Res> implements $PlanDraftSetCopyWith<$Res> {
+  factory $PlanDraftSetBodyweightCopyWith(PlanDraftSetBodyweight value, $Res Function(PlanDraftSetBodyweight) _then) = _$PlanDraftSetBodyweightCopyWithImpl;
+@override @useResult
+$Res call({
+ int count, RepTarget repTarget
+});
+
+
+$RepTargetCopyWith<$Res> get repTarget;
+
+}
+/// @nodoc
+class _$PlanDraftSetBodyweightCopyWithImpl<$Res>
+    implements $PlanDraftSetBodyweightCopyWith<$Res> {
+  _$PlanDraftSetBodyweightCopyWithImpl(this._self, this._then);
+
+  final PlanDraftSetBodyweight _self;
+  final $Res Function(PlanDraftSetBodyweight) _then;
+
+/// Create a copy of PlanDraftSet
+/// with the given fields replaced by the non-null parameter values.
+@override @pragma('vm:prefer-inline') $Res call({Object? count = null,Object? repTarget = null,}) {
+  return _then(PlanDraftSetBodyweight(
+count: null == count ? _self.count : count // ignore: cast_nullable_to_non_nullable
+as int,repTarget: null == repTarget ? _self.repTarget : repTarget // ignore: cast_nullable_to_non_nullable
+as RepTarget,
+  ));
+}
+
+/// Create a copy of PlanDraftSet
+/// with the given fields replaced by the non-null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$RepTargetCopyWith<$Res> get repTarget {
+  
+  return $RepTargetCopyWith<$Res>(_self.repTarget, (value) {
+    return _then(_self.copyWith(repTarget: value));
+  });
+}
 }
 
 // dart format on

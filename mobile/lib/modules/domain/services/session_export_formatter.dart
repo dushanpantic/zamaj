@@ -174,6 +174,7 @@ abstract final class SessionExportFormatter {
         weightKg == null
             ? '${durationSeconds}s'
             : '${WeightFormatter.formatKg(weightKg)} × ${durationSeconds}s',
+      ActualBodyweight(:final reps) => '$reps reps',
     };
   }
 
@@ -199,6 +200,8 @@ abstract final class SessionExportFormatter {
             ? '${sets.length} × ${durationSeconds}s'
             : '${WeightFormatter.formatKg(weightKg)}kg '
                   '${sets.length} × ${durationSeconds}s',
+      PlannedBodyweight(:final repTarget) =>
+        '${sets.length} × ${RepTargetFormatter.format(repTarget)}',
     };
   }
 
@@ -210,6 +213,8 @@ abstract final class SessionExportFormatter {
         weightKg == null
             ? '${durationSeconds}s'
             : '${WeightFormatter.formatKg(weightKg)}kg × ${durationSeconds}s',
+      PlannedBodyweight(:final repTarget) =>
+        '× ${RepTargetFormatter.format(repTarget)}',
     };
   }
 
@@ -222,6 +227,8 @@ abstract final class SessionExportFormatter {
             ? '${sub.setCount} × ${durationSeconds}s'
             : '${WeightFormatter.formatKg(weightKg)}kg '
                   '${sub.setCount} × ${durationSeconds}s',
+      PlannedBodyweight(:final repTarget) =>
+        '${sub.setCount} × ${RepTargetFormatter.format(repTarget)}',
     };
   }
 }

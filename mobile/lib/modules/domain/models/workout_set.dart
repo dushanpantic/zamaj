@@ -27,6 +27,8 @@ abstract class WorkoutSet with _$WorkoutSet {
         if (weightKg != null) {
           _validateWeight(weightKg, id: id);
         }
+      case (BodyweightMeasurement(), PlannedBodyweight()):
+        break;
       case (RepBasedMeasurement(), _):
         throw ValidationError(
           entityId: id,
@@ -40,6 +42,13 @@ abstract class WorkoutSet with _$WorkoutSet {
           invariant: 'plannedValues_variant_mismatch',
           message:
               'measurementType is timeBased but plannedValues is ${plannedValues.runtimeType}',
+        );
+      case (BodyweightMeasurement(), _):
+        throw ValidationError(
+          entityId: id,
+          invariant: 'plannedValues_variant_mismatch',
+          message:
+              'measurementType is bodyweight but plannedValues is ${plannedValues.runtimeType}',
         );
     }
   }

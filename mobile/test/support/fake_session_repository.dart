@@ -569,6 +569,7 @@ class FakeSessionRepository implements SessionRepository {
     return switch (values) {
       ActualRepBased() => const MeasurementType.repBased(),
       ActualTimeBased() => const MeasurementType.timeBased(),
+      ActualBodyweight() => const MeasurementType.bodyweight(),
     };
   }
 }

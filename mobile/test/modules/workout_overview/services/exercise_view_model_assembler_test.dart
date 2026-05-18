@@ -385,6 +385,9 @@ Session _sessionFromGroups(List<_ExerciseSpec> specs) {
             TimeBasedMeasurement() => const PlannedSetValues.timeBased(
               durationSeconds: 30,
             ),
+            BodyweightMeasurement() => PlannedSetValues.bodyweight(
+              repTarget: RepTarget.fixed(reps: spec.reps),
+            ),
           },
           createdAt: now,
           updatedAt: now,
@@ -453,6 +456,9 @@ Session _sessionFromGroups(List<_ExerciseSpec> specs) {
               TimeBasedMeasurement() => const ActualSetValues.timeBased(
                 durationSeconds: 30,
               ),
+              BodyweightMeasurement() => ActualSetValues.bodyweight(
+                reps: spec.reps,
+              ),
             },
             plannedSetIdInSnapshot: j < spec.plannedSetCount
                 ? 'ws-${spec.id}-$j'
@@ -497,6 +503,12 @@ extension on PlannedSetValues {
       ),
     PlannedTimeBased(:final durationSeconds) => ActualSetValues.timeBased(
       durationSeconds: durationSeconds,
+    ),
+    PlannedBodyweight(:final repTarget) => ActualSetValues.bodyweight(
+      reps: switch (repTarget) {
+        RepTargetFixed(:final reps) => reps,
+        RepTargetRange(:final maxReps) => maxReps,
+      },
     ),
   };
 }

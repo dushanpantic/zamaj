@@ -202,6 +202,7 @@ class FocusModeBloc extends Bloc<FocusModeEvent, FocusModeState> {
         durationSeconds: draft.durationSeconds,
         weightKg: IncrementRules.bumpWeight(draft.weightKg ?? 0, event.delta),
       ),
+      ActualBodyweight() => draft,
     };
     emit(
       current.copyWith(
@@ -217,17 +218,20 @@ class FocusModeBloc extends Bloc<FocusModeEvent, FocusModeState> {
     final current = state;
     if (current is! FocusModeReady) return;
     final draft = current.draftFor(event.sessionExerciseId);
-    if (draft is! ActualRepBased) return;
+    final next = switch (draft) {
+      ActualRepBased() => ActualSetValues.repBased(
+        weightKg: draft.weightKg,
+        reps: IncrementRules.bumpReps(draft.reps, event.delta),
+      ),
+      ActualBodyweight() => ActualSetValues.bodyweight(
+        reps: IncrementRules.bumpReps(draft.reps, event.delta),
+      ),
+      _ => null,
+    };
+    if (next == null) return;
     emit(
       current.copyWith(
-        drafts: _replaceDraft(
-          current.drafts,
-          event.sessionExerciseId,
-          ActualSetValues.repBased(
-            weightKg: draft.weightKg,
-            reps: IncrementRules.bumpReps(draft.reps, event.delta),
-          ),
-        ),
+        drafts: _replaceDraft(current.drafts, event.sessionExerciseId, next),
       ),
     );
   }
@@ -277,6 +281,7 @@ class FocusModeBloc extends Bloc<FocusModeEvent, FocusModeState> {
         durationSeconds: draft.durationSeconds,
         weightKg: clamped,
       ),
+      ActualBodyweight() => draft,
     };
     emit(
       current.copyWith(
@@ -882,6 +887,7 @@ class FocusModeBloc extends Bloc<FocusModeEvent, FocusModeState> {
       TimeBasedMeasurement() => const ActualSetValues.timeBased(
         durationSeconds: 0,
       ),
+      BodyweightMeasurement() => const ActualSetValues.bodyweight(reps: 0),
     };
   }
 
@@ -889,6 +895,7 @@ class FocusModeBloc extends Bloc<FocusModeEvent, FocusModeState> {
     return switch ((measurementType, values)) {
       (RepBasedMeasurement(), ActualRepBased()) => true,
       (TimeBasedMeasurement(), ActualTimeBased()) => true,
+      (BodyweightMeasurement(), ActualBodyweight()) => true,
       _ => false,
     };
   }

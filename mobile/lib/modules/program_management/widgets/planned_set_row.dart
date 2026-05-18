@@ -65,6 +65,10 @@ class PlannedSetRow extends StatelessWidget {
                   onDurationChanged: onDurationChanged,
                   onWeightChanged: onWeightChanged,
                 ),
+              PlannedSetDraftBodyweight(:final repsInput) => _BodyweightField(
+                repsInput: repsInput,
+                onRepsChanged: onRepsChanged,
+              ),
             },
           ),
           IconButton(
@@ -189,6 +193,65 @@ class _RepBasedFieldsState extends State<_RepBasedFields> {
           ),
         ),
       ],
+    );
+  }
+}
+
+class _BodyweightField extends StatefulWidget {
+  const _BodyweightField({
+    required this.repsInput,
+    required this.onRepsChanged,
+  });
+
+  final String repsInput;
+  final void Function(String) onRepsChanged;
+
+  @override
+  State<_BodyweightField> createState() => _BodyweightFieldState();
+}
+
+class _BodyweightFieldState extends State<_BodyweightField> {
+  late final TextEditingController _repsController;
+
+  @override
+  void initState() {
+    super.initState();
+    _repsController = TextEditingController(text: widget.repsInput);
+  }
+
+  @override
+  void didUpdateWidget(_BodyweightField oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.repsInput != widget.repsInput &&
+        _repsController.text != widget.repsInput) {
+      _repsController.text = widget.repsInput;
+    }
+  }
+
+  @override
+  void dispose() {
+    _repsController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    const typography = AppTypography.standard;
+    final colors = Theme.of(context).appColors;
+
+    return TextField(
+      controller: _repsController,
+      keyboardType: TextInputType.text,
+      inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r'[0-9\-–]'))],
+      style: typography.bodySmall.copyWith(color: colors.onSurface),
+      decoration: const InputDecoration(
+        labelText: 'Reps (or range, e.g. 6-8)',
+        contentPadding: EdgeInsets.symmetric(
+          horizontal: AppSpacing.md,
+          vertical: AppSpacing.sm,
+        ),
+      ),
+      onChanged: widget.onRepsChanged,
     );
   }
 }

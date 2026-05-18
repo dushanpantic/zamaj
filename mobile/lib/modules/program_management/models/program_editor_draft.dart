@@ -132,6 +132,10 @@ abstract class ProgramDraft with _$ProgramDraft {
           durationSeconds: int.tryParse(durationInput) ?? 0,
           weightKg: _parseOptionalWeight(weightInput),
         ),
+      PlannedSetDraftBodyweight(:final repsInput) =>
+        PlannedSetValues.bodyweight(
+          repTarget: _parseRepTargetOrZero(repsInput),
+        ),
     };
   }
 
@@ -218,6 +222,9 @@ sealed class PlannedSetDraftValues with _$PlannedSetDraftValues {
     required String durationInput,
     @Default('') String weightInput,
   }) = PlannedSetDraftTimeBased;
+
+  const factory PlannedSetDraftValues.bodyweight({required String repsInput}) =
+      PlannedSetDraftBodyweight;
 
   factory PlannedSetDraftValues.fromJson(Map<String, dynamic> json) =>
       _$PlannedSetDraftValuesFromJson(json);

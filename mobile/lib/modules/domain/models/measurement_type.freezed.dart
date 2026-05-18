@@ -23,6 +23,10 @@ MeasurementType _$MeasurementTypeFromJson(
           return TimeBasedMeasurement.fromJson(
             json
           );
+                case 'bodyweight':
+          return BodyweightMeasurement.fromJson(
+            json
+          );
         
           default:
             throw CheckedFromJsonException(
@@ -81,12 +85,13 @@ extension MeasurementTypePatterns on MeasurementType {
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeMap<TResult extends Object?>({TResult Function( RepBasedMeasurement value)?  repBased,TResult Function( TimeBasedMeasurement value)?  timeBased,required TResult orElse(),}){
+@optionalTypeArgs TResult maybeMap<TResult extends Object?>({TResult Function( RepBasedMeasurement value)?  repBased,TResult Function( TimeBasedMeasurement value)?  timeBased,TResult Function( BodyweightMeasurement value)?  bodyweight,required TResult orElse(),}){
 final _that = this;
 switch (_that) {
 case RepBasedMeasurement() when repBased != null:
 return repBased(_that);case TimeBasedMeasurement() when timeBased != null:
-return timeBased(_that);case _:
+return timeBased(_that);case BodyweightMeasurement() when bodyweight != null:
+return bodyweight(_that);case _:
   return orElse();
 
 }
@@ -104,12 +109,13 @@ return timeBased(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult map<TResult extends Object?>({required TResult Function( RepBasedMeasurement value)  repBased,required TResult Function( TimeBasedMeasurement value)  timeBased,}){
+@optionalTypeArgs TResult map<TResult extends Object?>({required TResult Function( RepBasedMeasurement value)  repBased,required TResult Function( TimeBasedMeasurement value)  timeBased,required TResult Function( BodyweightMeasurement value)  bodyweight,}){
 final _that = this;
 switch (_that) {
 case RepBasedMeasurement():
 return repBased(_that);case TimeBasedMeasurement():
-return timeBased(_that);}
+return timeBased(_that);case BodyweightMeasurement():
+return bodyweight(_that);}
 }
 /// A variant of `map` that fallback to returning `null`.
 ///
@@ -123,12 +129,13 @@ return timeBased(_that);}
 /// }
 /// ```
 
-@optionalTypeArgs TResult? mapOrNull<TResult extends Object?>({TResult? Function( RepBasedMeasurement value)?  repBased,TResult? Function( TimeBasedMeasurement value)?  timeBased,}){
+@optionalTypeArgs TResult? mapOrNull<TResult extends Object?>({TResult? Function( RepBasedMeasurement value)?  repBased,TResult? Function( TimeBasedMeasurement value)?  timeBased,TResult? Function( BodyweightMeasurement value)?  bodyweight,}){
 final _that = this;
 switch (_that) {
 case RepBasedMeasurement() when repBased != null:
 return repBased(_that);case TimeBasedMeasurement() when timeBased != null:
-return timeBased(_that);case _:
+return timeBased(_that);case BodyweightMeasurement() when bodyweight != null:
+return bodyweight(_that);case _:
   return null;
 
 }
@@ -145,11 +152,12 @@ return timeBased(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>({TResult Function()?  repBased,TResult Function()?  timeBased,required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>({TResult Function()?  repBased,TResult Function()?  timeBased,TResult Function()?  bodyweight,required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case RepBasedMeasurement() when repBased != null:
 return repBased();case TimeBasedMeasurement() when timeBased != null:
-return timeBased();case _:
+return timeBased();case BodyweightMeasurement() when bodyweight != null:
+return bodyweight();case _:
   return orElse();
 
 }
@@ -167,11 +175,12 @@ return timeBased();case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>({required TResult Function()  repBased,required TResult Function()  timeBased,}) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>({required TResult Function()  repBased,required TResult Function()  timeBased,required TResult Function()  bodyweight,}) {final _that = this;
 switch (_that) {
 case RepBasedMeasurement():
 return repBased();case TimeBasedMeasurement():
-return timeBased();}
+return timeBased();case BodyweightMeasurement():
+return bodyweight();}
 }
 /// A variant of `when` that fallback to returning `null`
 ///
@@ -185,11 +194,12 @@ return timeBased();}
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>({TResult? Function()?  repBased,TResult? Function()?  timeBased,}) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>({TResult? Function()?  repBased,TResult? Function()?  timeBased,TResult? Function()?  bodyweight,}) {final _that = this;
 switch (_that) {
 case RepBasedMeasurement() when repBased != null:
 return repBased();case TimeBasedMeasurement() when timeBased != null:
-return timeBased();case _:
+return timeBased();case BodyweightMeasurement() when bodyweight != null:
+return bodyweight();case _:
   return null;
 
 }
@@ -267,6 +277,45 @@ int get hashCode => runtimeType.hashCode;
 @override
 String toString() {
   return 'MeasurementType.timeBased()';
+}
+
+
+}
+
+
+
+
+/// @nodoc
+@JsonSerializable()
+
+class BodyweightMeasurement implements MeasurementType {
+  const BodyweightMeasurement({final  String? $type}): $type = $type ?? 'bodyweight';
+  factory BodyweightMeasurement.fromJson(Map<String, dynamic> json) => _$BodyweightMeasurementFromJson(json);
+
+
+
+@JsonKey(name: 'type')
+final String $type;
+
+
+
+@override
+Map<String, dynamic> toJson() {
+  return _$BodyweightMeasurementToJson(this, );
+}
+
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is BodyweightMeasurement);
+}
+
+@JsonKey(includeFromJson: false, includeToJson: false)
+@override
+int get hashCode => runtimeType.hashCode;
+
+@override
+String toString() {
+  return 'MeasurementType.bodyweight()';
 }
 
 

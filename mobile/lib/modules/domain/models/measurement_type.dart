@@ -8,6 +8,7 @@ part 'measurement_type.g.dart';
 sealed class MeasurementType with _$MeasurementType {
   const factory MeasurementType.repBased() = RepBasedMeasurement;
   const factory MeasurementType.timeBased() = TimeBasedMeasurement;
+  const factory MeasurementType.bodyweight() = BodyweightMeasurement;
 
   factory MeasurementType.fromJson(Map<String, dynamic> json) =>
       wrapDeserializationErrors(

@@ -561,6 +561,7 @@ class _ExerciseTileContent extends StatelessWidget {
     final typeLabel = switch (exercise.measurementType) {
       RepBasedMeasurement() => 'Rep-based',
       TimeBasedMeasurement() => 'Time-based',
+      BodyweightMeasurement() => 'Bodyweight',
     };
     if (sets.isEmpty) return typeLabel;
 
@@ -613,6 +614,15 @@ class _ExerciseTileContent extends StatelessWidget {
         if (weight == null) return '${sets.length}×${duration}s';
         return '${WeightFormatter.formatKg(weight)}kg '
             '${sets.length}×${duration}s';
+      case PlannedSetDraftBodyweight():
+        String? reps;
+        for (final set in sets) {
+          final values = set.values;
+          if (values is! PlannedSetDraftBodyweight) return null;
+          reps ??= values.repsInput;
+          if (values.repsInput != reps) return null;
+        }
+        return '${sets.length}×$reps';
     }
   }
 }

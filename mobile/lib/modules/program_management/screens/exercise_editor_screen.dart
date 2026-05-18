@@ -95,6 +95,7 @@ class _ExerciseEditorScreenState extends State<ExerciseEditorScreen> {
     final label = switch (pending) {
       RepBasedMeasurement() => 'rep-based',
       TimeBasedMeasurement() => 'time-based',
+      BodyweightMeasurement() => 'bodyweight',
     };
 
     final confirmed = await ConfirmationDialog.show(

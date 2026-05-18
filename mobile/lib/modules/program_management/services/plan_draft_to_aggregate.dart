@@ -53,9 +53,13 @@ abstract final class PlanDraftToAggregate {
     Uuid idGenerator,
   ) {
     final sets = exercise.sets;
-    final measurementType = sets.isEmpty || sets.first is PlanDraftSetRepBased
+    final measurementType = sets.isEmpty
         ? const MeasurementType.repBased()
-        : const MeasurementType.timeBased();
+        : switch (sets.first) {
+            PlanDraftSetRepBased() => const MeasurementType.repBased(),
+            PlanDraftSetTimeBased() => const MeasurementType.timeBased(),
+            PlanDraftSetBodyweight() => const MeasurementType.bodyweight(),
+          };
 
     return ExerciseDraft(
       draftId: idGenerator.v4(),
@@ -110,6 +114,20 @@ abstract final class PlanDraftToAggregate {
             ),
           ),
         ),
+      PlanDraftSetBodyweight(:final count, :final repTarget) => List.generate(
+        count,
+        (_) => PlannedSetDraft(
+          draftId: idGenerator.v4(),
+          persistedId: null,
+          values: PlannedSetDraftValues.bodyweight(
+            repsInput: switch (repTarget) {
+              RepTargetFixed(:final reps) => reps.toString(),
+              RepTargetRange(:final minReps, :final maxReps) =>
+                '$minReps-$maxReps',
+            },
+          ),
+        ),
+      ),
     };
   }
 }

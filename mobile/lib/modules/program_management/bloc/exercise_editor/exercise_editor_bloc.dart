@@ -296,6 +296,7 @@ class ExerciseEditorBloc
           final PlannedSetDraftTimeBased tb => tb.copyWith(
             weightInput: event.rawInput,
           ),
+          PlannedSetDraftBodyweight() => s.values,
         };
         return s.copyWith(values: next);
       }).toList(),
@@ -313,9 +314,16 @@ class ExerciseEditorBloc
     final updated = current.draft.copyWith(
       sets: current.draft.sets.map((s) {
         if (s.draftId != event.setDraftId) return s;
-        final values = s.values;
-        if (values is! PlannedSetDraftRepBased) return s;
-        return s.copyWith(values: values.copyWith(repsInput: event.rawInput));
+        final next = switch (s.values) {
+          final PlannedSetDraftRepBased rep => rep.copyWith(
+            repsInput: event.rawInput,
+          ),
+          final PlannedSetDraftBodyweight bw => bw.copyWith(
+            repsInput: event.rawInput,
+          ),
+          PlannedSetDraftTimeBased() => s.values,
+        };
+        return s.copyWith(values: next);
       }).toList(),
     );
     final validation = _computeValidation(updated);
@@ -449,6 +457,12 @@ class ExerciseEditorBloc
           durationInput: durationSeconds.toString(),
           weightInput: weightKg == null ? '' : weightKg.toString(),
         ),
+      PlannedBodyweight(:final repTarget) => PlannedSetDraftValues.bodyweight(
+        repsInput: switch (repTarget) {
+          RepTargetFixed(:final reps) => reps.toString(),
+          RepTargetRange(:final minReps, :final maxReps) => '$minReps-$maxReps',
+        },
+      ),
     };
     return PlannedSetDraft(
       draftId: _uuid.v4(),
@@ -466,6 +480,9 @@ class ExerciseEditorBloc
       TimeBasedMeasurement() => const PlannedSetDraftValues.timeBased(
         durationInput: '',
         weightInput: '',
+      ),
+      BodyweightMeasurement() => const PlannedSetDraftValues.bodyweight(
+        repsInput: '',
       ),
     };
   }
@@ -519,6 +536,20 @@ class ExerciseEditorBloc
             weightKg: weightKg,
           );
         }(),
+      (PlannedSetDraftBodyweight(:final repsInput), BodyweightMeasurement()) =>
+        () {
+          final result = ProgramValidation.validateBodyweightSet(
+            repsInput: repsInput,
+          );
+          return switch (result) {
+            Valid(:final value) => PlannedSetValues.bodyweight(
+              repTarget: value,
+            ),
+            Invalid() => PlannedSetValues.bodyweight(
+              repTarget: RepTarget.fixed(reps: 0),
+            ),
+          };
+        }(),
       (PlannedSetDraftRepBased(), TimeBasedMeasurement()) =>
         const PlannedSetValues.timeBased(durationSeconds: 0),
       (PlannedSetDraftTimeBased(), RepBasedMeasurement()) =>
@@ -526,6 +557,17 @@ class ExerciseEditorBloc
           weightKg: 0,
           repTarget: RepTarget.fixed(reps: 0),
         ),
+      (PlannedSetDraftRepBased(), BodyweightMeasurement()) =>
+        PlannedSetValues.bodyweight(repTarget: RepTarget.fixed(reps: 0)),
+      (PlannedSetDraftTimeBased(), BodyweightMeasurement()) =>
+        PlannedSetValues.bodyweight(repTarget: RepTarget.fixed(reps: 0)),
+      (PlannedSetDraftBodyweight(), RepBasedMeasurement()) =>
+        PlannedSetValues.repBased(
+          weightKg: 0,
+          repTarget: RepTarget.fixed(reps: 0),
+        ),
+      (PlannedSetDraftBodyweight(), TimeBasedMeasurement()) =>
+        const PlannedSetValues.timeBased(durationSeconds: 0),
     };
   }
 

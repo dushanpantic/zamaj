@@ -16,6 +16,9 @@ sealed class ActualSetValues with _$ActualSetValues {
     double? weightKg,
   }) = ActualTimeBased;
 
+  const factory ActualSetValues.bodyweight({required int reps}) =
+      ActualBodyweight;
+
   factory ActualSetValues.fromJson(Map<String, dynamic> json) =>
       wrapDeserializationErrors(
         () => _$ActualSetValuesFromJson(json),

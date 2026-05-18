@@ -75,6 +75,9 @@ final class ExerciseDraftValidation extends Equatable {
         ProgramValidation.validateTimeBasedSet(durationInput) is Valid<int> &&
             ProgramValidation.validateTimeBasedSetWeight(weightInput)
                 is Valid<double?>,
+      (PlannedSetDraftBodyweight(:final repsInput), BodyweightMeasurement()) =>
+        ProgramValidation.validateBodyweightSet(repsInput: repsInput)
+            is Valid<RepTarget>,
       _ => false,
     };
   }

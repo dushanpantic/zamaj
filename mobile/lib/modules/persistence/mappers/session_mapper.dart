@@ -186,6 +186,7 @@ class SessionMapper {
     final measurementType = switch (actualValues) {
       ActualRepBased() => const MeasurementType.repBased(),
       ActualTimeBased() => const MeasurementType.timeBased(),
+      ActualBodyweight() => const MeasurementType.bodyweight(),
     };
 
     return domain.ExecutedSet(
@@ -259,6 +260,7 @@ class SessionMapper {
     final measurementDiscriminator = switch (set.measurementType) {
       RepBasedMeasurement() => 'repBased',
       TimeBasedMeasurement() => 'timeBased',
+      BodyweightMeasurement() => 'bodyweight',
     };
 
     return ExecutedSetsCompanion(

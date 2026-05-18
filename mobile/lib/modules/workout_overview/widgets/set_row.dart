@@ -123,6 +123,9 @@ class _SetRowState extends State<SetRow> {
         _weight.text = tb?.weightKg != null
             ? WeightFormatter.formatKg(tb!.weightKg!)
             : '';
+      case BodyweightMeasurement():
+        final bw = seed is ActualBodyweight ? seed : null;
+        _reps.text = (bw?.reps ?? 0).toString();
     }
   }
 
@@ -141,6 +144,12 @@ class _SetRowState extends State<SetRow> {
             durationSeconds: durationSeconds,
             weightKg: weightKg,
           ),
+        PlannedBodyweight(:final repTarget) => ActualSetValues.bodyweight(
+          reps: switch (repTarget) {
+            RepTargetFixed(:final reps) => reps,
+            RepTargetRange(:final maxReps) => maxReps,
+          },
+        ),
         null => null,
       };
 
@@ -168,7 +177,14 @@ class _SetRowState extends State<SetRow> {
     return switch (widget.measurementType) {
       RepBasedMeasurement() => _readRepBased(),
       TimeBasedMeasurement() => _readTimeBased(),
+      BodyweightMeasurement() => _readBodyweight(),
     };
+  }
+
+  ActualSetValues? _readBodyweight() {
+    final reps = int.tryParse(_reps.text.trim());
+    if (reps == null || reps < 0) return null;
+    return ActualSetValues.bodyweight(reps: reps);
   }
 
   ActualSetValues? _readRepBased() {
@@ -331,6 +347,8 @@ class _Header extends StatelessWidget {
         weightKg == null
             ? '${durationSeconds}s'
             : '${WeightFormatter.formatKg(weightKg)}kg × ${durationSeconds}s',
+      PlannedBodyweight(:final repTarget) =>
+        '× ${RepTargetFormatter.format(repTarget)}',
     };
   }
 
@@ -343,6 +361,7 @@ class _Header extends StatelessWidget {
           weightKg == null
               ? '${durationSeconds}s'
               : '${WeightFormatter.formatKg(weightKg)} × ${durationSeconds}s',
+        ActualBodyweight(:final reps) => '× $reps',
       };
     }
     return switch (mode) {
@@ -431,6 +450,10 @@ class _Editor extends StatelessWidget {
               weight: weight,
               onChanged: onChanged,
             ),
+            BodyweightMeasurement() => _BodyweightFields(
+              reps: reps,
+              onChanged: onChanged,
+            ),
           },
           const SizedBox(height: AppSpacing.sm),
           SizedBox(
@@ -482,6 +505,24 @@ class _RepBasedFields extends StatelessWidget {
           ),
         ),
       ],
+    );
+  }
+}
+
+class _BodyweightFields extends StatelessWidget {
+  const _BodyweightFields({required this.reps, required this.onChanged});
+
+  final TextEditingController reps;
+  final VoidCallback onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    return _NumericField(
+      controller: reps,
+      label: 'reps',
+      allowDecimal: false,
+      steps: const [-1, 1],
+      onChanged: onChanged,
     );
   }
 }

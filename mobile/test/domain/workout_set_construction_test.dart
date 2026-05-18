@@ -31,6 +31,41 @@ void main() {
       }
     });
 
+    test('valid bodyweight sets construct without error', () {
+      final rng = Random(143);
+      for (var i = 0; i < 100; i++) {
+        const mt = MeasurementType.bodyweight();
+        final set = anyWorkoutSet(rng, mt);
+        expect(set.measurementType, equals(mt));
+        expect(set.plannedValues, isA<PlannedBodyweight>());
+      }
+    });
+
+    test('bodyweight + repBased planned values mismatch throws', () {
+      expect(
+        () => WorkoutSet(
+          id: 'id-1',
+          exerciseId: 'ex-1',
+          position: 0,
+          measurementType: const MeasurementType.bodyweight(),
+          plannedValues: PlannedSetValues.repBased(
+            weightKg: 10,
+            repTarget: RepTarget.fixed(reps: 8),
+          ),
+          createdAt: DateTime.utc(2024),
+          updatedAt: DateTime.utc(2024),
+          schemaVersion: 1,
+        ),
+        throwsA(
+          isA<ValidationError>().having(
+            (e) => e.invariant,
+            'invariant',
+            'plannedValues_variant_mismatch',
+          ),
+        ),
+      );
+    });
+
     test(
       'variant mismatch throws ValidationError with correct entityId and invariant',
       () {

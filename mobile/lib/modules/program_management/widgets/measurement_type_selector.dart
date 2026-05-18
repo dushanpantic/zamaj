@@ -42,6 +42,16 @@ class MeasurementTypeSelector extends StatelessWidget {
               : null,
           colors: colors,
         ),
+        const SizedBox(width: AppSpacing.sm),
+        _TypeChip(
+          label: 'Bodyweight',
+          isSelected: selected is BodyweightMeasurement,
+          enabled: enabled,
+          onTap: enabled
+              ? () => onChanged(const MeasurementType.bodyweight())
+              : null,
+          colors: colors,
+        ),
       ],
     );
   }

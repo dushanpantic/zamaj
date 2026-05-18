@@ -353,6 +353,7 @@ class DriftSessionRepository implements SessionRepository {
       final measurementDiscriminator = switch (measurementType) {
         RepBasedMeasurement() => 'repBased',
         TimeBasedMeasurement() => 'timeBased',
+        BodyweightMeasurement() => 'bodyweight',
       };
 
       await _db
@@ -1055,6 +1056,7 @@ class DriftSessionRepository implements SessionRepository {
     final isValid = switch ((measurementType, actualValues)) {
       (RepBasedMeasurement(), ActualRepBased()) => true,
       (TimeBasedMeasurement(), ActualTimeBased()) => true,
+      (BodyweightMeasurement(), ActualBodyweight()) => true,
       _ => false,
     };
     if (!isValid) {

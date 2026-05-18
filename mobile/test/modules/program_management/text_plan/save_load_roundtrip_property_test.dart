@@ -184,6 +184,10 @@ PlanDraftSet _toPlanDraftSet(PlannedSetValues values, int count) {
       count: count,
       durationSeconds: durationSeconds,
     ),
+    PlannedBodyweight(:final repTarget) => PlanDraftSet.bodyweight(
+      count: count,
+      repTarget: repTarget,
+    ),
   };
 }
 
@@ -273,6 +277,7 @@ List<PlanDraftSet> _mergeAdjacent(List<PlanDraftSet> sets) {
 int _countOf(PlanDraftSet s) => switch (s) {
   PlanDraftSetRepBased(:final count) => count,
   PlanDraftSetTimeBased(:final count) => count,
+  PlanDraftSetBodyweight(:final count) => count,
 };
 
 PlanDraftSet _withCount(PlanDraftSet s, int count) => switch (s) {
@@ -282,6 +287,10 @@ PlanDraftSet _withCount(PlanDraftSet s, int count) => switch (s) {
       repTarget: repTarget,
       weightKg: weightKg,
     ),
+  PlanDraftSetBodyweight(:final repTarget) => PlanDraftSet.bodyweight(
+    count: count,
+    repTarget: repTarget,
+  ),
   PlanDraftSetTimeBased(:final durationSeconds, :final weightKg) =>
     PlanDraftSet.timeBased(
       count: count,

@@ -235,6 +235,8 @@ PlannedSetDraft _anyPlannedSetDraft(
     timeBased: () => PlannedSetDraftValues.timeBased(
       durationInput: '${10 + rng.nextInt(291)}',
     ),
+    bodyweight: () =>
+        PlannedSetDraftValues.bodyweight(repsInput: '${1 + rng.nextInt(20)}'),
   );
   return PlannedSetDraft(
     draftId: 'set_${dayIndex}_${groupIndex}_${exerciseIndex}_$setIndex',

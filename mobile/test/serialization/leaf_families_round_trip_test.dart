@@ -61,6 +61,23 @@ void main() {
       }
     });
 
+    test('PlannedBodyweight serializes with "bodyweight" discriminator', () {
+      // ignore: prefer_const_constructors
+      final v = PlannedSetValues.bodyweight(
+        repTarget: RepTarget.fixed(reps: 8),
+      );
+      final json = v.toJson();
+      expect(json['type'], equals('bodyweight'));
+      expect(PlannedSetValues.fromJson(json), equals(v));
+    });
+
+    test('ActualBodyweight serializes with "bodyweight" discriminator', () {
+      const v = ActualSetValues.bodyweight(reps: 12);
+      final json = v.toJson();
+      expect(json['type'], equals('bodyweight'));
+      expect(ActualSetValues.fromJson(json), equals(v));
+    });
+
     test('ActualSetValues round-trips through JSON', () {
       for (var i = 0; i < iterations; i++) {
         final v = anyActualSetValues(rng);

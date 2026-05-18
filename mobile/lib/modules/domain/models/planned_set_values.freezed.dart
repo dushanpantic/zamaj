@@ -23,6 +23,10 @@ PlannedSetValues _$PlannedSetValuesFromJson(
           return PlannedTimeBased.fromJson(
             json
           );
+                case 'bodyweight':
+          return PlannedBodyweight.fromJson(
+            json
+          );
         
           default:
             throw CheckedFromJsonException(
@@ -38,12 +42,7 @@ PlannedSetValues _$PlannedSetValuesFromJson(
 /// @nodoc
 mixin _$PlannedSetValues {
 
- double? get weightKg;
-/// Create a copy of PlannedSetValues
-/// with the given fields replaced by the non-null parameter values.
-@JsonKey(includeFromJson: false, includeToJson: false)
-@pragma('vm:prefer-inline')
-$PlannedSetValuesCopyWith<PlannedSetValues> get copyWith => _$PlannedSetValuesCopyWithImpl<PlannedSetValues>(this as PlannedSetValues, _$identity);
+
 
   /// Serializes this PlannedSetValues to a JSON map.
   Map<String, dynamic> toJson();
@@ -51,50 +50,24 @@ $PlannedSetValuesCopyWith<PlannedSetValues> get copyWith => _$PlannedSetValuesCo
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is PlannedSetValues&&(identical(other.weightKg, weightKg) || other.weightKg == weightKg));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is PlannedSetValues);
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,weightKg);
+int get hashCode => runtimeType.hashCode;
 
 @override
 String toString() {
-  return 'PlannedSetValues(weightKg: $weightKg)';
+  return 'PlannedSetValues()';
 }
 
 
 }
 
 /// @nodoc
-abstract mixin class $PlannedSetValuesCopyWith<$Res>  {
-  factory $PlannedSetValuesCopyWith(PlannedSetValues value, $Res Function(PlannedSetValues) _then) = _$PlannedSetValuesCopyWithImpl;
-@useResult
-$Res call({
- double weightKg
-});
-
-
-
-
-}
-/// @nodoc
-class _$PlannedSetValuesCopyWithImpl<$Res>
-    implements $PlannedSetValuesCopyWith<$Res> {
-  _$PlannedSetValuesCopyWithImpl(this._self, this._then);
-
-  final PlannedSetValues _self;
-  final $Res Function(PlannedSetValues) _then;
-
-/// Create a copy of PlannedSetValues
-/// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? weightKg = null,}) {
-  return _then(_self.copyWith(
-weightKg: null == weightKg ? _self.weightKg! : weightKg // ignore: cast_nullable_to_non_nullable
-as double,
-  ));
-}
-
+class $PlannedSetValuesCopyWith<$Res>  {
+$PlannedSetValuesCopyWith(PlannedSetValues _, $Res Function(PlannedSetValues) __);
 }
 
 
@@ -112,12 +85,13 @@ extension PlannedSetValuesPatterns on PlannedSetValues {
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeMap<TResult extends Object?>({TResult Function( PlannedRepBased value)?  repBased,TResult Function( PlannedTimeBased value)?  timeBased,required TResult orElse(),}){
+@optionalTypeArgs TResult maybeMap<TResult extends Object?>({TResult Function( PlannedRepBased value)?  repBased,TResult Function( PlannedTimeBased value)?  timeBased,TResult Function( PlannedBodyweight value)?  bodyweight,required TResult orElse(),}){
 final _that = this;
 switch (_that) {
 case PlannedRepBased() when repBased != null:
 return repBased(_that);case PlannedTimeBased() when timeBased != null:
-return timeBased(_that);case _:
+return timeBased(_that);case PlannedBodyweight() when bodyweight != null:
+return bodyweight(_that);case _:
   return orElse();
 
 }
@@ -135,12 +109,13 @@ return timeBased(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult map<TResult extends Object?>({required TResult Function( PlannedRepBased value)  repBased,required TResult Function( PlannedTimeBased value)  timeBased,}){
+@optionalTypeArgs TResult map<TResult extends Object?>({required TResult Function( PlannedRepBased value)  repBased,required TResult Function( PlannedTimeBased value)  timeBased,required TResult Function( PlannedBodyweight value)  bodyweight,}){
 final _that = this;
 switch (_that) {
 case PlannedRepBased():
 return repBased(_that);case PlannedTimeBased():
-return timeBased(_that);}
+return timeBased(_that);case PlannedBodyweight():
+return bodyweight(_that);}
 }
 /// A variant of `map` that fallback to returning `null`.
 ///
@@ -154,12 +129,13 @@ return timeBased(_that);}
 /// }
 /// ```
 
-@optionalTypeArgs TResult? mapOrNull<TResult extends Object?>({TResult? Function( PlannedRepBased value)?  repBased,TResult? Function( PlannedTimeBased value)?  timeBased,}){
+@optionalTypeArgs TResult? mapOrNull<TResult extends Object?>({TResult? Function( PlannedRepBased value)?  repBased,TResult? Function( PlannedTimeBased value)?  timeBased,TResult? Function( PlannedBodyweight value)?  bodyweight,}){
 final _that = this;
 switch (_that) {
 case PlannedRepBased() when repBased != null:
 return repBased(_that);case PlannedTimeBased() when timeBased != null:
-return timeBased(_that);case _:
+return timeBased(_that);case PlannedBodyweight() when bodyweight != null:
+return bodyweight(_that);case _:
   return null;
 
 }
@@ -176,11 +152,12 @@ return timeBased(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>({TResult Function( double weightKg,  RepTarget repTarget)?  repBased,TResult Function( int durationSeconds,  double? weightKg)?  timeBased,required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>({TResult Function( double weightKg,  RepTarget repTarget)?  repBased,TResult Function( int durationSeconds,  double? weightKg)?  timeBased,TResult Function( RepTarget repTarget)?  bodyweight,required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case PlannedRepBased() when repBased != null:
 return repBased(_that.weightKg,_that.repTarget);case PlannedTimeBased() when timeBased != null:
-return timeBased(_that.durationSeconds,_that.weightKg);case _:
+return timeBased(_that.durationSeconds,_that.weightKg);case PlannedBodyweight() when bodyweight != null:
+return bodyweight(_that.repTarget);case _:
   return orElse();
 
 }
@@ -198,11 +175,12 @@ return timeBased(_that.durationSeconds,_that.weightKg);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>({required TResult Function( double weightKg,  RepTarget repTarget)  repBased,required TResult Function( int durationSeconds,  double? weightKg)  timeBased,}) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>({required TResult Function( double weightKg,  RepTarget repTarget)  repBased,required TResult Function( int durationSeconds,  double? weightKg)  timeBased,required TResult Function( RepTarget repTarget)  bodyweight,}) {final _that = this;
 switch (_that) {
 case PlannedRepBased():
 return repBased(_that.weightKg,_that.repTarget);case PlannedTimeBased():
-return timeBased(_that.durationSeconds,_that.weightKg);}
+return timeBased(_that.durationSeconds,_that.weightKg);case PlannedBodyweight():
+return bodyweight(_that.repTarget);}
 }
 /// A variant of `when` that fallback to returning `null`
 ///
@@ -216,11 +194,12 @@ return timeBased(_that.durationSeconds,_that.weightKg);}
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>({TResult? Function( double weightKg,  RepTarget repTarget)?  repBased,TResult? Function( int durationSeconds,  double? weightKg)?  timeBased,}) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>({TResult? Function( double weightKg,  RepTarget repTarget)?  repBased,TResult? Function( int durationSeconds,  double? weightKg)?  timeBased,TResult? Function( RepTarget repTarget)?  bodyweight,}) {final _that = this;
 switch (_that) {
 case PlannedRepBased() when repBased != null:
 return repBased(_that.weightKg,_that.repTarget);case PlannedTimeBased() when timeBased != null:
-return timeBased(_that.durationSeconds,_that.weightKg);case _:
+return timeBased(_that.durationSeconds,_that.weightKg);case PlannedBodyweight() when bodyweight != null:
+return bodyweight(_that.repTarget);case _:
   return null;
 
 }
@@ -235,7 +214,7 @@ class PlannedRepBased implements PlannedSetValues {
   const PlannedRepBased({required this.weightKg, required this.repTarget, final  String? $type}): $type = $type ?? 'repBased';
   factory PlannedRepBased.fromJson(Map<String, dynamic> json) => _$PlannedRepBasedFromJson(json);
 
-@override final  double weightKg;
+ final  double weightKg;
  final  RepTarget repTarget;
 
 @JsonKey(name: 'type')
@@ -244,7 +223,7 @@ final String $type;
 
 /// Create a copy of PlannedSetValues
 /// with the given fields replaced by the non-null parameter values.
-@override @JsonKey(includeFromJson: false, includeToJson: false)
+@JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
 $PlannedRepBasedCopyWith<PlannedRepBased> get copyWith => _$PlannedRepBasedCopyWithImpl<PlannedRepBased>(this, _$identity);
 
@@ -273,7 +252,7 @@ String toString() {
 /// @nodoc
 abstract mixin class $PlannedRepBasedCopyWith<$Res> implements $PlannedSetValuesCopyWith<$Res> {
   factory $PlannedRepBasedCopyWith(PlannedRepBased value, $Res Function(PlannedRepBased) _then) = _$PlannedRepBasedCopyWithImpl;
-@override @useResult
+@useResult
 $Res call({
  double weightKg, RepTarget repTarget
 });
@@ -292,7 +271,7 @@ class _$PlannedRepBasedCopyWithImpl<$Res>
 
 /// Create a copy of PlannedSetValues
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? weightKg = null,Object? repTarget = null,}) {
+@pragma('vm:prefer-inline') $Res call({Object? weightKg = null,Object? repTarget = null,}) {
   return _then(PlannedRepBased(
 weightKg: null == weightKg ? _self.weightKg : weightKg // ignore: cast_nullable_to_non_nullable
 as double,repTarget: null == repTarget ? _self.repTarget : repTarget // ignore: cast_nullable_to_non_nullable
@@ -320,7 +299,7 @@ class PlannedTimeBased implements PlannedSetValues {
   factory PlannedTimeBased.fromJson(Map<String, dynamic> json) => _$PlannedTimeBasedFromJson(json);
 
  final  int durationSeconds;
-@override final  double? weightKg;
+ final  double? weightKg;
 
 @JsonKey(name: 'type')
 final String $type;
@@ -328,7 +307,7 @@ final String $type;
 
 /// Create a copy of PlannedSetValues
 /// with the given fields replaced by the non-null parameter values.
-@override @JsonKey(includeFromJson: false, includeToJson: false)
+@JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
 $PlannedTimeBasedCopyWith<PlannedTimeBased> get copyWith => _$PlannedTimeBasedCopyWithImpl<PlannedTimeBased>(this, _$identity);
 
@@ -357,7 +336,7 @@ String toString() {
 /// @nodoc
 abstract mixin class $PlannedTimeBasedCopyWith<$Res> implements $PlannedSetValuesCopyWith<$Res> {
   factory $PlannedTimeBasedCopyWith(PlannedTimeBased value, $Res Function(PlannedTimeBased) _then) = _$PlannedTimeBasedCopyWithImpl;
-@override @useResult
+@useResult
 $Res call({
  int durationSeconds, double? weightKg
 });
@@ -376,7 +355,7 @@ class _$PlannedTimeBasedCopyWithImpl<$Res>
 
 /// Create a copy of PlannedSetValues
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? durationSeconds = null,Object? weightKg = freezed,}) {
+@pragma('vm:prefer-inline') $Res call({Object? durationSeconds = null,Object? weightKg = freezed,}) {
   return _then(PlannedTimeBased(
 durationSeconds: null == durationSeconds ? _self.durationSeconds : durationSeconds // ignore: cast_nullable_to_non_nullable
 as int,weightKg: freezed == weightKg ? _self.weightKg : weightKg // ignore: cast_nullable_to_non_nullable
@@ -385,6 +364,88 @@ as double?,
 }
 
 
+}
+
+/// @nodoc
+@JsonSerializable()
+
+class PlannedBodyweight implements PlannedSetValues {
+  const PlannedBodyweight({required this.repTarget, final  String? $type}): $type = $type ?? 'bodyweight';
+  factory PlannedBodyweight.fromJson(Map<String, dynamic> json) => _$PlannedBodyweightFromJson(json);
+
+ final  RepTarget repTarget;
+
+@JsonKey(name: 'type')
+final String $type;
+
+
+/// Create a copy of PlannedSetValues
+/// with the given fields replaced by the non-null parameter values.
+@JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+$PlannedBodyweightCopyWith<PlannedBodyweight> get copyWith => _$PlannedBodyweightCopyWithImpl<PlannedBodyweight>(this, _$identity);
+
+@override
+Map<String, dynamic> toJson() {
+  return _$PlannedBodyweightToJson(this, );
+}
+
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is PlannedBodyweight&&(identical(other.repTarget, repTarget) || other.repTarget == repTarget));
+}
+
+@JsonKey(includeFromJson: false, includeToJson: false)
+@override
+int get hashCode => Object.hash(runtimeType,repTarget);
+
+@override
+String toString() {
+  return 'PlannedSetValues.bodyweight(repTarget: $repTarget)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class $PlannedBodyweightCopyWith<$Res> implements $PlannedSetValuesCopyWith<$Res> {
+  factory $PlannedBodyweightCopyWith(PlannedBodyweight value, $Res Function(PlannedBodyweight) _then) = _$PlannedBodyweightCopyWithImpl;
+@useResult
+$Res call({
+ RepTarget repTarget
+});
+
+
+$RepTargetCopyWith<$Res> get repTarget;
+
+}
+/// @nodoc
+class _$PlannedBodyweightCopyWithImpl<$Res>
+    implements $PlannedBodyweightCopyWith<$Res> {
+  _$PlannedBodyweightCopyWithImpl(this._self, this._then);
+
+  final PlannedBodyweight _self;
+  final $Res Function(PlannedBodyweight) _then;
+
+/// Create a copy of PlannedSetValues
+/// with the given fields replaced by the non-null parameter values.
+@pragma('vm:prefer-inline') $Res call({Object? repTarget = null,}) {
+  return _then(PlannedBodyweight(
+repTarget: null == repTarget ? _self.repTarget : repTarget // ignore: cast_nullable_to_non_nullable
+as RepTarget,
+  ));
+}
+
+/// Create a copy of PlannedSetValues
+/// with the given fields replaced by the non-null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$RepTargetCopyWith<$Res> get repTarget {
+  
+  return $RepTargetCopyWith<$Res>(_self.repTarget, (value) {
+    return _then(_self.copyWith(repTarget: value));
+  });
+}
 }
 
 // dart format on

@@ -648,6 +648,10 @@ class WorkoutDayEditorBloc
           durationSeconds: int.tryParse(durationInput) ?? 0,
           weightKg: _parseOptionalWeight(weightInput),
         ),
+      PlannedSetDraftBodyweight(:final repsInput) =>
+        PlannedSetValues.bodyweight(
+          repTarget: _parseRepTargetOrZero(repsInput),
+        ),
     };
   }
 
@@ -735,6 +739,12 @@ class WorkoutDayEditorBloc
           durationInput: durationSeconds.toString(),
           weightInput: weightKg == null ? '' : weightKg.toString(),
         ),
+      PlannedBodyweight(:final repTarget) => PlannedSetDraftValues.bodyweight(
+        repsInput: switch (repTarget) {
+          RepTargetFixed(:final reps) => reps.toString(),
+          RepTargetRange(:final minReps, :final maxReps) => '$minReps-$maxReps',
+        },
+      ),
     };
   }
 }

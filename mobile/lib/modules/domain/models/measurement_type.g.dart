@@ -30,3 +30,16 @@ TimeBasedMeasurement _$TimeBasedMeasurementFromJson(
 Map<String, dynamic> _$TimeBasedMeasurementToJson(
   TimeBasedMeasurement instance,
 ) => <String, dynamic>{'type': instance.$type};
+
+BodyweightMeasurement _$BodyweightMeasurementFromJson(
+  Map<String, dynamic> json,
+) => $checkedCreate('BodyweightMeasurement', json, ($checkedConvert) {
+  final val = BodyweightMeasurement(
+    $type: $checkedConvert('type', (v) => v as String?),
+  );
+  return val;
+}, fieldKeyMap: const {r'$type': 'type'});
+
+Map<String, dynamic> _$BodyweightMeasurementToJson(
+  BodyweightMeasurement instance,
+) => <String, dynamic>{'type': instance.$type};

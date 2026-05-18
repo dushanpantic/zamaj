@@ -58,6 +58,8 @@ abstract final class PlanPrettyPrinter {
         weightKg == null
             ? '${count}x${durationSeconds}s$restSuffix'
             : '${count}x${durationSeconds}s ${WeightFormatter.formatKg(weightKg)}kg$restSuffix',
+      PlanDraftSetBodyweight(:final count, :final repTarget) =>
+        '${count}x${RepTargetFormatter.format(repTarget)} bw$restSuffix',
     };
   }
 }

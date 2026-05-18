@@ -42,3 +42,15 @@ Map<String, dynamic> _$ActualTimeBasedToJson(ActualTimeBased instance) =>
       'weightKg': ?instance.weightKg,
       'type': instance.$type,
     };
+
+ActualBodyweight _$ActualBodyweightFromJson(Map<String, dynamic> json) =>
+    $checkedCreate('ActualBodyweight', json, ($checkedConvert) {
+      final val = ActualBodyweight(
+        reps: $checkedConvert('reps', (v) => (v as num).toInt()),
+        $type: $checkedConvert('type', (v) => v as String?),
+      );
+      return val;
+    }, fieldKeyMap: const {r'$type': 'type'});
+
+Map<String, dynamic> _$ActualBodyweightToJson(ActualBodyweight instance) =>
+    <String, dynamic>{'reps': instance.reps, 'type': instance.$type};

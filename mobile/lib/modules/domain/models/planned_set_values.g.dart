@@ -45,3 +45,21 @@ Map<String, dynamic> _$PlannedTimeBasedToJson(PlannedTimeBased instance) =>
       'weightKg': ?instance.weightKg,
       'type': instance.$type,
     };
+
+PlannedBodyweight _$PlannedBodyweightFromJson(Map<String, dynamic> json) =>
+    $checkedCreate('PlannedBodyweight', json, ($checkedConvert) {
+      final val = PlannedBodyweight(
+        repTarget: $checkedConvert(
+          'repTarget',
+          (v) => RepTarget.fromJson(v as Map<String, dynamic>),
+        ),
+        $type: $checkedConvert('type', (v) => v as String?),
+      );
+      return val;
+    }, fieldKeyMap: const {r'$type': 'type'});
+
+Map<String, dynamic> _$PlannedBodyweightToJson(PlannedBodyweight instance) =>
+    <String, dynamic>{
+      'repTarget': instance.repTarget.toJson(),
+      'type': instance.$type,
+    };

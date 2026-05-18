@@ -21,6 +21,8 @@ abstract final class PlannedSummaryFormatter {
             ? '${sets.length}×${durationSeconds}s'
             : '${WeightFormatter.formatKg(weightKg)}kg '
                   '${sets.length}×${durationSeconds}s',
+      PlannedBodyweight(:final repTarget) =>
+        '${sets.length}×${RepTargetFormatter.format(repTarget)}',
     };
   }
 }
