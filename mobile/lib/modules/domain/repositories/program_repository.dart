@@ -42,6 +42,7 @@ abstract class ProgramRepository {
     required List<Exercise> exercises,
     ExerciseGroupRole role = ExerciseGroupRole.main,
   });
+  Future<ExerciseGroup?> getExerciseGroup(String exerciseGroupId);
   Future<ExerciseGroup> updateExerciseGroup(ExerciseGroup group);
   Future<void> deleteExerciseGroup(String exerciseGroupId);
   Future<void> reorderExerciseGroups(

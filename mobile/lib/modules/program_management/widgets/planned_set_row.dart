@@ -13,7 +13,6 @@ class PlannedSetRow extends StatelessWidget {
     required this.onRepsChanged,
     required this.onDurationChanged,
     required this.onDelete,
-    required this.onDuplicate,
     this.reorderIndex,
   });
 
@@ -22,7 +21,6 @@ class PlannedSetRow extends StatelessWidget {
   final void Function(String) onRepsChanged;
   final void Function(String) onDurationChanged;
   final VoidCallback onDelete;
-  final VoidCallback onDuplicate;
   final int? reorderIndex;
 
   @override
@@ -70,20 +68,6 @@ class PlannedSetRow extends StatelessWidget {
                 onRepsChanged: onRepsChanged,
               ),
             },
-          ),
-          IconButton(
-            icon: Icon(
-              Icons.content_copy_outlined,
-              color: colors.onSurfaceMuted,
-              size: 20,
-            ),
-            onPressed: onDuplicate,
-            tooltip: 'Duplicate set',
-            padding: EdgeInsets.zero,
-            constraints: const BoxConstraints(
-              minWidth: AppSpacing.touchMin,
-              minHeight: AppSpacing.touchMin,
-            ),
           ),
           IconButton(
             icon: Icon(Icons.delete_outline, color: colors.error, size: 20),

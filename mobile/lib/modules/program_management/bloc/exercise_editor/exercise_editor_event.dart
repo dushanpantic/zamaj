@@ -23,8 +23,8 @@ final class ExerciseNameChanged extends ExerciseEditorEvent {
   List<Object?> get props => [name];
 }
 
-final class ExerciseMeasurementTypeRequested extends ExerciseEditorEvent {
-  const ExerciseMeasurementTypeRequested({required this.next});
+final class ExerciseMeasurementTypeChanged extends ExerciseEditorEvent {
+  const ExerciseMeasurementTypeChanged({required this.next});
 
   final MeasurementType next;
 
@@ -32,18 +32,13 @@ final class ExerciseMeasurementTypeRequested extends ExerciseEditorEvent {
   List<Object?> get props => [next];
 }
 
-final class ExerciseMeasurementTypeConfirmed extends ExerciseEditorEvent {
-  const ExerciseMeasurementTypeConfirmed();
+final class ExerciseGroupRoleChanged extends ExerciseEditorEvent {
+  const ExerciseGroupRoleChanged({required this.role});
+
+  final ExerciseGroupRole role;
 
   @override
-  List<Object?> get props => [];
-}
-
-final class ExerciseMeasurementTypeCancelled extends ExerciseEditorEvent {
-  const ExerciseMeasurementTypeCancelled();
-
-  @override
-  List<Object?> get props => [];
+  List<Object?> get props => [role];
 }
 
 final class ExerciseNotesChanged extends ExerciseEditorEvent {
@@ -85,15 +80,6 @@ final class PlannedSetAdded extends ExerciseEditorEvent {
 
   @override
   List<Object?> get props => [];
-}
-
-final class PlannedSetDuplicated extends ExerciseEditorEvent {
-  const PlannedSetDuplicated({required this.setDraftId});
-
-  final String setDraftId;
-
-  @override
-  List<Object?> get props => [setDraftId];
 }
 
 final class PlannedSetDeleted extends ExerciseEditorEvent {

@@ -68,6 +68,10 @@ class _ThrowingProgramRepository implements ProgramRepository {
   }) => throw UnimplementedError();
 
   @override
+  Future<ExerciseGroup?> getExerciseGroup(String exerciseGroupId) =>
+      throw UnimplementedError();
+
+  @override
   Future<ExerciseGroup> updateExerciseGroup(ExerciseGroup group) =>
       throw UnimplementedError();
 

@@ -400,6 +400,15 @@ class DriftProgramRepository implements ProgramRepository {
   }
 
   @override
+  Future<domain.ExerciseGroup?> getExerciseGroup(String exerciseGroupId) async {
+    final groupRow = await (_db.select(
+      _db.exerciseGroups,
+    )..where((t) => t.id.equals(exerciseGroupId))).getSingleOrNull();
+    if (groupRow == null) return null;
+    return _loadExerciseGroup(exerciseGroupId);
+  }
+
+  @override
   Future<domain.ExerciseGroup> updateExerciseGroup(
     domain.ExerciseGroup group,
   ) async {

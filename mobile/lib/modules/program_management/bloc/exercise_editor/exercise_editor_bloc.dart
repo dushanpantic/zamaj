@@ -18,15 +18,13 @@ class ExerciseEditorBloc
        super(const ExerciseEditorInitial()) {
     on<ExerciseEditorOpened>(_onOpened);
     on<ExerciseNameChanged>(_onNameChanged);
-    on<ExerciseMeasurementTypeRequested>(_onMeasurementTypeRequested);
-    on<ExerciseMeasurementTypeConfirmed>(_onMeasurementTypeConfirmed);
-    on<ExerciseMeasurementTypeCancelled>(_onMeasurementTypeCancelled);
+    on<ExerciseMeasurementTypeChanged>(_onMeasurementTypeChanged);
+    on<ExerciseGroupRoleChanged>(_onGroupRoleChanged);
     on<ExerciseNotesChanged>(_onNotesChanged);
     on<ExerciseVideoUrlChanged>(_onVideoUrlChanged);
     on<ExerciseVideoUrlActivated>(_onVideoUrlActivated);
     on<ExercisePlannedRestChanged>(_onPlannedRestChanged);
     on<PlannedSetAdded>(_onPlannedSetAdded);
-    on<PlannedSetDuplicated>(_onPlannedSetDuplicated);
     on<PlannedSetDeleted>(_onPlannedSetDeleted);
     on<PlannedSetReordered>(_onPlannedSetReordered);
     on<PlannedSetWeightChanged>(_onPlannedSetWeightChanged);
@@ -40,7 +38,9 @@ class ExerciseEditorBloc
   final _uuid = const Uuid();
 
   Exercise? _baselineExercise;
+  ExerciseGroup? _baselineGroup;
   ExerciseDraft? _baselineDraft;
+  ExerciseGroupRole? _baselineGroupRole;
   String? _baselinePlannedRestInput;
   String? _plannedRestInput;
 
@@ -55,6 +55,7 @@ class ExerciseEditorBloc
     final baselineDraft = _baselineDraft;
     if (baselineDraft == null) return false;
     if (current.draft != baselineDraft) return true;
+    if (current.groupRole != _baselineGroupRole) return true;
     return _plannedRestInput != _baselinePlannedRestInput;
   }
 
@@ -68,7 +69,15 @@ class ExerciseEditorBloc
       emit(ExerciseEditorNotFound(exerciseId: event.exerciseId));
       return;
     }
+    final group = await _programRepository.getExerciseGroup(
+      exercise.exerciseGroupId,
+    );
+    if (group == null) {
+      emit(ExerciseEditorNotFound(exerciseId: event.exerciseId));
+      return;
+    }
     _baselineExercise = exercise;
+    _baselineGroup = group;
     var draft = _exerciseToDraft(exercise);
     if (draft.plannedRestSeconds == null) {
       draft = draft.copyWith(plannedRestSeconds: 180);
@@ -86,9 +95,16 @@ class ExerciseEditorBloc
     }
     _plannedRestInput = draft.plannedRestSeconds?.toString() ?? '180';
     _baselineDraft = draft;
+    _baselineGroupRole = group.role;
     _baselinePlannedRestInput = _plannedRestInput;
     final validation = _computeValidation(draft);
-    emit(ExerciseEditorEditing(draft: draft, validation: validation));
+    emit(
+      ExerciseEditorEditing(
+        draft: draft,
+        groupRole: group.role,
+        validation: validation,
+      ),
+    );
   }
 
   Future<void> _onNameChanged(
@@ -102,49 +118,32 @@ class ExerciseEditorBloc
     emit(current.copyWith(draft: updated, validation: validation));
   }
 
-  Future<void> _onMeasurementTypeRequested(
-    ExerciseMeasurementTypeRequested event,
+  Future<void> _onMeasurementTypeChanged(
+    ExerciseMeasurementTypeChanged event,
     Emitter<ExerciseEditorState> emit,
   ) async {
     final current = state;
     if (current is! ExerciseEditorEditing) return;
     if (event.next == current.draft.measurementType) return;
-    emit(current.copyWith(pendingMeasurementChange: () => event.next));
-  }
-
-  Future<void> _onMeasurementTypeConfirmed(
-    ExerciseMeasurementTypeConfirmed event,
-    Emitter<ExerciseEditorState> emit,
-  ) async {
-    final current = state;
-    if (current is! ExerciseEditorEditing) return;
-    final pending = current.pendingMeasurementChange;
-    if (pending == null) return;
     final reinitializedSets = current.draft.sets
-        .map((s) => s.copyWith(values: _emptySet(pending)))
+        .map((s) => s.copyWith(values: _emptySet(event.next)))
         .toList();
     final updated = current.draft.copyWith(
-      measurementType: pending,
+      measurementType: event.next,
       sets: reinitializedSets,
     );
     final validation = _computeValidation(updated);
-    emit(
-      ExerciseEditorEditing(
-        draft: updated,
-        validation: validation,
-        pendingMeasurementChange: null,
-        lastSaveError: current.lastSaveError,
-      ),
-    );
+    emit(current.copyWith(draft: updated, validation: validation));
   }
 
-  Future<void> _onMeasurementTypeCancelled(
-    ExerciseMeasurementTypeCancelled event,
+  Future<void> _onGroupRoleChanged(
+    ExerciseGroupRoleChanged event,
     Emitter<ExerciseEditorState> emit,
   ) async {
     final current = state;
     if (current is! ExerciseEditorEditing) return;
-    emit(current.copyWith(pendingMeasurementChange: () => null));
+    if (event.role == current.groupRole) return;
+    emit(current.copyWith(groupRole: event.role));
   }
 
   Future<void> _onNotesChanged(
@@ -187,6 +186,7 @@ class ExerciseEditorBloc
       emit(
         ExerciseEditorVideoLinkError(
           draft: current.draft,
+          groupRole: current.groupRole,
           validation: current.validation,
           reason: result.reason,
         ),
@@ -212,38 +212,17 @@ class ExerciseEditorBloc
     final current = state;
     if (current is! ExerciseEditorEditing) return;
     if (current.draft.sets.length >= 20) return;
+    final values = current.draft.sets.isEmpty
+        ? _emptySet(current.draft.measurementType)
+        : current.draft.sets.last.values;
     final newSet = PlannedSetDraft(
       draftId: _uuid.v4(),
       persistedId: null,
-      values: _emptySet(current.draft.measurementType),
+      values: values,
     );
     final updated = current.draft.copyWith(
       sets: [...current.draft.sets, newSet],
     );
-    final validation = _computeValidation(updated);
-    emit(current.copyWith(draft: updated, validation: validation));
-  }
-
-  Future<void> _onPlannedSetDuplicated(
-    PlannedSetDuplicated event,
-    Emitter<ExerciseEditorState> emit,
-  ) async {
-    final current = state;
-    if (current is! ExerciseEditorEditing) return;
-    if (current.draft.sets.length >= 20) return;
-    final sourceIndex = current.draft.sets.indexWhere(
-      (s) => s.draftId == event.setDraftId,
-    );
-    if (sourceIndex < 0) return;
-    final source = current.draft.sets[sourceIndex];
-    final duplicate = PlannedSetDraft(
-      draftId: _uuid.v4(),
-      persistedId: null,
-      values: source.values,
-    );
-    final newSets = List<PlannedSetDraft>.from(current.draft.sets)
-      ..insert(sourceIndex + 1, duplicate);
-    final updated = current.draft.copyWith(sets: newSets);
     final validation = _computeValidation(updated);
     emit(current.copyWith(draft: updated, validation: validation));
   }
@@ -365,13 +344,17 @@ class ExerciseEditorBloc
     if (persistedId == null) return;
     final baseline = _baselineExercise;
     if (baseline == null) return;
+    final baselineGroup = _baselineGroup;
+    if (baselineGroup == null) return;
 
     final restResult = ProgramValidation.validatePlannedRest(_plannedRestInput);
     final plannedRestSeconds = restResult is Valid<int?>
         ? restResult.value
         : null;
 
-    emit(ExerciseEditorSaving(draft: current.draft));
+    emit(
+      ExerciseEditorSaving(draft: current.draft, groupRole: current.groupRole),
+    );
     try {
       final measurementType = current.draft.measurementType;
       final baselineSetsById = {for (final s in baseline.sets) s.id: s};
@@ -417,11 +400,17 @@ class ExerciseEditorBloc
         schemaVersion: baseline.schemaVersion,
       );
       await _programRepository.updateExercise(updatedExercise);
+      if (current.groupRole != baselineGroup.role) {
+        await _programRepository.updateExerciseGroup(
+          baselineGroup.copyWith(role: current.groupRole),
+        );
+      }
       emit(ExerciseEditorSaved(exerciseId: persistedId));
     } on DomainError catch (e) {
       emit(
         ExerciseEditorEditing(
           draft: current.draft,
+          groupRole: current.groupRole,
           validation: validation,
           lastSaveError: e,
         ),
