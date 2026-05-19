@@ -143,28 +143,25 @@ class _ExerciseEditorScreenState extends State<ExerciseEditorScreen> {
           ExerciseEditorNotFound(:final exerciseId) => _NotFoundScaffold(
             exerciseId: exerciseId,
           ),
-          ExerciseEditorSaving(:final draft, :final groupRole) =>
-            _EditorScaffold(
-              nameController: _nameController,
-              plannedRestController: _plannedRestController,
-              notesController: _notesController,
-              videoUrlController: _videoUrlController,
-              draft: draft,
-              groupRole: groupRole,
-              validation: const ExerciseDraftValidation(
-                isNameValid: true,
-                isPlannedRestValid: true,
-                isVideoUrlValid: true,
-                isNotesValid: true,
-                isSetCountValid: true,
-                areSetsValid: true,
-              ),
-              isSaving: true,
-              lastSaveError: null,
+          ExerciseEditorSaving(:final draft) => _EditorScaffold(
+            nameController: _nameController,
+            plannedRestController: _plannedRestController,
+            notesController: _notesController,
+            videoUrlController: _videoUrlController,
+            draft: draft,
+            validation: const ExerciseDraftValidation(
+              isNameValid: true,
+              isPlannedRestValid: true,
+              isVideoUrlValid: true,
+              isNotesValid: true,
+              isSetCountValid: true,
+              areSetsValid: true,
             ),
+            isSaving: true,
+            lastSaveError: null,
+          ),
           ExerciseEditorEditing(
             :final draft,
-            :final groupRole,
             :final validation,
             :final lastSaveError,
           ) =>
@@ -174,24 +171,18 @@ class _ExerciseEditorScreenState extends State<ExerciseEditorScreen> {
               notesController: _notesController,
               videoUrlController: _videoUrlController,
               draft: draft,
-              groupRole: groupRole,
               validation: validation,
               isSaving: false,
               lastSaveError: lastSaveError,
             ),
           ExerciseEditorSaved() => const _LoadingScaffold(),
-          ExerciseEditorVideoLinkError(
-            :final draft,
-            :final groupRole,
-            :final validation,
-          ) =>
+          ExerciseEditorVideoLinkError(:final draft, :final validation) =>
             _EditorScaffold(
               nameController: _nameController,
               plannedRestController: _plannedRestController,
               notesController: _notesController,
               videoUrlController: _videoUrlController,
               draft: draft,
-              groupRole: groupRole,
               validation: validation,
               isSaving: false,
               lastSaveError: null,
@@ -266,7 +257,6 @@ class _EditorScaffold extends StatelessWidget {
     required this.notesController,
     required this.videoUrlController,
     required this.draft,
-    required this.groupRole,
     required this.validation,
     required this.isSaving,
     required this.lastSaveError,
@@ -277,7 +267,6 @@ class _EditorScaffold extends StatelessWidget {
   final TextEditingController notesController;
   final TextEditingController videoUrlController;
   final ExerciseDraft draft;
-  final ExerciseGroupRole groupRole;
   final ExerciseDraftValidation validation;
   final bool isSaving;
   final DomainError? lastSaveError;
@@ -322,7 +311,6 @@ class _EditorScaffold extends StatelessWidget {
             notesController: notesController,
             videoUrlController: videoUrlController,
             draft: draft,
-            groupRole: groupRole,
             validation: validation,
             lastSaveError: lastSaveError,
           ),
@@ -346,7 +334,6 @@ class _EditorBody extends StatelessWidget {
     required this.notesController,
     required this.videoUrlController,
     required this.draft,
-    required this.groupRole,
     required this.validation,
     required this.lastSaveError,
   });
@@ -356,7 +343,6 @@ class _EditorBody extends StatelessWidget {
   final TextEditingController notesController;
   final TextEditingController videoUrlController;
   final ExerciseDraft draft;
-  final ExerciseGroupRole groupRole;
   final ExerciseDraftValidation validation;
   final DomainError? lastSaveError;
 
@@ -389,19 +375,6 @@ class _EditorBody extends StatelessWidget {
                   ),
                   onChanged: (value) =>
                       bloc.add(ExerciseNameChanged(name: value)),
-                ),
-                const SizedBox(height: AppSpacing.lg),
-                Text(
-                  'Role',
-                  style: typography.caption.copyWith(
-                    color: colors.onSurfaceMuted,
-                  ),
-                ),
-                const SizedBox(height: AppSpacing.sm),
-                _GroupRoleToggle(
-                  role: groupRole,
-                  onChanged: (role) =>
-                      bloc.add(ExerciseGroupRoleChanged(role: role)),
                 ),
                 const SizedBox(height: AppSpacing.lg),
                 Text(
@@ -567,61 +540,6 @@ class _EditorBody extends StatelessWidget {
           ),
         ),
       ],
-    );
-  }
-}
-
-class _GroupRoleToggle extends StatelessWidget {
-  const _GroupRoleToggle({required this.role, required this.onChanged});
-
-  final ExerciseGroupRole role;
-  final ValueChanged<ExerciseGroupRole> onChanged;
-
-  @override
-  Widget build(BuildContext context) {
-    final colors = Theme.of(context).appColors;
-    final isWarmup = role == ExerciseGroupRole.warmup;
-    return Align(
-      alignment: Alignment.centerLeft,
-      child: InkWell(
-        onTap: () => onChanged(
-          isWarmup ? ExerciseGroupRole.main : ExerciseGroupRole.warmup,
-        ),
-        borderRadius: BorderRadius.circular(AppRadius.pill),
-        child: Container(
-          constraints: const BoxConstraints(minHeight: AppSpacing.touchMin),
-          padding: const EdgeInsets.symmetric(
-            horizontal: AppSpacing.md,
-            vertical: AppSpacing.xs,
-          ),
-          decoration: BoxDecoration(
-            color: isWarmup
-                ? colors.warmupBg.withValues(alpha: 0.6)
-                : Colors.transparent,
-            borderRadius: BorderRadius.circular(AppRadius.pill),
-            border: Border.all(
-              color: isWarmup ? colors.warmup : colors.outline,
-            ),
-          ),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(
-                isWarmup ? Icons.local_fire_department : Icons.fitness_center,
-                size: 14,
-                color: isWarmup ? colors.warmup : colors.onSurfaceMuted,
-              ),
-              const SizedBox(width: AppSpacing.xs),
-              Text(
-                isWarmup ? 'WARMUP' : 'Main',
-                style: AppTypography.standard.badge.copyWith(
-                  color: isWarmup ? colors.warmup : colors.onSurfaceMuted,
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
     );
   }
 }

@@ -32,15 +32,6 @@ final class ExerciseMeasurementTypeChanged extends ExerciseEditorEvent {
   List<Object?> get props => [next];
 }
 
-final class ExerciseGroupRoleChanged extends ExerciseEditorEvent {
-  const ExerciseGroupRoleChanged({required this.role});
-
-  final ExerciseGroupRole role;
-
-  @override
-  List<Object?> get props => [role];
-}
-
 final class ExerciseNotesChanged extends ExerciseEditorEvent {
   const ExerciseNotesChanged({required this.notes});
 

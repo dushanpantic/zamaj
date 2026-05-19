@@ -123,25 +123,21 @@ final class ExerciseEditorNotFound extends ExerciseEditorState {
 final class ExerciseEditorEditing extends ExerciseEditorState {
   const ExerciseEditorEditing({
     required this.draft,
-    required this.groupRole,
     required this.validation,
     this.lastSaveError,
   });
 
   final ExerciseDraft draft;
-  final ExerciseGroupRole groupRole;
   final ExerciseDraftValidation validation;
   final DomainError? lastSaveError;
 
   ExerciseEditorEditing copyWith({
     ExerciseDraft? draft,
-    ExerciseGroupRole? groupRole,
     ExerciseDraftValidation? validation,
     DomainError? Function()? lastSaveError,
   }) {
     return ExerciseEditorEditing(
       draft: draft ?? this.draft,
-      groupRole: groupRole ?? this.groupRole,
       validation: validation ?? this.validation,
       lastSaveError: lastSaveError != null
           ? lastSaveError()
@@ -150,17 +146,16 @@ final class ExerciseEditorEditing extends ExerciseEditorState {
   }
 
   @override
-  List<Object?> get props => [draft, groupRole, validation, lastSaveError];
+  List<Object?> get props => [draft, validation, lastSaveError];
 }
 
 final class ExerciseEditorSaving extends ExerciseEditorState {
-  const ExerciseEditorSaving({required this.draft, required this.groupRole});
+  const ExerciseEditorSaving({required this.draft});
 
   final ExerciseDraft draft;
-  final ExerciseGroupRole groupRole;
 
   @override
-  List<Object?> get props => [draft, groupRole];
+  List<Object?> get props => [draft];
 }
 
 final class ExerciseEditorSaved extends ExerciseEditorState {
@@ -175,16 +170,14 @@ final class ExerciseEditorSaved extends ExerciseEditorState {
 final class ExerciseEditorVideoLinkError extends ExerciseEditorState {
   const ExerciseEditorVideoLinkError({
     required this.draft,
-    required this.groupRole,
     required this.validation,
     required this.reason,
   });
 
   final ExerciseDraft draft;
-  final ExerciseGroupRole groupRole;
   final ExerciseDraftValidation validation;
   final String reason;
 
   @override
-  List<Object?> get props => [draft, groupRole, validation, reason];
+  List<Object?> get props => [draft, validation, reason];
 }

@@ -19,7 +19,6 @@ class ExerciseEditorBloc
     on<ExerciseEditorOpened>(_onOpened);
     on<ExerciseNameChanged>(_onNameChanged);
     on<ExerciseMeasurementTypeChanged>(_onMeasurementTypeChanged);
-    on<ExerciseGroupRoleChanged>(_onGroupRoleChanged);
     on<ExerciseNotesChanged>(_onNotesChanged);
     on<ExerciseVideoUrlChanged>(_onVideoUrlChanged);
     on<ExerciseVideoUrlActivated>(_onVideoUrlActivated);
@@ -38,9 +37,7 @@ class ExerciseEditorBloc
   final _uuid = const Uuid();
 
   Exercise? _baselineExercise;
-  ExerciseGroup? _baselineGroup;
   ExerciseDraft? _baselineDraft;
-  ExerciseGroupRole? _baselineGroupRole;
   String? _baselinePlannedRestInput;
   String? _plannedRestInput;
 
@@ -55,7 +52,6 @@ class ExerciseEditorBloc
     final baselineDraft = _baselineDraft;
     if (baselineDraft == null) return false;
     if (current.draft != baselineDraft) return true;
-    if (current.groupRole != _baselineGroupRole) return true;
     return _plannedRestInput != _baselinePlannedRestInput;
   }
 
@@ -69,15 +65,7 @@ class ExerciseEditorBloc
       emit(ExerciseEditorNotFound(exerciseId: event.exerciseId));
       return;
     }
-    final group = await _programRepository.getExerciseGroup(
-      exercise.exerciseGroupId,
-    );
-    if (group == null) {
-      emit(ExerciseEditorNotFound(exerciseId: event.exerciseId));
-      return;
-    }
     _baselineExercise = exercise;
-    _baselineGroup = group;
     var draft = _exerciseToDraft(exercise);
     if (draft.plannedRestSeconds == null) {
       draft = draft.copyWith(plannedRestSeconds: 180);
@@ -95,16 +83,9 @@ class ExerciseEditorBloc
     }
     _plannedRestInput = draft.plannedRestSeconds?.toString() ?? '180';
     _baselineDraft = draft;
-    _baselineGroupRole = group.role;
     _baselinePlannedRestInput = _plannedRestInput;
     final validation = _computeValidation(draft);
-    emit(
-      ExerciseEditorEditing(
-        draft: draft,
-        groupRole: group.role,
-        validation: validation,
-      ),
-    );
+    emit(ExerciseEditorEditing(draft: draft, validation: validation));
   }
 
   Future<void> _onNameChanged(
@@ -134,16 +115,6 @@ class ExerciseEditorBloc
     );
     final validation = _computeValidation(updated);
     emit(current.copyWith(draft: updated, validation: validation));
-  }
-
-  Future<void> _onGroupRoleChanged(
-    ExerciseGroupRoleChanged event,
-    Emitter<ExerciseEditorState> emit,
-  ) async {
-    final current = state;
-    if (current is! ExerciseEditorEditing) return;
-    if (event.role == current.groupRole) return;
-    emit(current.copyWith(groupRole: event.role));
   }
 
   Future<void> _onNotesChanged(
@@ -186,7 +157,6 @@ class ExerciseEditorBloc
       emit(
         ExerciseEditorVideoLinkError(
           draft: current.draft,
-          groupRole: current.groupRole,
           validation: current.validation,
           reason: result.reason,
         ),
@@ -344,17 +314,13 @@ class ExerciseEditorBloc
     if (persistedId == null) return;
     final baseline = _baselineExercise;
     if (baseline == null) return;
-    final baselineGroup = _baselineGroup;
-    if (baselineGroup == null) return;
 
     final restResult = ProgramValidation.validatePlannedRest(_plannedRestInput);
     final plannedRestSeconds = restResult is Valid<int?>
         ? restResult.value
         : null;
 
-    emit(
-      ExerciseEditorSaving(draft: current.draft, groupRole: current.groupRole),
-    );
+    emit(ExerciseEditorSaving(draft: current.draft));
     try {
       final measurementType = current.draft.measurementType;
       final baselineSetsById = {for (final s in baseline.sets) s.id: s};
@@ -400,17 +366,11 @@ class ExerciseEditorBloc
         schemaVersion: baseline.schemaVersion,
       );
       await _programRepository.updateExercise(updatedExercise);
-      if (current.groupRole != baselineGroup.role) {
-        await _programRepository.updateExerciseGroup(
-          baselineGroup.copyWith(role: current.groupRole),
-        );
-      }
       emit(ExerciseEditorSaved(exerciseId: persistedId));
     } on DomainError catch (e) {
       emit(
         ExerciseEditorEditing(
           draft: current.draft,
-          groupRole: current.groupRole,
           validation: validation,
           lastSaveError: e,
         ),
