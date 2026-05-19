@@ -48,6 +48,7 @@ void main() {
       position: 0,
       kindDiscriminator: kindJson['type'] as String,
       kindPayloadJson: kindPayload,
+      roleDiscriminator: 'main',
       createdAtMs: 1700000002000,
       updatedAtMs: 1700000003000,
       schemaVersion: 1,

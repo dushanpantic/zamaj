@@ -7,6 +7,7 @@ library;
 import 'package:zamaj/modules/domain/models/exercise.dart';
 import 'package:zamaj/modules/domain/models/exercise_group.dart';
 import 'package:zamaj/modules/domain/models/exercise_group_kind.dart';
+import 'package:zamaj/modules/domain/models/exercise_group_role.dart';
 import 'package:zamaj/modules/domain/models/exercise_metadata.dart';
 import 'package:zamaj/modules/domain/models/measurement_type.dart';
 import 'package:zamaj/modules/domain/models/planned_set_values.dart';
@@ -39,6 +40,7 @@ abstract class ProgramRepository {
     required String workoutDayId,
     required ExerciseGroupKind kind,
     required List<Exercise> exercises,
+    ExerciseGroupRole role = ExerciseGroupRole.main,
   });
   Future<ExerciseGroup> updateExerciseGroup(ExerciseGroup group);
   Future<void> deleteExerciseGroup(String exerciseGroupId);

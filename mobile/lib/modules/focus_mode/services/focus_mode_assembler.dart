@@ -29,7 +29,8 @@ abstract final class FocusModeAssembler {
 
     final panels = <FocusModeViewModel>[
       for (final exercise in group)
-        if (exercise.state is! SkippedState) _buildPanel(exercise, session),
+        if (exercise.state is! SkippedState)
+          _buildPanel(exercise, session, _resolveGroupRole(exercise, session)),
     ];
     if (panels.isEmpty) return null;
 
@@ -210,9 +211,24 @@ abstract final class FocusModeAssembler {
     };
   }
 
+  static ExerciseGroupRole _resolveGroupRole(
+    SessionExercise sessionExercise,
+    Session session,
+  ) {
+    for (final group in session.snapshot.workoutDay.exerciseGroups) {
+      for (final ex in group.exercises) {
+        if (ex.id == sessionExercise.plannedExerciseIdInSnapshot) {
+          return group.role;
+        }
+      }
+    }
+    return ExerciseGroupRole.main;
+  }
+
   static FocusModeViewModel _buildPanel(
     SessionExercise exercise,
     Session session,
+    ExerciseGroupRole plannedGroupRole,
   ) {
     final planned = _lookupPlanned(sessionExercise: exercise, session: session);
     final effectiveMt = switch (exercise.state) {
@@ -285,6 +301,7 @@ abstract final class FocusModeAssembler {
       isReplaced: isReplaced,
       plannedExerciseName: planned.name,
       isLoggable: isLoggable,
+      plannedGroupRole: plannedGroupRole,
     );
   }
 

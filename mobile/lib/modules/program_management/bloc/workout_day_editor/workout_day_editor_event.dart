@@ -1,4 +1,5 @@
 import 'package:equatable/equatable.dart';
+import 'package:zamaj/modules/domain/models/exercise_group_role.dart';
 
 sealed class WorkoutDayEditorEvent extends Equatable {
   const WorkoutDayEditorEvent();
@@ -124,4 +125,17 @@ final class SupersetUngrouped extends WorkoutDayEditorEvent {
 
   @override
   List<Object?> get props => [groupDraftId];
+}
+
+final class ExerciseGroupRoleToggled extends WorkoutDayEditorEvent {
+  const ExerciseGroupRoleToggled({
+    required this.groupDraftId,
+    required this.role,
+  });
+
+  final String groupDraftId;
+  final ExerciseGroupRole role;
+
+  @override
+  List<Object?> get props => [groupDraftId, role];
 }

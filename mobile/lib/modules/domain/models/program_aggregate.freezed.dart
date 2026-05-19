@@ -567,7 +567,7 @@ as List<ExerciseGroupAggregate>,
 /// @nodoc
 mixin _$ExerciseGroupAggregate {
 
- String get id; String get workoutDayId; ExerciseGroupKind get kind; int get position; List<ExerciseAggregate> get exercises;
+ String get id; String get workoutDayId; ExerciseGroupKind get kind; int get position; List<ExerciseAggregate> get exercises; ExerciseGroupRole get role;
 /// Create a copy of ExerciseGroupAggregate
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -578,16 +578,16 @@ $ExerciseGroupAggregateCopyWith<ExerciseGroupAggregate> get copyWith => _$Exerci
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is ExerciseGroupAggregate&&(identical(other.id, id) || other.id == id)&&(identical(other.workoutDayId, workoutDayId) || other.workoutDayId == workoutDayId)&&(identical(other.kind, kind) || other.kind == kind)&&(identical(other.position, position) || other.position == position)&&const DeepCollectionEquality().equals(other.exercises, exercises));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is ExerciseGroupAggregate&&(identical(other.id, id) || other.id == id)&&(identical(other.workoutDayId, workoutDayId) || other.workoutDayId == workoutDayId)&&(identical(other.kind, kind) || other.kind == kind)&&(identical(other.position, position) || other.position == position)&&const DeepCollectionEquality().equals(other.exercises, exercises)&&(identical(other.role, role) || other.role == role));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,id,workoutDayId,kind,position,const DeepCollectionEquality().hash(exercises));
+int get hashCode => Object.hash(runtimeType,id,workoutDayId,kind,position,const DeepCollectionEquality().hash(exercises),role);
 
 @override
 String toString() {
-  return 'ExerciseGroupAggregate(id: $id, workoutDayId: $workoutDayId, kind: $kind, position: $position, exercises: $exercises)';
+  return 'ExerciseGroupAggregate(id: $id, workoutDayId: $workoutDayId, kind: $kind, position: $position, exercises: $exercises, role: $role)';
 }
 
 
@@ -598,7 +598,7 @@ abstract mixin class $ExerciseGroupAggregateCopyWith<$Res>  {
   factory $ExerciseGroupAggregateCopyWith(ExerciseGroupAggregate value, $Res Function(ExerciseGroupAggregate) _then) = _$ExerciseGroupAggregateCopyWithImpl;
 @useResult
 $Res call({
- String id, String workoutDayId, ExerciseGroupKind kind, int position, List<ExerciseAggregate> exercises
+ String id, String workoutDayId, ExerciseGroupKind kind, int position, List<ExerciseAggregate> exercises, ExerciseGroupRole role
 });
 
 
@@ -615,14 +615,15 @@ class _$ExerciseGroupAggregateCopyWithImpl<$Res>
 
 /// Create a copy of ExerciseGroupAggregate
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? workoutDayId = null,Object? kind = null,Object? position = null,Object? exercises = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? workoutDayId = null,Object? kind = null,Object? position = null,Object? exercises = null,Object? role = null,}) {
   return _then(_self.copyWith(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as String,workoutDayId: null == workoutDayId ? _self.workoutDayId : workoutDayId // ignore: cast_nullable_to_non_nullable
 as String,kind: null == kind ? _self.kind : kind // ignore: cast_nullable_to_non_nullable
 as ExerciseGroupKind,position: null == position ? _self.position : position // ignore: cast_nullable_to_non_nullable
 as int,exercises: null == exercises ? _self.exercises : exercises // ignore: cast_nullable_to_non_nullable
-as List<ExerciseAggregate>,
+as List<ExerciseAggregate>,role: null == role ? _self.role : role // ignore: cast_nullable_to_non_nullable
+as ExerciseGroupRole,
   ));
 }
 /// Create a copy of ExerciseGroupAggregate
@@ -716,10 +717,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id,  String workoutDayId,  ExerciseGroupKind kind,  int position,  List<ExerciseAggregate> exercises)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id,  String workoutDayId,  ExerciseGroupKind kind,  int position,  List<ExerciseAggregate> exercises,  ExerciseGroupRole role)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _ExerciseGroupAggregate() when $default != null:
-return $default(_that.id,_that.workoutDayId,_that.kind,_that.position,_that.exercises);case _:
+return $default(_that.id,_that.workoutDayId,_that.kind,_that.position,_that.exercises,_that.role);case _:
   return orElse();
 
 }
@@ -737,10 +738,10 @@ return $default(_that.id,_that.workoutDayId,_that.kind,_that.position,_that.exer
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id,  String workoutDayId,  ExerciseGroupKind kind,  int position,  List<ExerciseAggregate> exercises)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id,  String workoutDayId,  ExerciseGroupKind kind,  int position,  List<ExerciseAggregate> exercises,  ExerciseGroupRole role)  $default,) {final _that = this;
 switch (_that) {
 case _ExerciseGroupAggregate():
-return $default(_that.id,_that.workoutDayId,_that.kind,_that.position,_that.exercises);case _:
+return $default(_that.id,_that.workoutDayId,_that.kind,_that.position,_that.exercises,_that.role);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -757,10 +758,10 @@ return $default(_that.id,_that.workoutDayId,_that.kind,_that.position,_that.exer
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id,  String workoutDayId,  ExerciseGroupKind kind,  int position,  List<ExerciseAggregate> exercises)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id,  String workoutDayId,  ExerciseGroupKind kind,  int position,  List<ExerciseAggregate> exercises,  ExerciseGroupRole role)?  $default,) {final _that = this;
 switch (_that) {
 case _ExerciseGroupAggregate() when $default != null:
-return $default(_that.id,_that.workoutDayId,_that.kind,_that.position,_that.exercises);case _:
+return $default(_that.id,_that.workoutDayId,_that.kind,_that.position,_that.exercises,_that.role);case _:
   return null;
 
 }
@@ -772,7 +773,7 @@ return $default(_that.id,_that.workoutDayId,_that.kind,_that.position,_that.exer
 
 
 class _ExerciseGroupAggregate implements ExerciseGroupAggregate {
-  const _ExerciseGroupAggregate({required this.id, required this.workoutDayId, required this.kind, required this.position, required final  List<ExerciseAggregate> exercises}): _exercises = exercises;
+  const _ExerciseGroupAggregate({required this.id, required this.workoutDayId, required this.kind, required this.position, required final  List<ExerciseAggregate> exercises, this.role = ExerciseGroupRole.main}): _exercises = exercises;
   
 
 @override final  String id;
@@ -786,6 +787,7 @@ class _ExerciseGroupAggregate implements ExerciseGroupAggregate {
   return EqualUnmodifiableListView(_exercises);
 }
 
+@override@JsonKey() final  ExerciseGroupRole role;
 
 /// Create a copy of ExerciseGroupAggregate
 /// with the given fields replaced by the non-null parameter values.
@@ -797,16 +799,16 @@ _$ExerciseGroupAggregateCopyWith<_ExerciseGroupAggregate> get copyWith => __$Exe
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _ExerciseGroupAggregate&&(identical(other.id, id) || other.id == id)&&(identical(other.workoutDayId, workoutDayId) || other.workoutDayId == workoutDayId)&&(identical(other.kind, kind) || other.kind == kind)&&(identical(other.position, position) || other.position == position)&&const DeepCollectionEquality().equals(other._exercises, _exercises));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _ExerciseGroupAggregate&&(identical(other.id, id) || other.id == id)&&(identical(other.workoutDayId, workoutDayId) || other.workoutDayId == workoutDayId)&&(identical(other.kind, kind) || other.kind == kind)&&(identical(other.position, position) || other.position == position)&&const DeepCollectionEquality().equals(other._exercises, _exercises)&&(identical(other.role, role) || other.role == role));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,id,workoutDayId,kind,position,const DeepCollectionEquality().hash(_exercises));
+int get hashCode => Object.hash(runtimeType,id,workoutDayId,kind,position,const DeepCollectionEquality().hash(_exercises),role);
 
 @override
 String toString() {
-  return 'ExerciseGroupAggregate(id: $id, workoutDayId: $workoutDayId, kind: $kind, position: $position, exercises: $exercises)';
+  return 'ExerciseGroupAggregate(id: $id, workoutDayId: $workoutDayId, kind: $kind, position: $position, exercises: $exercises, role: $role)';
 }
 
 
@@ -817,7 +819,7 @@ abstract mixin class _$ExerciseGroupAggregateCopyWith<$Res> implements $Exercise
   factory _$ExerciseGroupAggregateCopyWith(_ExerciseGroupAggregate value, $Res Function(_ExerciseGroupAggregate) _then) = __$ExerciseGroupAggregateCopyWithImpl;
 @override @useResult
 $Res call({
- String id, String workoutDayId, ExerciseGroupKind kind, int position, List<ExerciseAggregate> exercises
+ String id, String workoutDayId, ExerciseGroupKind kind, int position, List<ExerciseAggregate> exercises, ExerciseGroupRole role
 });
 
 
@@ -834,14 +836,15 @@ class __$ExerciseGroupAggregateCopyWithImpl<$Res>
 
 /// Create a copy of ExerciseGroupAggregate
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? workoutDayId = null,Object? kind = null,Object? position = null,Object? exercises = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? workoutDayId = null,Object? kind = null,Object? position = null,Object? exercises = null,Object? role = null,}) {
   return _then(_ExerciseGroupAggregate(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as String,workoutDayId: null == workoutDayId ? _self.workoutDayId : workoutDayId // ignore: cast_nullable_to_non_nullable
 as String,kind: null == kind ? _self.kind : kind // ignore: cast_nullable_to_non_nullable
 as ExerciseGroupKind,position: null == position ? _self.position : position // ignore: cast_nullable_to_non_nullable
 as int,exercises: null == exercises ? _self._exercises : exercises // ignore: cast_nullable_to_non_nullable
-as List<ExerciseAggregate>,
+as List<ExerciseAggregate>,role: null == role ? _self.role : role // ignore: cast_nullable_to_non_nullable
+as ExerciseGroupRole,
   ));
 }
 

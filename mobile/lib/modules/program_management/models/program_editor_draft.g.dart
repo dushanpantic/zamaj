@@ -70,6 +70,12 @@ _ExerciseGroupDraft _$ExerciseGroupDraftFromJson(Map<String, dynamic> json) =>
               .map((e) => ExerciseDraft.fromJson(e as Map<String, dynamic>))
               .toList(),
         ),
+        role: $checkedConvert(
+          'role',
+          (v) =>
+              $enumDecodeNullable(_$ExerciseGroupRoleEnumMap, v) ??
+              ExerciseGroupRole.main,
+        ),
       );
       return val;
     });
@@ -79,7 +85,13 @@ Map<String, dynamic> _$ExerciseGroupDraftToJson(_ExerciseGroupDraft instance) =>
       'draftId': instance.draftId,
       'persistedId': ?instance.persistedId,
       'exercises': instance.exercises.map((e) => e.toJson()).toList(),
+      'role': _$ExerciseGroupRoleEnumMap[instance.role]!,
     };
+
+const _$ExerciseGroupRoleEnumMap = {
+  ExerciseGroupRole.warmup: 'warmup',
+  ExerciseGroupRole.main: 'main',
+};
 
 _ExerciseDraft _$ExerciseDraftFromJson(Map<String, dynamic> json) =>
     $checkedCreate('_ExerciseDraft', json, ($checkedConvert) {

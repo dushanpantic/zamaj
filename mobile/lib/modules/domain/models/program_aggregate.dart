@@ -1,5 +1,6 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:zamaj/modules/domain/models/exercise_group_kind.dart';
+import 'package:zamaj/modules/domain/models/exercise_group_role.dart';
 import 'package:zamaj/modules/domain/models/exercise_metadata.dart';
 import 'package:zamaj/modules/domain/models/measurement_type.dart';
 import 'package:zamaj/modules/domain/models/planned_set_values.dart';
@@ -37,6 +38,7 @@ abstract class ExerciseGroupAggregate with _$ExerciseGroupAggregate {
     required ExerciseGroupKind kind,
     required int position,
     required List<ExerciseAggregate> exercises,
+    @Default(ExerciseGroupRole.main) ExerciseGroupRole role,
   }) = _ExerciseGroupAggregate;
 }
 

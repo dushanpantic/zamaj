@@ -331,17 +331,28 @@ class _ExerciseList extends StatelessWidget {
       itemBuilder: (context, index) {
         final group = draft.groups[index];
         if (group.exercises.length == 1) {
-          return _FlatExerciseRow(
+          return Padding(
             key: ValueKey(group.draftId),
-            group: group,
-            exercise: group.exercises.first,
-            reorderIndex: index,
-            bloc: bloc,
-            onNavigateToExercise: (id) {
-              final screenState = context
-                  .findAncestorStateOfType<_WorkoutDayEditorScreenState>();
-              screenState?._navigateToExercise(id);
-            },
+            padding: const EdgeInsets.only(bottom: AppSpacing.sm),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                _GroupRoleToggle(group: group, bloc: bloc),
+                _FlatExerciseRow(
+                  group: group,
+                  exercise: group.exercises.first,
+                  reorderIndex: index,
+                  bloc: bloc,
+                  onNavigateToExercise: (id) {
+                    final screenState = context
+                        .findAncestorStateOfType<
+                          _WorkoutDayEditorScreenState
+                        >();
+                    screenState?._navigateToExercise(id);
+                  },
+                ),
+              ],
+            ),
           );
         }
         return _SupersetCard(
@@ -360,6 +371,69 @@ class _ExerciseList extends StatelessWidget {
   }
 }
 
+class _GroupRoleToggle extends StatelessWidget {
+  const _GroupRoleToggle({required this.group, required this.bloc});
+
+  final ExerciseGroupDraft group;
+  final WorkoutDayEditorBloc bloc;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = Theme.of(context).appColors;
+    final isWarmup = group.role == ExerciseGroupRole.warmup;
+    return Align(
+      alignment: Alignment.centerLeft,
+      child: Padding(
+        padding: const EdgeInsets.only(bottom: AppSpacing.xs),
+        child: InkWell(
+          onTap: () => bloc.add(
+            ExerciseGroupRoleToggled(
+              groupDraftId: group.draftId,
+              role: isWarmup
+                  ? ExerciseGroupRole.main
+                  : ExerciseGroupRole.warmup,
+            ),
+          ),
+          borderRadius: BorderRadius.circular(AppRadius.pill),
+          child: Container(
+            constraints: const BoxConstraints(minHeight: AppSpacing.touchMin),
+            padding: const EdgeInsets.symmetric(
+              horizontal: AppSpacing.md,
+              vertical: AppSpacing.xs,
+            ),
+            decoration: BoxDecoration(
+              color: isWarmup
+                  ? colors.warmupBg.withValues(alpha: 0.6)
+                  : Colors.transparent,
+              borderRadius: BorderRadius.circular(AppRadius.pill),
+              border: Border.all(
+                color: isWarmup ? colors.warmup : colors.outline,
+              ),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(
+                  isWarmup ? Icons.local_fire_department : Icons.fitness_center,
+                  size: 14,
+                  color: isWarmup ? colors.warmup : colors.onSurfaceMuted,
+                ),
+                const SizedBox(width: AppSpacing.xs),
+                Text(
+                  isWarmup ? 'WARMUP' : 'Main',
+                  style: AppTypography.standard.badge.copyWith(
+                    color: isWarmup ? colors.warmup : colors.onSurfaceMuted,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
 class _ExerciseDragPayload {
   const _ExerciseDragPayload({
     required this.groupDraftId,
@@ -372,7 +446,6 @@ class _ExerciseDragPayload {
 
 class _FlatExerciseRow extends StatelessWidget {
   const _FlatExerciseRow({
-    super.key,
     required this.group,
     required this.exercise,
     required this.reorderIndex,
@@ -709,6 +782,8 @@ class _SupersetCard extends StatelessWidget {
                     ),
                   ),
                 ),
+                const SizedBox(width: AppSpacing.sm),
+                _GroupRoleToggle(group: group, bloc: bloc),
                 const Spacer(),
                 IconButton(
                   icon: Icon(

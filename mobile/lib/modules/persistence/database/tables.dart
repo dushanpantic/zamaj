@@ -48,6 +48,8 @@ class ExerciseGroups extends Table {
   IntColumn get position => integer()();
   TextColumn get kindDiscriminator => text()();
   TextColumn get kindPayloadJson => text()();
+  TextColumn get roleDiscriminator =>
+      text().withDefault(const Constant('main'))();
   IntColumn get createdAtMs => integer()();
   IntColumn get updatedAtMs => integer()();
   IntColumn get schemaVersion => integer()();

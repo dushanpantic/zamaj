@@ -15,7 +15,7 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$ExerciseGroup {
 
- String get id; String get workoutDayId; int get position; ExerciseGroupKind get kind; List<Exercise> get exercises; DateTime get createdAt; DateTime get updatedAt; int get schemaVersion;
+ String get id; String get workoutDayId; int get position; ExerciseGroupKind get kind; List<Exercise> get exercises; DateTime get createdAt; DateTime get updatedAt; int get schemaVersion; ExerciseGroupRole get role;
 /// Create a copy of ExerciseGroup
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -28,16 +28,16 @@ $ExerciseGroupCopyWith<ExerciseGroup> get copyWith => _$ExerciseGroupCopyWithImp
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is ExerciseGroup&&(identical(other.id, id) || other.id == id)&&(identical(other.workoutDayId, workoutDayId) || other.workoutDayId == workoutDayId)&&(identical(other.position, position) || other.position == position)&&(identical(other.kind, kind) || other.kind == kind)&&const DeepCollectionEquality().equals(other.exercises, exercises)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt)&&(identical(other.updatedAt, updatedAt) || other.updatedAt == updatedAt)&&(identical(other.schemaVersion, schemaVersion) || other.schemaVersion == schemaVersion));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is ExerciseGroup&&(identical(other.id, id) || other.id == id)&&(identical(other.workoutDayId, workoutDayId) || other.workoutDayId == workoutDayId)&&(identical(other.position, position) || other.position == position)&&(identical(other.kind, kind) || other.kind == kind)&&const DeepCollectionEquality().equals(other.exercises, exercises)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt)&&(identical(other.updatedAt, updatedAt) || other.updatedAt == updatedAt)&&(identical(other.schemaVersion, schemaVersion) || other.schemaVersion == schemaVersion)&&(identical(other.role, role) || other.role == role));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,id,workoutDayId,position,kind,const DeepCollectionEquality().hash(exercises),createdAt,updatedAt,schemaVersion);
+int get hashCode => Object.hash(runtimeType,id,workoutDayId,position,kind,const DeepCollectionEquality().hash(exercises),createdAt,updatedAt,schemaVersion,role);
 
 @override
 String toString() {
-  return 'ExerciseGroup(id: $id, workoutDayId: $workoutDayId, position: $position, kind: $kind, exercises: $exercises, createdAt: $createdAt, updatedAt: $updatedAt, schemaVersion: $schemaVersion)';
+  return 'ExerciseGroup(id: $id, workoutDayId: $workoutDayId, position: $position, kind: $kind, exercises: $exercises, createdAt: $createdAt, updatedAt: $updatedAt, schemaVersion: $schemaVersion, role: $role)';
 }
 
 
@@ -48,7 +48,7 @@ abstract mixin class $ExerciseGroupCopyWith<$Res>  {
   factory $ExerciseGroupCopyWith(ExerciseGroup value, $Res Function(ExerciseGroup) _then) = _$ExerciseGroupCopyWithImpl;
 @useResult
 $Res call({
- String id, String workoutDayId, int position, ExerciseGroupKind kind, List<Exercise> exercises, DateTime createdAt, DateTime updatedAt, int schemaVersion
+ String id, String workoutDayId, int position, ExerciseGroupKind kind, List<Exercise> exercises, DateTime createdAt, DateTime updatedAt, int schemaVersion, ExerciseGroupRole role
 });
 
 
@@ -65,7 +65,7 @@ class _$ExerciseGroupCopyWithImpl<$Res>
 
 /// Create a copy of ExerciseGroup
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? workoutDayId = null,Object? position = null,Object? kind = null,Object? exercises = null,Object? createdAt = null,Object? updatedAt = null,Object? schemaVersion = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? workoutDayId = null,Object? position = null,Object? kind = null,Object? exercises = null,Object? createdAt = null,Object? updatedAt = null,Object? schemaVersion = null,Object? role = null,}) {
   return _then(_self.copyWith(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as String,workoutDayId: null == workoutDayId ? _self.workoutDayId : workoutDayId // ignore: cast_nullable_to_non_nullable
@@ -75,7 +75,8 @@ as ExerciseGroupKind,exercises: null == exercises ? _self.exercises : exercises 
 as List<Exercise>,createdAt: null == createdAt ? _self.createdAt : createdAt // ignore: cast_nullable_to_non_nullable
 as DateTime,updatedAt: null == updatedAt ? _self.updatedAt : updatedAt // ignore: cast_nullable_to_non_nullable
 as DateTime,schemaVersion: null == schemaVersion ? _self.schemaVersion : schemaVersion // ignore: cast_nullable_to_non_nullable
-as int,
+as int,role: null == role ? _self.role : role // ignore: cast_nullable_to_non_nullable
+as ExerciseGroupRole,
   ));
 }
 /// Create a copy of ExerciseGroup
@@ -169,10 +170,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id,  String workoutDayId,  int position,  ExerciseGroupKind kind,  List<Exercise> exercises,  DateTime createdAt,  DateTime updatedAt,  int schemaVersion)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id,  String workoutDayId,  int position,  ExerciseGroupKind kind,  List<Exercise> exercises,  DateTime createdAt,  DateTime updatedAt,  int schemaVersion,  ExerciseGroupRole role)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _ExerciseGroup() when $default != null:
-return $default(_that.id,_that.workoutDayId,_that.position,_that.kind,_that.exercises,_that.createdAt,_that.updatedAt,_that.schemaVersion);case _:
+return $default(_that.id,_that.workoutDayId,_that.position,_that.kind,_that.exercises,_that.createdAt,_that.updatedAt,_that.schemaVersion,_that.role);case _:
   return orElse();
 
 }
@@ -190,10 +191,10 @@ return $default(_that.id,_that.workoutDayId,_that.position,_that.kind,_that.exer
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id,  String workoutDayId,  int position,  ExerciseGroupKind kind,  List<Exercise> exercises,  DateTime createdAt,  DateTime updatedAt,  int schemaVersion)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id,  String workoutDayId,  int position,  ExerciseGroupKind kind,  List<Exercise> exercises,  DateTime createdAt,  DateTime updatedAt,  int schemaVersion,  ExerciseGroupRole role)  $default,) {final _that = this;
 switch (_that) {
 case _ExerciseGroup():
-return $default(_that.id,_that.workoutDayId,_that.position,_that.kind,_that.exercises,_that.createdAt,_that.updatedAt,_that.schemaVersion);case _:
+return $default(_that.id,_that.workoutDayId,_that.position,_that.kind,_that.exercises,_that.createdAt,_that.updatedAt,_that.schemaVersion,_that.role);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -210,10 +211,10 @@ return $default(_that.id,_that.workoutDayId,_that.position,_that.kind,_that.exer
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id,  String workoutDayId,  int position,  ExerciseGroupKind kind,  List<Exercise> exercises,  DateTime createdAt,  DateTime updatedAt,  int schemaVersion)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id,  String workoutDayId,  int position,  ExerciseGroupKind kind,  List<Exercise> exercises,  DateTime createdAt,  DateTime updatedAt,  int schemaVersion,  ExerciseGroupRole role)?  $default,) {final _that = this;
 switch (_that) {
 case _ExerciseGroup() when $default != null:
-return $default(_that.id,_that.workoutDayId,_that.position,_that.kind,_that.exercises,_that.createdAt,_that.updatedAt,_that.schemaVersion);case _:
+return $default(_that.id,_that.workoutDayId,_that.position,_that.kind,_that.exercises,_that.createdAt,_that.updatedAt,_that.schemaVersion,_that.role);case _:
   return null;
 
 }
@@ -225,7 +226,7 @@ return $default(_that.id,_that.workoutDayId,_that.position,_that.kind,_that.exer
 @JsonSerializable()
 
 class _ExerciseGroup extends ExerciseGroup {
-   _ExerciseGroup({required this.id, required this.workoutDayId, required this.position, required this.kind, required final  List<Exercise> exercises, required this.createdAt, required this.updatedAt, required this.schemaVersion}): _exercises = exercises,super._();
+   _ExerciseGroup({required this.id, required this.workoutDayId, required this.position, required this.kind, required final  List<Exercise> exercises, required this.createdAt, required this.updatedAt, required this.schemaVersion, this.role = ExerciseGroupRole.main}): _exercises = exercises,super._();
   factory _ExerciseGroup.fromJson(Map<String, dynamic> json) => _$ExerciseGroupFromJson(json);
 
 @override final  String id;
@@ -242,6 +243,7 @@ class _ExerciseGroup extends ExerciseGroup {
 @override final  DateTime createdAt;
 @override final  DateTime updatedAt;
 @override final  int schemaVersion;
+@override@JsonKey() final  ExerciseGroupRole role;
 
 /// Create a copy of ExerciseGroup
 /// with the given fields replaced by the non-null parameter values.
@@ -256,16 +258,16 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _ExerciseGroup&&(identical(other.id, id) || other.id == id)&&(identical(other.workoutDayId, workoutDayId) || other.workoutDayId == workoutDayId)&&(identical(other.position, position) || other.position == position)&&(identical(other.kind, kind) || other.kind == kind)&&const DeepCollectionEquality().equals(other._exercises, _exercises)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt)&&(identical(other.updatedAt, updatedAt) || other.updatedAt == updatedAt)&&(identical(other.schemaVersion, schemaVersion) || other.schemaVersion == schemaVersion));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _ExerciseGroup&&(identical(other.id, id) || other.id == id)&&(identical(other.workoutDayId, workoutDayId) || other.workoutDayId == workoutDayId)&&(identical(other.position, position) || other.position == position)&&(identical(other.kind, kind) || other.kind == kind)&&const DeepCollectionEquality().equals(other._exercises, _exercises)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt)&&(identical(other.updatedAt, updatedAt) || other.updatedAt == updatedAt)&&(identical(other.schemaVersion, schemaVersion) || other.schemaVersion == schemaVersion)&&(identical(other.role, role) || other.role == role));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,id,workoutDayId,position,kind,const DeepCollectionEquality().hash(_exercises),createdAt,updatedAt,schemaVersion);
+int get hashCode => Object.hash(runtimeType,id,workoutDayId,position,kind,const DeepCollectionEquality().hash(_exercises),createdAt,updatedAt,schemaVersion,role);
 
 @override
 String toString() {
-  return 'ExerciseGroup(id: $id, workoutDayId: $workoutDayId, position: $position, kind: $kind, exercises: $exercises, createdAt: $createdAt, updatedAt: $updatedAt, schemaVersion: $schemaVersion)';
+  return 'ExerciseGroup(id: $id, workoutDayId: $workoutDayId, position: $position, kind: $kind, exercises: $exercises, createdAt: $createdAt, updatedAt: $updatedAt, schemaVersion: $schemaVersion, role: $role)';
 }
 
 
@@ -276,7 +278,7 @@ abstract mixin class _$ExerciseGroupCopyWith<$Res> implements $ExerciseGroupCopy
   factory _$ExerciseGroupCopyWith(_ExerciseGroup value, $Res Function(_ExerciseGroup) _then) = __$ExerciseGroupCopyWithImpl;
 @override @useResult
 $Res call({
- String id, String workoutDayId, int position, ExerciseGroupKind kind, List<Exercise> exercises, DateTime createdAt, DateTime updatedAt, int schemaVersion
+ String id, String workoutDayId, int position, ExerciseGroupKind kind, List<Exercise> exercises, DateTime createdAt, DateTime updatedAt, int schemaVersion, ExerciseGroupRole role
 });
 
 
@@ -293,7 +295,7 @@ class __$ExerciseGroupCopyWithImpl<$Res>
 
 /// Create a copy of ExerciseGroup
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? workoutDayId = null,Object? position = null,Object? kind = null,Object? exercises = null,Object? createdAt = null,Object? updatedAt = null,Object? schemaVersion = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? workoutDayId = null,Object? position = null,Object? kind = null,Object? exercises = null,Object? createdAt = null,Object? updatedAt = null,Object? schemaVersion = null,Object? role = null,}) {
   return _then(_ExerciseGroup(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as String,workoutDayId: null == workoutDayId ? _self.workoutDayId : workoutDayId // ignore: cast_nullable_to_non_nullable
@@ -303,7 +305,8 @@ as ExerciseGroupKind,exercises: null == exercises ? _self._exercises : exercises
 as List<Exercise>,createdAt: null == createdAt ? _self.createdAt : createdAt // ignore: cast_nullable_to_non_nullable
 as DateTime,updatedAt: null == updatedAt ? _self.updatedAt : updatedAt // ignore: cast_nullable_to_non_nullable
 as DateTime,schemaVersion: null == schemaVersion ? _self.schemaVersion : schemaVersion // ignore: cast_nullable_to_non_nullable
-as int,
+as int,role: null == role ? _self.role : role // ignore: cast_nullable_to_non_nullable
+as ExerciseGroupRole,
   ));
 }
 

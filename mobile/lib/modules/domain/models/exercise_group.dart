@@ -3,6 +3,7 @@ import 'package:zamaj/core/deserialization.dart';
 import 'package:zamaj/modules/domain/errors.dart';
 import 'package:zamaj/modules/domain/models/exercise.dart';
 import 'package:zamaj/modules/domain/models/exercise_group_kind.dart';
+import 'package:zamaj/modules/domain/models/exercise_group_role.dart';
 
 part 'exercise_group.freezed.dart';
 part 'exercise_group.g.dart';
@@ -22,6 +23,7 @@ abstract class ExerciseGroup with _$ExerciseGroup {
     required DateTime createdAt,
     required DateTime updatedAt,
     required int schemaVersion,
+    @Default(ExerciseGroupRole.main) ExerciseGroupRole role,
   }) = _ExerciseGroup;
 
   factory ExerciseGroup.fromJson(Map<String, dynamic> json) =>

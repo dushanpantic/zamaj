@@ -64,6 +64,7 @@ class _ThrowingProgramRepository implements ProgramRepository {
     required String workoutDayId,
     required ExerciseGroupKind kind,
     required List<Exercise> exercises,
+    ExerciseGroupRole role = ExerciseGroupRole.main,
   }) => throw UnimplementedError();
 
   @override

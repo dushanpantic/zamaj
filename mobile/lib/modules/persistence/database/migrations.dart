@@ -37,6 +37,57 @@ abstract final class AppMigrations {
     if (from < 8) {
       await _renormalizeSessionExercisePositions(db);
     }
+    if (from < 9) {
+      await m.addColumn(db.exerciseGroups, db.exerciseGroups.roleDiscriminator);
+    }
+    if (from < 10) {
+      // Split from v9 because v9 shipped without this backfill; the broken
+      // app still stamped the DB as v9, so the snapshot rewrite must live
+      // in its own version to re-fire on the next open.
+      await _backfillSessionSnapshotRole(db);
+    }
+  }
+
+  /// Rewrites every session's canonical snapshot JSON to include the new
+  /// `role` field on each `ExerciseGroup`, defaulted to `"main"`. Without
+  /// this, deserializing a pre-v9 snapshot would default role on the domain
+  /// side, then [SessionSnapshot]'s invariant rejects the row because the
+  /// stored canonical bytes no longer round-trip.
+  ///
+  /// Idempotent: groups that already carry a `role` key are left alone.
+  static Future<void> _backfillSessionSnapshotRole(AppDatabase db) async {
+    if (!await _tableExists(db, 'sessions')) return;
+
+    final sessions = await db
+        .customSelect('SELECT id, snapshot_json FROM sessions')
+        .get();
+
+    for (final session in sessions) {
+      final sessionId = session.read<String>('id');
+      final snapshot =
+          jsonDecode(session.read<String>('snapshot_json'))
+              as Map<String, dynamic>;
+
+      final groups = snapshot['exerciseGroups'] as List<dynamic>?;
+      if (groups == null) continue;
+      var changed = false;
+      for (final group in groups) {
+        final g = group as Map<String, dynamic>;
+        if (!g.containsKey('role')) {
+          g['role'] = 'main';
+          changed = true;
+        }
+      }
+      if (!changed) continue;
+
+      final canonical = CanonicalJson.encode(snapshot);
+      final hash = CanonicalJson.sha256Hex(canonical);
+      await db.customStatement(
+        'UPDATE sessions SET snapshot_json = ?, snapshot_hash = ?, '
+        'schema_version = ? WHERE id = ?',
+        [canonical, hash, SchemaVersions.domain, sessionId],
+      );
+    }
   }
 
   /// Re-anchors `session_exercises.position` to template order for every

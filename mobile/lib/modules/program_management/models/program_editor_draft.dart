@@ -68,6 +68,7 @@ abstract class ProgramDraft with _$ProgramDraft {
       id: groupId,
       workoutDayId: workoutDayId,
       kind: group.kind(),
+      role: group.role,
       position: position,
       exercises: [
         for (var i = 0; i < group.exercises.length; i++)
@@ -173,6 +174,7 @@ abstract class ExerciseGroupDraft with _$ExerciseGroupDraft {
     required String draftId,
     required String? persistedId,
     required List<ExerciseDraft> exercises,
+    @Default(ExerciseGroupRole.main) ExerciseGroupRole role,
   }) = _ExerciseGroupDraft;
 
   factory ExerciseGroupDraft.fromJson(Map<String, dynamic> json) =>

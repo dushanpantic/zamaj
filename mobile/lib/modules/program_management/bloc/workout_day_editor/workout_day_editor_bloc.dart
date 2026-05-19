@@ -23,6 +23,7 @@ class WorkoutDayEditorBloc
     on<ExerciseReorderedWithinGroup>(_onExerciseReordered);
     on<ExerciseDraggedOntoExercise>(_onExerciseDraggedOnto);
     on<SupersetUngrouped>(_onSupersetUngrouped);
+    on<ExerciseGroupRoleToggled>(_onRoleToggled);
   }
 
   final ProgramRepository _programRepository;
@@ -272,6 +273,22 @@ class WorkoutDayEditorBloc
     await _persist(emit);
   }
 
+  Future<void> _onRoleToggled(
+    ExerciseGroupRoleToggled event,
+    Emitter<WorkoutDayEditorState> emit,
+  ) async {
+    final current = state;
+    if (current is! WorkoutDayEditorEditing) return;
+    final updated = current.draft.copyWith(
+      groups: current.draft.groups.map((g) {
+        if (g.draftId != event.groupDraftId) return g;
+        return g.copyWith(role: event.role);
+      }).toList(),
+    );
+    emit(current.copyWith(draft: updated, lastSaveError: () => null));
+    await _persist(emit);
+  }
+
   Future<void> _onSupersetUngrouped(
     SupersetUngrouped event,
     Emitter<WorkoutDayEditorState> emit,
@@ -391,6 +408,7 @@ class WorkoutDayEditorBloc
           await _programRepository.createExerciseGroup(
             workoutDayId: persistedId,
             kind: group.kind(),
+            role: group.role,
             exercises: [
               for (var j = 0; j < group.exercises.length; j++)
                 _draftExerciseToDomain(
@@ -491,13 +509,15 @@ class WorkoutDayEditorBloc
             );
           }
 
-          if (baselineGroup.kind != group.kind()) {
+          if (baselineGroup.kind != group.kind() ||
+              baselineGroup.role != group.role) {
             await _programRepository.updateExerciseGroup(
               ExerciseGroup(
                 id: persistedGroupId,
                 workoutDayId: baselineGroup.workoutDayId,
                 position: baselineGroup.position,
                 kind: group.kind(),
+                role: group.role,
                 exercises: [
                   for (var j = 0; j < group.exercises.length; j++)
                     _draftExerciseToDomain(
@@ -701,6 +721,7 @@ class WorkoutDayEditorBloc
         return ExerciseGroupDraft(
           draftId: group.id,
           persistedId: group.id,
+          role: group.role,
           exercises: group.exercises.map((exercise) {
             return ExerciseDraft(
               draftId: exercise.id,

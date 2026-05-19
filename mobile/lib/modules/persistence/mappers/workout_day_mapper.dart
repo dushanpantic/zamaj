@@ -5,6 +5,7 @@ import 'package:zamaj/core/canonical_json.dart';
 import 'package:zamaj/modules/domain/models/exercise.dart' as domain;
 import 'package:zamaj/modules/domain/models/exercise_group.dart' as domain;
 import 'package:zamaj/modules/domain/models/exercise_group_kind.dart';
+import 'package:zamaj/modules/domain/models/exercise_group_role.dart';
 import 'package:zamaj/modules/domain/models/exercise_metadata.dart';
 import 'package:zamaj/modules/domain/models/measurement_type.dart';
 import 'package:zamaj/modules/domain/models/planned_set_values.dart';
@@ -54,12 +55,14 @@ class WorkoutDayMapper {
     final kind = ExerciseGroupKind.fromJson(
       jsonDecode(row.kindPayloadJson) as Map<String, dynamic>,
     );
+    final role = ExerciseGroupRole.fromName(row.roleDiscriminator);
 
     return domain.ExerciseGroup(
       id: row.id,
       workoutDayId: row.workoutDayId,
       position: row.position,
       kind: kind,
+      role: role,
       exercises: exercises.map((e) => _exerciseToDomain(e, setRows)).toList(),
       createdAt: DateTime.fromMillisecondsSinceEpoch(
         row.createdAtMs,
@@ -155,6 +158,7 @@ class WorkoutDayMapper {
       position: Value(group.position),
       kindDiscriminator: Value(kindJson['type'] as String),
       kindPayloadJson: Value(CanonicalJson.encode(kindJson)),
+      roleDiscriminator: Value(group.role.name),
       createdAtMs: Value(group.createdAt.millisecondsSinceEpoch),
       updatedAtMs: Value(group.updatedAt.millisecondsSinceEpoch),
       schemaVersion: Value(group.schemaVersion),

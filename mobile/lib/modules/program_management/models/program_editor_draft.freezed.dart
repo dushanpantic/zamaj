@@ -571,7 +571,7 @@ as List<ExerciseGroupDraft>,
 /// @nodoc
 mixin _$ExerciseGroupDraft {
 
- String get draftId; String? get persistedId; List<ExerciseDraft> get exercises;
+ String get draftId; String? get persistedId; List<ExerciseDraft> get exercises; ExerciseGroupRole get role;
 /// Create a copy of ExerciseGroupDraft
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -584,16 +584,16 @@ $ExerciseGroupDraftCopyWith<ExerciseGroupDraft> get copyWith => _$ExerciseGroupD
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is ExerciseGroupDraft&&(identical(other.draftId, draftId) || other.draftId == draftId)&&(identical(other.persistedId, persistedId) || other.persistedId == persistedId)&&const DeepCollectionEquality().equals(other.exercises, exercises));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is ExerciseGroupDraft&&(identical(other.draftId, draftId) || other.draftId == draftId)&&(identical(other.persistedId, persistedId) || other.persistedId == persistedId)&&const DeepCollectionEquality().equals(other.exercises, exercises)&&(identical(other.role, role) || other.role == role));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,draftId,persistedId,const DeepCollectionEquality().hash(exercises));
+int get hashCode => Object.hash(runtimeType,draftId,persistedId,const DeepCollectionEquality().hash(exercises),role);
 
 @override
 String toString() {
-  return 'ExerciseGroupDraft(draftId: $draftId, persistedId: $persistedId, exercises: $exercises)';
+  return 'ExerciseGroupDraft(draftId: $draftId, persistedId: $persistedId, exercises: $exercises, role: $role)';
 }
 
 
@@ -604,7 +604,7 @@ abstract mixin class $ExerciseGroupDraftCopyWith<$Res>  {
   factory $ExerciseGroupDraftCopyWith(ExerciseGroupDraft value, $Res Function(ExerciseGroupDraft) _then) = _$ExerciseGroupDraftCopyWithImpl;
 @useResult
 $Res call({
- String draftId, String? persistedId, List<ExerciseDraft> exercises
+ String draftId, String? persistedId, List<ExerciseDraft> exercises, ExerciseGroupRole role
 });
 
 
@@ -621,12 +621,13 @@ class _$ExerciseGroupDraftCopyWithImpl<$Res>
 
 /// Create a copy of ExerciseGroupDraft
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? draftId = null,Object? persistedId = freezed,Object? exercises = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? draftId = null,Object? persistedId = freezed,Object? exercises = null,Object? role = null,}) {
   return _then(_self.copyWith(
 draftId: null == draftId ? _self.draftId : draftId // ignore: cast_nullable_to_non_nullable
 as String,persistedId: freezed == persistedId ? _self.persistedId : persistedId // ignore: cast_nullable_to_non_nullable
 as String?,exercises: null == exercises ? _self.exercises : exercises // ignore: cast_nullable_to_non_nullable
-as List<ExerciseDraft>,
+as List<ExerciseDraft>,role: null == role ? _self.role : role // ignore: cast_nullable_to_non_nullable
+as ExerciseGroupRole,
   ));
 }
 
@@ -711,10 +712,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String draftId,  String? persistedId,  List<ExerciseDraft> exercises)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String draftId,  String? persistedId,  List<ExerciseDraft> exercises,  ExerciseGroupRole role)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _ExerciseGroupDraft() when $default != null:
-return $default(_that.draftId,_that.persistedId,_that.exercises);case _:
+return $default(_that.draftId,_that.persistedId,_that.exercises,_that.role);case _:
   return orElse();
 
 }
@@ -732,10 +733,10 @@ return $default(_that.draftId,_that.persistedId,_that.exercises);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String draftId,  String? persistedId,  List<ExerciseDraft> exercises)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String draftId,  String? persistedId,  List<ExerciseDraft> exercises,  ExerciseGroupRole role)  $default,) {final _that = this;
 switch (_that) {
 case _ExerciseGroupDraft():
-return $default(_that.draftId,_that.persistedId,_that.exercises);case _:
+return $default(_that.draftId,_that.persistedId,_that.exercises,_that.role);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -752,10 +753,10 @@ return $default(_that.draftId,_that.persistedId,_that.exercises);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String draftId,  String? persistedId,  List<ExerciseDraft> exercises)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String draftId,  String? persistedId,  List<ExerciseDraft> exercises,  ExerciseGroupRole role)?  $default,) {final _that = this;
 switch (_that) {
 case _ExerciseGroupDraft() when $default != null:
-return $default(_that.draftId,_that.persistedId,_that.exercises);case _:
+return $default(_that.draftId,_that.persistedId,_that.exercises,_that.role);case _:
   return null;
 
 }
@@ -767,7 +768,7 @@ return $default(_that.draftId,_that.persistedId,_that.exercises);case _:
 @JsonSerializable()
 
 class _ExerciseGroupDraft extends ExerciseGroupDraft {
-  const _ExerciseGroupDraft({required this.draftId, required this.persistedId, required final  List<ExerciseDraft> exercises}): _exercises = exercises,super._();
+  const _ExerciseGroupDraft({required this.draftId, required this.persistedId, required final  List<ExerciseDraft> exercises, this.role = ExerciseGroupRole.main}): _exercises = exercises,super._();
   factory _ExerciseGroupDraft.fromJson(Map<String, dynamic> json) => _$ExerciseGroupDraftFromJson(json);
 
 @override final  String draftId;
@@ -779,6 +780,7 @@ class _ExerciseGroupDraft extends ExerciseGroupDraft {
   return EqualUnmodifiableListView(_exercises);
 }
 
+@override@JsonKey() final  ExerciseGroupRole role;
 
 /// Create a copy of ExerciseGroupDraft
 /// with the given fields replaced by the non-null parameter values.
@@ -793,16 +795,16 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _ExerciseGroupDraft&&(identical(other.draftId, draftId) || other.draftId == draftId)&&(identical(other.persistedId, persistedId) || other.persistedId == persistedId)&&const DeepCollectionEquality().equals(other._exercises, _exercises));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _ExerciseGroupDraft&&(identical(other.draftId, draftId) || other.draftId == draftId)&&(identical(other.persistedId, persistedId) || other.persistedId == persistedId)&&const DeepCollectionEquality().equals(other._exercises, _exercises)&&(identical(other.role, role) || other.role == role));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,draftId,persistedId,const DeepCollectionEquality().hash(_exercises));
+int get hashCode => Object.hash(runtimeType,draftId,persistedId,const DeepCollectionEquality().hash(_exercises),role);
 
 @override
 String toString() {
-  return 'ExerciseGroupDraft(draftId: $draftId, persistedId: $persistedId, exercises: $exercises)';
+  return 'ExerciseGroupDraft(draftId: $draftId, persistedId: $persistedId, exercises: $exercises, role: $role)';
 }
 
 
@@ -813,7 +815,7 @@ abstract mixin class _$ExerciseGroupDraftCopyWith<$Res> implements $ExerciseGrou
   factory _$ExerciseGroupDraftCopyWith(_ExerciseGroupDraft value, $Res Function(_ExerciseGroupDraft) _then) = __$ExerciseGroupDraftCopyWithImpl;
 @override @useResult
 $Res call({
- String draftId, String? persistedId, List<ExerciseDraft> exercises
+ String draftId, String? persistedId, List<ExerciseDraft> exercises, ExerciseGroupRole role
 });
 
 
@@ -830,12 +832,13 @@ class __$ExerciseGroupDraftCopyWithImpl<$Res>
 
 /// Create a copy of ExerciseGroupDraft
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? draftId = null,Object? persistedId = freezed,Object? exercises = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? draftId = null,Object? persistedId = freezed,Object? exercises = null,Object? role = null,}) {
   return _then(_ExerciseGroupDraft(
 draftId: null == draftId ? _self.draftId : draftId // ignore: cast_nullable_to_non_nullable
 as String,persistedId: freezed == persistedId ? _self.persistedId : persistedId // ignore: cast_nullable_to_non_nullable
 as String?,exercises: null == exercises ? _self._exercises : exercises // ignore: cast_nullable_to_non_nullable
-as List<ExerciseDraft>,
+as List<ExerciseDraft>,role: null == role ? _self.role : role // ignore: cast_nullable_to_non_nullable
+as ExerciseGroupRole,
   ));
 }
 

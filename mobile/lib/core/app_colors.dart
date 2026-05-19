@@ -24,6 +24,8 @@ class AppColors {
     required this.exerciseCompleted,
     required this.exerciseSkipped,
     required this.exerciseReplaced,
+    required this.warmup,
+    required this.warmupBg,
     required this.loggableHint,
     required this.restTimer,
     required this.restTimerOvertime,
@@ -53,6 +55,14 @@ class AppColors {
   final Color exerciseCompleted;
   final Color exerciseSkipped;
   final Color exerciseReplaced;
+
+  /// Foreground accent for warmup chips/badges/pills. Reused at the set
+  /// level if warmup sets land later.
+  final Color warmup;
+
+  /// Tinted surface background for warmup containers. Designed to combine
+  /// with [surface] / [surfaceVariant] at low alpha.
+  final Color warmupBg;
 
   /// Subtle accent applied to the most-recently-touched exercise's loggable
   /// row so the user's eye returns there after a rest. Intended for use as a
@@ -85,6 +95,8 @@ class AppColors {
     exerciseCompleted: Color(0xFF22C55E),
     exerciseSkipped: Color(0xFF71717A),
     exerciseReplaced: Color(0xFFF59E0B),
+    warmup: Color(0xFF60A5FA),
+    warmupBg: Color(0xFF1E293B),
     loggableHint: Color(0xFFF97316),
     restTimer: Color(0xFFF97316),
     restTimerOvertime: Color(0xFFEF4444),
@@ -110,6 +122,8 @@ class AppColors {
     exerciseCompleted: Color(0xFF16A34A),
     exerciseSkipped: Color(0xFFA1A1AA),
     exerciseReplaced: Color(0xFFD97706),
+    warmup: Color(0xFF2563EB),
+    warmupBg: Color(0xFFE0F2FE),
     loggableHint: Color(0xFFEA580C),
     restTimer: Color(0xFFEA580C),
     restTimerOvertime: Color(0xFFDC2626),

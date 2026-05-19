@@ -57,5 +57,6 @@ abstract class FocusModeViewModel with _$FocusModeViewModel {
     /// i.e. state is `unfinished` or `replaced` and `executedSets.length <
     /// plannedSetCount`. False for completed/skipped panels.
     required bool isLoggable,
+    @Default(ExerciseGroupRole.main) ExerciseGroupRole plannedGroupRole,
   }) = _FocusModeViewModel;
 }

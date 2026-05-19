@@ -1164,6 +1164,19 @@ class $ExerciseGroupsTable extends ExerciseGroups
     type: DriftSqlType.string,
     requiredDuringInsert: true,
   );
+  static const VerificationMeta _roleDiscriminatorMeta = const VerificationMeta(
+    'roleDiscriminator',
+  );
+  @override
+  late final GeneratedColumn<String> roleDiscriminator =
+      GeneratedColumn<String>(
+        'role_discriminator',
+        aliasedName,
+        false,
+        type: DriftSqlType.string,
+        requiredDuringInsert: false,
+        defaultValue: const Constant('main'),
+      );
   static const VerificationMeta _createdAtMsMeta = const VerificationMeta(
     'createdAtMs',
   );
@@ -1204,6 +1217,7 @@ class $ExerciseGroupsTable extends ExerciseGroups
     position,
     kindDiscriminator,
     kindPayloadJson,
+    roleDiscriminator,
     createdAtMs,
     updatedAtMs,
     schemaVersion,
@@ -1265,6 +1279,15 @@ class $ExerciseGroupsTable extends ExerciseGroups
       );
     } else if (isInserting) {
       context.missing(_kindPayloadJsonMeta);
+    }
+    if (data.containsKey('role_discriminator')) {
+      context.handle(
+        _roleDiscriminatorMeta,
+        roleDiscriminator.isAcceptableOrUnknown(
+          data['role_discriminator']!,
+          _roleDiscriminatorMeta,
+        ),
+      );
     }
     if (data.containsKey('created_at_ms')) {
       context.handle(
@@ -1332,6 +1355,10 @@ class $ExerciseGroupsTable extends ExerciseGroups
         DriftSqlType.string,
         data['${effectivePrefix}kind_payload_json'],
       )!,
+      roleDiscriminator: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}role_discriminator'],
+      )!,
       createdAtMs: attachedDatabase.typeMapping.read(
         DriftSqlType.int,
         data['${effectivePrefix}created_at_ms'],
@@ -1359,6 +1386,7 @@ class ExerciseGroup extends DataClass implements Insertable<ExerciseGroup> {
   final int position;
   final String kindDiscriminator;
   final String kindPayloadJson;
+  final String roleDiscriminator;
   final int createdAtMs;
   final int updatedAtMs;
   final int schemaVersion;
@@ -1368,6 +1396,7 @@ class ExerciseGroup extends DataClass implements Insertable<ExerciseGroup> {
     required this.position,
     required this.kindDiscriminator,
     required this.kindPayloadJson,
+    required this.roleDiscriminator,
     required this.createdAtMs,
     required this.updatedAtMs,
     required this.schemaVersion,
@@ -1380,6 +1409,7 @@ class ExerciseGroup extends DataClass implements Insertable<ExerciseGroup> {
     map['position'] = Variable<int>(position);
     map['kind_discriminator'] = Variable<String>(kindDiscriminator);
     map['kind_payload_json'] = Variable<String>(kindPayloadJson);
+    map['role_discriminator'] = Variable<String>(roleDiscriminator);
     map['created_at_ms'] = Variable<int>(createdAtMs);
     map['updated_at_ms'] = Variable<int>(updatedAtMs);
     map['schema_version'] = Variable<int>(schemaVersion);
@@ -1393,6 +1423,7 @@ class ExerciseGroup extends DataClass implements Insertable<ExerciseGroup> {
       position: Value(position),
       kindDiscriminator: Value(kindDiscriminator),
       kindPayloadJson: Value(kindPayloadJson),
+      roleDiscriminator: Value(roleDiscriminator),
       createdAtMs: Value(createdAtMs),
       updatedAtMs: Value(updatedAtMs),
       schemaVersion: Value(schemaVersion),
@@ -1410,6 +1441,7 @@ class ExerciseGroup extends DataClass implements Insertable<ExerciseGroup> {
       position: serializer.fromJson<int>(json['position']),
       kindDiscriminator: serializer.fromJson<String>(json['kindDiscriminator']),
       kindPayloadJson: serializer.fromJson<String>(json['kindPayloadJson']),
+      roleDiscriminator: serializer.fromJson<String>(json['roleDiscriminator']),
       createdAtMs: serializer.fromJson<int>(json['createdAtMs']),
       updatedAtMs: serializer.fromJson<int>(json['updatedAtMs']),
       schemaVersion: serializer.fromJson<int>(json['schemaVersion']),
@@ -1424,6 +1456,7 @@ class ExerciseGroup extends DataClass implements Insertable<ExerciseGroup> {
       'position': serializer.toJson<int>(position),
       'kindDiscriminator': serializer.toJson<String>(kindDiscriminator),
       'kindPayloadJson': serializer.toJson<String>(kindPayloadJson),
+      'roleDiscriminator': serializer.toJson<String>(roleDiscriminator),
       'createdAtMs': serializer.toJson<int>(createdAtMs),
       'updatedAtMs': serializer.toJson<int>(updatedAtMs),
       'schemaVersion': serializer.toJson<int>(schemaVersion),
@@ -1436,6 +1469,7 @@ class ExerciseGroup extends DataClass implements Insertable<ExerciseGroup> {
     int? position,
     String? kindDiscriminator,
     String? kindPayloadJson,
+    String? roleDiscriminator,
     int? createdAtMs,
     int? updatedAtMs,
     int? schemaVersion,
@@ -1445,6 +1479,7 @@ class ExerciseGroup extends DataClass implements Insertable<ExerciseGroup> {
     position: position ?? this.position,
     kindDiscriminator: kindDiscriminator ?? this.kindDiscriminator,
     kindPayloadJson: kindPayloadJson ?? this.kindPayloadJson,
+    roleDiscriminator: roleDiscriminator ?? this.roleDiscriminator,
     createdAtMs: createdAtMs ?? this.createdAtMs,
     updatedAtMs: updatedAtMs ?? this.updatedAtMs,
     schemaVersion: schemaVersion ?? this.schemaVersion,
@@ -1462,6 +1497,9 @@ class ExerciseGroup extends DataClass implements Insertable<ExerciseGroup> {
       kindPayloadJson: data.kindPayloadJson.present
           ? data.kindPayloadJson.value
           : this.kindPayloadJson,
+      roleDiscriminator: data.roleDiscriminator.present
+          ? data.roleDiscriminator.value
+          : this.roleDiscriminator,
       createdAtMs: data.createdAtMs.present
           ? data.createdAtMs.value
           : this.createdAtMs,
@@ -1482,6 +1520,7 @@ class ExerciseGroup extends DataClass implements Insertable<ExerciseGroup> {
           ..write('position: $position, ')
           ..write('kindDiscriminator: $kindDiscriminator, ')
           ..write('kindPayloadJson: $kindPayloadJson, ')
+          ..write('roleDiscriminator: $roleDiscriminator, ')
           ..write('createdAtMs: $createdAtMs, ')
           ..write('updatedAtMs: $updatedAtMs, ')
           ..write('schemaVersion: $schemaVersion')
@@ -1496,6 +1535,7 @@ class ExerciseGroup extends DataClass implements Insertable<ExerciseGroup> {
     position,
     kindDiscriminator,
     kindPayloadJson,
+    roleDiscriminator,
     createdAtMs,
     updatedAtMs,
     schemaVersion,
@@ -1509,6 +1549,7 @@ class ExerciseGroup extends DataClass implements Insertable<ExerciseGroup> {
           other.position == this.position &&
           other.kindDiscriminator == this.kindDiscriminator &&
           other.kindPayloadJson == this.kindPayloadJson &&
+          other.roleDiscriminator == this.roleDiscriminator &&
           other.createdAtMs == this.createdAtMs &&
           other.updatedAtMs == this.updatedAtMs &&
           other.schemaVersion == this.schemaVersion);
@@ -1520,6 +1561,7 @@ class ExerciseGroupsCompanion extends UpdateCompanion<ExerciseGroup> {
   final Value<int> position;
   final Value<String> kindDiscriminator;
   final Value<String> kindPayloadJson;
+  final Value<String> roleDiscriminator;
   final Value<int> createdAtMs;
   final Value<int> updatedAtMs;
   final Value<int> schemaVersion;
@@ -1530,6 +1572,7 @@ class ExerciseGroupsCompanion extends UpdateCompanion<ExerciseGroup> {
     this.position = const Value.absent(),
     this.kindDiscriminator = const Value.absent(),
     this.kindPayloadJson = const Value.absent(),
+    this.roleDiscriminator = const Value.absent(),
     this.createdAtMs = const Value.absent(),
     this.updatedAtMs = const Value.absent(),
     this.schemaVersion = const Value.absent(),
@@ -1541,6 +1584,7 @@ class ExerciseGroupsCompanion extends UpdateCompanion<ExerciseGroup> {
     required int position,
     required String kindDiscriminator,
     required String kindPayloadJson,
+    this.roleDiscriminator = const Value.absent(),
     required int createdAtMs,
     required int updatedAtMs,
     required int schemaVersion,
@@ -1559,6 +1603,7 @@ class ExerciseGroupsCompanion extends UpdateCompanion<ExerciseGroup> {
     Expression<int>? position,
     Expression<String>? kindDiscriminator,
     Expression<String>? kindPayloadJson,
+    Expression<String>? roleDiscriminator,
     Expression<int>? createdAtMs,
     Expression<int>? updatedAtMs,
     Expression<int>? schemaVersion,
@@ -1570,6 +1615,7 @@ class ExerciseGroupsCompanion extends UpdateCompanion<ExerciseGroup> {
       if (position != null) 'position': position,
       if (kindDiscriminator != null) 'kind_discriminator': kindDiscriminator,
       if (kindPayloadJson != null) 'kind_payload_json': kindPayloadJson,
+      if (roleDiscriminator != null) 'role_discriminator': roleDiscriminator,
       if (createdAtMs != null) 'created_at_ms': createdAtMs,
       if (updatedAtMs != null) 'updated_at_ms': updatedAtMs,
       if (schemaVersion != null) 'schema_version': schemaVersion,
@@ -1583,6 +1629,7 @@ class ExerciseGroupsCompanion extends UpdateCompanion<ExerciseGroup> {
     Value<int>? position,
     Value<String>? kindDiscriminator,
     Value<String>? kindPayloadJson,
+    Value<String>? roleDiscriminator,
     Value<int>? createdAtMs,
     Value<int>? updatedAtMs,
     Value<int>? schemaVersion,
@@ -1594,6 +1641,7 @@ class ExerciseGroupsCompanion extends UpdateCompanion<ExerciseGroup> {
       position: position ?? this.position,
       kindDiscriminator: kindDiscriminator ?? this.kindDiscriminator,
       kindPayloadJson: kindPayloadJson ?? this.kindPayloadJson,
+      roleDiscriminator: roleDiscriminator ?? this.roleDiscriminator,
       createdAtMs: createdAtMs ?? this.createdAtMs,
       updatedAtMs: updatedAtMs ?? this.updatedAtMs,
       schemaVersion: schemaVersion ?? this.schemaVersion,
@@ -1619,6 +1667,9 @@ class ExerciseGroupsCompanion extends UpdateCompanion<ExerciseGroup> {
     if (kindPayloadJson.present) {
       map['kind_payload_json'] = Variable<String>(kindPayloadJson.value);
     }
+    if (roleDiscriminator.present) {
+      map['role_discriminator'] = Variable<String>(roleDiscriminator.value);
+    }
     if (createdAtMs.present) {
       map['created_at_ms'] = Variable<int>(createdAtMs.value);
     }
@@ -1642,6 +1693,7 @@ class ExerciseGroupsCompanion extends UpdateCompanion<ExerciseGroup> {
           ..write('position: $position, ')
           ..write('kindDiscriminator: $kindDiscriminator, ')
           ..write('kindPayloadJson: $kindPayloadJson, ')
+          ..write('roleDiscriminator: $roleDiscriminator, ')
           ..write('createdAtMs: $createdAtMs, ')
           ..write('updatedAtMs: $updatedAtMs, ')
           ..write('schemaVersion: $schemaVersion, ')
@@ -7462,6 +7514,7 @@ typedef $$ExerciseGroupsTableCreateCompanionBuilder =
       required int position,
       required String kindDiscriminator,
       required String kindPayloadJson,
+      Value<String> roleDiscriminator,
       required int createdAtMs,
       required int updatedAtMs,
       required int schemaVersion,
@@ -7474,6 +7527,7 @@ typedef $$ExerciseGroupsTableUpdateCompanionBuilder =
       Value<int> position,
       Value<String> kindDiscriminator,
       Value<String> kindPayloadJson,
+      Value<String> roleDiscriminator,
       Value<int> createdAtMs,
       Value<int> updatedAtMs,
       Value<int> schemaVersion,
@@ -7554,6 +7608,11 @@ class $$ExerciseGroupsTableFilterComposer
 
   ColumnFilters<String> get kindPayloadJson => $composableBuilder(
     column: $table.kindPayloadJson,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get roleDiscriminator => $composableBuilder(
+    column: $table.roleDiscriminator,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -7650,6 +7709,11 @@ class $$ExerciseGroupsTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<String> get roleDiscriminator => $composableBuilder(
+    column: $table.roleDiscriminator,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<int> get createdAtMs => $composableBuilder(
     column: $table.createdAtMs,
     builder: (column) => ColumnOrderings(column),
@@ -7711,6 +7775,11 @@ class $$ExerciseGroupsTableAnnotationComposer
 
   GeneratedColumn<String> get kindPayloadJson => $composableBuilder(
     column: $table.kindPayloadJson,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get roleDiscriminator => $composableBuilder(
+    column: $table.roleDiscriminator,
     builder: (column) => column,
   );
 
@@ -7813,6 +7882,7 @@ class $$ExerciseGroupsTableTableManager
                 Value<int> position = const Value.absent(),
                 Value<String> kindDiscriminator = const Value.absent(),
                 Value<String> kindPayloadJson = const Value.absent(),
+                Value<String> roleDiscriminator = const Value.absent(),
                 Value<int> createdAtMs = const Value.absent(),
                 Value<int> updatedAtMs = const Value.absent(),
                 Value<int> schemaVersion = const Value.absent(),
@@ -7823,6 +7893,7 @@ class $$ExerciseGroupsTableTableManager
                 position: position,
                 kindDiscriminator: kindDiscriminator,
                 kindPayloadJson: kindPayloadJson,
+                roleDiscriminator: roleDiscriminator,
                 createdAtMs: createdAtMs,
                 updatedAtMs: updatedAtMs,
                 schemaVersion: schemaVersion,
@@ -7835,6 +7906,7 @@ class $$ExerciseGroupsTableTableManager
                 required int position,
                 required String kindDiscriminator,
                 required String kindPayloadJson,
+                Value<String> roleDiscriminator = const Value.absent(),
                 required int createdAtMs,
                 required int updatedAtMs,
                 required int schemaVersion,
@@ -7845,6 +7917,7 @@ class $$ExerciseGroupsTableTableManager
                 position: position,
                 kindDiscriminator: kindDiscriminator,
                 kindPayloadJson: kindPayloadJson,
+                roleDiscriminator: roleDiscriminator,
                 createdAtMs: createdAtMs,
                 updatedAtMs: updatedAtMs,
                 schemaVersion: schemaVersion,

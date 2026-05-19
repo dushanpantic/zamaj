@@ -199,6 +199,11 @@ class _Header extends StatelessWidget {
                             overflow: TextOverflow.ellipsis,
                           ),
                         ),
+                        if (viewModel.plannedGroupRole ==
+                            ExerciseGroupRole.warmup) ...[
+                          const SizedBox(width: AppSpacing.sm),
+                          _WarmupBadge(colors: colors),
+                        ],
                         const SizedBox(width: AppSpacing.sm),
                         _StateBadge(state: state, colors: colors),
                       ],
@@ -284,6 +289,31 @@ class _RestIndicator extends StatelessWidget {
           style: typography.numericXs.copyWith(color: colors.onSurfaceMuted),
         ),
       ],
+    );
+  }
+}
+
+class _WarmupBadge extends StatelessWidget {
+  const _WarmupBadge({required this.colors});
+
+  final AppColors colors;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.sm,
+        vertical: 2,
+      ),
+      decoration: BoxDecoration(
+        color: colors.warmup.withValues(alpha: 0.15),
+        borderRadius: BorderRadius.circular(AppRadius.pill),
+        border: Border.all(color: colors.warmup.withValues(alpha: 0.5)),
+      ),
+      child: Text(
+        'WARMUP',
+        style: AppTypography.standard.caption.copyWith(color: colors.warmup),
+      ),
     );
   }
 }

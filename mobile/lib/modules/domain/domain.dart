@@ -7,6 +7,7 @@ export 'models/executed_set.dart';
 export 'models/exercise.dart';
 export 'models/exercise_group.dart';
 export 'models/exercise_group_kind.dart';
+export 'models/exercise_group_role.dart';
 export 'models/exercise_metadata.dart';
 export 'models/exercise_state.dart';
 export 'models/extra_work.dart';

@@ -16,13 +16,23 @@ abstract final class ExerciseViewModelAssembler {
       for (final group in session.snapshot.workoutDay.exerciseGroups)
         for (final exercise in group.exercises) exercise.id: exercise,
     };
+    final groupRoleByExerciseId = <String, ExerciseGroupRole>{
+      for (final group in session.snapshot.workoutDay.exerciseGroups)
+        for (final exercise in group.exercises) exercise.id: group.role,
+    };
 
     final sorted = List<SessionExercise>.of(session.sessionExercises)
       ..sort((a, b) => a.position.compareTo(b.position));
 
     final viewModels = <ExerciseViewModel>[
       for (final ex in sorted)
-        _buildViewModel(ex, plannedById, loggableSetIndexByExerciseId[ex.id]),
+        _buildViewModel(
+          ex,
+          plannedById,
+          loggableSetIndexByExerciseId[ex.id],
+          groupRoleByExerciseId[ex.plannedExerciseIdInSnapshot] ??
+              ExerciseGroupRole.main,
+        ),
     ];
 
     return _groupByAdjacentSupersetTag(viewModels, sorted);
@@ -32,6 +42,7 @@ abstract final class ExerciseViewModelAssembler {
     SessionExercise sessionExercise,
     Map<String, Exercise> plannedById,
     int? loggableSetIndex,
+    ExerciseGroupRole plannedGroupRole,
   ) {
     final planned = plannedById[sessionExercise.plannedExerciseIdInSnapshot];
     if (planned == null) {
@@ -54,6 +65,7 @@ abstract final class ExerciseViewModelAssembler {
       setRows: _buildSetRows(sessionExercise, planned, loggableSetIndex),
       isLoggable: loggableSetIndex != null,
       effectiveMeasurementType: effectiveMt,
+      plannedGroupRole: plannedGroupRole,
     );
   }
 

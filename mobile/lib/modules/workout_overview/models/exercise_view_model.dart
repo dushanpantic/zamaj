@@ -29,5 +29,6 @@ abstract class ExerciseViewModel with _$ExerciseViewModel {
     /// Derived from the engine's [SessionState.openTargets] projection.
     required bool isLoggable,
     required MeasurementType effectiveMeasurementType,
+    @Default(ExerciseGroupRole.main) ExerciseGroupRole plannedGroupRole,
   }) = _ExerciseViewModel;
 }

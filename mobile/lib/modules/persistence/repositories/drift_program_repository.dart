@@ -7,6 +7,7 @@ import 'package:zamaj/modules/domain/errors.dart';
 import 'package:zamaj/modules/domain/models/exercise.dart' as domain;
 import 'package:zamaj/modules/domain/models/exercise_group.dart' as domain;
 import 'package:zamaj/modules/domain/models/exercise_group_kind.dart';
+import 'package:zamaj/modules/domain/models/exercise_group_role.dart';
 import 'package:zamaj/modules/domain/models/exercise_metadata.dart';
 import 'package:zamaj/modules/domain/models/measurement_type.dart';
 import 'package:zamaj/modules/domain/models/planned_set_values.dart';
@@ -319,6 +320,7 @@ class DriftProgramRepository implements ProgramRepository {
     required String workoutDayId,
     required ExerciseGroupKind kind,
     required List<domain.Exercise> exercises,
+    ExerciseGroupRole role = ExerciseGroupRole.main,
   }) async {
     return _db.transaction(() async {
       final dayRow = await (_db.select(
@@ -342,6 +344,7 @@ class DriftProgramRepository implements ProgramRepository {
               position: position,
               kindDiscriminator: kindJson['type'] as String,
               kindPayloadJson: CanonicalJson.encode(kindJson),
+              roleDiscriminator: Value(role.name),
               createdAtMs: utcToMs(now),
               updatedAtMs: utcToMs(now),
               schemaVersion: SchemaVersions.domain,
@@ -418,6 +421,7 @@ class DriftProgramRepository implements ProgramRepository {
         ExerciseGroupsCompanion(
           kindDiscriminator: Value(kindJson['type'] as String),
           kindPayloadJson: Value(CanonicalJson.encode(kindJson)),
+          roleDiscriminator: Value(group.role.name),
           updatedAtMs: Value(utcToMs(updatedAt)),
           schemaVersion: const Value(SchemaVersions.domain),
         ),
@@ -832,6 +836,7 @@ class DriftProgramRepository implements ProgramRepository {
                   position: group.position,
                   kindDiscriminator: kindJson['type'] as String,
                   kindPayloadJson: CanonicalJson.encode(kindJson),
+                  roleDiscriminator: Value(group.role.name),
                   createdAtMs: utcToMs(aggregate.createdAt),
                   updatedAtMs: utcToMs(aggregate.updatedAt),
                   schemaVersion: SchemaVersions.domain,

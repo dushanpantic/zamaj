@@ -26,6 +26,12 @@ _ExerciseGroup _$ExerciseGroupFromJson(
     createdAt: $checkedConvert('createdAt', (v) => DateTime.parse(v as String)),
     updatedAt: $checkedConvert('updatedAt', (v) => DateTime.parse(v as String)),
     schemaVersion: $checkedConvert('schemaVersion', (v) => (v as num).toInt()),
+    role: $checkedConvert(
+      'role',
+      (v) =>
+          $enumDecodeNullable(_$ExerciseGroupRoleEnumMap, v) ??
+          ExerciseGroupRole.main,
+    ),
   );
   return val;
 });
@@ -40,4 +46,10 @@ Map<String, dynamic> _$ExerciseGroupToJson(_ExerciseGroup instance) =>
       'createdAt': instance.createdAt.toIso8601String(),
       'updatedAt': instance.updatedAt.toIso8601String(),
       'schemaVersion': instance.schemaVersion,
+      'role': _$ExerciseGroupRoleEnumMap[instance.role]!,
     };
+
+const _$ExerciseGroupRoleEnumMap = {
+  ExerciseGroupRole.warmup: 'warmup',
+  ExerciseGroupRole.main: 'main',
+};
