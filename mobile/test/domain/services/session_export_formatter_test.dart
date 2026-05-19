@@ -17,6 +17,72 @@ void main() {
       expect(out.contains('(in progress)'), isFalse);
     });
 
+    test('completed session appends duration suffix to date line', () {
+      final session = _session(
+        workoutDayName: 'Upper A',
+        endedAt: DateTime.utc(2026, 5, 12, 18, 30),
+        sessionDuration: const Duration(hours: 1, minutes: 24),
+        exercises: const [],
+      );
+      final out = SessionExportFormatter.format(session);
+      final lines = out.split('\n');
+      expect(lines[1], endsWith(' · 1h 24m'));
+    });
+
+    test('duration under an hour renders as Xm', () {
+      final session = _session(
+        workoutDayName: 'Upper A',
+        endedAt: DateTime.utc(2026, 5, 12, 18, 30),
+        sessionDuration: const Duration(minutes: 45),
+        exercises: const [],
+      );
+      final out = SessionExportFormatter.format(session);
+      expect(out.split('\n')[1], endsWith(' · 45m'));
+    });
+
+    test('whole-hour duration omits the minutes part', () {
+      final session = _session(
+        workoutDayName: 'Upper A',
+        endedAt: DateTime.utc(2026, 5, 12, 18, 30),
+        sessionDuration: const Duration(hours: 2),
+        exercises: const [],
+      );
+      final out = SessionExportFormatter.format(session);
+      expect(out.split('\n')[1], endsWith(' · 2h'));
+    });
+
+    test('sub-minute duration renders as <1m', () {
+      final session = _session(
+        workoutDayName: 'Upper A',
+        endedAt: DateTime.utc(2026, 5, 12, 18, 30),
+        sessionDuration: const Duration(seconds: 30),
+        exercises: const [],
+      );
+      final out = SessionExportFormatter.format(session);
+      expect(out.split('\n')[1], endsWith(' · <1m'));
+    });
+
+    test('zero duration omits the suffix entirely', () {
+      final session = _session(
+        workoutDayName: 'Upper A',
+        endedAt: DateTime.utc(2026, 5, 12, 18, 30),
+        exercises: const [],
+      );
+      final out = SessionExportFormatter.format(session);
+      expect(out.split('\n')[1], isNot(contains('·')));
+    });
+
+    test('in-progress sessions never show a duration suffix', () {
+      final session = _session(
+        workoutDayName: 'Upper A',
+        endedAt: null,
+        sessionDuration: const Duration(hours: 1),
+        exercises: const [],
+      );
+      final out = SessionExportFormatter.format(session);
+      expect(out, isNot(contains('·')));
+    });
+
     test('marks in-progress sessions with explicit marker', () {
       final session = _session(
         workoutDayName: 'Upper A',
@@ -242,6 +308,317 @@ void main() {
       expect(out, contains('- 3 calf sets'));
     });
 
+    test('rep-based exercise with every set matching plan collapses Done', () {
+      final session = _session(
+        workoutDayName: 'Upper A',
+        endedAt: DateTime.utc(2026, 5, 12),
+        exercises: [
+          _ExerciseSpec(
+            name: 'Bench Press',
+            measurementType: const MeasurementType.repBased(),
+            plannedRep: const [(100.0, 8), (100.0, 8), (100.0, 8)],
+            state: const ExerciseState.completed(),
+            actualRep: const [(100.0, 8), (100.0, 8), (100.0, 8)],
+          ),
+        ],
+      );
+      final out = SessionExportFormatter.format(session);
+      expect(out, contains('Plan: 100kg 3 × 8'));
+      expect(out, contains('Done: as planned'));
+      expect(out, isNot(contains('100 × 8')));
+    });
+
+    test('time-based set counts as matched when actual >= planned duration', () {
+      final session = _session(
+        workoutDayName: 'Core',
+        endedAt: DateTime.utc(2026, 5, 12),
+        exercises: [
+          _ExerciseSpec(
+            name: 'Plank Hold',
+            measurementType: const MeasurementType.timeBased(),
+            plannedTime: const [30, 30, 30],
+            state: const ExerciseState.completed(),
+            actualTime: const [30, 35, 31],
+          ),
+        ],
+      );
+      final out = SessionExportFormatter.format(session);
+      expect(out, contains('Plan: 3 × 30s'));
+      expect(out, contains('Done: as planned'));
+      expect(out, isNot(contains('35s')));
+    });
+
+    test('time-based with any underperforming set lists all actuals', () {
+      final session = _session(
+        workoutDayName: 'Core',
+        endedAt: DateTime.utc(2026, 5, 12),
+        exercises: [
+          _ExerciseSpec(
+            name: 'Plank Hold',
+            measurementType: const MeasurementType.timeBased(),
+            plannedTime: const [30, 30, 30],
+            state: const ExerciseState.completed(),
+            actualTime: const [30, 35, 28],
+          ),
+        ],
+      );
+      final out = SessionExportFormatter.format(session);
+      expect(out, isNot(contains('Done: as planned')));
+      expect(out, contains('30s'));
+      expect(out, contains('35s'));
+      expect(out, contains('28s'));
+    });
+
+    test('range rep target never collapses — actuals are always listed', () {
+      final t = DateTime.utc(2026, 5, 12);
+      final base = _session(
+        workoutDayName: 'Upper A',
+        endedAt: t,
+        exercises: const [],
+      );
+      final workoutDay = WorkoutDay(
+        id: 'wd-1',
+        programId: 'p-1',
+        name: 'Upper A',
+        exerciseGroups: [
+          ExerciseGroup(
+            id: 'g-0',
+            workoutDayId: 'wd-1',
+            position: 0,
+            kind: const ExerciseGroupKind.single(),
+            exercises: [
+              Exercise(
+                id: 'ex-0',
+                exerciseGroupId: 'g-0',
+                position: 0,
+                name: 'Lat Pulldown',
+                measurementType: const MeasurementType.repBased(),
+                metadata: const ExerciseMetadata(),
+                sets: [
+                  for (var i = 0; i < 3; i++)
+                    WorkoutSet(
+                      id: 'ws-0-$i',
+                      exerciseId: 'ex-0',
+                      position: i,
+                      measurementType: const MeasurementType.repBased(),
+                      plannedValues: PlannedSetValues.repBased(
+                        weightKg: 60,
+                        repTarget: RepTarget.range(minReps: 8, maxReps: 10),
+                      ),
+                      createdAt: t,
+                      updatedAt: t,
+                      schemaVersion: 1,
+                    ),
+                ],
+                createdAt: t,
+                updatedAt: t,
+                schemaVersion: 1,
+              ),
+            ],
+            createdAt: t,
+            updatedAt: t,
+            schemaVersion: 1,
+          ),
+        ],
+        createdAt: t,
+        updatedAt: t,
+        schemaVersion: 1,
+      );
+      final snapshot = SessionSnapshot.capture(
+        workoutDay: workoutDay,
+        capturedAt: t,
+        schemaVersion: 1,
+      );
+      final session = base.copyWith(
+        snapshot: snapshot,
+        workoutDayId: workoutDay.id,
+        sessionExercises: [
+          SessionExercise(
+            id: 'sx-0',
+            sessionId: base.id,
+            position: 0,
+            plannedExerciseIdInSnapshot: 'ex-0',
+            state: const ExerciseState.completed(),
+            executedSets: [
+              for (var i = 0; i < 3; i++)
+                ExecutedSet(
+                  id: 'es-0-$i',
+                  sessionExerciseId: 'sx-0',
+                  position: i,
+                  measurementType: const MeasurementType.repBased(),
+                  actualValues: const ActualSetValues.repBased(
+                    weightKg: 60,
+                    reps: 9,
+                  ),
+                  completedAt: t,
+                  createdAt: t,
+                  updatedAt: t,
+                  schemaVersion: 1,
+                ),
+            ],
+            createdAt: t,
+            updatedAt: t,
+            schemaVersion: 1,
+          ),
+        ],
+      );
+      final out = SessionExportFormatter.format(session);
+      expect(out, contains('Plan: 60kg 3 × 8-10'));
+      expect(out, isNot(contains('Done: as planned')));
+      expect(out, contains('60 × 9'));
+    });
+
+    test('fewer actual sets than planned never collapses', () {
+      final session = _session(
+        workoutDayName: 'Upper A',
+        endedAt: DateTime.utc(2026, 5, 12),
+        exercises: [
+          _ExerciseSpec(
+            name: 'Bench Press',
+            measurementType: const MeasurementType.repBased(),
+            plannedRep: const [(100.0, 8), (100.0, 8), (100.0, 8)],
+            state: const ExerciseState.completed(),
+            actualRep: const [(100.0, 8), (100.0, 8)],
+          ),
+        ],
+      );
+      final out = SessionExportFormatter.format(session);
+      expect(out, isNot(contains('Done: as planned')));
+      expect(out, contains('100 × 8'));
+    });
+
+    test('replaced exercise with all sets matching substitute plan collapses', () {
+      final session = _session(
+        workoutDayName: 'Upper A',
+        endedAt: DateTime.utc(2026, 5, 12),
+        exercises: [
+          _ExerciseSpec(
+            name: 'Bench Press',
+            measurementType: const MeasurementType.repBased(),
+            plannedRep: const [(100.0, 8), (100.0, 8), (100.0, 8), (100.0, 8)],
+            state: ExerciseState.replaced(
+              substitute: SubstituteExercise(
+                name: 'Cable Fly',
+                measurementType: const MeasurementType.repBased(),
+                plannedValues: PlannedSetValues.repBased(
+                  weightKg: 20,
+                  repTarget: RepTarget.fixed(reps: 12),
+                ),
+                setCount: 3,
+              ),
+            ),
+            actualRep: const [(20.0, 12), (20.0, 12), (20.0, 12)],
+          ),
+        ],
+      );
+      final out = SessionExportFormatter.format(session);
+      expect(out, contains('Bench Press → Cable Fly  (replaced)'));
+      expect(out, contains('Sub plan: 20kg 3 × 12'));
+      expect(out, contains('Done: as planned'));
+      expect(out, isNot(contains('20 × 12')));
+    });
+
+    test('warmup groups are included by default', () {
+      final session = _session(
+        workoutDayName: 'Upper A',
+        endedAt: DateTime.utc(2026, 5, 12),
+        exercises: [
+          _ExerciseSpec(
+            name: 'Band Pull-Apart',
+            measurementType: const MeasurementType.bodyweight(),
+            plannedBodyweightReps: const [15, 15],
+            state: const ExerciseState.completed(),
+            actualBodyweightReps: const [15, 15],
+            role: ExerciseGroupRole.warmup,
+          ),
+          _ExerciseSpec(
+            name: 'Bench Press',
+            measurementType: const MeasurementType.repBased(),
+            plannedRep: const [(100.0, 8)],
+            state: const ExerciseState.completed(),
+            actualRep: const [(100.0, 8)],
+          ),
+        ],
+      );
+      final out = SessionExportFormatter.format(session);
+      expect(out, contains('Band Pull-Apart'));
+      expect(out, contains('Bench Press'));
+    });
+
+    test('includeWarmups: false hides exercises in warmup groups', () {
+      final session = _session(
+        workoutDayName: 'Upper A',
+        endedAt: DateTime.utc(2026, 5, 12),
+        exercises: [
+          _ExerciseSpec(
+            name: 'Band Pull-Apart',
+            measurementType: const MeasurementType.bodyweight(),
+            plannedBodyweightReps: const [15, 15],
+            state: const ExerciseState.completed(),
+            actualBodyweightReps: const [15, 15],
+            role: ExerciseGroupRole.warmup,
+          ),
+          _ExerciseSpec(
+            name: 'Bench Press',
+            measurementType: const MeasurementType.repBased(),
+            plannedRep: const [(100.0, 8)],
+            state: const ExerciseState.completed(),
+            actualRep: const [(100.0, 8)],
+          ),
+        ],
+      );
+      final out = SessionExportFormatter.format(
+        session,
+        includeWarmups: false,
+      );
+      expect(out, isNot(contains('Band Pull-Apart')));
+      expect(out, contains('Bench Press'));
+    });
+
+    test(
+      'includeWarmups: false still excludes a warmup slot that was replaced',
+      () {
+        final session = _session(
+          workoutDayName: 'Upper A',
+          endedAt: DateTime.utc(2026, 5, 12),
+          exercises: [
+            _ExerciseSpec(
+              name: 'Light Rows',
+              measurementType: const MeasurementType.repBased(),
+              plannedRep: const [(20.0, 10), (20.0, 10)],
+              state: ExerciseState.replaced(
+                substitute: SubstituteExercise(
+                  name: 'Face Pull',
+                  measurementType: const MeasurementType.repBased(),
+                  plannedValues: PlannedSetValues.repBased(
+                    weightKg: 15,
+                    repTarget: RepTarget.fixed(reps: 12),
+                  ),
+                  setCount: 2,
+                ),
+              ),
+              actualRep: const [(15.0, 12), (15.0, 12)],
+              role: ExerciseGroupRole.warmup,
+            ),
+            _ExerciseSpec(
+              name: 'Bench Press',
+              measurementType: const MeasurementType.repBased(),
+              plannedRep: const [(100.0, 8)],
+              state: const ExerciseState.completed(),
+              actualRep: const [(100.0, 8)],
+            ),
+          ],
+        );
+        final out = SessionExportFormatter.format(
+          session,
+          includeWarmups: false,
+        );
+        expect(out, isNot(contains('Light Rows')));
+        expect(out, isNot(contains('Face Pull')));
+        expect(out, contains('Bench Press'));
+      },
+    );
+
     test('output ends without trailing whitespace', () {
       final session = _session(
         workoutDayName: 'Upper A',
@@ -278,6 +655,7 @@ class _ExerciseSpec {
     this.actualTime = const [],
     this.actualBodyweightReps = const [],
     this.supersetTag,
+    this.role = ExerciseGroupRole.main,
   });
 
   final String name;
@@ -290,14 +668,19 @@ class _ExerciseSpec {
   final List<int> actualTime;
   final List<int> actualBodyweightReps;
   final String? supersetTag;
+  final ExerciseGroupRole role;
 }
 
 Session _session({
   required String workoutDayName,
   required DateTime? endedAt,
   required List<_ExerciseSpec> exercises,
+  Duration sessionDuration = Duration.zero,
 }) {
   final t = DateTime.utc(2026, 5, 12);
+  final startedAt = endedAt != null
+      ? endedAt.subtract(sessionDuration)
+      : t;
   final workoutDay = WorkoutDay(
     id: 'wd-1',
     programId: 'p-1',
@@ -309,6 +692,7 @@ Session _session({
           workoutDayId: 'wd-1',
           position: i,
           kind: const ExerciseGroupKind.single(),
+          role: exercises[i].role,
           exercises: [_buildExercise(exercises[i], i)],
           createdAt: t,
           updatedAt: t,
@@ -334,7 +718,7 @@ Session _session({
     ],
     notes: const [],
     extraWork: const [],
-    startedAt: t,
+    startedAt: startedAt,
     endedAt: endedAt,
     createdAt: t,
     updatedAt: t,

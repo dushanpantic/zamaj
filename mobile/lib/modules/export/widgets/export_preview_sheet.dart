@@ -9,25 +9,31 @@ import 'package:zamaj/modules/export/services/share_service.dart';
 /// Modal bottom sheet that displays a formatted export and lets the user
 /// copy it to the clipboard or invoke the OS share sheet.
 ///
+/// The body is rebuilt from [buildText] whenever the "Include warmups"
+/// toggle flips, so the formatter — not the sheet — owns the rendering.
+///
 /// Reads its [ShareService] from the surrounding [BlocProvider] /
 /// [RepositoryProvider] tree (wired in `app.dart`).
 class ExportPreviewSheet extends StatefulWidget {
   const ExportPreviewSheet({
     super.key,
     required this.title,
-    required this.text,
+    required this.buildText,
     this.shareSubject,
+    this.initialIncludeWarmups = false,
   });
 
   final String title;
-  final String text;
+  final String Function(bool includeWarmups) buildText;
   final String? shareSubject;
+  final bool initialIncludeWarmups;
 
   static Future<void> show(
     BuildContext context, {
     required String title,
-    required String text,
+    required String Function(bool includeWarmups) buildText,
     String? shareSubject,
+    bool initialIncludeWarmups = false,
   }) {
     return showModalBottomSheet<void>(
       context: context,
@@ -39,8 +45,9 @@ class ExportPreviewSheet extends StatefulWidget {
         value: context.read<ShareService>(),
         child: ExportPreviewSheet(
           title: title,
-          text: text,
+          buildText: buildText,
           shareSubject: shareSubject,
+          initialIncludeWarmups: initialIncludeWarmups,
         ),
       ),
     );
@@ -52,9 +59,18 @@ class ExportPreviewSheet extends StatefulWidget {
 
 class _ExportPreviewSheetState extends State<ExportPreviewSheet> {
   bool _shareInFlight = false;
+  late bool _includeWarmups = widget.initialIncludeWarmups;
+  late String _text = widget.buildText(_includeWarmups);
+
+  void _onIncludeWarmupsChanged(bool value) {
+    setState(() {
+      _includeWarmups = value;
+      _text = widget.buildText(value);
+    });
+  }
 
   Future<void> _onCopy() async {
-    await Clipboard.setData(ClipboardData(text: widget.text));
+    await Clipboard.setData(ClipboardData(text: _text));
     if (!mounted) return;
     ScaffoldMessenger.of(
       context,
@@ -65,7 +81,7 @@ class _ExportPreviewSheetState extends State<ExportPreviewSheet> {
     if (_shareInFlight) return;
     setState(() => _shareInFlight = true);
     final result = await context.read<ShareService>().shareText(
-      widget.text,
+      _text,
       subject: widget.shareSubject,
     );
     if (!mounted) return;
@@ -100,7 +116,24 @@ class _ExportPreviewSheetState extends State<ExportPreviewSheet> {
               widget.title,
               style: typography.title.copyWith(color: colors.onSurface),
             ),
-            const SizedBox(height: AppSpacing.md),
+            const SizedBox(height: AppSpacing.sm),
+            Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    'Include warmups',
+                    style: typography.bodySmall.copyWith(
+                      color: colors.onSurfaceMuted,
+                    ),
+                  ),
+                ),
+                Switch(
+                  value: _includeWarmups,
+                  onChanged: _onIncludeWarmupsChanged,
+                ),
+              ],
+            ),
+            const SizedBox(height: AppSpacing.sm),
             Flexible(
               child: Container(
                 padding: const EdgeInsets.all(AppSpacing.md),
@@ -111,7 +144,7 @@ class _ExportPreviewSheetState extends State<ExportPreviewSheet> {
                 ),
                 child: SingleChildScrollView(
                   child: SelectableText(
-                    widget.text,
+                    _text,
                     style: typography.bodySmall.copyWith(
                       color: colors.onSurface,
                       fontFamily: 'monospace',

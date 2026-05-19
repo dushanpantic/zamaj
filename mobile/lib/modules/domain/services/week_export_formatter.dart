@@ -13,6 +13,7 @@ abstract final class WeekExportFormatter {
   static String format({
     required DateTime weekStart,
     required List<Session> sessions,
+    bool includeWarmups = true,
   }) {
     final buf = StringBuffer();
     final start = weekStart.isUtc ? weekStart.toLocal() : weekStart;
@@ -32,7 +33,9 @@ abstract final class WeekExportFormatter {
       buf.writeln();
       buf.writeln();
       buf.writeln('───────────────');
-      buf.write(SessionExportFormatter.format(s));
+      buf.write(
+        SessionExportFormatter.format(s, includeWarmups: includeWarmups),
+      );
     }
 
     return buf.toString();
