@@ -123,68 +123,168 @@ class _FocusTimeBasedPanelState extends State<FocusTimeBasedPanel> {
     const typography = AppTypography.standard;
     final isRunning = widget.stopwatch.isRunning;
 
-    return Container(
-      padding: const EdgeInsets.symmetric(
-        horizontal: AppSpacing.lg,
-        vertical: AppSpacing.lg,
-      ),
-      decoration: BoxDecoration(
-        color: colors.surface,
-        borderRadius: BorderRadius.circular(AppRadius.lg),
-        border: Border.all(color: colors.outline),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Center(
-            child: Text(
-              _formatMmss(
-                isRunning
-                    ? widget.stopwatch.elapsedSeconds
-                    : widget.durationSeconds,
-              ),
-              style: typography.numericHero.copyWith(
-                color: isRunning ? colors.primary : colors.onSurface,
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Center(
+          child: Text(
+            _formatMmss(
+              isRunning
+                  ? widget.stopwatch.elapsedSeconds
+                  : widget.durationSeconds,
+            ),
+            style: typography.numericHero.copyWith(
+              color: isRunning ? colors.primary : colors.onSurface,
+            ),
+          ),
+        ),
+        const SizedBox(height: AppSpacing.xs),
+        Center(
+          child: Text(
+            'seconds',
+            style: typography.caption.copyWith(color: colors.onSurfaceMuted),
+          ),
+        ),
+        const SizedBox(height: AppSpacing.md),
+        SizedBox(
+          height: AppSpacing.touchMin,
+          child: isRunning
+              ? FilledButton.icon(
+                  onPressed: widget.enabled ? widget.onStopwatchStop : null,
+                  icon: const Icon(Icons.stop, size: 18),
+                  label: const Text('STOP'),
+                  style: FilledButton.styleFrom(
+                    backgroundColor: colors.error,
+                    foregroundColor: colors.onError,
+                  ),
+                )
+              : FilledButton.icon(
+                  onPressed: widget.enabled ? widget.onStopwatchStart : null,
+                  icon: const Icon(Icons.play_arrow, size: 18),
+                  label: const Text('START TIMER'),
+                ),
+        ),
+        const SizedBox(height: AppSpacing.md),
+        Row(
+          children: [
+            Expanded(
+              child: SizedBox(
+                height: AppSpacing.touchMin,
+                child: OutlinedButton(
+                  onPressed: widget.enabled && !isRunning
+                      ? () => widget.onDurationBump(-5)
+                      : null,
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: colors.onSurfaceMuted,
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: AppSpacing.xs,
+                    ),
+                  ),
+                  child: const FittedBox(
+                    fit: BoxFit.scaleDown,
+                    child: Text('-5', maxLines: 1),
+                  ),
+                ),
               ),
             ),
+            const SizedBox(width: AppSpacing.sm),
+            Expanded(
+              flex: 2,
+              child: TextField(
+                controller: _seconds,
+                focusNode: _secondsFocus,
+                enabled: widget.enabled && !isRunning,
+                textAlign: TextAlign.center,
+                keyboardType: TextInputType.number,
+                inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                onSubmitted: (text) {
+                  final parsed = int.tryParse(text.trim());
+                  if (parsed != null) widget.onDurationCommitted(parsed);
+                },
+                decoration: InputDecoration(
+                  filled: true,
+                  fillColor: colors.surfaceVariant,
+                  contentPadding: const EdgeInsets.symmetric(
+                    horizontal: AppSpacing.md,
+                    vertical: AppSpacing.md,
+                  ),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(AppRadius.md),
+                    borderSide: BorderSide(color: colors.outline),
+                  ),
+                ),
+                style: typography.numeric.copyWith(color: colors.onSurface),
+              ),
+            ),
+            const SizedBox(width: AppSpacing.sm),
+            Expanded(
+              child: SizedBox(
+                height: AppSpacing.touchMin,
+                child: OutlinedButton(
+                  onPressed: widget.enabled && !isRunning
+                      ? () => widget.onDurationBump(5)
+                      : null,
+                  style: OutlinedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: AppSpacing.xs,
+                    ),
+                  ),
+                  child: const FittedBox(
+                    fit: BoxFit.scaleDown,
+                    child: Text('+5', maxLines: 1),
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+        if (widget.weightKg != null) ...[
+          const SizedBox(height: AppSpacing.md),
+          Divider(color: colors.outline, height: 1),
+          const SizedBox(height: AppSpacing.sm),
+          Row(
+            children: [
+              Text(
+                'Added weight',
+                style: typography.caption.copyWith(
+                  color: colors.onSurfaceMuted,
+                ),
+              ),
+              const Spacer(),
+              TextButton.icon(
+                onPressed: widget.enabled ? widget.onWeightCleared : null,
+                icon: const Icon(Icons.close, size: 16),
+                label: const Text('Remove'),
+                style: TextButton.styleFrom(
+                  foregroundColor: colors.onSurfaceMuted,
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: AppSpacing.sm,
+                  ),
+                  minimumSize: const Size(0, 32),
+                ),
+              ),
+            ],
           ),
           const SizedBox(height: AppSpacing.xs),
-          Center(
-            child: Text(
-              'seconds',
-              style: typography.caption.copyWith(color: colors.onSurfaceMuted),
-            ),
-          ),
-          const SizedBox(height: AppSpacing.md),
-          SizedBox(
-            height: AppSpacing.touchMin,
-            child: isRunning
-                ? FilledButton.icon(
-                    onPressed: widget.enabled ? widget.onStopwatchStop : null,
-                    icon: const Icon(Icons.stop, size: 18),
-                    label: const Text('STOP'),
-                    style: FilledButton.styleFrom(
-                      backgroundColor: colors.error,
-                      foregroundColor: colors.onError,
-                    ),
-                  )
-                : FilledButton.icon(
-                    onPressed: widget.enabled ? widget.onStopwatchStart : null,
-                    icon: const Icon(Icons.play_arrow, size: 18),
-                    label: const Text('START TIMER'),
-                  ),
-          ),
-          const SizedBox(height: AppSpacing.md),
           Row(
             children: [
               Expanded(
                 child: SizedBox(
                   height: AppSpacing.touchMin,
                   child: OutlinedButton(
-                    onPressed: widget.enabled && !isRunning
-                        ? () => widget.onDurationBump(-5)
+                    onPressed: widget.enabled
+                        ? () => widget.onWeightBump(-2.5)
                         : null,
-                    child: const Text('-5'),
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: colors.onSurfaceMuted,
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: AppSpacing.xs,
+                      ),
+                    ),
+                    child: const FittedBox(
+                      fit: BoxFit.scaleDown,
+                      child: Text('-2.5', maxLines: 1),
+                    ),
                   ),
                 ),
               ),
@@ -192,20 +292,29 @@ class _FocusTimeBasedPanelState extends State<FocusTimeBasedPanel> {
               Expanded(
                 flex: 2,
                 child: TextField(
-                  controller: _seconds,
-                  focusNode: _secondsFocus,
-                  enabled: widget.enabled && !isRunning,
+                  controller: _weight,
+                  focusNode: _weightFocus,
+                  enabled: widget.enabled,
                   textAlign: TextAlign.center,
-                  keyboardType: TextInputType.number,
-                  inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                  keyboardType: const TextInputType.numberWithOptions(
+                    decimal: true,
+                  ),
+                  inputFormatters: [
+                    FilteringTextInputFormatter.allow(RegExp(r'[0-9.]')),
+                  ],
                   onSubmitted: (text) {
-                    final parsed = int.tryParse(text.trim());
-                    if (parsed != null) widget.onDurationCommitted(parsed);
+                    final raw = text.trim();
+                    if (raw.isEmpty) {
+                      widget.onWeightCleared();
+                      return;
+                    }
+                    final parsed = double.tryParse(raw);
+                    if (parsed != null) widget.onWeightCommitted(parsed);
                   },
                   decoration: InputDecoration(
-                    isDense: true,
                     filled: true,
                     fillColor: colors.surfaceVariant,
+                    suffixText: 'kg',
                     contentPadding: const EdgeInsets.symmetric(
                       horizontal: AppSpacing.md,
                       vertical: AppSpacing.md,
@@ -223,125 +332,37 @@ class _FocusTimeBasedPanelState extends State<FocusTimeBasedPanel> {
                 child: SizedBox(
                   height: AppSpacing.touchMin,
                   child: OutlinedButton(
-                    onPressed: widget.enabled && !isRunning
-                        ? () => widget.onDurationBump(5)
+                    onPressed: widget.enabled
+                        ? () => widget.onWeightBump(2.5)
                         : null,
-                    child: const Text('+5'),
+                    style: OutlinedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: AppSpacing.xs,
+                      ),
+                    ),
+                    child: const FittedBox(
+                      fit: BoxFit.scaleDown,
+                      child: Text('+2.5', maxLines: 1),
+                    ),
                   ),
                 ),
               ),
             ],
           ),
-          if (widget.weightKg != null) ...[
-            const SizedBox(height: AppSpacing.md),
-            Divider(color: colors.outline, height: 1),
-            const SizedBox(height: AppSpacing.sm),
-            Row(
-              children: [
-                Text(
-                  'Added weight',
-                  style: typography.caption.copyWith(
-                    color: colors.onSurfaceMuted,
-                  ),
-                ),
-                const Spacer(),
-                TextButton.icon(
-                  onPressed: widget.enabled ? widget.onWeightCleared : null,
-                  icon: const Icon(Icons.close, size: 16),
-                  label: const Text('Remove'),
-                  style: TextButton.styleFrom(
-                    foregroundColor: colors.onSurfaceMuted,
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: AppSpacing.sm,
-                    ),
-                    minimumSize: const Size(0, 32),
-                  ),
-                ),
-              ],
+        ] else ...[
+          const SizedBox(height: AppSpacing.sm),
+          Align(
+            alignment: Alignment.center,
+            child: TextButton.icon(
+              onPressed: widget.enabled
+                  ? () => widget.onWeightCommitted(0)
+                  : null,
+              icon: const Icon(Icons.add, size: 16),
+              label: const Text('Add weight'),
             ),
-            const SizedBox(height: AppSpacing.xs),
-            Row(
-              children: [
-                Expanded(
-                  child: SizedBox(
-                    height: AppSpacing.touchMin,
-                    child: OutlinedButton(
-                      onPressed: widget.enabled
-                          ? () => widget.onWeightBump(-2.5)
-                          : null,
-                      child: const Text('-2.5'),
-                    ),
-                  ),
-                ),
-                const SizedBox(width: AppSpacing.sm),
-                Expanded(
-                  flex: 2,
-                  child: TextField(
-                    controller: _weight,
-                    focusNode: _weightFocus,
-                    enabled: widget.enabled,
-                    textAlign: TextAlign.center,
-                    keyboardType: const TextInputType.numberWithOptions(
-                      decimal: true,
-                    ),
-                    inputFormatters: [
-                      FilteringTextInputFormatter.allow(RegExp(r'[0-9.]')),
-                    ],
-                    onSubmitted: (text) {
-                      final raw = text.trim();
-                      if (raw.isEmpty) {
-                        widget.onWeightCleared();
-                        return;
-                      }
-                      final parsed = double.tryParse(raw);
-                      if (parsed != null) widget.onWeightCommitted(parsed);
-                    },
-                    decoration: InputDecoration(
-                      isDense: true,
-                      filled: true,
-                      fillColor: colors.surfaceVariant,
-                      suffixText: 'kg',
-                      contentPadding: const EdgeInsets.symmetric(
-                        horizontal: AppSpacing.md,
-                        vertical: AppSpacing.md,
-                      ),
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(AppRadius.md),
-                        borderSide: BorderSide(color: colors.outline),
-                      ),
-                    ),
-                    style: typography.numeric.copyWith(color: colors.onSurface),
-                  ),
-                ),
-                const SizedBox(width: AppSpacing.sm),
-                Expanded(
-                  child: SizedBox(
-                    height: AppSpacing.touchMin,
-                    child: OutlinedButton(
-                      onPressed: widget.enabled
-                          ? () => widget.onWeightBump(2.5)
-                          : null,
-                      child: const Text('+2.5'),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ] else ...[
-            const SizedBox(height: AppSpacing.sm),
-            Align(
-              alignment: Alignment.center,
-              child: TextButton.icon(
-                onPressed: widget.enabled
-                    ? () => widget.onWeightCommitted(0)
-                    : null,
-                icon: const Icon(Icons.add, size: 16),
-                label: const Text('Add weight'),
-              ),
-            ),
-          ],
+          ),
         ],
-      ),
+      ],
     );
   }
 

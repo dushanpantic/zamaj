@@ -105,82 +105,71 @@ class _FocusRepBasedPanelState extends State<FocusRepBasedPanel> {
     const typography = AppTypography.standard;
     final weightSteps = IncrementRules.weightSteps(widget.weightKg);
 
-    return Container(
-      padding: const EdgeInsets.symmetric(
-        horizontal: AppSpacing.lg,
-        vertical: AppSpacing.lg,
-      ),
-      decoration: BoxDecoration(
-        color: colors.surface,
-        borderRadius: BorderRadius.circular(AppRadius.lg),
-        border: Border.all(color: colors.outline),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.end,
-            children: [
-              Expanded(
-                child: _BigNumericField(
-                  controller: _weight,
-                  focusNode: _weightFocus,
-                  label: 'kg',
-                  allowDecimal: true,
-                  enabled: widget.enabled,
-                  onSubmitted: (text) {
-                    final parsed = double.tryParse(text.trim());
-                    if (parsed != null) widget.onWeightCommitted(parsed);
-                  },
-                ),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.end,
+          children: [
+            Expanded(
+              child: _BigNumericField(
+                controller: _weight,
+                focusNode: _weightFocus,
+                label: 'kg',
+                allowDecimal: true,
+                enabled: widget.enabled,
+                onSubmitted: (text) {
+                  final parsed = double.tryParse(text.trim());
+                  if (parsed != null) widget.onWeightCommitted(parsed);
+                },
               ),
-              const SizedBox(width: AppSpacing.lg),
-              Text(
-                '×',
-                style: typography.displaySmall.copyWith(
-                  color: colors.onSurfaceMuted,
-                ),
+            ),
+            const SizedBox(width: AppSpacing.lg),
+            Text(
+              '×',
+              style: typography.displaySmall.copyWith(
+                color: colors.onSurfaceMuted,
               ),
-              const SizedBox(width: AppSpacing.lg),
-              Expanded(
-                child: _BigNumericField(
-                  controller: _reps,
-                  focusNode: _repsFocus,
-                  label: 'reps',
-                  allowDecimal: false,
-                  enabled: widget.enabled,
-                  onSubmitted: (text) {
-                    final parsed = int.tryParse(text.trim());
-                    if (parsed != null) widget.onRepsCommitted(parsed);
-                  },
-                ),
+            ),
+            const SizedBox(width: AppSpacing.lg),
+            Expanded(
+              child: _BigNumericField(
+                controller: _reps,
+                focusNode: _repsFocus,
+                label: 'reps',
+                allowDecimal: false,
+                enabled: widget.enabled,
+                onSubmitted: (text) {
+                  final parsed = int.tryParse(text.trim());
+                  if (parsed != null) widget.onRepsCommitted(parsed);
+                },
               ),
-            ],
-          ),
-          const SizedBox(height: AppSpacing.md),
-          Row(
-            children: [
-              Expanded(
-                child: _BumpRow(
-                  steps: weightSteps,
-                  enabled: widget.enabled,
-                  onTap: widget.onWeightBump,
-                  formatter: (v) => _fmtDecimalStep(v),
-                ),
+            ),
+          ],
+        ),
+        const SizedBox(height: AppSpacing.md),
+        Row(
+          children: [
+            Expanded(
+              child: _BumpRow(
+                steps: weightSteps,
+                enabled: widget.enabled,
+                onTap: widget.onWeightBump,
+                formatter: (v) => _fmtDecimalStep(v),
               ),
-              const SizedBox(width: AppSpacing.lg),
-              Expanded(
-                child: _BumpRow(
-                  steps: const [-1, 1],
-                  enabled: widget.enabled,
-                  onTap: (delta) => widget.onRepsBump(delta.round()),
-                  formatter: (v) => v.toInt().toString(),
-                ),
+            ),
+            const SizedBox(width: AppSpacing.lg),
+            Expanded(
+              child: _BumpRow(
+                steps: const [-1, 1],
+                enabled: widget.enabled,
+                onTap: (delta) => widget.onRepsBump(delta.round()),
+                formatter: (v) => v.toInt().toString(),
               ),
-            ],
-          ),
-        ],
-      ),
+            ),
+          ],
+        ),
+      ],
     );
   }
 
@@ -228,7 +217,6 @@ class _BigNumericField extends StatelessWidget {
           onSubmitted: onSubmitted,
           style: typography.numericHero.copyWith(color: colors.onSurface),
           decoration: InputDecoration(
-            isDense: true,
             filled: true,
             fillColor: colors.surfaceVariant,
             contentPadding: const EdgeInsets.symmetric(
@@ -268,23 +256,35 @@ class _BumpRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = Theme.of(context).appColors;
     return Row(
       children: [
-        for (final step in steps)
+        for (var i = 0; i < steps.length; i++) ...[
+          if (i > 0) const SizedBox(width: AppSpacing.sm),
           Expanded(
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 3),
-              child: SizedBox(
-                height: AppSpacing.touchMin,
-                child: OutlinedButton(
-                  onPressed: enabled ? () => onTap(step) : null,
+            child: SizedBox(
+              height: AppSpacing.touchMin,
+              child: OutlinedButton(
+                onPressed: enabled ? () => onTap(steps[i]) : null,
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: steps[i] < 0 ? colors.onSurfaceMuted : null,
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: AppSpacing.xs,
+                  ),
+                ),
+                child: FittedBox(
+                  fit: BoxFit.scaleDown,
                   child: Text(
-                    step > 0 ? '+${formatter(step)}' : formatter(step),
+                    steps[i] > 0
+                        ? '+${formatter(steps[i])}'
+                        : formatter(steps[i]),
+                    maxLines: 1,
                   ),
                 ),
               ),
             ),
           ),
+        ],
       ],
     );
   }

@@ -326,7 +326,7 @@ class _PanelHeader extends StatelessWidget {
         ],
         Text(
           panel.displayExerciseName,
-          style: typography.titleSmall.copyWith(color: colors.onBackground),
+          style: typography.title.copyWith(color: colors.onBackground),
           maxLines: 2,
           overflow: TextOverflow.ellipsis,
         ),

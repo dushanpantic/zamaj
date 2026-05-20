@@ -65,39 +65,26 @@ class _FocusBodyweightPanelState extends State<FocusBodyweightPanel> {
 
   @override
   Widget build(BuildContext context) {
-    final colors = Theme.of(context).appColors;
-
-    return Container(
-      padding: const EdgeInsets.symmetric(
-        horizontal: AppSpacing.lg,
-        vertical: AppSpacing.lg,
-      ),
-      decoration: BoxDecoration(
-        color: colors.surface,
-        borderRadius: BorderRadius.circular(AppRadius.lg),
-        border: Border.all(color: colors.outline),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          _BigNumericField(
-            controller: _reps,
-            focusNode: _repsFocus,
-            label: 'reps',
-            enabled: widget.enabled,
-            onSubmitted: (text) {
-              final parsed = int.tryParse(text.trim());
-              if (parsed != null) widget.onRepsCommitted(parsed);
-            },
-          ),
-          const SizedBox(height: AppSpacing.md),
-          _BumpRow(
-            steps: const [-1, 1],
-            enabled: widget.enabled,
-            onTap: widget.onRepsBump,
-          ),
-        ],
-      ),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        _BigNumericField(
+          controller: _reps,
+          focusNode: _repsFocus,
+          label: 'reps',
+          enabled: widget.enabled,
+          onSubmitted: (text) {
+            final parsed = int.tryParse(text.trim());
+            if (parsed != null) widget.onRepsCommitted(parsed);
+          },
+        ),
+        const SizedBox(height: AppSpacing.md),
+        _BumpRow(
+          steps: const [-1, 1],
+          enabled: widget.enabled,
+          onTap: widget.onRepsBump,
+        ),
+      ],
     );
   }
 }
@@ -136,7 +123,6 @@ class _BigNumericField extends StatelessWidget {
           onSubmitted: onSubmitted,
           style: typography.numericHero.copyWith(color: colors.onSurface),
           decoration: InputDecoration(
-            isDense: true,
             filled: true,
             fillColor: colors.surfaceVariant,
             contentPadding: const EdgeInsets.symmetric(
@@ -174,21 +160,33 @@ class _BumpRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = Theme.of(context).appColors;
     return Row(
       children: [
-        for (final step in steps)
+        for (var i = 0; i < steps.length; i++) ...[
+          if (i > 0) const SizedBox(width: AppSpacing.sm),
           Expanded(
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 3),
-              child: SizedBox(
-                height: AppSpacing.touchMin,
-                child: OutlinedButton(
-                  onPressed: enabled ? () => onTap(step) : null,
-                  child: Text(step > 0 ? '+$step' : '$step'),
+            child: SizedBox(
+              height: AppSpacing.touchMin,
+              child: OutlinedButton(
+                onPressed: enabled ? () => onTap(steps[i]) : null,
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: steps[i] < 0 ? colors.onSurfaceMuted : null,
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: AppSpacing.xs,
+                  ),
+                ),
+                child: FittedBox(
+                  fit: BoxFit.scaleDown,
+                  child: Text(
+                    steps[i] > 0 ? '+${steps[i]}' : '${steps[i]}',
+                    maxLines: 1,
+                  ),
                 ),
               ),
             ),
           ),
+        ],
       ],
     );
   }

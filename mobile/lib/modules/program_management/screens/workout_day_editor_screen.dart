@@ -334,24 +334,16 @@ class _ExerciseList extends StatelessWidget {
           return Padding(
             key: ValueKey(group.draftId),
             padding: const EdgeInsets.only(bottom: AppSpacing.sm),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                _GroupRoleToggle(group: group, bloc: bloc),
-                _FlatExerciseRow(
-                  group: group,
-                  exercise: group.exercises.first,
-                  reorderIndex: index,
-                  bloc: bloc,
-                  onNavigateToExercise: (id) {
-                    final screenState = context
-                        .findAncestorStateOfType<
-                          _WorkoutDayEditorScreenState
-                        >();
-                    screenState?._navigateToExercise(id);
-                  },
-                ),
-              ],
+            child: _FlatExerciseRow(
+              group: group,
+              exercise: group.exercises.first,
+              reorderIndex: index,
+              bloc: bloc,
+              onNavigateToExercise: (id) {
+                final screenState = context
+                    .findAncestorStateOfType<_WorkoutDayEditorScreenState>();
+                screenState?._navigateToExercise(id);
+              },
             ),
           );
         }
@@ -371,68 +363,32 @@ class _ExerciseList extends StatelessWidget {
   }
 }
 
-class _GroupRoleToggle extends StatelessWidget {
-  const _GroupRoleToggle({required this.group, required this.bloc});
+class _WarmupBadge extends StatelessWidget {
+  const _WarmupBadge({required this.colors});
 
-  final ExerciseGroupDraft group;
-  final WorkoutDayEditorBloc bloc;
+  final AppColors colors;
 
   @override
   Widget build(BuildContext context) {
-    final colors = Theme.of(context).appColors;
-    final isWarmup = group.role == ExerciseGroupRole.warmup;
-    return Align(
-      alignment: Alignment.centerLeft,
-      child: Padding(
-        padding: const EdgeInsets.only(bottom: AppSpacing.xs),
-        child: InkWell(
-          onTap: () => bloc.add(
-            ExerciseGroupRoleToggled(
-              groupDraftId: group.draftId,
-              role: isWarmup
-                  ? ExerciseGroupRole.main
-                  : ExerciseGroupRole.warmup,
-            ),
-          ),
-          borderRadius: BorderRadius.circular(AppRadius.pill),
-          child: Container(
-            constraints: const BoxConstraints(minHeight: AppSpacing.touchMin),
-            padding: const EdgeInsets.symmetric(
-              horizontal: AppSpacing.md,
-              vertical: AppSpacing.xs,
-            ),
-            decoration: BoxDecoration(
-              color: isWarmup
-                  ? colors.warmupBg.withValues(alpha: 0.6)
-                  : Colors.transparent,
-              borderRadius: BorderRadius.circular(AppRadius.pill),
-              border: Border.all(
-                color: isWarmup ? colors.warmup : colors.outline,
-              ),
-            ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(
-                  isWarmup ? Icons.local_fire_department : Icons.fitness_center,
-                  size: 14,
-                  color: isWarmup ? colors.warmup : colors.onSurfaceMuted,
-                ),
-                const SizedBox(width: AppSpacing.xs),
-                Text(
-                  isWarmup ? 'WARMUP' : 'Main',
-                  style: AppTypography.standard.badge.copyWith(
-                    color: isWarmup ? colors.warmup : colors.onSurfaceMuted,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
+    return Container(
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.sm,
+        vertical: 2,
+      ),
+      decoration: BoxDecoration(
+        color: colors.warmup.withValues(alpha: 0.15),
+        borderRadius: BorderRadius.circular(AppRadius.pill),
+        border: Border.all(color: colors.warmup.withValues(alpha: 0.5)),
+      ),
+      child: Text(
+        'WARMUP',
+        style: AppTypography.standard.caption.copyWith(color: colors.warmup),
       ),
     );
   }
 }
+
+enum _GroupMenuAction { toggleWarmup, ungroup, delete }
 
 class _ExerciseDragPayload {
   const _ExerciseDragPayload({
@@ -459,9 +415,29 @@ class _FlatExerciseRow extends StatelessWidget {
   final WorkoutDayEditorBloc bloc;
   final void Function(String exerciseId) onNavigateToExercise;
 
+  Future<void> _confirmAndDelete(BuildContext context) async {
+    final confirmed = await ConfirmationDialog.show(
+      context: context,
+      title: 'Delete Exercise',
+      body:
+          'Delete "${exercise.name.isEmpty ? 'Unnamed exercise' : exercise.name}"? This cannot be undone.',
+      confirmLabel: 'Delete',
+      isDestructive: true,
+    );
+    if (confirmed == true) {
+      bloc.add(
+        ExerciseRemovedFromGroup(
+          groupDraftId: group.draftId,
+          exerciseDraftId: exercise.draftId,
+        ),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final colors = Theme.of(context).appColors;
+    final isWarmup = group.role == ExerciseGroupRole.warmup;
 
     final payload = _ExerciseDragPayload(
       groupDraftId: group.draftId,
@@ -490,33 +466,26 @@ class _FlatExerciseRow extends StatelessWidget {
             borderRadius: BorderRadius.circular(AppRadius.sm),
             child: SizedBox(
               width: MediaQuery.of(context).size.width - AppSpacing.lg * 2,
-              child: _ExerciseTileContent(exercise: exercise, colors: colors),
+              child: _ExerciseTileContent(
+                exercise: exercise,
+                colors: colors,
+                isWarmup: isWarmup,
+              ),
             ),
           ),
           childWhenDragging: Opacity(
             opacity: 0.3,
-            child: _ExerciseTileContent(exercise: exercise, colors: colors),
+            child: _ExerciseTileContent(
+              exercise: exercise,
+              colors: colors,
+              isWarmup: isWarmup,
+            ),
           ),
           child: Dismissible(
             key: ValueKey('dismiss_${exercise.draftId}'),
             direction: DismissDirection.endToStart,
             confirmDismiss: (_) async {
-              final confirmed = await ConfirmationDialog.show(
-                context: context,
-                title: 'Delete Exercise',
-                body:
-                    'Delete "${exercise.name.isEmpty ? 'Unnamed exercise' : exercise.name}"? This cannot be undone.',
-                confirmLabel: 'Delete',
-                isDestructive: true,
-              );
-              if (confirmed == true) {
-                bloc.add(
-                  ExerciseRemovedFromGroup(
-                    groupDraftId: group.draftId,
-                    exerciseDraftId: exercise.draftId,
-                  ),
-                );
-              }
+              await _confirmAndDelete(context);
               return false;
             },
             background: Container(
@@ -550,9 +519,10 @@ class _FlatExerciseRow extends StatelessWidget {
                   },
                   borderRadius: BorderRadius.circular(AppRadius.sm),
                   child: Padding(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: AppSpacing.md,
-                      vertical: AppSpacing.sm,
+                    padding: const EdgeInsets.only(
+                      left: AppSpacing.md,
+                      top: AppSpacing.sm,
+                      bottom: AppSpacing.sm,
                     ),
                     child: Row(
                       children: [
@@ -573,7 +543,60 @@ class _FlatExerciseRow extends StatelessWidget {
                           child: _ExerciseTileContent(
                             exercise: exercise,
                             colors: colors,
+                            isWarmup: isWarmup,
                           ),
+                        ),
+                        PopupMenuButton<_GroupMenuAction>(
+                          tooltip: 'Exercise actions',
+                          icon: Icon(
+                            Icons.more_vert,
+                            color: colors.onSurfaceMuted,
+                            size: 20,
+                          ),
+                          padding: EdgeInsets.zero,
+                          onSelected: (action) {
+                            switch (action) {
+                              case _GroupMenuAction.toggleWarmup:
+                                bloc.add(
+                                  ExerciseGroupRoleToggled(
+                                    groupDraftId: group.draftId,
+                                    role: isWarmup
+                                        ? ExerciseGroupRole.main
+                                        : ExerciseGroupRole.warmup,
+                                  ),
+                                );
+                              case _GroupMenuAction.delete:
+                                _confirmAndDelete(context);
+                              case _GroupMenuAction.ungroup:
+                                break;
+                            }
+                          },
+                          itemBuilder: (context) => [
+                            PopupMenuItem(
+                              value: _GroupMenuAction.toggleWarmup,
+                              child: ListTile(
+                                leading: Icon(
+                                  isWarmup
+                                      ? Icons.fitness_center
+                                      : Icons.local_fire_department,
+                                ),
+                                title: Text(
+                                  isWarmup ? 'Mark as main' : 'Mark as warmup',
+                                ),
+                                contentPadding: EdgeInsets.zero,
+                                dense: true,
+                              ),
+                            ),
+                            const PopupMenuItem(
+                              value: _GroupMenuAction.delete,
+                              child: ListTile(
+                                leading: Icon(Icons.delete_outline),
+                                title: Text('Delete'),
+                                contentPadding: EdgeInsets.zero,
+                                dense: true,
+                              ),
+                            ),
+                          ],
                         ),
                       ],
                     ),
@@ -589,10 +612,15 @@ class _FlatExerciseRow extends StatelessWidget {
 }
 
 class _ExerciseTileContent extends StatelessWidget {
-  const _ExerciseTileContent({required this.exercise, required this.colors});
+  const _ExerciseTileContent({
+    required this.exercise,
+    required this.colors,
+    this.isWarmup = false,
+  });
 
   final ExerciseDraft exercise;
   final AppColors colors;
+  final bool isWarmup;
 
   @override
   Widget build(BuildContext context) {
@@ -603,9 +631,22 @@ class _ExerciseTileContent extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       mainAxisSize: MainAxisSize.min,
       children: [
-        Text(
-          exercise.name.isEmpty ? 'Unnamed exercise' : exercise.name,
-          style: AppTypography.standard.label.copyWith(color: colors.onSurface),
+        Row(
+          children: [
+            Flexible(
+              child: Text(
+                exercise.name.isEmpty ? 'Unnamed exercise' : exercise.name,
+                style: AppTypography.standard.label.copyWith(
+                  color: colors.onSurface,
+                ),
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+            if (isWarmup) ...[
+              const SizedBox(width: AppSpacing.sm),
+              _WarmupBadge(colors: colors),
+            ],
+          ],
         ),
         const SizedBox(height: 2),
         Row(
@@ -741,6 +782,7 @@ class _SupersetCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colors = Theme.of(context).appColors;
+    final isWarmup = group.role == ExerciseGroupRole.warmup;
 
     return Card(
       color: colors.surface,
@@ -750,7 +792,12 @@ class _SupersetCard extends StatelessWidget {
         side: BorderSide(color: colors.outline),
       ),
       child: Padding(
-        padding: const EdgeInsets.all(AppSpacing.md),
+        padding: const EdgeInsets.only(
+          left: AppSpacing.md,
+          right: AppSpacing.sm,
+          top: AppSpacing.md,
+          bottom: AppSpacing.md,
+        ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -782,23 +829,64 @@ class _SupersetCard extends StatelessWidget {
                     ),
                   ),
                 ),
-                const SizedBox(width: AppSpacing.sm),
-                _GroupRoleToggle(group: group, bloc: bloc),
+                if (isWarmup) ...[
+                  const SizedBox(width: AppSpacing.sm),
+                  _WarmupBadge(colors: colors),
+                ],
                 const Spacer(),
-                IconButton(
+                PopupMenuButton<_GroupMenuAction>(
+                  tooltip: 'Superset actions',
                   icon: Icon(
-                    Icons.call_split,
+                    Icons.more_vert,
                     color: colors.onSurfaceMuted,
                     size: 20,
                   ),
-                  onPressed: () =>
-                      bloc.add(SupersetUngrouped(groupDraftId: group.draftId)),
-                  tooltip: 'Ungroup superset',
                   padding: EdgeInsets.zero,
-                  constraints: const BoxConstraints(
-                    minWidth: AppSpacing.touchMin,
-                    minHeight: AppSpacing.touchMin,
-                  ),
+                  onSelected: (action) {
+                    switch (action) {
+                      case _GroupMenuAction.toggleWarmup:
+                        bloc.add(
+                          ExerciseGroupRoleToggled(
+                            groupDraftId: group.draftId,
+                            role: isWarmup
+                                ? ExerciseGroupRole.main
+                                : ExerciseGroupRole.warmup,
+                          ),
+                        );
+                      case _GroupMenuAction.ungroup:
+                        bloc.add(
+                          SupersetUngrouped(groupDraftId: group.draftId),
+                        );
+                      case _GroupMenuAction.delete:
+                        break;
+                    }
+                  },
+                  itemBuilder: (context) => [
+                    PopupMenuItem(
+                      value: _GroupMenuAction.toggleWarmup,
+                      child: ListTile(
+                        leading: Icon(
+                          isWarmup
+                              ? Icons.fitness_center
+                              : Icons.local_fire_department,
+                        ),
+                        title: Text(
+                          isWarmup ? 'Mark as main' : 'Mark as warmup',
+                        ),
+                        contentPadding: EdgeInsets.zero,
+                        dense: true,
+                      ),
+                    ),
+                    const PopupMenuItem(
+                      value: _GroupMenuAction.ungroup,
+                      child: ListTile(
+                        leading: Icon(Icons.call_split),
+                        title: Text('Ungroup superset'),
+                        contentPadding: EdgeInsets.zero,
+                        dense: true,
+                      ),
+                    ),
+                  ],
                 ),
               ],
             ),
