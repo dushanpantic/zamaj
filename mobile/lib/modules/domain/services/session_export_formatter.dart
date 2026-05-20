@@ -7,7 +7,6 @@ import 'package:zamaj/modules/domain/models/exercise.dart';
 import 'package:zamaj/modules/domain/models/exercise_group_role.dart';
 import 'package:zamaj/modules/domain/models/exercise_state.dart';
 import 'package:zamaj/modules/domain/models/planned_set_values.dart';
-import 'package:zamaj/modules/domain/models/rep_target.dart';
 import 'package:zamaj/modules/domain/models/session.dart';
 import 'package:zamaj/modules/domain/models/session_exercise.dart';
 import 'package:zamaj/modules/domain/models/substitute_exercise.dart';
@@ -19,15 +18,10 @@ import 'package:zamaj/modules/domain/models/workout_set.dart';
 ///
 /// Pure Dart. No locale, no IO. The output is stable for a given session
 /// and intentionally compact — `Plan:` lines collapse uniform planned values
-/// (e.g. `100kg 4 × 8`). When every executed set satisfies its planned
-/// counterpart the `Done:` body collapses to `Done: as planned`; otherwise
-/// it lists one executed set per row in position order.
-///
-/// "Satisfies" is per measurement type: rep-based and bodyweight require an
-/// exact match against a fixed rep target (range targets never collapse —
-/// the actuals are always shown), and time-based requires the actual
-/// duration to be at least the planned duration (weight, if any, must
-/// match).
+/// (e.g. `100kg 4 × 8`). When every executed set carries identical values
+/// the `Done:` body uses the same compact shape (e.g. `Done: 40kg 4 × 10`);
+/// otherwise each set is rendered on its own row with its unit
+/// (e.g. `100kg × 8`, `30s`, `40kg × 30s`, `10 reps`).
 abstract final class SessionExportFormatter {
   static String format(Session session, {bool includeWarmups = true}) {
     final buf = StringBuffer();
@@ -210,9 +204,9 @@ abstract final class SessionExportFormatter {
       return;
     }
 
-    final plan = _plannedValuesForComparison(sx, planned);
-    if (plan != null && _allActualsMatchPlan(sets, plan)) {
-      buf.writeln('${indent}Done: as planned');
+    final uniform = _uniformActualsSummary(sets);
+    if (uniform != null) {
+      buf.writeln('${indent}Done: $uniform');
       return;
     }
 
@@ -222,77 +216,36 @@ abstract final class SessionExportFormatter {
     }
   }
 
-  /// Returns the per-set planned values to compare actuals against, or
-  /// `null` when no plan is available (e.g. snapshot lookup missed).
-  /// For replaced exercises the substitute's uniform plan is expanded to
-  /// `setCount` entries; otherwise the snapshot's planned sets are used in
-  /// position order.
-  static List<PlannedSetValues>? _plannedValuesForComparison(
-    SessionExercise sx,
-    Exercise? planned,
-  ) {
-    final state = sx.state;
-    if (state is ReplacedState) {
-      return List<PlannedSetValues>.filled(
-        state.substitute.setCount,
-        state.substitute.plannedValues,
-      );
+  // When every executed set has identical [ActualSetValues], collapse to
+  // one line matching the planned-summary shape (e.g. `40kg 4 × 10`).
+  // Returns null when the sets differ — callers fall back to per-set rows.
+  static String? _uniformActualsSummary(List<ExecutedSet> sets) {
+    if (sets.isEmpty) return null;
+    final first = sets.first.actualValues;
+    for (final s in sets.skip(1)) {
+      if (s.actualValues != first) return null;
     }
-    if (planned == null) return null;
-    final sorted = [...planned.sets]
-      ..sort((a, b) => a.position.compareTo(b.position));
-    return [for (final s in sorted) s.plannedValues];
-  }
-
-  static bool _allActualsMatchPlan(
-    List<ExecutedSet> actuals,
-    List<PlannedSetValues> plan,
-  ) {
-    if (actuals.length != plan.length) return false;
-    for (var i = 0; i < actuals.length; i++) {
-      if (!_setMatches(actuals[i].actualValues, plan[i])) return false;
-    }
-    return true;
-  }
-
-  static bool _setMatches(ActualSetValues actual, PlannedSetValues plan) {
-    return switch ((plan, actual)) {
-      (
-        PlannedRepBased(weightKg: final pKg, repTarget: final target),
-        ActualRepBased(weightKg: final aKg, reps: final aReps),
-      ) =>
-        pKg == aKg && _repTargetSatisfied(target, aReps),
-      (
-        PlannedTimeBased(durationSeconds: final pSec, weightKg: final pKg),
-        ActualTimeBased(durationSeconds: final aSec, weightKg: final aKg),
-      ) =>
-        aSec >= pSec && pKg == aKg,
-      (
-        PlannedBodyweight(repTarget: final target),
-        ActualBodyweight(reps: final aReps),
-      ) =>
-        _repTargetSatisfied(target, aReps),
-      _ => false,
-    };
-  }
-
-  // Range rep targets always render actuals — the coach wants to see where
-  // in the range you landed.
-  static bool _repTargetSatisfied(RepTarget target, int actualReps) {
-    return switch (target) {
-      RepTargetFixed(:final reps) => reps == actualReps,
-      RepTargetRange() => false,
+    final count = sets.length;
+    return switch (first) {
+      ActualRepBased(:final weightKg, :final reps) =>
+        '${WeightFormatter.formatKg(weightKg)}kg $count × $reps',
+      ActualTimeBased(:final durationSeconds, :final weightKg) =>
+        weightKg == null
+            ? '$count × ${durationSeconds}s'
+            : '${WeightFormatter.formatKg(weightKg)}kg '
+                  '$count × ${durationSeconds}s',
+      ActualBodyweight(:final reps) => '$count × $reps',
     };
   }
 
   static String _renderExecutedSet(ExecutedSet s) {
     return switch (s.actualValues) {
       ActualRepBased(:final weightKg, :final reps) =>
-        '${WeightFormatter.formatKg(weightKg)} × $reps',
+        '${WeightFormatter.formatKg(weightKg)}kg × $reps',
       ActualTimeBased(:final durationSeconds, :final weightKg) =>
         weightKg == null
             ? '${durationSeconds}s'
-            : '${WeightFormatter.formatKg(weightKg)} × ${durationSeconds}s',
+            : '${WeightFormatter.formatKg(weightKg)}kg × ${durationSeconds}s',
       ActualBodyweight(:final reps) => '$reps reps',
     };
   }

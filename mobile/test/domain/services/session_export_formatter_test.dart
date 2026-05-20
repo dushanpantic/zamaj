@@ -93,7 +93,7 @@ void main() {
       expect(out.contains('(in progress)'), isTrue);
     });
 
-    test('uniform rep-based exercise renders compact Plan + Done', () {
+    test('mixed rep-based actuals render per-set Done lines with kg suffix', () {
       final session = _session(
         workoutDayName: 'Upper A',
         endedAt: DateTime.utc(2026, 5, 12),
@@ -111,10 +111,10 @@ void main() {
       expect(out, contains('Bench Press'));
       expect(out, contains('Plan: 100kg 4 × 8'));
       expect(out, contains('Done:'));
-      expect(out, contains('100 × 8'));
-      expect(out, contains('97.5 × 8'));
-      expect(out, contains('95 × 7'));
-      expect(out, contains('95 × 6'));
+      expect(out, contains('100kg × 8'));
+      expect(out, contains('97.5kg × 8'));
+      expect(out, contains('95kg × 7'));
+      expect(out, contains('95kg × 6'));
     });
 
     test('bodyweight exercise renders reps without kg', () {
@@ -211,8 +211,8 @@ void main() {
       expect(out, contains('Bench Press → Cable Fly  (replaced)'));
       expect(out, contains('Plan: 100kg 4 × 8'));
       expect(out, contains('Sub plan: 20kg 3 × 12'));
-      expect(out, contains('20 × 12'));
-      expect(out, contains('20 × 10'));
+      expect(out, contains('20kg × 12'));
+      expect(out, contains('20kg × 10'));
     });
 
     test('consecutive exercises sharing a supersetTag render as a block', () {
@@ -308,7 +308,7 @@ void main() {
       expect(out, contains('- 3 calf sets'));
     });
 
-    test('rep-based exercise with every set matching plan collapses Done', () {
+    test('uniform rep-based actuals collapse to a single compact Done line', () {
       final session = _session(
         workoutDayName: 'Upper A',
         endedAt: DateTime.utc(2026, 5, 12),
@@ -324,11 +324,30 @@ void main() {
       );
       final out = SessionExportFormatter.format(session);
       expect(out, contains('Plan: 100kg 3 × 8'));
-      expect(out, contains('Done: as planned'));
-      expect(out, isNot(contains('100 × 8')));
+      expect(out, contains('Done: 100kg 3 × 8'));
+      expect(out, isNot(contains('Done: as planned')));
     });
 
-    test('time-based set counts as matched when actual >= planned duration', () {
+    test('uniform actuals collapse even when they differ from plan', () {
+      final session = _session(
+        workoutDayName: 'Upper A',
+        endedAt: DateTime.utc(2026, 5, 12),
+        exercises: [
+          _ExerciseSpec(
+            name: 'Bench Press',
+            measurementType: const MeasurementType.repBased(),
+            plannedRep: const [(100.0, 8), (100.0, 8), (100.0, 8)],
+            state: const ExerciseState.completed(),
+            actualRep: const [(40.0, 10), (40.0, 10), (40.0, 10)],
+          ),
+        ],
+      );
+      final out = SessionExportFormatter.format(session);
+      expect(out, contains('Plan: 100kg 3 × 8'));
+      expect(out, contains('Done: 40kg 3 × 10'));
+    });
+
+    test('uniform time-based actuals collapse to compact Done line', () {
       final session = _session(
         workoutDayName: 'Core',
         endedAt: DateTime.utc(2026, 5, 12),
@@ -338,17 +357,16 @@ void main() {
             measurementType: const MeasurementType.timeBased(),
             plannedTime: const [30, 30, 30],
             state: const ExerciseState.completed(),
-            actualTime: const [30, 35, 31],
+            actualTime: const [30, 30, 30],
           ),
         ],
       );
       final out = SessionExportFormatter.format(session);
       expect(out, contains('Plan: 3 × 30s'));
-      expect(out, contains('Done: as planned'));
-      expect(out, isNot(contains('35s')));
+      expect(out, contains('Done: 3 × 30s'));
     });
 
-    test('time-based with any underperforming set lists all actuals', () {
+    test('mixed time-based actuals list every set on its own line', () {
       final session = _session(
         workoutDayName: 'Core',
         endedAt: DateTime.utc(2026, 5, 12),
@@ -363,13 +381,31 @@ void main() {
         ],
       );
       final out = SessionExportFormatter.format(session);
-      expect(out, isNot(contains('Done: as planned')));
       expect(out, contains('30s'));
       expect(out, contains('35s'));
       expect(out, contains('28s'));
     });
 
-    test('range rep target never collapses — actuals are always listed', () {
+    test('uniform bodyweight actuals collapse to compact Done line', () {
+      final session = _session(
+        workoutDayName: 'Calisthenics',
+        endedAt: DateTime.utc(2026, 5, 12),
+        exercises: [
+          _ExerciseSpec(
+            name: 'Pushups',
+            measurementType: const MeasurementType.bodyweight(),
+            plannedBodyweightReps: const [10, 10, 10],
+            state: const ExerciseState.completed(),
+            actualBodyweightReps: const [10, 10, 10],
+          ),
+        ],
+      );
+      final out = SessionExportFormatter.format(session);
+      expect(out, contains('Plan: 3 × 10'));
+      expect(out, contains('Done: 3 × 10'));
+    });
+
+    test('uniform actuals collapse the Done line even with a range plan', () {
       final t = DateTime.utc(2026, 5, 12);
       final base = _session(
         workoutDayName: 'Upper A',
@@ -464,30 +500,10 @@ void main() {
       );
       final out = SessionExportFormatter.format(session);
       expect(out, contains('Plan: 60kg 3 × 8-10'));
-      expect(out, isNot(contains('Done: as planned')));
-      expect(out, contains('60 × 9'));
+      expect(out, contains('Done: 60kg 3 × 9'));
     });
 
-    test('fewer actual sets than planned never collapses', () {
-      final session = _session(
-        workoutDayName: 'Upper A',
-        endedAt: DateTime.utc(2026, 5, 12),
-        exercises: [
-          _ExerciseSpec(
-            name: 'Bench Press',
-            measurementType: const MeasurementType.repBased(),
-            plannedRep: const [(100.0, 8), (100.0, 8), (100.0, 8)],
-            state: const ExerciseState.completed(),
-            actualRep: const [(100.0, 8), (100.0, 8)],
-          ),
-        ],
-      );
-      final out = SessionExportFormatter.format(session);
-      expect(out, isNot(contains('Done: as planned')));
-      expect(out, contains('100 × 8'));
-    });
-
-    test('replaced exercise with all sets matching substitute plan collapses', () {
+    test('replaced exercise with uniform actuals collapses the Done line', () {
       final session = _session(
         workoutDayName: 'Upper A',
         endedAt: DateTime.utc(2026, 5, 12),
@@ -514,8 +530,8 @@ void main() {
       final out = SessionExportFormatter.format(session);
       expect(out, contains('Bench Press → Cable Fly  (replaced)'));
       expect(out, contains('Sub plan: 20kg 3 × 12'));
-      expect(out, contains('Done: as planned'));
-      expect(out, isNot(contains('20 × 12')));
+      expect(out, contains('Done: 20kg 3 × 12'));
+      expect(out, isNot(contains('Done: as planned')));
     });
 
     test('warmup groups are included by default', () {
