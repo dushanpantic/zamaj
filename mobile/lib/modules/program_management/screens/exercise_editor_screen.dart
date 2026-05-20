@@ -431,22 +431,11 @@ class _EditorBody extends StatelessWidget {
                             rawInput: raw,
                           ),
                         ),
-                        onDelete: () async {
-                          final confirmed = await ConfirmationDialog.show(
-                            context: context,
-                            title: 'Delete set',
-                            body: 'Delete set ${i + 1}? This cannot be undone.',
-                            confirmLabel: 'Delete',
-                            isDestructive: true,
-                          );
-                          if (confirmed == true && context.mounted) {
-                            bloc.add(
-                              PlannedSetDeleted(
-                                setDraftId: draft.sets[i].draftId,
-                              ),
-                            );
-                          }
-                        },
+                        onDelete: () => bloc.add(
+                          PlannedSetDeleted(
+                            setDraftId: draft.sets[i].draftId,
+                          ),
+                        ),
                       ),
                   ],
                 ),
