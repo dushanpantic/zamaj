@@ -93,29 +93,37 @@ void main() {
       expect(out.contains('(in progress)'), isTrue);
     });
 
-    test('mixed rep-based actuals render per-set Done lines with kg suffix', () {
-      final session = _session(
-        workoutDayName: 'Upper A',
-        endedAt: DateTime.utc(2026, 5, 12),
-        exercises: [
-          _ExerciseSpec(
-            name: 'Bench Press',
-            measurementType: const MeasurementType.repBased(),
-            plannedRep: const [(100.0, 8), (100.0, 8), (100.0, 8), (100.0, 8)],
-            state: const ExerciseState.completed(),
-            actualRep: const [(100.0, 8), (97.5, 8), (95.0, 7), (95.0, 6)],
-          ),
-        ],
-      );
-      final out = SessionExportFormatter.format(session);
-      expect(out, contains('Bench Press'));
-      expect(out, contains('Plan: 100kg 4 × 8'));
-      expect(out, contains('Done:'));
-      expect(out, contains('100kg × 8'));
-      expect(out, contains('97.5kg × 8'));
-      expect(out, contains('95kg × 7'));
-      expect(out, contains('95kg × 6'));
-    });
+    test(
+      'mixed rep-based actuals render per-set Done lines with kg suffix',
+      () {
+        final session = _session(
+          workoutDayName: 'Upper A',
+          endedAt: DateTime.utc(2026, 5, 12),
+          exercises: [
+            _ExerciseSpec(
+              name: 'Bench Press',
+              measurementType: const MeasurementType.repBased(),
+              plannedRep: const [
+                (100.0, 8),
+                (100.0, 8),
+                (100.0, 8),
+                (100.0, 8),
+              ],
+              state: const ExerciseState.completed(),
+              actualRep: const [(100.0, 8), (97.5, 8), (95.0, 7), (95.0, 6)],
+            ),
+          ],
+        );
+        final out = SessionExportFormatter.format(session);
+        expect(out, contains('Bench Press'));
+        expect(out, contains('Plan: 100kg 4 × 8'));
+        expect(out, contains('Done:'));
+        expect(out, contains('100kg × 8'));
+        expect(out, contains('97.5kg × 8'));
+        expect(out, contains('95kg × 7'));
+        expect(out, contains('95kg × 6'));
+      },
+    );
 
     test('bodyweight exercise renders reps without kg', () {
       final session = _session(
@@ -308,25 +316,28 @@ void main() {
       expect(out, contains('- 3 calf sets'));
     });
 
-    test('uniform rep-based actuals collapse to a single compact Done line', () {
-      final session = _session(
-        workoutDayName: 'Upper A',
-        endedAt: DateTime.utc(2026, 5, 12),
-        exercises: [
-          _ExerciseSpec(
-            name: 'Bench Press',
-            measurementType: const MeasurementType.repBased(),
-            plannedRep: const [(100.0, 8), (100.0, 8), (100.0, 8)],
-            state: const ExerciseState.completed(),
-            actualRep: const [(100.0, 8), (100.0, 8), (100.0, 8)],
-          ),
-        ],
-      );
-      final out = SessionExportFormatter.format(session);
-      expect(out, contains('Plan: 100kg 3 × 8'));
-      expect(out, contains('Done: 100kg 3 × 8'));
-      expect(out, isNot(contains('Done: as planned')));
-    });
+    test(
+      'uniform rep-based actuals collapse to a single compact Done line',
+      () {
+        final session = _session(
+          workoutDayName: 'Upper A',
+          endedAt: DateTime.utc(2026, 5, 12),
+          exercises: [
+            _ExerciseSpec(
+              name: 'Bench Press',
+              measurementType: const MeasurementType.repBased(),
+              plannedRep: const [(100.0, 8), (100.0, 8), (100.0, 8)],
+              state: const ExerciseState.completed(),
+              actualRep: const [(100.0, 8), (100.0, 8), (100.0, 8)],
+            ),
+          ],
+        );
+        final out = SessionExportFormatter.format(session);
+        expect(out, contains('Plan: 100kg 3 × 8'));
+        expect(out, contains('Done: 100kg 3 × 8'));
+        expect(out, isNot(contains('Done: as planned')));
+      },
+    );
 
     test('uniform actuals collapse even when they differ from plan', () {
       final session = _session(
@@ -583,10 +594,7 @@ void main() {
           ),
         ],
       );
-      final out = SessionExportFormatter.format(
-        session,
-        includeWarmups: false,
-      );
+      final out = SessionExportFormatter.format(session, includeWarmups: false);
       expect(out, isNot(contains('Band Pull-Apart')));
       expect(out, contains('Bench Press'));
     });
@@ -694,9 +702,7 @@ Session _session({
   Duration sessionDuration = Duration.zero,
 }) {
   final t = DateTime.utc(2026, 5, 12);
-  final startedAt = endedAt != null
-      ? endedAt.subtract(sessionDuration)
-      : t;
+  final startedAt = endedAt != null ? endedAt.subtract(sessionDuration) : t;
   final workoutDay = WorkoutDay(
     id: 'wd-1',
     programId: 'p-1',

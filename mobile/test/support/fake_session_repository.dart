@@ -168,6 +168,13 @@ class FakeSessionRepository implements SessionRepository {
   }
 
   @override
+  Future<void> deleteSession(String sessionId) async {
+    _requireSession(sessionId);
+    _sessions.remove(sessionId);
+    _notify(sessionId);
+  }
+
+  @override
   Future<Session> completeSet({
     required String sessionExerciseId,
     required ActualSetValues actualValues,

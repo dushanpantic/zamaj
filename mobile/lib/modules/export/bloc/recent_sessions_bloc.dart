@@ -19,6 +19,7 @@ class RecentSessionsBloc
     on<RecentSessionsOpened>(_onOpened);
     on<RecentSessionsRetried>(_onRetried);
     on<RecentSessionsRefreshed>(_onRefreshed);
+    on<RecentSessionsDeleteRequested>(_onDeleteRequested);
   }
 
   final ProgramRepository _programRepository;
@@ -48,6 +49,45 @@ class RecentSessionsBloc
     final current = state;
     if (current is! RecentSessionsLoaded) return;
     await _load(programId: current.programId, emit: emit);
+  }
+
+  Future<void> _onDeleteRequested(
+    RecentSessionsDeleteRequested event,
+    Emitter<RecentSessionsState> emit,
+  ) async {
+    final current = state;
+    if (current is! RecentSessionsLoaded) return;
+
+    // Optimistic in-place removal so the list doesn't flash a spinner;
+    // the Dismissible animation has already hidden the tile.
+    emit(
+      RecentSessionsLoaded(
+        programId: current.programId,
+        programName: current.programName,
+        items: [
+          for (final i in current.items)
+            if (i.sessionId != event.sessionId) i,
+        ],
+        sessionsById: {
+          for (final entry in current.sessionsById.entries)
+            if (entry.key != event.sessionId) entry.key: entry.value,
+        },
+        weekSessions: [
+          for (final s in current.weekSessions)
+            if (s.id != event.sessionId) s,
+        ],
+        window: current.window,
+        referenceNow: current.referenceNow,
+      ),
+    );
+
+    try {
+      await _sessionRepository.deleteSession(event.sessionId);
+    } on DomainError catch (e) {
+      // Restore prior state and surface the failure.
+      emit(current);
+      emit(RecentSessionsFailure(programId: current.programId, error: e));
+    }
   }
 
   Future<void> _load({

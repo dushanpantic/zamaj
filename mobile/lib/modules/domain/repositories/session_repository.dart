@@ -45,6 +45,12 @@ abstract class SessionRepository {
 
   Future<Session> endSession(String sessionId);
 
+  /// Permanently removes a session and all of its dependent rows (exercises,
+  /// executed sets, notes, extra work). The program template snapshot embedded
+  /// in the session is discarded with it. Cascades through foreign keys, so
+  /// no orphans remain. Throws [NotFoundError] if no such session exists.
+  Future<void> deleteSession(String sessionId);
+
   Future<Session> completeSet({
     required String sessionExerciseId,
     required ActualSetValues actualValues,

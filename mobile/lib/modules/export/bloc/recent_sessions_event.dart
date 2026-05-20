@@ -23,3 +23,12 @@ final class RecentSessionsRetried extends RecentSessionsEvent {
 final class RecentSessionsRefreshed extends RecentSessionsEvent {
   const RecentSessionsRefreshed();
 }
+
+final class RecentSessionsDeleteRequested extends RecentSessionsEvent {
+  const RecentSessionsDeleteRequested(this.sessionId);
+
+  final String sessionId;
+
+  @override
+  List<Object?> get props => [sessionId];
+}

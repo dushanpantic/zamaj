@@ -139,6 +139,7 @@ class _LoadedBody extends StatelessWidget {
           item: item,
           referenceNow: state.referenceNow,
           onPressed: () => _onTilePressed(context, item, state),
+          onDelete: () => _onDeleteRequested(context, item),
         ),
       );
     }
@@ -155,9 +156,46 @@ class _LoadedBody extends StatelessWidget {
     ExportPreviewSheet.show(
       context,
       title: item.workoutDayName,
-      buildText: (includeWarmups) =>
-          SessionExportFormatter.format(session, includeWarmups: includeWarmups),
+      buildText: (includeWarmups) => SessionExportFormatter.format(
+        session,
+        includeWarmups: includeWarmups,
+      ),
       shareSubject: '${item.workoutDayName} — workout',
+    );
+  }
+
+  Future<void> _onDeleteRequested(
+    BuildContext context,
+    SessionHistoryItem item,
+  ) async {
+    final bloc = context.read<RecentSessionsBloc>();
+    final confirmed = await _confirmDelete(context, item);
+    if (confirmed != true) return;
+    bloc.add(RecentSessionsDeleteRequested(item.sessionId));
+  }
+
+  Future<bool?> _confirmDelete(BuildContext context, SessionHistoryItem item) {
+    final colors = Theme.of(context).appColors;
+    return showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Delete session?'),
+        content: Text(
+          'This permanently removes "${item.workoutDayName}" and all '
+          'logged sets. This cannot be undone.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            style: TextButton.styleFrom(foregroundColor: colors.error),
+            child: const Text('Delete'),
+          ),
+        ],
+      ),
     );
   }
 }

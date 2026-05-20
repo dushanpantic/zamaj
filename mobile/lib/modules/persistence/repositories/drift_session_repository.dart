@@ -318,6 +318,16 @@ class DriftSessionRepository implements SessionRepository {
   }
 
   @override
+  Future<void> deleteSession(String sessionId) async {
+    await _db.transaction(() async {
+      await _requireSessionRow(sessionId);
+      await (_db.delete(
+        _db.sessions,
+      )..where((t) => t.id.equals(sessionId))).go();
+    });
+  }
+
+  @override
   Future<domain.Session> completeSet({
     required String sessionExerciseId,
     required ActualSetValues actualValues,
