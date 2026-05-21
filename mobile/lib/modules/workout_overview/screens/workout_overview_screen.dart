@@ -475,6 +475,17 @@ class _GroupBuilder extends StatelessWidget {
   }
 }
 
+/// Mirrors the display-name logic in [ExerciseCard]: a replaced exercise
+/// shows its substitute's name, everything else shows the planned name.
+/// Used as the label inside the compact drag-feedback pill.
+String _exerciseDisplayName(ExerciseViewModel viewModel) {
+  final state = viewModel.sessionExercise.state;
+  return switch (state) {
+    ReplacedState(:final substitute) => substitute.name,
+    _ => viewModel.plannedExerciseName,
+  };
+}
+
 /// Wraps an exercise card with both a Draggable (handle on the card)
 /// and a DragTarget (the whole card body accepts drops to start a
 /// superset). The reorder gaps between cards are separate widgets.
@@ -520,16 +531,14 @@ class _DraggableExercise extends StatelessWidget {
         final card = _MaybeDraggable(
           canDrag: canDrag,
           payload: ExerciseDragPayload(exercise.sessionExercise.id),
+          exerciseName: _exerciseDisplayName(exercise),
           child: AnimatedScale(
             duration: const Duration(milliseconds: 80),
             scale: highlight ? 0.98 : 1,
             child: child,
           ),
         );
-        return Container(
-          margin: const EdgeInsets.symmetric(vertical: AppSpacing.xs),
-          child: card,
-        );
+        return card;
       },
     );
   }
@@ -539,34 +548,82 @@ class _MaybeDraggable extends StatelessWidget {
   const _MaybeDraggable({
     required this.canDrag,
     required this.payload,
+    required this.exerciseName,
     required this.child,
   });
 
   final bool canDrag;
   final ExerciseDragPayload payload;
+  final String exerciseName;
   final Widget child;
 
   @override
   Widget build(BuildContext context) {
     if (!canDrag) return child;
+    final screenWidth = MediaQuery.of(context).size.width;
+    final pillWidth = (screenWidth * 0.7).clamp(220.0, 360.0);
     return LongPressDraggable<ExerciseDragPayload>(
       data: payload,
       delay: const Duration(milliseconds: 250),
       onDragStarted: Haptics.grab,
-      feedback: Material(
-        elevation: 6,
-        color: Colors.transparent,
-        child: SizedBox(
-          width: MediaQuery.of(context).size.width - AppSpacing.lg * 2,
-          child: child,
-        ),
-      ),
+      feedback: _DragFeedbackPill(exerciseName: exerciseName, width: pillWidth),
       childWhenDragging: Opacity(opacity: 0.3, child: child),
       child: child,
     );
   }
 }
 
+/// Compact pill shown under the finger while dragging an exercise card.
+/// Occludes far less of the screen than dragging the full card, so the
+/// user can see and aim at the reorder gaps between groups.
+class _DragFeedbackPill extends StatelessWidget {
+  const _DragFeedbackPill({required this.exerciseName, required this.width});
+
+  final String exerciseName;
+  final double width;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = Theme.of(context).appColors;
+    const typography = AppTypography.standard;
+    return Material(
+      elevation: 8,
+      color: Colors.transparent,
+      borderRadius: BorderRadius.circular(AppRadius.pill),
+      child: Container(
+        width: width,
+        height: AppSpacing.touchMin,
+        padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
+        decoration: BoxDecoration(
+          color: colors.surface,
+          borderRadius: BorderRadius.circular(AppRadius.pill),
+          border: Border.all(color: colors.primary, width: 2),
+        ),
+        child: Row(
+          children: [
+            Icon(Icons.drag_indicator, size: 20, color: colors.primary),
+            const SizedBox(width: AppSpacing.sm),
+            Expanded(
+              child: Text(
+                exerciseName,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: typography.label.copyWith(color: colors.onSurface),
+              ),
+            ),
+            const SizedBox(width: AppSpacing.sm),
+            Icon(Icons.swap_vert, size: 18, color: colors.onSurfaceMuted),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// Drop zone between two exercise groups. The hit area is always
+/// [_restHitHeight] tall so the user has a comfortable target while
+/// dragging; the visible indicator is just a thin centered line at rest
+/// and expands into a full-width primary bar when a drag is hovering.
 class _ReorderGap extends StatelessWidget {
   const _ReorderGap({
     required this.sessionId,
@@ -577,6 +634,9 @@ class _ReorderGap extends StatelessWidget {
   final String sessionId;
   final int unfinishedIndex;
   final bool enabled;
+
+  static const double _restHitHeight = 32;
+  static const double _hoverHitHeight = 48;
 
   @override
   Widget build(BuildContext context) {
@@ -595,12 +655,23 @@ class _ReorderGap extends StatelessWidget {
       builder: (context, candidate, _) {
         final hovering = candidate.isNotEmpty && enabled;
         return AnimatedContainer(
-          duration: const Duration(milliseconds: 100),
-          height: hovering ? 18 : 6,
-          margin: const EdgeInsets.symmetric(vertical: AppSpacing.xs),
-          decoration: BoxDecoration(
-            color: hovering ? colors.primary : Colors.transparent,
-            borderRadius: BorderRadius.circular(AppRadius.pill),
+          duration: const Duration(milliseconds: 120),
+          curve: Curves.easeOut,
+          height: hovering ? _hoverHitHeight : _restHitHeight,
+          alignment: Alignment.center,
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 120),
+            curve: Curves.easeOut,
+            height: hovering ? 6 : 2,
+            margin: EdgeInsets.symmetric(
+              horizontal: hovering ? 0 : AppSpacing.xl,
+            ),
+            decoration: BoxDecoration(
+              color: hovering
+                  ? colors.primary
+                  : colors.outline.withValues(alpha: 0.4),
+              borderRadius: BorderRadius.circular(AppRadius.pill),
+            ),
           ),
         );
       },
@@ -741,24 +812,19 @@ class _BottomActionBar extends StatelessWidget {
         ),
         child: Row(
           children: [
-            Expanded(
-              child: OutlinedButton.icon(
-                onPressed: canMutate ? onAddNote : null,
-                icon: const Icon(Icons.sticky_note_2_outlined, size: 18),
-                label: const Text('Note'),
-              ),
+            _SecondaryActionButton(
+              icon: Icons.sticky_note_2_outlined,
+              tooltip: 'Add note',
+              onPressed: canMutate ? onAddNote : null,
+            ),
+            const SizedBox(width: AppSpacing.xs),
+            _SecondaryActionButton(
+              icon: Icons.add_task,
+              tooltip: 'Add extra work',
+              onPressed: canMutate ? onAddExtraWork : null,
             ),
             const SizedBox(width: AppSpacing.sm),
             Expanded(
-              child: OutlinedButton.icon(
-                onPressed: canMutate ? onAddExtraWork : null,
-                icon: const Icon(Icons.add_task, size: 18),
-                label: const Text('Extra'),
-              ),
-            ),
-            const SizedBox(width: AppSpacing.sm),
-            Expanded(
-              flex: 2,
               child: FilledButton.icon(
                 onPressed: hasOpenTarget && !state.isEnded ? onFocusMode : null,
                 icon: const Icon(Icons.center_focus_strong, size: 18),
@@ -766,6 +832,40 @@ class _BottomActionBar extends StatelessWidget {
               ),
             ),
           ],
+        ),
+      ),
+    );
+  }
+}
+
+/// Square 48dp icon button used in the bottom action bar for secondary
+/// actions (Note, Extra). Outlined to read as a peer of the primary
+/// FilledButton next to it, sized to satisfy [AppSpacing.touchMin].
+class _SecondaryActionButton extends StatelessWidget {
+  const _SecondaryActionButton({
+    required this.icon,
+    required this.tooltip,
+    required this.onPressed,
+  });
+
+  final IconData icon;
+  final String tooltip;
+  final VoidCallback? onPressed;
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      width: AppSpacing.touchMin,
+      height: AppSpacing.touchMin,
+      child: Tooltip(
+        message: tooltip,
+        child: OutlinedButton(
+          onPressed: onPressed,
+          style: OutlinedButton.styleFrom(
+            padding: EdgeInsets.zero,
+            minimumSize: const Size.square(AppSpacing.touchMin),
+          ),
+          child: Icon(icon, size: 20, semanticLabel: tooltip),
         ),
       ),
     );

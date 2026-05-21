@@ -735,20 +735,39 @@ class DriftSessionRepository implements SessionRepository {
           orderedUnfinishedIds.map((id) => exerciseById[id]!.position).toList()
             ..sort();
 
+      // Two-phase write to dodge the (session_id, position) UNIQUE constraint:
+      // SQLite checks UNIQUE per-statement (no deferred constraints), so a
+      // direct row-by-row update collides whenever two rows swap slots.
+      // Phase 1 parks every moving row in a disjoint negative range; phase 2
+      // writes the final positions.
+      final movers = <({String id, int newPosition, SessionExercise row})>[];
       for (var i = 0; i < orderedUnfinishedIds.length; i++) {
         final id = orderedUnfinishedIds[i];
         final exercise = exerciseById[id]!;
         final newPosition = slots[i];
         if (newPosition == exercise.position) continue;
+        movers.add((id: id, newPosition: newPosition, row: exercise));
+      }
+
+      for (final mover in movers) {
+        await (_db.update(
+          _db.sessionExercises,
+        )..where((t) => t.id.equals(mover.id))).write(
+          SessionExercisesCompanion(
+            position: Value(-1 - mover.row.position),
+          ),
+        );
+      }
+      for (final mover in movers) {
         final updatedAt = _timestamps.nextUpdatedAt(
-          previousUpdatedAt: msToUtc(exercise.updatedAtMs),
-          createdAt: msToUtc(exercise.createdAtMs),
+          previousUpdatedAt: msToUtc(mover.row.updatedAtMs),
+          createdAt: msToUtc(mover.row.createdAtMs),
         );
         await (_db.update(
           _db.sessionExercises,
-        )..where((t) => t.id.equals(id))).write(
+        )..where((t) => t.id.equals(mover.id))).write(
           SessionExercisesCompanion(
-            position: Value(newPosition),
+            position: Value(mover.newPosition),
             updatedAtMs: Value(utcToMs(updatedAt)),
           ),
         );

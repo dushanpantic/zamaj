@@ -292,6 +292,108 @@ void main() {
     );
   });
 
+  group('reorderUnfinished — UNIQUE(session_id, position) safety', () {
+    test(
+      'swapping two unfinished exercises does not trip the UNIQUE constraint',
+      () async {
+        // Regression: prior implementation wrote new positions row-by-row,
+        // which collides with SQLite's per-statement UNIQUE check whenever
+        // two rows trade slots (e.g. moving the second exercise to first).
+        final rng = Random(101);
+        final db = AppDatabase(NativeDatabase.memory());
+        try {
+          final programRepo = DriftProgramRepository(db: db);
+          final sessionRepo = DriftSessionRepository(
+            db: db,
+            programRepository: programRepo,
+          );
+
+          final session = await _seedSession(rng, programRepo, sessionRepo);
+          final originalById = {
+            for (final se in session.sessionExercises) se.id: se,
+          };
+          final ids = session.sessionExercises.map((e) => e.id).toList();
+          final swapped = [ids[1], ids[0], ...ids.skip(2)];
+
+          final after = await sessionRepo.reorderUnfinished(
+            sessionId: session.id,
+            orderedUnfinishedIds: swapped,
+          );
+
+          // The two swapped ids exchange positions; everyone else holds.
+          final byId = {for (final se in after.sessionExercises) se.id: se};
+          expect(
+            byId[ids[0]]!.position,
+            equals(originalById[ids[1]]!.position),
+          );
+          expect(
+            byId[ids[1]]!.position,
+            equals(originalById[ids[0]]!.position),
+          );
+          final positions = after.sessionExercises
+              .map((e) => e.position)
+              .toList();
+          expect(
+            positions.toSet().length,
+            equals(positions.length),
+            reason: 'positions must remain distinct after swap',
+          );
+        } finally {
+          await db.close();
+        }
+      },
+    );
+
+    test(
+      'reversing all unfinished exercises does not trip the UNIQUE constraint',
+      () async {
+        final rng = Random(102);
+        final db = AppDatabase(NativeDatabase.memory());
+        try {
+          final programRepo = DriftProgramRepository(db: db);
+          final sessionRepo = DriftSessionRepository(
+            db: db,
+            programRepository: programRepo,
+          );
+
+          final session = await _seedSession(rng, programRepo, sessionRepo);
+          final originalSlots =
+              session.sessionExercises.map((e) => e.position).toList()..sort();
+          final ids = session.sessionExercises.map((e) => e.id).toList();
+          final reversed = ids.reversed.toList();
+
+          final after = await sessionRepo.reorderUnfinished(
+            sessionId: session.id,
+            orderedUnfinishedIds: reversed,
+          );
+
+          // The slot occupied by reversed[i] should be the i-th slot in
+          // ascending order — i.e. the order in `reversed` matches the
+          // ascending position sort.
+          final byId = {for (final se in after.sessionExercises) se.id: se};
+          for (var i = 0; i < reversed.length; i++) {
+            expect(
+              byId[reversed[i]]!.position,
+              equals(originalSlots[i]),
+              reason:
+                  'Reversed id at index $i should occupy ascending slot $i',
+            );
+          }
+          final positions = after.sessionExercises
+              .map((e) => e.position)
+              .toList();
+          expect(
+            positions.toSet().length,
+            equals(positions.length),
+            reason: 'positions must remain distinct after reverse',
+          );
+        } finally {
+          await db.close();
+        }
+      },
+    );
+  });
+
   group('markExerciseDone', () {
     test(
       'flips an unfinished exercise to completed without changing position',
