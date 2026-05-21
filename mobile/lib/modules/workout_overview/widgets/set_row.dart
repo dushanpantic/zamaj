@@ -455,11 +455,14 @@ class _Editor extends StatelessWidget {
               onChanged: onChanged,
             ),
           },
-          const SizedBox(height: AppSpacing.sm),
+          const SizedBox(height: AppSpacing.md),
           SizedBox(
-            height: AppSpacing.touchMin,
+            height: 56,
             child: FilledButton(
               onPressed: canSubmit ? onSubmit : null,
+              style: FilledButton.styleFrom(
+                textStyle: AppTypography.standard.actionLabel,
+              ),
               child: Text(isEditingExisting ? 'SAVE' : 'LOG SET'),
             ),
           ),
@@ -482,27 +485,23 @@ class _RepBasedFields extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Expanded(
-          child: _NumericField(
-            controller: weight,
-            label: 'kg',
-            allowDecimal: true,
-            steps: const [-2.5, 2.5],
-            onChanged: onChanged,
-          ),
+        _NumericField(
+          controller: weight,
+          label: 'kg',
+          allowDecimal: true,
+          steps: const [-2.5, 2.5],
+          onChanged: onChanged,
         ),
-        const SizedBox(width: AppSpacing.sm),
-        Expanded(
-          child: _NumericField(
-            controller: reps,
-            label: 'reps',
-            allowDecimal: false,
-            steps: const [-1, 1],
-            onChanged: onChanged,
-          ),
+        const SizedBox(height: AppSpacing.sm),
+        _NumericField(
+          controller: reps,
+          label: 'reps',
+          allowDecimal: false,
+          steps: const [-1, 1],
+          onChanged: onChanged,
         ),
       ],
     );
@@ -540,34 +539,34 @@ class _TimeBasedFields extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Expanded(
-          child: _NumericField(
-            controller: duration,
-            label: 'seconds',
-            allowDecimal: false,
-            steps: const [-5, 5],
-            onChanged: onChanged,
-          ),
+        _NumericField(
+          controller: duration,
+          label: 'seconds',
+          allowDecimal: false,
+          steps: const [-5, 5],
+          onChanged: onChanged,
         ),
-        const SizedBox(width: AppSpacing.sm),
-        Expanded(
-          child: _NumericField(
-            controller: weight,
-            label: 'kg (optional)',
-            allowDecimal: true,
-            steps: const [-2.5, 2.5],
-            onChanged: onChanged,
-          ),
+        const SizedBox(height: AppSpacing.sm),
+        _NumericField(
+          controller: weight,
+          label: 'kg (optional)',
+          allowDecimal: true,
+          steps: const [-2.5, 2.5],
+          onChanged: onChanged,
         ),
       ],
     );
   }
 }
 
-class _NumericField extends StatelessWidget {
+/// Numeric input rendered as a counter — step buttons flank a centered,
+/// borderless field showing the value with a caption beneath. Tapping the
+/// value opens the keyboard for manual entry. [steps] is interpreted as
+/// `[negativeStep, positiveStep]` (e.g. `[-2.5, 2.5]`).
+class _NumericField extends StatefulWidget {
   const _NumericField({
     required this.controller,
     required this.label,
@@ -582,72 +581,134 @@ class _NumericField extends StatelessWidget {
   final List<double> steps;
   final VoidCallback onChanged;
 
+  @override
+  State<_NumericField> createState() => _NumericFieldState();
+}
+
+class _NumericFieldState extends State<_NumericField> {
+  final FocusNode _focus = FocusNode();
+
+  @override
+  void dispose() {
+    _focus.dispose();
+    super.dispose();
+  }
+
   void _bump(double delta) {
-    final current = double.tryParse(controller.text.trim()) ?? 0;
+    final current = double.tryParse(widget.controller.text.trim()) ?? 0;
     final next = (current + delta).clamp(0, double.maxFinite).toDouble();
-    if (allowDecimal) {
+    if (widget.allowDecimal) {
       final rounded = (next * 2).round() / 2;
-      controller.text = WeightFormatter.formatKg(rounded);
+      widget.controller.text = WeightFormatter.formatKg(rounded);
     } else {
-      controller.text = next.round().toString();
+      widget.controller.text = next.round().toString();
     }
-    onChanged();
+    widget.onChanged();
   }
 
   @override
   Widget build(BuildContext context) {
     final colors = Theme.of(context).appColors;
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
+    const typography = AppTypography.standard;
+    final negative = widget.steps.first;
+    final positive = widget.steps.last;
+
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.center,
       children: [
-        TextField(
-          controller: controller,
-          keyboardType: TextInputType.numberWithOptions(decimal: allowDecimal),
-          inputFormatters: [
-            FilteringTextInputFormatter.allow(
-              allowDecimal ? RegExp(r'[0-9.]') : RegExp(r'[0-9]'),
-            ),
-          ],
-          decoration: InputDecoration(labelText: label, isDense: true),
-          style: AppTypography.standard.numeric.copyWith(
-            color: colors.onSurface,
-          ),
-          onChanged: (_) => onChanged(),
+        _StepButton(
+          label: _fmtStep(negative, widget.allowDecimal),
+          onPressed: () => _bump(negative),
         ),
-        const SizedBox(height: AppSpacing.xs),
-        Row(
-          children: [
-            for (final step in steps)
-              Expanded(
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 2),
-                  child: SizedBox(
-                    height: 36,
-                    child: OutlinedButton(
-                      onPressed: () => _bump(step),
-                      style: OutlinedButton.styleFrom(
-                        padding: EdgeInsets.zero,
-                        textStyle: AppTypography.standard.label,
+        Expanded(
+          child: GestureDetector(
+            behavior: HitTestBehavior.opaque,
+            onTap: _focus.requestFocus,
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xs),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  TextField(
+                    controller: widget.controller,
+                    focusNode: _focus,
+                    keyboardType: TextInputType.numberWithOptions(
+                      decimal: widget.allowDecimal,
+                    ),
+                    inputFormatters: [
+                      FilteringTextInputFormatter.allow(
+                        widget.allowDecimal
+                            ? RegExp(r'[0-9.]')
+                            : RegExp(r'[0-9]'),
                       ),
-                      child: Text(
-                        step > 0
-                            ? '+${_fmtStep(step, allowDecimal)}'
-                            : _fmtStep(step, allowDecimal),
-                      ),
+                    ],
+                    textAlign: TextAlign.center,
+                    decoration: const InputDecoration(
+                      border: InputBorder.none,
+                      enabledBorder: InputBorder.none,
+                      focusedBorder: InputBorder.none,
+                      isDense: true,
+                      contentPadding: EdgeInsets.zero,
+                    ),
+                    style: typography.numericLarge.copyWith(
+                      color: colors.onSurface,
+                    ),
+                    onChanged: (_) => widget.onChanged(),
+                  ),
+                  const SizedBox(height: AppSpacing.xs),
+                  Text(
+                    widget.label,
+                    style: typography.labelSmall.copyWith(
+                      color: colors.onSurfaceMuted,
                     ),
                   ),
-                ),
+                ],
               ),
-          ],
+            ),
+          ),
+        ),
+        _StepButton(
+          label: '+${_fmtStep(positive, widget.allowDecimal)}',
+          onPressed: () => _bump(positive),
         ),
       ],
     );
   }
 
-  String _fmtStep(double v, bool allowDecimal) {
+  static String _fmtStep(double v, bool allowDecimal) {
     if (!allowDecimal) return v.toInt().toString();
     return v == v.truncateToDouble()
         ? v.toInt().toString()
         : v.toStringAsFixed(1);
+  }
+}
+
+/// Oversized step button for the inline editor — sweaty-hands ergonomics
+/// matter more than card compactness, so this is intentionally larger than
+/// [AppSpacing.touchMin].
+class _StepButton extends StatelessWidget {
+  const _StepButton({required this.label, required this.onPressed});
+
+  static const double _width = 64;
+  static const double _height = 64;
+
+  final String label;
+  final VoidCallback onPressed;
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      width: _width,
+      height: _height,
+      child: OutlinedButton(
+        onPressed: onPressed,
+        style: OutlinedButton.styleFrom(
+          padding: EdgeInsets.zero,
+          minimumSize: const Size(_width, _height),
+          textStyle: AppTypography.standard.actionLabel,
+        ),
+        child: Text(label),
+      ),
+    );
   }
 }

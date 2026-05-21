@@ -65,6 +65,17 @@ No hard-coded pixels, no `Color(0x...)` literals.
 - Typography: `Theme.of(context).textTheme.*`; use `AppTypography.standard.numeric` / `numericLarge` for any numeric readout so tabular figures don't jitter.
 - Semantic colors: `planned`/`actual`, `exerciseCompleted|Skipped|Replaced`, `restTimer`/`restTimerOvertime`. Add new semantic fields to `AppColors` (both palettes) rather than one-off values.
 
+### In-session sweaty-hands ergonomics (`workout_overview/`, `focus_mode/`)
+
+These two modules are used live in the gym with wet hands — `touchMin` (48 dp) is the floor, not the target. When adding or editing controls under `lib/modules/workout_overview/**` or `lib/modules/focus_mode/**`:
+
+- Step / counter buttons: **64×64 dp** minimum, label at `AppTypography.standard.actionLabel` (18 px, w700).
+- Numeric value inputs (the value the user is logging): **`numericLarge`** (36 px).
+- Primary action buttons (LOG SET, SAVE, FOCUS, rest-timer controls): **≥ 56 dp tall**, `actionLabel` text style.
+- When two counters would otherwise share a row, **stack vertically** rather than crushing tap targets below ~56 dp wide.
+
+Outside these two modules (program management, day picker, settings), the normal `touchMin` (48 dp) is fine — this rule is specifically about the live-session surface.
+
 ### Tests
 
 Scope is **domain + persistence**. Do not add `bloc_test` (not a dependency) or widget tests. Layout mirrors `lib/` under `test/{core,domain,persistence,repository,serialization}`. Property tests use `test/support/generators.dart`. Drift end-to-end tests live in `test/integration/`; use `makeInMemoryDatabase()` from `test/support/in_memory_app_database.dart`. `Random.nextInt(max)` requires `max <= 2^32` — for dates, use a base timestamp + millisecond offset.
