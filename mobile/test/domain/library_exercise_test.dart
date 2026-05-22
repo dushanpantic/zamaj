@@ -79,17 +79,11 @@ void main() {
     });
 
     test('leading-whitespace name throws ValidationError', () {
-      expect(
-        () => makeEntry(name: ' Bench'),
-        throwsA(isA<ValidationError>()),
-      );
+      expect(() => makeEntry(name: ' Bench'), throwsA(isA<ValidationError>()));
     });
 
     test('trailing-whitespace name throws ValidationError', () {
-      expect(
-        () => makeEntry(name: 'Bench '),
-        throwsA(isA<ValidationError>()),
-      );
+      expect(() => makeEntry(name: 'Bench '), throwsA(isA<ValidationError>()));
     });
 
     test('empty name throws ValidationError', () {

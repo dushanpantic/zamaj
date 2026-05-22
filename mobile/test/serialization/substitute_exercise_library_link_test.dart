@@ -19,13 +19,17 @@ void main() {
       );
 
       final json = original.toJson();
-      expect(json['libraryExerciseId'],
-          equals('11111111-1111-4111-8111-111111111111'));
+      expect(
+        json['libraryExerciseId'],
+        equals('11111111-1111-4111-8111-111111111111'),
+      );
 
       final restored = SubstituteExercise.fromJson(json);
       expect(restored, equals(original));
-      expect(restored.libraryExerciseId,
-          equals('11111111-1111-4111-8111-111111111111'));
+      expect(
+        restored.libraryExerciseId,
+        equals('11111111-1111-4111-8111-111111111111'),
+      );
     });
 
     test('round-trips with libraryExerciseId null', () {

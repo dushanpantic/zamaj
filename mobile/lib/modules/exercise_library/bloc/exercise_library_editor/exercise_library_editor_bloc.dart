@@ -61,7 +61,9 @@ class ExerciseLibraryEditorBloc
     final entry = await _repo.get(event.libraryExerciseId!);
     if (entry == null) {
       emit(
-        ExerciseLibraryEditorNotFound(libraryExerciseId: event.libraryExerciseId!),
+        ExerciseLibraryEditorNotFound(
+          libraryExerciseId: event.libraryExerciseId!,
+        ),
       );
       return;
     }

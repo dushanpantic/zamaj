@@ -205,6 +205,7 @@ class WorkoutOverviewBloc
       substitutePlannedValues: event.substitutePlannedValues,
       substituteSetCount: event.substituteSetCount,
       substituteMetadata: event.substituteMetadata,
+      substituteLibraryExerciseId: event.substituteLibraryExerciseId,
     ),
   );
 

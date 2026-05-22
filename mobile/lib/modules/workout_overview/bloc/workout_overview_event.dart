@@ -98,6 +98,7 @@ final class WorkoutOverviewExerciseReplaced extends WorkoutOverviewEvent {
     required this.substitutePlannedValues,
     required this.substituteSetCount,
     this.substituteMetadata,
+    this.substituteLibraryExerciseId,
   });
 
   final String sessionExerciseId;
@@ -106,6 +107,7 @@ final class WorkoutOverviewExerciseReplaced extends WorkoutOverviewEvent {
   final PlannedSetValues substitutePlannedValues;
   final int substituteSetCount;
   final ExerciseMetadata? substituteMetadata;
+  final String? substituteLibraryExerciseId;
 
   @override
   List<Object?> get props => [
@@ -115,6 +117,7 @@ final class WorkoutOverviewExerciseReplaced extends WorkoutOverviewEvent {
     substitutePlannedValues,
     substituteSetCount,
     substituteMetadata,
+    substituteLibraryExerciseId,
   ];
 }
 

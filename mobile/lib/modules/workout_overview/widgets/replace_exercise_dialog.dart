@@ -5,6 +5,46 @@ import 'package:zamaj/core/app_theme.dart';
 import 'package:zamaj/core/app_typography.dart';
 import 'package:zamaj/core/weight_formatter.dart';
 import 'package:zamaj/modules/domain/domain.dart';
+import 'package:zamaj/modules/exercise_library/widgets/library_picker_sheet.dart';
+
+Future<ReplaceExerciseResult?> presentReplaceFlow({
+  required BuildContext context,
+  required String plannedExerciseName,
+  required MeasurementType defaultMeasurementType,
+  required PlannedSetValues defaultPlannedValues,
+  required int defaultSetCount,
+}) async {
+  final picked = await LibraryPickerSheet.show(
+    context,
+    measurementType: defaultMeasurementType,
+    title: 'Replace with…',
+  );
+  if (!context.mounted) return null;
+  switch (picked) {
+    case LibraryPickerSelected(:final entry):
+      return ReplaceExerciseDialog.show(
+        context: context,
+        plannedExerciseName: plannedExerciseName,
+        defaultMeasurementType: entry.measurementType,
+        defaultPlannedValues: defaultPlannedValues,
+        defaultSetCount: defaultSetCount,
+        seedName: entry.name,
+        seedVideoUrl: entry.videoUrl,
+        seedLibraryExerciseId: entry.id,
+        lockMeasurementType: true,
+      );
+    case LibraryPickerCreateOneOff():
+      return ReplaceExerciseDialog.show(
+        context: context,
+        plannedExerciseName: plannedExerciseName,
+        defaultMeasurementType: defaultMeasurementType,
+        defaultPlannedValues: defaultPlannedValues,
+        defaultSetCount: defaultSetCount,
+      );
+    case null:
+      return null;
+  }
+}
 
 /// Defaults extracted from the original planned exercise to seed the
 /// replace-dialog's planned-values fields.
@@ -59,6 +99,7 @@ class ReplaceExerciseResult {
     required this.plannedValues,
     required this.setCount,
     this.metadata,
+    this.libraryExerciseId,
   });
 
   final String name;
@@ -66,11 +107,9 @@ class ReplaceExerciseResult {
   final PlannedSetValues plannedValues;
   final int setCount;
   final ExerciseMetadata? metadata;
+  final String? libraryExerciseId;
 }
 
-/// In-session substitution dialog. Asks for a substitute name, measurement
-/// type, planned values, set count, and optional notes; the template stays
-/// untouched.
 class ReplaceExerciseDialog extends StatefulWidget {
   const ReplaceExerciseDialog({
     super.key,
@@ -78,12 +117,20 @@ class ReplaceExerciseDialog extends StatefulWidget {
     required this.defaultMeasurementType,
     required this.defaultPlannedValues,
     required this.defaultSetCount,
+    this.seedName,
+    this.seedVideoUrl,
+    this.seedLibraryExerciseId,
+    this.lockMeasurementType = false,
   });
 
   final String plannedExerciseName;
   final MeasurementType defaultMeasurementType;
   final PlannedSetValues defaultPlannedValues;
   final int defaultSetCount;
+  final String? seedName;
+  final String? seedVideoUrl;
+  final String? seedLibraryExerciseId;
+  final bool lockMeasurementType;
 
   static Future<ReplaceExerciseResult?> show({
     required BuildContext context,
@@ -91,6 +138,10 @@ class ReplaceExerciseDialog extends StatefulWidget {
     required MeasurementType defaultMeasurementType,
     required PlannedSetValues defaultPlannedValues,
     required int defaultSetCount,
+    String? seedName,
+    String? seedVideoUrl,
+    String? seedLibraryExerciseId,
+    bool lockMeasurementType = false,
   }) {
     return showDialog<ReplaceExerciseResult>(
       context: context,
@@ -99,6 +150,10 @@ class ReplaceExerciseDialog extends StatefulWidget {
         defaultMeasurementType: defaultMeasurementType,
         defaultPlannedValues: defaultPlannedValues,
         defaultSetCount: defaultSetCount,
+        seedName: seedName,
+        seedVideoUrl: seedVideoUrl,
+        seedLibraryExerciseId: seedLibraryExerciseId,
+        lockMeasurementType: lockMeasurementType,
       ),
     );
   }
@@ -119,7 +174,7 @@ class _ReplaceExerciseDialogState extends State<ReplaceExerciseDialog> {
   @override
   void initState() {
     super.initState();
-    _name = TextEditingController();
+    _name = TextEditingController(text: widget.seedName ?? '');
     _notes = TextEditingController();
     _weight = TextEditingController();
     _reps = TextEditingController();
@@ -213,13 +268,22 @@ class _ReplaceExerciseDialogState extends State<ReplaceExerciseDialog> {
   void _submit() {
     if (!_canSubmit) return;
     final notes = _notes.text.trim();
+    final videoUrl = widget.seedVideoUrl;
+    ExerciseMetadata? metadata;
+    if (notes.isNotEmpty || videoUrl != null) {
+      metadata = ExerciseMetadata(
+        notes: notes.isEmpty ? null : notes,
+        videoUrl: videoUrl,
+      );
+    }
     Navigator.of(context).pop(
       ReplaceExerciseResult(
         name: _name.text.trim(),
         measurementType: _measurementType,
         plannedValues: _parsePlannedValues()!,
         setCount: _parseSetCount()!,
-        metadata: notes.isEmpty ? null : ExerciseMetadata(notes: notes),
+        metadata: metadata,
+        libraryExerciseId: widget.seedLibraryExerciseId,
       ),
     );
   }
@@ -305,13 +369,15 @@ class _ReplaceExerciseDialogState extends State<ReplaceExerciseDialog> {
                   BodyweightMeasurement() => 2,
                 },
               },
-              onSelectionChanged: (selection) {
-                _onMeasurementTypeChanged(switch (selection.first) {
-                  0 => const MeasurementType.repBased(),
-                  1 => const MeasurementType.timeBased(),
-                  _ => const MeasurementType.bodyweight(),
-                });
-              },
+              onSelectionChanged: widget.lockMeasurementType
+                  ? null
+                  : (selection) {
+                      _onMeasurementTypeChanged(switch (selection.first) {
+                        0 => const MeasurementType.repBased(),
+                        1 => const MeasurementType.timeBased(),
+                        _ => const MeasurementType.bodyweight(),
+                      });
+                    },
             ),
             const SizedBox(height: AppSpacing.lg),
             _PlannedFields(

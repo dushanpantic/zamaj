@@ -91,7 +91,7 @@ abstract class ProgramDraft with _$ProgramDraft {
       measurementType: exercise.measurementType,
       metadata: exercise.metadata,
       plannedRestSeconds: exercise.plannedRestSeconds,
-      libraryExerciseId: null,
+      libraryExerciseId: exercise.libraryExerciseId,
       position: position,
       sets: [
         for (var i = 0; i < exercise.sets.length; i++)
@@ -196,6 +196,7 @@ abstract class ExerciseDraft with _$ExerciseDraft {
     required ExerciseMetadata metadata,
     required int? plannedRestSeconds,
     required List<PlannedSetDraft> sets,
+    String? libraryExerciseId,
   }) = _ExerciseDraft;
 
   factory ExerciseDraft.fromJson(Map<String, dynamic> json) =>

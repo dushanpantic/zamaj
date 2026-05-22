@@ -578,6 +578,7 @@ class FocusModeBloc extends Bloc<FocusModeEvent, FocusModeState> {
         substitutePlannedValues: event.substitutePlannedValues,
         substituteSetCount: event.substituteSetCount,
         substituteMetadata: event.substituteMetadata,
+        substituteLibraryExerciseId: event.substituteLibraryExerciseId,
       );
       _stopRestTicker();
       // Drop the prior draft for the replaced exercise — its measurement

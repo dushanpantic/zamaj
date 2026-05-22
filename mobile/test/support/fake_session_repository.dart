@@ -355,6 +355,7 @@ class FakeSessionRepository implements SessionRepository {
     required PlannedSetValues substitutePlannedValues,
     required int substituteSetCount,
     ExerciseMetadata? substituteMetadata,
+    String? substituteLibraryExerciseId,
   }) async {
     final session = await getSessionByExerciseId(sessionExerciseId);
     final now = clock.now().toUtc();
@@ -369,6 +370,7 @@ class FakeSessionRepository implements SessionRepository {
             plannedValues: substitutePlannedValues,
             setCount: substituteSetCount,
             metadata: substituteMetadata,
+            libraryExerciseId: substituteLibraryExerciseId,
           ),
         ),
         updatedAt: now,

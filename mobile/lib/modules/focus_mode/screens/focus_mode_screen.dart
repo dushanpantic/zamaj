@@ -728,7 +728,7 @@ class _PanelActionsMenu extends StatelessWidget {
       session: state.sessionState.session,
     );
     if (defaults == null) return;
-    final result = await ReplaceExerciseDialog.show(
+    final result = await presentReplaceFlow(
       context: context,
       plannedExerciseName: panel.plannedExerciseName,
       defaultMeasurementType: panel.effectiveMeasurementType,
@@ -744,6 +744,7 @@ class _PanelActionsMenu extends StatelessWidget {
         substitutePlannedValues: result.plannedValues,
         substituteSetCount: result.setCount,
         substituteMetadata: result.metadata,
+        substituteLibraryExerciseId: result.libraryExerciseId,
       ),
     );
   }

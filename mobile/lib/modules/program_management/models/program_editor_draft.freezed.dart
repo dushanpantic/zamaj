@@ -849,7 +849,7 @@ as ExerciseGroupRole,
 /// @nodoc
 mixin _$ExerciseDraft {
 
- String get draftId; String? get persistedId; String get name; MeasurementType get measurementType; ExerciseMetadata get metadata; int? get plannedRestSeconds; List<PlannedSetDraft> get sets;
+ String get draftId; String? get persistedId; String get name; MeasurementType get measurementType; ExerciseMetadata get metadata; int? get plannedRestSeconds; List<PlannedSetDraft> get sets; String? get libraryExerciseId;
 /// Create a copy of ExerciseDraft
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -862,16 +862,16 @@ $ExerciseDraftCopyWith<ExerciseDraft> get copyWith => _$ExerciseDraftCopyWithImp
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is ExerciseDraft&&(identical(other.draftId, draftId) || other.draftId == draftId)&&(identical(other.persistedId, persistedId) || other.persistedId == persistedId)&&(identical(other.name, name) || other.name == name)&&(identical(other.measurementType, measurementType) || other.measurementType == measurementType)&&(identical(other.metadata, metadata) || other.metadata == metadata)&&(identical(other.plannedRestSeconds, plannedRestSeconds) || other.plannedRestSeconds == plannedRestSeconds)&&const DeepCollectionEquality().equals(other.sets, sets));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is ExerciseDraft&&(identical(other.draftId, draftId) || other.draftId == draftId)&&(identical(other.persistedId, persistedId) || other.persistedId == persistedId)&&(identical(other.name, name) || other.name == name)&&(identical(other.measurementType, measurementType) || other.measurementType == measurementType)&&(identical(other.metadata, metadata) || other.metadata == metadata)&&(identical(other.plannedRestSeconds, plannedRestSeconds) || other.plannedRestSeconds == plannedRestSeconds)&&const DeepCollectionEquality().equals(other.sets, sets)&&(identical(other.libraryExerciseId, libraryExerciseId) || other.libraryExerciseId == libraryExerciseId));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,draftId,persistedId,name,measurementType,metadata,plannedRestSeconds,const DeepCollectionEquality().hash(sets));
+int get hashCode => Object.hash(runtimeType,draftId,persistedId,name,measurementType,metadata,plannedRestSeconds,const DeepCollectionEquality().hash(sets),libraryExerciseId);
 
 @override
 String toString() {
-  return 'ExerciseDraft(draftId: $draftId, persistedId: $persistedId, name: $name, measurementType: $measurementType, metadata: $metadata, plannedRestSeconds: $plannedRestSeconds, sets: $sets)';
+  return 'ExerciseDraft(draftId: $draftId, persistedId: $persistedId, name: $name, measurementType: $measurementType, metadata: $metadata, plannedRestSeconds: $plannedRestSeconds, sets: $sets, libraryExerciseId: $libraryExerciseId)';
 }
 
 
@@ -882,7 +882,7 @@ abstract mixin class $ExerciseDraftCopyWith<$Res>  {
   factory $ExerciseDraftCopyWith(ExerciseDraft value, $Res Function(ExerciseDraft) _then) = _$ExerciseDraftCopyWithImpl;
 @useResult
 $Res call({
- String draftId, String? persistedId, String name, MeasurementType measurementType, ExerciseMetadata metadata, int? plannedRestSeconds, List<PlannedSetDraft> sets
+ String draftId, String? persistedId, String name, MeasurementType measurementType, ExerciseMetadata metadata, int? plannedRestSeconds, List<PlannedSetDraft> sets, String? libraryExerciseId
 });
 
 
@@ -899,7 +899,7 @@ class _$ExerciseDraftCopyWithImpl<$Res>
 
 /// Create a copy of ExerciseDraft
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? draftId = null,Object? persistedId = freezed,Object? name = null,Object? measurementType = null,Object? metadata = null,Object? plannedRestSeconds = freezed,Object? sets = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? draftId = null,Object? persistedId = freezed,Object? name = null,Object? measurementType = null,Object? metadata = null,Object? plannedRestSeconds = freezed,Object? sets = null,Object? libraryExerciseId = freezed,}) {
   return _then(_self.copyWith(
 draftId: null == draftId ? _self.draftId : draftId // ignore: cast_nullable_to_non_nullable
 as String,persistedId: freezed == persistedId ? _self.persistedId : persistedId // ignore: cast_nullable_to_non_nullable
@@ -908,7 +908,8 @@ as String,measurementType: null == measurementType ? _self.measurementType : mea
 as MeasurementType,metadata: null == metadata ? _self.metadata : metadata // ignore: cast_nullable_to_non_nullable
 as ExerciseMetadata,plannedRestSeconds: freezed == plannedRestSeconds ? _self.plannedRestSeconds : plannedRestSeconds // ignore: cast_nullable_to_non_nullable
 as int?,sets: null == sets ? _self.sets : sets // ignore: cast_nullable_to_non_nullable
-as List<PlannedSetDraft>,
+as List<PlannedSetDraft>,libraryExerciseId: freezed == libraryExerciseId ? _self.libraryExerciseId : libraryExerciseId // ignore: cast_nullable_to_non_nullable
+as String?,
   ));
 }
 /// Create a copy of ExerciseDraft
@@ -1011,10 +1012,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String draftId,  String? persistedId,  String name,  MeasurementType measurementType,  ExerciseMetadata metadata,  int? plannedRestSeconds,  List<PlannedSetDraft> sets)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String draftId,  String? persistedId,  String name,  MeasurementType measurementType,  ExerciseMetadata metadata,  int? plannedRestSeconds,  List<PlannedSetDraft> sets,  String? libraryExerciseId)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _ExerciseDraft() when $default != null:
-return $default(_that.draftId,_that.persistedId,_that.name,_that.measurementType,_that.metadata,_that.plannedRestSeconds,_that.sets);case _:
+return $default(_that.draftId,_that.persistedId,_that.name,_that.measurementType,_that.metadata,_that.plannedRestSeconds,_that.sets,_that.libraryExerciseId);case _:
   return orElse();
 
 }
@@ -1032,10 +1033,10 @@ return $default(_that.draftId,_that.persistedId,_that.name,_that.measurementType
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String draftId,  String? persistedId,  String name,  MeasurementType measurementType,  ExerciseMetadata metadata,  int? plannedRestSeconds,  List<PlannedSetDraft> sets)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String draftId,  String? persistedId,  String name,  MeasurementType measurementType,  ExerciseMetadata metadata,  int? plannedRestSeconds,  List<PlannedSetDraft> sets,  String? libraryExerciseId)  $default,) {final _that = this;
 switch (_that) {
 case _ExerciseDraft():
-return $default(_that.draftId,_that.persistedId,_that.name,_that.measurementType,_that.metadata,_that.plannedRestSeconds,_that.sets);case _:
+return $default(_that.draftId,_that.persistedId,_that.name,_that.measurementType,_that.metadata,_that.plannedRestSeconds,_that.sets,_that.libraryExerciseId);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -1052,10 +1053,10 @@ return $default(_that.draftId,_that.persistedId,_that.name,_that.measurementType
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String draftId,  String? persistedId,  String name,  MeasurementType measurementType,  ExerciseMetadata metadata,  int? plannedRestSeconds,  List<PlannedSetDraft> sets)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String draftId,  String? persistedId,  String name,  MeasurementType measurementType,  ExerciseMetadata metadata,  int? plannedRestSeconds,  List<PlannedSetDraft> sets,  String? libraryExerciseId)?  $default,) {final _that = this;
 switch (_that) {
 case _ExerciseDraft() when $default != null:
-return $default(_that.draftId,_that.persistedId,_that.name,_that.measurementType,_that.metadata,_that.plannedRestSeconds,_that.sets);case _:
+return $default(_that.draftId,_that.persistedId,_that.name,_that.measurementType,_that.metadata,_that.plannedRestSeconds,_that.sets,_that.libraryExerciseId);case _:
   return null;
 
 }
@@ -1067,7 +1068,7 @@ return $default(_that.draftId,_that.persistedId,_that.name,_that.measurementType
 @JsonSerializable()
 
 class _ExerciseDraft implements ExerciseDraft {
-  const _ExerciseDraft({required this.draftId, required this.persistedId, required this.name, required this.measurementType, required this.metadata, required this.plannedRestSeconds, required final  List<PlannedSetDraft> sets}): _sets = sets;
+  const _ExerciseDraft({required this.draftId, required this.persistedId, required this.name, required this.measurementType, required this.metadata, required this.plannedRestSeconds, required final  List<PlannedSetDraft> sets, this.libraryExerciseId}): _sets = sets;
   factory _ExerciseDraft.fromJson(Map<String, dynamic> json) => _$ExerciseDraftFromJson(json);
 
 @override final  String draftId;
@@ -1083,6 +1084,7 @@ class _ExerciseDraft implements ExerciseDraft {
   return EqualUnmodifiableListView(_sets);
 }
 
+@override final  String? libraryExerciseId;
 
 /// Create a copy of ExerciseDraft
 /// with the given fields replaced by the non-null parameter values.
@@ -1097,16 +1099,16 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _ExerciseDraft&&(identical(other.draftId, draftId) || other.draftId == draftId)&&(identical(other.persistedId, persistedId) || other.persistedId == persistedId)&&(identical(other.name, name) || other.name == name)&&(identical(other.measurementType, measurementType) || other.measurementType == measurementType)&&(identical(other.metadata, metadata) || other.metadata == metadata)&&(identical(other.plannedRestSeconds, plannedRestSeconds) || other.plannedRestSeconds == plannedRestSeconds)&&const DeepCollectionEquality().equals(other._sets, _sets));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _ExerciseDraft&&(identical(other.draftId, draftId) || other.draftId == draftId)&&(identical(other.persistedId, persistedId) || other.persistedId == persistedId)&&(identical(other.name, name) || other.name == name)&&(identical(other.measurementType, measurementType) || other.measurementType == measurementType)&&(identical(other.metadata, metadata) || other.metadata == metadata)&&(identical(other.plannedRestSeconds, plannedRestSeconds) || other.plannedRestSeconds == plannedRestSeconds)&&const DeepCollectionEquality().equals(other._sets, _sets)&&(identical(other.libraryExerciseId, libraryExerciseId) || other.libraryExerciseId == libraryExerciseId));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,draftId,persistedId,name,measurementType,metadata,plannedRestSeconds,const DeepCollectionEquality().hash(_sets));
+int get hashCode => Object.hash(runtimeType,draftId,persistedId,name,measurementType,metadata,plannedRestSeconds,const DeepCollectionEquality().hash(_sets),libraryExerciseId);
 
 @override
 String toString() {
-  return 'ExerciseDraft(draftId: $draftId, persistedId: $persistedId, name: $name, measurementType: $measurementType, metadata: $metadata, plannedRestSeconds: $plannedRestSeconds, sets: $sets)';
+  return 'ExerciseDraft(draftId: $draftId, persistedId: $persistedId, name: $name, measurementType: $measurementType, metadata: $metadata, plannedRestSeconds: $plannedRestSeconds, sets: $sets, libraryExerciseId: $libraryExerciseId)';
 }
 
 
@@ -1117,7 +1119,7 @@ abstract mixin class _$ExerciseDraftCopyWith<$Res> implements $ExerciseDraftCopy
   factory _$ExerciseDraftCopyWith(_ExerciseDraft value, $Res Function(_ExerciseDraft) _then) = __$ExerciseDraftCopyWithImpl;
 @override @useResult
 $Res call({
- String draftId, String? persistedId, String name, MeasurementType measurementType, ExerciseMetadata metadata, int? plannedRestSeconds, List<PlannedSetDraft> sets
+ String draftId, String? persistedId, String name, MeasurementType measurementType, ExerciseMetadata metadata, int? plannedRestSeconds, List<PlannedSetDraft> sets, String? libraryExerciseId
 });
 
 
@@ -1134,7 +1136,7 @@ class __$ExerciseDraftCopyWithImpl<$Res>
 
 /// Create a copy of ExerciseDraft
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? draftId = null,Object? persistedId = freezed,Object? name = null,Object? measurementType = null,Object? metadata = null,Object? plannedRestSeconds = freezed,Object? sets = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? draftId = null,Object? persistedId = freezed,Object? name = null,Object? measurementType = null,Object? metadata = null,Object? plannedRestSeconds = freezed,Object? sets = null,Object? libraryExerciseId = freezed,}) {
   return _then(_ExerciseDraft(
 draftId: null == draftId ? _self.draftId : draftId // ignore: cast_nullable_to_non_nullable
 as String,persistedId: freezed == persistedId ? _self.persistedId : persistedId // ignore: cast_nullable_to_non_nullable
@@ -1143,7 +1145,8 @@ as String,measurementType: null == measurementType ? _self.measurementType : mea
 as MeasurementType,metadata: null == metadata ? _self.metadata : metadata // ignore: cast_nullable_to_non_nullable
 as ExerciseMetadata,plannedRestSeconds: freezed == plannedRestSeconds ? _self.plannedRestSeconds : plannedRestSeconds // ignore: cast_nullable_to_non_nullable
 as int?,sets: null == sets ? _self._sets : sets // ignore: cast_nullable_to_non_nullable
-as List<PlannedSetDraft>,
+as List<PlannedSetDraft>,libraryExerciseId: freezed == libraryExerciseId ? _self.libraryExerciseId : libraryExerciseId // ignore: cast_nullable_to_non_nullable
+as String?,
   ));
 }
 

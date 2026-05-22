@@ -30,6 +30,8 @@ class ExerciseEditorBloc
     on<PlannedSetRepsChanged>(_onPlannedSetRepsChanged);
     on<PlannedSetDurationChanged>(_onPlannedSetDurationChanged);
     on<ExerciseSavePressed>(_onSavePressed);
+    on<ExerciseLibraryLinked>(_onLibraryLinked);
+    on<ExerciseLibraryUnlinked>(_onLibraryUnlinked);
   }
 
   final ProgramRepository _programRepository;
@@ -360,6 +362,7 @@ class ExerciseEditorBloc
           videoUrl: _nullIfBlank(current.draft.metadata.videoUrl),
         ),
         plannedRestSeconds: plannedRestSeconds,
+        libraryExerciseId: current.draft.libraryExerciseId,
         sets: sets,
         createdAt: baseline.createdAt,
         updatedAt: baseline.updatedAt,
@@ -378,6 +381,36 @@ class ExerciseEditorBloc
     }
   }
 
+  Future<void> _onLibraryLinked(
+    ExerciseLibraryLinked event,
+    Emitter<ExerciseEditorState> emit,
+  ) async {
+    final current = state;
+    if (current is! ExerciseEditorEditing) return;
+    var draft = current.draft.copyWith(
+      libraryExerciseId: event.libraryExerciseId,
+    );
+    if (event.overwriteNameAndVideo) {
+      draft = draft.copyWith(
+        name: event.libraryName,
+        metadata: draft.metadata.copyWith(videoUrl: event.libraryVideoUrl),
+      );
+    }
+    final validation = _computeValidation(draft);
+    emit(current.copyWith(draft: draft, validation: validation));
+  }
+
+  Future<void> _onLibraryUnlinked(
+    ExerciseLibraryUnlinked event,
+    Emitter<ExerciseEditorState> emit,
+  ) async {
+    final current = state;
+    if (current is! ExerciseEditorEditing) return;
+    final draft = current.draft.copyWith(libraryExerciseId: null);
+    final validation = _computeValidation(draft);
+    emit(current.copyWith(draft: draft, validation: validation));
+  }
+
   ExerciseDraft _exerciseToDraft(Exercise exercise) {
     return ExerciseDraft(
       draftId: _uuid.v4(),
@@ -386,6 +419,7 @@ class ExerciseEditorBloc
       measurementType: exercise.measurementType,
       metadata: exercise.metadata,
       plannedRestSeconds: exercise.plannedRestSeconds,
+      libraryExerciseId: exercise.libraryExerciseId,
       sets: exercise.sets.map(_setToDraft).toList(),
     );
   }

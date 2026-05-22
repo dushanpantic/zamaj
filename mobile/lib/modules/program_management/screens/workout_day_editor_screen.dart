@@ -7,6 +7,7 @@ import 'package:zamaj/core/app_typography.dart';
 import 'package:zamaj/core/rest_formatter.dart';
 import 'package:zamaj/core/weight_formatter.dart';
 import 'package:zamaj/modules/domain/domain.dart';
+import 'package:zamaj/modules/exercise_library/widgets/library_picker_sheet.dart';
 import 'package:zamaj/modules/program_management/bloc/workout_day_editor/workout_day_editor_bloc.dart';
 import 'package:zamaj/modules/program_management/bloc/workout_day_editor/workout_day_editor_event.dart';
 import 'package:zamaj/modules/program_management/bloc/workout_day_editor/workout_day_editor_state.dart';
@@ -221,9 +222,7 @@ class _EditingBody extends StatelessWidget {
           IconButton(
             icon: Icon(Icons.add, color: colors.primary),
             tooltip: 'Add exercise',
-            onPressed: isSaving
-                ? null
-                : () => _showAddExerciseDialog(context, bloc),
+            onPressed: isSaving ? null : () => _startAddExercise(context, bloc),
           ),
         ],
       ),
@@ -236,11 +235,23 @@ class _EditingBody extends StatelessWidget {
     );
   }
 
-  void _showAddExerciseDialog(BuildContext context, WorkoutDayEditorBloc bloc) {
-    showDialog<void>(
-      context: context,
-      builder: (_) => _AddExerciseDialog(bloc: bloc),
-    );
+  Future<void> _startAddExercise(
+    BuildContext context,
+    WorkoutDayEditorBloc bloc,
+  ) async {
+    final result = await LibraryPickerSheet.show(context);
+    if (!context.mounted) return;
+    switch (result) {
+      case LibraryPickerSelected(:final entry):
+        bloc.add(LibraryExerciseAddedAsNew(entry: entry));
+      case LibraryPickerCreateOneOff():
+        await showDialog<void>(
+          context: context,
+          builder: (_) => _AddExerciseDialog(bloc: bloc),
+        );
+      case null:
+        return;
+    }
   }
 }
 

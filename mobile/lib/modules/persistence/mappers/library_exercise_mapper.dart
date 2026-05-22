@@ -19,10 +19,7 @@ class LibraryExerciseMapper {
       cues: row.cues,
       archivedAt: row.archivedAtMs == null
           ? null
-          : DateTime.fromMillisecondsSinceEpoch(
-              row.archivedAtMs!,
-              isUtc: true,
-            ),
+          : DateTime.fromMillisecondsSinceEpoch(row.archivedAtMs!, isUtc: true),
       createdAt: DateTime.fromMillisecondsSinceEpoch(
         row.createdAtMs,
         isUtc: true,

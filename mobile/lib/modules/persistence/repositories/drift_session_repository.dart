@@ -656,6 +656,7 @@ class DriftSessionRepository implements SessionRepository {
     required PlannedSetValues substitutePlannedValues,
     required int substituteSetCount,
     ExerciseMetadata? substituteMetadata,
+    String? substituteLibraryExerciseId,
   }) async {
     return _db.transaction(() async {
       final exerciseRow = await _requireSessionExerciseRow(sessionExerciseId);
@@ -667,6 +668,7 @@ class DriftSessionRepository implements SessionRepository {
         plannedValues: substitutePlannedValues,
         setCount: substituteSetCount,
         metadata: substituteMetadata,
+        libraryExerciseId: substituteLibraryExerciseId,
       );
       final substituteJson = CanonicalJson.encode(substitute.toJson());
 
@@ -753,9 +755,7 @@ class DriftSessionRepository implements SessionRepository {
         await (_db.update(
           _db.sessionExercises,
         )..where((t) => t.id.equals(mover.id))).write(
-          SessionExercisesCompanion(
-            position: Value(-1 - mover.row.position),
-          ),
+          SessionExercisesCompanion(position: Value(-1 - mover.row.position)),
         );
       }
       for (final mover in movers) {

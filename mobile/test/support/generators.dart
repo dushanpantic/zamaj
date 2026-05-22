@@ -85,9 +85,7 @@ LibraryExercise anyLibraryExercise(Random rng) {
     id: anyUuidV4(rng),
     name: _anyTrimmedNonEmptyString(rng, maxLen: 40),
     measurementType: anyMeasurementType(rng),
-    videoUrl: rng.nextBool()
-        ? 'https://example.com/${anyUuidV4(rng)}'
-        : null,
+    videoUrl: rng.nextBool() ? 'https://example.com/${anyUuidV4(rng)}' : null,
     cues: rng.nextBool() ? _anyString(rng, maxLen: 200) : null,
     archivedAt: rng.nextBool() ? anyUtcDateTime(rng) : null,
     createdAt: anyUtcDateTime(rng),

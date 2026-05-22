@@ -57,7 +57,9 @@ final class LibraryExerciseDraftValidation extends Equatable {
         ? true
         : ProgramValidation.validateVideoUrl(draft.videoUrl) is Valid<Uri?>;
     final cuesTrimmed = draft.cues.trim();
-    final areCuesValid = cuesTrimmed.isEmpty ? true : cuesTrimmed.length <= 2000;
+    final areCuesValid = cuesTrimmed.isEmpty
+        ? true
+        : cuesTrimmed.length <= 2000;
     return LibraryExerciseDraftValidation(
       isNameValid: isNameValid,
       isVideoUrlValid: isVideoUrlValid,

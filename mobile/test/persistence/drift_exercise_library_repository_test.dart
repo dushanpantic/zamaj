@@ -198,28 +198,27 @@ void main() {
       );
     });
 
-    test('refreshes nameLower so subsequent queries find the new name',
-        () async {
-      final created = await repo.create(
-        name: 'Old Name',
-        measurementType: const MeasurementType.repBased(),
-      );
-      await repo.update(created.copyWith(name: 'Different Name'));
+    test(
+      'refreshes nameLower so subsequent queries find the new name',
+      () async {
+        final created = await repo.create(
+          name: 'Old Name',
+          measurementType: const MeasurementType.repBased(),
+        );
+        await repo.update(created.copyWith(name: 'Different Name'));
 
-      final byOld = await repo.findByNormalizedName('Old Name');
-      expect(byOld, isNull);
-      final byNew = await repo.findByNormalizedName('different NAME');
-      expect(byNew?.id, equals(created.id));
-    });
+        final byOld = await repo.findByNormalizedName('Old Name');
+        expect(byOld, isNull);
+        final byNew = await repo.findByNormalizedName('different NAME');
+        expect(byNew?.id, equals(created.id));
+      },
+    );
 
     test('throws NotFoundError for an unknown id', () async {
-      final phantom = anyLibraryExercise(Random(0)).copyWith(
-        id: '00000000-0000-4000-8000-000000000000',
-      );
-      expect(
-        () => repo.update(phantom),
-        throwsA(isA<NotFoundError>()),
-      );
+      final phantom = anyLibraryExercise(
+        Random(0),
+      ).copyWith(id: '00000000-0000-4000-8000-000000000000');
+      expect(() => repo.update(phantom), throwsA(isA<NotFoundError>()));
     });
   });
 
@@ -340,8 +339,11 @@ void main() {
       )..where((t) => t.id.equals(entry.id))).go();
 
       final orphaned = await programRepo.getExercise(exercise.id);
-      expect(orphaned!.libraryExerciseId, isNull,
-          reason: 'onDelete: setNull should null the FK, not cascade');
+      expect(
+        orphaned!.libraryExerciseId,
+        isNull,
+        reason: 'onDelete: setNull should null the FK, not cascade',
+      );
     });
   });
 }

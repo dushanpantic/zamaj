@@ -117,6 +117,10 @@ _ExerciseDraft _$ExerciseDraftFromJson(Map<String, dynamic> json) =>
               .map((e) => PlannedSetDraft.fromJson(e as Map<String, dynamic>))
               .toList(),
         ),
+        libraryExerciseId: $checkedConvert(
+          'libraryExerciseId',
+          (v) => v as String?,
+        ),
       );
       return val;
     });
@@ -130,6 +134,7 @@ Map<String, dynamic> _$ExerciseDraftToJson(_ExerciseDraft instance) =>
       'metadata': instance.metadata.toJson(),
       'plannedRestSeconds': ?instance.plannedRestSeconds,
       'sets': instance.sets.map((e) => e.toJson()).toList(),
+      'libraryExerciseId': ?instance.libraryExerciseId,
     };
 
 _PlannedSetDraft _$PlannedSetDraftFromJson(Map<String, dynamic> json) =>

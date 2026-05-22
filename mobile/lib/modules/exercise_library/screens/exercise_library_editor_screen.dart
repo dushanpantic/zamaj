@@ -370,7 +370,8 @@ class _EditorBody extends StatelessWidget {
                   decoration: InputDecoration(
                     labelText: 'Name',
                     errorText:
-                        !validation.isNameValid && nameController.text.isNotEmpty
+                        !validation.isNameValid &&
+                            nameController.text.isNotEmpty
                         ? 'Name must be 1–80 characters'
                         : null,
                   ),

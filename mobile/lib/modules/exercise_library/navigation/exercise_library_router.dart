@@ -17,8 +17,8 @@ abstract final class ExerciseLibraryRouter {
         settings: settings,
         builder: (context) => BlocProvider(
           create: (_) => ExerciseLibraryListBloc(
-            exerciseLibraryRepository:
-                context.read<ExerciseLibraryRepository>(),
+            exerciseLibraryRepository: context
+                .read<ExerciseLibraryRepository>(),
           ),
           child: const ExerciseLibraryListScreen(),
         ),
@@ -29,8 +29,8 @@ abstract final class ExerciseLibraryRouter {
           final args = settings.arguments as ExerciseLibraryEditorArgs?;
           return BlocProvider(
             create: (_) => ExerciseLibraryEditorBloc(
-              exerciseLibraryRepository:
-                  context.read<ExerciseLibraryRepository>(),
+              exerciseLibraryRepository: context
+                  .read<ExerciseLibraryRepository>(),
             ),
             child: ExerciseLibraryEditorScreen(
               args: args ?? const ExerciseLibraryEditorArgs(),
@@ -43,8 +43,8 @@ abstract final class ExerciseLibraryRouter {
         builder: (context) => BlocProvider(
           create: (_) => LinkSuggestionBloc(
             programRepository: context.read<ProgramRepository>(),
-            exerciseLibraryRepository:
-                context.read<ExerciseLibraryRepository>(),
+            exerciseLibraryRepository: context
+                .read<ExerciseLibraryRepository>(),
           ),
           child: const LinkSuggestionScreen(),
         ),

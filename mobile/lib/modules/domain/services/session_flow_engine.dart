@@ -104,6 +104,7 @@ class SessionFlowEngine {
     required PlannedSetValues substitutePlannedValues,
     required int substituteSetCount,
     ExerciseMetadata? substituteMetadata,
+    String? substituteLibraryExerciseId,
   }) async {
     final session = await _repository.getSessionByExerciseId(sessionExerciseId);
     final exercise = session.sessionExercises.firstWhere(
@@ -117,6 +118,7 @@ class SessionFlowEngine {
       substitutePlannedValues: substitutePlannedValues,
       substituteSetCount: substituteSetCount,
       substituteMetadata: substituteMetadata,
+      substituteLibraryExerciseId: substituteLibraryExerciseId,
     );
     return _buildState(updatedSession);
   }

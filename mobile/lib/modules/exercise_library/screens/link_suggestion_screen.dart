@@ -138,8 +138,7 @@ class _LoadedView extends StatelessWidget {
               final cluster = clusters[index];
               return _ClusterCard(
                 cluster: cluster,
-                isApplying:
-                    cluster.normalizedName == applyingNormalizedName,
+                isApplying: cluster.normalizedName == applyingNormalizedName,
                 onAccept: () => context.read<LinkSuggestionBloc>().add(
                   LinkSuggestionClusterAccepted(
                     normalizedName: cluster.normalizedName,

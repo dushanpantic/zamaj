@@ -136,3 +136,35 @@ final class ExerciseSavePressed extends ExerciseEditorEvent {
   @override
   List<Object?> get props => [];
 }
+
+/// Links the exercise to a library entry. When [overwriteNameAndVideo] is true
+/// the draft's `name` and `metadata.videoUrl` are replaced with the library
+/// entry's values. `metadata.notes` is never touched (day-specific).
+final class ExerciseLibraryLinked extends ExerciseEditorEvent {
+  const ExerciseLibraryLinked({
+    required this.libraryExerciseId,
+    required this.libraryName,
+    required this.libraryVideoUrl,
+    required this.overwriteNameAndVideo,
+  });
+
+  final String libraryExerciseId;
+  final String libraryName;
+  final String? libraryVideoUrl;
+  final bool overwriteNameAndVideo;
+
+  @override
+  List<Object?> get props => [
+    libraryExerciseId,
+    libraryName,
+    libraryVideoUrl,
+    overwriteNameAndVideo,
+  ];
+}
+
+final class ExerciseLibraryUnlinked extends ExerciseEditorEvent {
+  const ExerciseLibraryUnlinked();
+
+  @override
+  List<Object?> get props => [];
+}

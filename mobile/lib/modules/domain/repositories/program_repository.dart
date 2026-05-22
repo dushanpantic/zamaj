@@ -55,6 +55,7 @@ abstract class ProgramRepository {
     required MeasurementType measurementType,
     ExerciseMetadata metadata = ExerciseMetadata.empty,
     int? plannedRestSeconds,
+    String? libraryExerciseId,
   });
   Future<Exercise?> getExercise(String exerciseId);
   Future<Exercise> updateExercise(Exercise exercise);

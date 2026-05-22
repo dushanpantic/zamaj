@@ -78,9 +78,7 @@ class DriftExerciseLibraryRepository implements ExerciseLibraryRepository {
 
     if (measurementType != null) {
       final discriminator = measurementType.toJson()['type'] as String;
-      query.where(
-        (t) => t.measurementTypeDiscriminator.equals(discriminator),
-      );
+      query.where((t) => t.measurementTypeDiscriminator.equals(discriminator));
     }
 
     if (nameQuery != null && nameQuery.trim().isNotEmpty) {

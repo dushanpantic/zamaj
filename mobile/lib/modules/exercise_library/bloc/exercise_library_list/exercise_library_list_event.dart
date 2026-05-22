@@ -29,7 +29,9 @@ final class ExerciseLibraryListSearchChanged extends ExerciseLibraryListEvent {
 
 final class ExerciseLibraryListIncludeArchivedToggled
     extends ExerciseLibraryListEvent {
-  const ExerciseLibraryListIncludeArchivedToggled({required this.includeArchived});
+  const ExerciseLibraryListIncludeArchivedToggled({
+    required this.includeArchived,
+  });
 
   final bool includeArchived;
 
@@ -49,7 +51,9 @@ final class ExerciseLibraryListArchiveRequested
 
 final class ExerciseLibraryListUnarchiveRequested
     extends ExerciseLibraryListEvent {
-  const ExerciseLibraryListUnarchiveRequested({required this.libraryExerciseId});
+  const ExerciseLibraryListUnarchiveRequested({
+    required this.libraryExerciseId,
+  });
 
   final String libraryExerciseId;
 
@@ -57,8 +61,7 @@ final class ExerciseLibraryListUnarchiveRequested
   List<Object?> get props => [libraryExerciseId];
 }
 
-final class ExerciseLibraryListRetryRequested
-    extends ExerciseLibraryListEvent {
+final class ExerciseLibraryListRetryRequested extends ExerciseLibraryListEvent {
   const ExerciseLibraryListRetryRequested();
 
   @override

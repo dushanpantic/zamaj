@@ -95,9 +95,7 @@ class _ClusterBuilder {
     if (exerciseName.length > _suggestedName.length) {
       _suggestedName = exerciseName;
     }
-    if (_suggestedVideoUrl == null &&
-        videoUrl != null &&
-        videoUrl.isNotEmpty) {
+    if (_suggestedVideoUrl == null && videoUrl != null && videoUrl.isNotEmpty) {
       _suggestedVideoUrl = videoUrl;
     }
   }

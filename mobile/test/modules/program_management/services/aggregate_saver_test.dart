@@ -88,6 +88,7 @@ class _ThrowingProgramRepository implements ProgramRepository {
     required MeasurementType measurementType,
     ExerciseMetadata metadata = ExerciseMetadata.empty,
     int? plannedRestSeconds,
+    String? libraryExerciseId,
   }) => throw UnimplementedError();
 
   @override

@@ -74,9 +74,11 @@ class Exercises extends Table {
   TextColumn get notes => text().nullable()();
   TextColumn get videoUrl => text().nullable()();
   IntColumn get plannedRestSeconds => integer().nullable()();
-  TextColumn get libraryExerciseId => text()
-      .nullable()
-      .references(LibraryExercises, #id, onDelete: KeyAction.setNull)();
+  TextColumn get libraryExerciseId => text().nullable().references(
+    LibraryExercises,
+    #id,
+    onDelete: KeyAction.setNull,
+  )();
   IntColumn get createdAtMs => integer()();
   IntColumn get updatedAtMs => integer()();
   IntColumn get schemaVersion => integer()();

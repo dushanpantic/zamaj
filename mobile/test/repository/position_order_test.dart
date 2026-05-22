@@ -375,8 +375,7 @@ void main() {
             expect(
               byId[reversed[i]]!.position,
               equals(originalSlots[i]),
-              reason:
-                  'Reversed id at index $i should occupy ascending slot $i',
+              reason: 'Reversed id at index $i should occupy ascending slot $i',
             );
           }
           final positions = after.sessionExercises

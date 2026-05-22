@@ -97,10 +97,10 @@ void main() {
         expect(cluster.suggestedName, 'BB Bench Press (long bar)');
         expect(cluster.measurementType, const MeasurementType.repBased());
         expect(cluster.occurrenceCount, 2);
-        expect(
-          cluster.occurrences.map((o) => o.programName).toSet(),
-          {'PPL', 'Upper/Lower'},
-        );
+        expect(cluster.occurrences.map((o) => o.programName).toSet(), {
+          'PPL',
+          'Upper/Lower',
+        });
       },
     );
 
@@ -219,50 +219,50 @@ void main() {
       expect(clusters.map((c) => c.suggestedName), ['Bench', 'Apple']);
     });
 
-    test(
-      'suggestedVideoUrl picks the first non-null videoUrl seen',
-      () {
-        final programs = [
-          _program(
-            id: 'p1',
-            name: 'P1',
-            days: [
-              _day(
-                id: 'd1',
-                programId: 'p1',
-                name: 'D1',
-                groups: [
-                  _singleGroup(
-                    id: 'g1',
-                    dayId: 'd1',
-                    exercise: _exercise(
-                      id: 'e1',
-                      groupId: 'g1',
-                      name: 'Squat',
-                      measurementType: const MeasurementType.repBased(),
-                    ),
+    test('suggestedVideoUrl picks the first non-null videoUrl seen', () {
+      final programs = [
+        _program(
+          id: 'p1',
+          name: 'P1',
+          days: [
+            _day(
+              id: 'd1',
+              programId: 'p1',
+              name: 'D1',
+              groups: [
+                _singleGroup(
+                  id: 'g1',
+                  dayId: 'd1',
+                  exercise: _exercise(
+                    id: 'e1',
+                    groupId: 'g1',
+                    name: 'Squat',
+                    measurementType: const MeasurementType.repBased(),
                   ),
-                  _singleGroup(
-                    id: 'g2',
-                    dayId: 'd1',
-                    exercise: _exercise(
-                      id: 'e2',
-                      groupId: 'g2',
-                      name: 'Squat',
-                      measurementType: const MeasurementType.repBased(),
-                      videoUrl: 'https://example.com/squat.mp4',
-                    ),
+                ),
+                _singleGroup(
+                  id: 'g2',
+                  dayId: 'd1',
+                  exercise: _exercise(
+                    id: 'e2',
+                    groupId: 'g2',
+                    name: 'Squat',
+                    measurementType: const MeasurementType.repBased(),
+                    videoUrl: 'https://example.com/squat.mp4',
                   ),
-                ],
-              ),
-            ],
-          ),
-        ];
+                ),
+              ],
+            ),
+          ],
+        ),
+      ];
 
-        final clusters = suggester.suggest(programs);
-        expect(clusters.single.suggestedVideoUrl, 'https://example.com/squat.mp4');
-      },
-    );
+      final clusters = suggester.suggest(programs);
+      expect(
+        clusters.single.suggestedVideoUrl,
+        'https://example.com/squat.mp4',
+      );
+    });
 
     test('chooses the longest variant as suggested name', () {
       final programs = [

@@ -35,19 +35,27 @@ void main() {
               variables: [const Variable<String>('library_exercises')],
             )
             .get();
-        expect(tableInfo, isNotEmpty,
-            reason: 'library_exercises table should be created');
+        expect(
+          tableInfo,
+          isNotEmpty,
+          reason: 'library_exercises table should be created',
+        );
 
         // The new column exists on exercises and is nullable.
-        final exerciseCols =
-            await migratedDb.customSelect("PRAGMA table_info('exercises')").get();
+        final exerciseCols = await migratedDb
+            .customSelect("PRAGMA table_info('exercises')")
+            .get();
         final libCol = exerciseCols.firstWhere(
           (r) => r.read<String>('name') == 'library_exercise_id',
           orElse: () => throw StateError(
-              'library_exercise_id column should exist on exercises'),
+            'library_exercise_id column should exist on exercises',
+          ),
         );
-        expect(libCol.read<int>('notnull'), equals(0),
-            reason: 'library_exercise_id must be nullable');
+        expect(
+          libCol.read<int>('notnull'),
+          equals(0),
+          reason: 'library_exercise_id must be nullable',
+        );
 
         // The covering index on library_exercises.name_lower exists.
         final indexInfo = await migratedDb
@@ -58,14 +66,15 @@ void main() {
               ],
             )
             .get();
-        expect(indexInfo, isNotEmpty,
-            reason: 'library_exercises_name_lower index should be created');
+        expect(
+          indexInfo,
+          isNotEmpty,
+          reason: 'library_exercises_name_lower index should be created',
+        );
 
         // Existing exercise row survived the migration and has NULL FK.
         final exerciseRows = await migratedDb
-            .customSelect(
-              'SELECT id, library_exercise_id FROM exercises',
-            )
+            .customSelect('SELECT id, library_exercise_id FROM exercises')
             .get();
         expect(exerciseRows.length, equals(1));
         expect(
@@ -255,20 +264,17 @@ void _seedExercise(raw.Database db) {
     wdId,
     0,
   ]);
-  db.execute(
-    'INSERT INTO exercise_groups VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
-    [
-      egId,
-      wdId,
-      0,
-      'single',
-      '{"type":"single"}',
-      'main',
-      _ts,
-      _ts,
-      7,
-    ],
-  );
+  db.execute('INSERT INTO exercise_groups VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)', [
+    egId,
+    wdId,
+    0,
+    'single',
+    '{"type":"single"}',
+    'main',
+    _ts,
+    _ts,
+    7,
+  ]);
   db.execute(
     'INSERT INTO exercises VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
     [

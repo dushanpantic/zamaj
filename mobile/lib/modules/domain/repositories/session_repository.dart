@@ -84,6 +84,7 @@ abstract class SessionRepository {
     required PlannedSetValues substitutePlannedValues,
     required int substituteSetCount,
     ExerciseMetadata? substituteMetadata,
+    String? substituteLibraryExerciseId,
   });
 
   /// Reorders unfinished [SessionExercise]s only. Throws [OrderingError] if

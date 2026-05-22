@@ -260,8 +260,7 @@ class _LoadedView extends StatelessWidget {
   Widget build(BuildContext context) {
     final colors = Theme.of(context).appColors;
     const typography = AppTypography.standard;
-    final isFilterActive =
-        searchQuery.trim().isNotEmpty || includeArchived;
+    final isFilterActive = searchQuery.trim().isNotEmpty || includeArchived;
 
     return Column(
       children: [

@@ -56,7 +56,7 @@ class _WorkoutOverviewScreenState extends State<WorkoutOverviewScreen> {
       session: state.sessionState.session,
     );
     if (defaults == null) return;
-    final result = await ReplaceExerciseDialog.show(
+    final result = await presentReplaceFlow(
       context: context,
       plannedExerciseName: viewModel.plannedExerciseName,
       defaultMeasurementType: viewModel.effectiveMeasurementType,
@@ -72,6 +72,7 @@ class _WorkoutOverviewScreenState extends State<WorkoutOverviewScreen> {
         substitutePlannedValues: result.plannedValues,
         substituteSetCount: result.setCount,
         substituteMetadata: result.metadata,
+        substituteLibraryExerciseId: result.libraryExerciseId,
       ),
     );
   }

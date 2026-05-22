@@ -481,6 +481,7 @@ class DriftProgramRepository implements ProgramRepository {
     required MeasurementType measurementType,
     ExerciseMetadata metadata = ExerciseMetadata.empty,
     int? plannedRestSeconds,
+    String? libraryExerciseId,
   }) async {
     return _db.transaction(() async {
       final groupRow = await (_db.select(
@@ -508,6 +509,7 @@ class DriftProgramRepository implements ProgramRepository {
               notes: Value(metadata.notes),
               videoUrl: Value(metadata.videoUrl),
               plannedRestSeconds: Value(plannedRestSeconds),
+              libraryExerciseId: Value(libraryExerciseId),
               createdAtMs: utcToMs(now),
               updatedAtMs: utcToMs(now),
               schemaVersion: SchemaVersions.domain,

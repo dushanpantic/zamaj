@@ -1,5 +1,5 @@
 import 'package:equatable/equatable.dart';
-import 'package:zamaj/modules/domain/models/exercise_group_role.dart';
+import 'package:zamaj/modules/domain/domain.dart';
 
 sealed class WorkoutDayEditorEvent extends Equatable {
   const WorkoutDayEditorEvent();
@@ -37,6 +37,15 @@ final class QuickExerciseAdded extends WorkoutDayEditorEvent {
 
   @override
   List<Object?> get props => [exerciseName];
+}
+
+final class LibraryExerciseAddedAsNew extends WorkoutDayEditorEvent {
+  const LibraryExerciseAddedAsNew({required this.entry});
+
+  final LibraryExercise entry;
+
+  @override
+  List<Object?> get props => [entry];
 }
 
 final class ExerciseGroupDeleted extends WorkoutDayEditorEvent {

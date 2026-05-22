@@ -28,7 +28,9 @@ void main() {
   });
 
   Future<domain.Exercise> makePlainExercise(Random rng, {String? name}) async {
-    final program = await programRepo.createProgram(name: 'P${rng.nextInt(99)}');
+    final program = await programRepo.createProgram(
+      name: 'P${rng.nextInt(99)}',
+    );
     final day = await programRepo.createWorkoutDay(
       programId: program.id,
       name: 'D',
@@ -55,25 +57,27 @@ void main() {
   }
 
   group('Exercise.libraryExerciseId persistence', () {
-    test('round-trips a libraryExerciseId set on a template Exercise',
-        () async {
-      final rng = Random(1);
-      final entry = await libraryRepo.create(
-        name: 'BB Bench Press',
-        measurementType: const MeasurementType.repBased(),
-      );
+    test(
+      'round-trips a libraryExerciseId set on a template Exercise',
+      () async {
+        final rng = Random(1);
+        final entry = await libraryRepo.create(
+          name: 'BB Bench Press',
+          measurementType: const MeasurementType.repBased(),
+        );
 
-      final exercise = await makePlainExercise(rng);
-      expect(exercise.libraryExerciseId, isNull);
+        final exercise = await makePlainExercise(rng);
+        expect(exercise.libraryExerciseId, isNull);
 
-      await programRepo.updateExercise(
-        exercise.copyWith(libraryExerciseId: entry.id),
-      );
+        await programRepo.updateExercise(
+          exercise.copyWith(libraryExerciseId: entry.id),
+        );
 
-      final reloaded = await programRepo.getExercise(exercise.id);
-      expect(reloaded, isNotNull);
-      expect(reloaded!.libraryExerciseId, equals(entry.id));
-    });
+        final reloaded = await programRepo.getExercise(exercise.id);
+        expect(reloaded, isNotNull);
+        expect(reloaded!.libraryExerciseId, equals(entry.id));
+      },
+    );
 
     test('unlink (set libraryExerciseId back to null) round-trips', () async {
       final rng = Random(2);
@@ -112,8 +116,11 @@ void main() {
 
       final reloaded = await programRepo.getExercise(exercise.id);
       expect(reloaded, isNotNull);
-      expect(reloaded!.libraryExerciseId, equals(entry.id),
-          reason: 'archive is soft-delete; FK should still resolve');
+      expect(
+        reloaded!.libraryExerciseId,
+        equals(entry.id),
+        reason: 'archive is soft-delete; FK should still resolve',
+      );
 
       final stillThere = await libraryRepo.get(entry.id);
       expect(stillThere, isNotNull);

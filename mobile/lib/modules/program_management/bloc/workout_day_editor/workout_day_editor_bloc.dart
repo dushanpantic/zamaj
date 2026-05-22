@@ -16,6 +16,7 @@ class WorkoutDayEditorBloc
     on<WorkoutDayEditorRefreshed>(_onRefreshed);
     on<WorkoutDayNameChanged>(_onNameChanged);
     on<QuickExerciseAdded>(_onQuickExerciseAdded);
+    on<LibraryExerciseAddedAsNew>(_onLibraryExerciseAddedAsNew);
     on<ExerciseGroupDeleted>(_onGroupDeleted);
     on<ExerciseGroupsReordered>(_onGroupsReordered);
     on<ExerciseAddedToGroup>(_onExerciseAddedToGroup);
@@ -122,6 +123,35 @@ class WorkoutDayEditorBloc
       metadata: ExerciseMetadata.empty,
       plannedRestSeconds: null,
       sets: const [],
+    );
+    final newGroup = ExerciseGroupDraft(
+      draftId: _uuid.v4(),
+      persistedId: null,
+      exercises: [newExercise],
+    );
+    final updated = current.draft.copyWith(
+      groups: [...current.draft.groups, newGroup],
+    );
+    emit(current.copyWith(draft: updated, lastSaveError: () => null));
+    await _persist(emit, navigateToNewExercise: true);
+  }
+
+  Future<void> _onLibraryExerciseAddedAsNew(
+    LibraryExerciseAddedAsNew event,
+    Emitter<WorkoutDayEditorState> emit,
+  ) async {
+    final current = state;
+    if (current is! WorkoutDayEditorEditing) return;
+    final entry = event.entry;
+    final newExercise = ExerciseDraft(
+      draftId: _uuid.v4(),
+      persistedId: null,
+      name: entry.name,
+      measurementType: entry.measurementType,
+      metadata: ExerciseMetadata(videoUrl: entry.videoUrl),
+      plannedRestSeconds: null,
+      sets: const [],
+      libraryExerciseId: entry.id,
     );
     final newGroup = ExerciseGroupDraft(
       draftId: _uuid.v4(),
@@ -415,6 +445,7 @@ class WorkoutDayEditorBloc
                   group.exercises[j],
                   exerciseGroupId: '',
                   position: j,
+                  includeLibraryLink: true,
                 ),
             ],
           );
@@ -475,6 +506,7 @@ class WorkoutDayEditorBloc
                 measurementType: exerciseDraft.measurementType,
                 metadata: exerciseDraft.metadata,
                 plannedRestSeconds: exerciseDraft.plannedRestSeconds,
+                libraryExerciseId: exerciseDraft.libraryExerciseId,
               );
               for (final setDraft in exerciseDraft.sets) {
                 await _programRepository.createSet(
@@ -620,6 +652,7 @@ class WorkoutDayEditorBloc
     ExerciseDraft draft, {
     required String exerciseGroupId,
     required int position,
+    bool includeLibraryLink = false,
   }) {
     final now = DateTime.now().toUtc();
     final exerciseId = draft.persistedId ?? _uuid.v4();
@@ -631,6 +664,7 @@ class WorkoutDayEditorBloc
       measurementType: draft.measurementType,
       metadata: draft.metadata,
       plannedRestSeconds: draft.plannedRestSeconds,
+      libraryExerciseId: includeLibraryLink ? draft.libraryExerciseId : null,
       sets: [
         for (var i = 0; i < draft.sets.length; i++)
           WorkoutSet(
