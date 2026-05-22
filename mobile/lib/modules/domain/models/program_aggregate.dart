@@ -51,6 +51,7 @@ abstract class ExerciseAggregate with _$ExerciseAggregate {
     required MeasurementType measurementType,
     required ExerciseMetadata metadata,
     required int? plannedRestSeconds,
+    required String? libraryExerciseId,
     required int position,
     required List<WorkoutSetAggregate> sets,
   }) = _ExerciseAggregate;

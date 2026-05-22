@@ -15,7 +15,7 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$SubstituteExercise {
 
- String get name; MeasurementType get measurementType; PlannedSetValues get plannedValues; int get setCount; ExerciseMetadata? get metadata;
+ String get name; MeasurementType get measurementType; PlannedSetValues get plannedValues; int get setCount; ExerciseMetadata? get metadata; String? get libraryExerciseId;
 /// Create a copy of SubstituteExercise
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -28,16 +28,16 @@ $SubstituteExerciseCopyWith<SubstituteExercise> get copyWith => _$SubstituteExer
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is SubstituteExercise&&(identical(other.name, name) || other.name == name)&&(identical(other.measurementType, measurementType) || other.measurementType == measurementType)&&(identical(other.plannedValues, plannedValues) || other.plannedValues == plannedValues)&&(identical(other.setCount, setCount) || other.setCount == setCount)&&(identical(other.metadata, metadata) || other.metadata == metadata));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is SubstituteExercise&&(identical(other.name, name) || other.name == name)&&(identical(other.measurementType, measurementType) || other.measurementType == measurementType)&&(identical(other.plannedValues, plannedValues) || other.plannedValues == plannedValues)&&(identical(other.setCount, setCount) || other.setCount == setCount)&&(identical(other.metadata, metadata) || other.metadata == metadata)&&(identical(other.libraryExerciseId, libraryExerciseId) || other.libraryExerciseId == libraryExerciseId));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,name,measurementType,plannedValues,setCount,metadata);
+int get hashCode => Object.hash(runtimeType,name,measurementType,plannedValues,setCount,metadata,libraryExerciseId);
 
 @override
 String toString() {
-  return 'SubstituteExercise(name: $name, measurementType: $measurementType, plannedValues: $plannedValues, setCount: $setCount, metadata: $metadata)';
+  return 'SubstituteExercise(name: $name, measurementType: $measurementType, plannedValues: $plannedValues, setCount: $setCount, metadata: $metadata, libraryExerciseId: $libraryExerciseId)';
 }
 
 
@@ -48,7 +48,7 @@ abstract mixin class $SubstituteExerciseCopyWith<$Res>  {
   factory $SubstituteExerciseCopyWith(SubstituteExercise value, $Res Function(SubstituteExercise) _then) = _$SubstituteExerciseCopyWithImpl;
 @useResult
 $Res call({
- String name, MeasurementType measurementType, PlannedSetValues plannedValues, int setCount, ExerciseMetadata? metadata
+ String name, MeasurementType measurementType, PlannedSetValues plannedValues, int setCount, ExerciseMetadata? metadata, String? libraryExerciseId
 });
 
 
@@ -65,14 +65,15 @@ class _$SubstituteExerciseCopyWithImpl<$Res>
 
 /// Create a copy of SubstituteExercise
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? name = null,Object? measurementType = null,Object? plannedValues = null,Object? setCount = null,Object? metadata = freezed,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? name = null,Object? measurementType = null,Object? plannedValues = null,Object? setCount = null,Object? metadata = freezed,Object? libraryExerciseId = freezed,}) {
   return _then(_self.copyWith(
 name: null == name ? _self.name : name // ignore: cast_nullable_to_non_nullable
 as String,measurementType: null == measurementType ? _self.measurementType : measurementType // ignore: cast_nullable_to_non_nullable
 as MeasurementType,plannedValues: null == plannedValues ? _self.plannedValues : plannedValues // ignore: cast_nullable_to_non_nullable
 as PlannedSetValues,setCount: null == setCount ? _self.setCount : setCount // ignore: cast_nullable_to_non_nullable
 as int,metadata: freezed == metadata ? _self.metadata : metadata // ignore: cast_nullable_to_non_nullable
-as ExerciseMetadata?,
+as ExerciseMetadata?,libraryExerciseId: freezed == libraryExerciseId ? _self.libraryExerciseId : libraryExerciseId // ignore: cast_nullable_to_non_nullable
+as String?,
   ));
 }
 /// Create a copy of SubstituteExercise
@@ -187,10 +188,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String name,  MeasurementType measurementType,  PlannedSetValues plannedValues,  int setCount,  ExerciseMetadata? metadata)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String name,  MeasurementType measurementType,  PlannedSetValues plannedValues,  int setCount,  ExerciseMetadata? metadata,  String? libraryExerciseId)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _SubstituteExercise() when $default != null:
-return $default(_that.name,_that.measurementType,_that.plannedValues,_that.setCount,_that.metadata);case _:
+return $default(_that.name,_that.measurementType,_that.plannedValues,_that.setCount,_that.metadata,_that.libraryExerciseId);case _:
   return orElse();
 
 }
@@ -208,10 +209,10 @@ return $default(_that.name,_that.measurementType,_that.plannedValues,_that.setCo
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String name,  MeasurementType measurementType,  PlannedSetValues plannedValues,  int setCount,  ExerciseMetadata? metadata)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String name,  MeasurementType measurementType,  PlannedSetValues plannedValues,  int setCount,  ExerciseMetadata? metadata,  String? libraryExerciseId)  $default,) {final _that = this;
 switch (_that) {
 case _SubstituteExercise():
-return $default(_that.name,_that.measurementType,_that.plannedValues,_that.setCount,_that.metadata);case _:
+return $default(_that.name,_that.measurementType,_that.plannedValues,_that.setCount,_that.metadata,_that.libraryExerciseId);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -228,10 +229,10 @@ return $default(_that.name,_that.measurementType,_that.plannedValues,_that.setCo
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String name,  MeasurementType measurementType,  PlannedSetValues plannedValues,  int setCount,  ExerciseMetadata? metadata)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String name,  MeasurementType measurementType,  PlannedSetValues plannedValues,  int setCount,  ExerciseMetadata? metadata,  String? libraryExerciseId)?  $default,) {final _that = this;
 switch (_that) {
 case _SubstituteExercise() when $default != null:
-return $default(_that.name,_that.measurementType,_that.plannedValues,_that.setCount,_that.metadata);case _:
+return $default(_that.name,_that.measurementType,_that.plannedValues,_that.setCount,_that.metadata,_that.libraryExerciseId);case _:
   return null;
 
 }
@@ -243,7 +244,7 @@ return $default(_that.name,_that.measurementType,_that.plannedValues,_that.setCo
 @JsonSerializable()
 
 class _SubstituteExercise extends SubstituteExercise {
-   _SubstituteExercise({required this.name, required this.measurementType, required this.plannedValues, required this.setCount, this.metadata}): super._();
+   _SubstituteExercise({required this.name, required this.measurementType, required this.plannedValues, required this.setCount, this.metadata, this.libraryExerciseId}): super._();
   factory _SubstituteExercise.fromJson(Map<String, dynamic> json) => _$SubstituteExerciseFromJson(json);
 
 @override final  String name;
@@ -251,6 +252,7 @@ class _SubstituteExercise extends SubstituteExercise {
 @override final  PlannedSetValues plannedValues;
 @override final  int setCount;
 @override final  ExerciseMetadata? metadata;
+@override final  String? libraryExerciseId;
 
 /// Create a copy of SubstituteExercise
 /// with the given fields replaced by the non-null parameter values.
@@ -265,16 +267,16 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _SubstituteExercise&&(identical(other.name, name) || other.name == name)&&(identical(other.measurementType, measurementType) || other.measurementType == measurementType)&&(identical(other.plannedValues, plannedValues) || other.plannedValues == plannedValues)&&(identical(other.setCount, setCount) || other.setCount == setCount)&&(identical(other.metadata, metadata) || other.metadata == metadata));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _SubstituteExercise&&(identical(other.name, name) || other.name == name)&&(identical(other.measurementType, measurementType) || other.measurementType == measurementType)&&(identical(other.plannedValues, plannedValues) || other.plannedValues == plannedValues)&&(identical(other.setCount, setCount) || other.setCount == setCount)&&(identical(other.metadata, metadata) || other.metadata == metadata)&&(identical(other.libraryExerciseId, libraryExerciseId) || other.libraryExerciseId == libraryExerciseId));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,name,measurementType,plannedValues,setCount,metadata);
+int get hashCode => Object.hash(runtimeType,name,measurementType,plannedValues,setCount,metadata,libraryExerciseId);
 
 @override
 String toString() {
-  return 'SubstituteExercise(name: $name, measurementType: $measurementType, plannedValues: $plannedValues, setCount: $setCount, metadata: $metadata)';
+  return 'SubstituteExercise(name: $name, measurementType: $measurementType, plannedValues: $plannedValues, setCount: $setCount, metadata: $metadata, libraryExerciseId: $libraryExerciseId)';
 }
 
 
@@ -285,7 +287,7 @@ abstract mixin class _$SubstituteExerciseCopyWith<$Res> implements $SubstituteEx
   factory _$SubstituteExerciseCopyWith(_SubstituteExercise value, $Res Function(_SubstituteExercise) _then) = __$SubstituteExerciseCopyWithImpl;
 @override @useResult
 $Res call({
- String name, MeasurementType measurementType, PlannedSetValues plannedValues, int setCount, ExerciseMetadata? metadata
+ String name, MeasurementType measurementType, PlannedSetValues plannedValues, int setCount, ExerciseMetadata? metadata, String? libraryExerciseId
 });
 
 
@@ -302,14 +304,15 @@ class __$SubstituteExerciseCopyWithImpl<$Res>
 
 /// Create a copy of SubstituteExercise
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? name = null,Object? measurementType = null,Object? plannedValues = null,Object? setCount = null,Object? metadata = freezed,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? name = null,Object? measurementType = null,Object? plannedValues = null,Object? setCount = null,Object? metadata = freezed,Object? libraryExerciseId = freezed,}) {
   return _then(_SubstituteExercise(
 name: null == name ? _self.name : name // ignore: cast_nullable_to_non_nullable
 as String,measurementType: null == measurementType ? _self.measurementType : measurementType // ignore: cast_nullable_to_non_nullable
 as MeasurementType,plannedValues: null == plannedValues ? _self.plannedValues : plannedValues // ignore: cast_nullable_to_non_nullable
 as PlannedSetValues,setCount: null == setCount ? _self.setCount : setCount // ignore: cast_nullable_to_non_nullable
 as int,metadata: freezed == metadata ? _self.metadata : metadata // ignore: cast_nullable_to_non_nullable
-as ExerciseMetadata?,
+as ExerciseMetadata?,libraryExerciseId: freezed == libraryExerciseId ? _self.libraryExerciseId : libraryExerciseId // ignore: cast_nullable_to_non_nullable
+as String?,
   ));
 }
 

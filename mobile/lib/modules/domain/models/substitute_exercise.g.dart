@@ -25,6 +25,10 @@ _SubstituteExercise _$SubstituteExerciseFromJson(Map<String, dynamic> json) =>
               ? null
               : ExerciseMetadata.fromJson(v as Map<String, dynamic>),
         ),
+        libraryExerciseId: $checkedConvert(
+          'libraryExerciseId',
+          (v) => v as String?,
+        ),
       );
       return val;
     });
@@ -36,4 +40,5 @@ Map<String, dynamic> _$SubstituteExerciseToJson(_SubstituteExercise instance) =>
       'plannedValues': instance.plannedValues.toJson(),
       'setCount': instance.setCount,
       'metadata': ?instance.metadata?.toJson(),
+      'libraryExerciseId': ?instance.libraryExerciseId,
     };

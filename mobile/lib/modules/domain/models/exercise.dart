@@ -20,6 +20,15 @@ abstract class Exercise with _$Exercise {
             'plannedRestSeconds must be in [0, 3600], got $plannedRestSeconds',
       );
     }
+    if (libraryExerciseId != null && libraryExerciseId!.length != 36) {
+      throw ValidationError(
+        entityId: id,
+        invariant: 'libraryExerciseId_not_uuid_v4',
+        message:
+            'libraryExerciseId must be canonical UUIDv4 (36 chars), '
+            'got ${libraryExerciseId!.length}',
+      );
+    }
     for (final s in sets) {
       if (s.measurementType != measurementType) {
         throw ValidationError(
@@ -41,6 +50,7 @@ abstract class Exercise with _$Exercise {
     required MeasurementType measurementType,
     required ExerciseMetadata metadata,
     int? plannedRestSeconds,
+    String? libraryExerciseId,
     required List<WorkoutSet> sets,
     required DateTime createdAt,
     required DateTime updatedAt,

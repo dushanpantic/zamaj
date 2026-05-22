@@ -18,6 +18,15 @@ abstract class SubstituteExercise with _$SubstituteExercise {
         message: 'setCount must be >= 1, got $setCount',
       );
     }
+    if (libraryExerciseId != null && libraryExerciseId!.length != 36) {
+      throw ValidationError(
+        entityId: name,
+        invariant: 'libraryExerciseId_not_uuid_v4',
+        message:
+            'libraryExerciseId must be canonical UUIDv4 (36 chars), '
+            'got ${libraryExerciseId!.length}',
+      );
+    }
     final mismatch = switch ((measurementType, plannedValues)) {
       (RepBasedMeasurement(), PlannedRepBased()) => false,
       (TimeBasedMeasurement(), PlannedTimeBased()) => false,
@@ -39,6 +48,7 @@ abstract class SubstituteExercise with _$SubstituteExercise {
     required PlannedSetValues plannedValues,
     required int setCount,
     ExerciseMetadata? metadata,
+    String? libraryExerciseId,
   }) = _SubstituteExercise;
 
   factory SubstituteExercise.fromJson(Map<String, dynamic> json) =>

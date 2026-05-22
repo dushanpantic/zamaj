@@ -91,6 +91,7 @@ abstract class ProgramDraft with _$ProgramDraft {
       measurementType: exercise.measurementType,
       metadata: exercise.metadata,
       plannedRestSeconds: exercise.plannedRestSeconds,
+      libraryExerciseId: null,
       position: position,
       sets: [
         for (var i = 0; i < exercise.sets.length; i++)

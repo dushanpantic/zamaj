@@ -863,7 +863,7 @@ $ExerciseGroupKindCopyWith<$Res> get kind {
 /// @nodoc
 mixin _$ExerciseAggregate {
 
- String get id; String get groupId; String get name; MeasurementType get measurementType; ExerciseMetadata get metadata; int? get plannedRestSeconds; int get position; List<WorkoutSetAggregate> get sets;
+ String get id; String get groupId; String get name; MeasurementType get measurementType; ExerciseMetadata get metadata; int? get plannedRestSeconds; String? get libraryExerciseId; int get position; List<WorkoutSetAggregate> get sets;
 /// Create a copy of ExerciseAggregate
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -874,16 +874,16 @@ $ExerciseAggregateCopyWith<ExerciseAggregate> get copyWith => _$ExerciseAggregat
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is ExerciseAggregate&&(identical(other.id, id) || other.id == id)&&(identical(other.groupId, groupId) || other.groupId == groupId)&&(identical(other.name, name) || other.name == name)&&(identical(other.measurementType, measurementType) || other.measurementType == measurementType)&&(identical(other.metadata, metadata) || other.metadata == metadata)&&(identical(other.plannedRestSeconds, plannedRestSeconds) || other.plannedRestSeconds == plannedRestSeconds)&&(identical(other.position, position) || other.position == position)&&const DeepCollectionEquality().equals(other.sets, sets));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is ExerciseAggregate&&(identical(other.id, id) || other.id == id)&&(identical(other.groupId, groupId) || other.groupId == groupId)&&(identical(other.name, name) || other.name == name)&&(identical(other.measurementType, measurementType) || other.measurementType == measurementType)&&(identical(other.metadata, metadata) || other.metadata == metadata)&&(identical(other.plannedRestSeconds, plannedRestSeconds) || other.plannedRestSeconds == plannedRestSeconds)&&(identical(other.libraryExerciseId, libraryExerciseId) || other.libraryExerciseId == libraryExerciseId)&&(identical(other.position, position) || other.position == position)&&const DeepCollectionEquality().equals(other.sets, sets));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,id,groupId,name,measurementType,metadata,plannedRestSeconds,position,const DeepCollectionEquality().hash(sets));
+int get hashCode => Object.hash(runtimeType,id,groupId,name,measurementType,metadata,plannedRestSeconds,libraryExerciseId,position,const DeepCollectionEquality().hash(sets));
 
 @override
 String toString() {
-  return 'ExerciseAggregate(id: $id, groupId: $groupId, name: $name, measurementType: $measurementType, metadata: $metadata, plannedRestSeconds: $plannedRestSeconds, position: $position, sets: $sets)';
+  return 'ExerciseAggregate(id: $id, groupId: $groupId, name: $name, measurementType: $measurementType, metadata: $metadata, plannedRestSeconds: $plannedRestSeconds, libraryExerciseId: $libraryExerciseId, position: $position, sets: $sets)';
 }
 
 
@@ -894,7 +894,7 @@ abstract mixin class $ExerciseAggregateCopyWith<$Res>  {
   factory $ExerciseAggregateCopyWith(ExerciseAggregate value, $Res Function(ExerciseAggregate) _then) = _$ExerciseAggregateCopyWithImpl;
 @useResult
 $Res call({
- String id, String groupId, String name, MeasurementType measurementType, ExerciseMetadata metadata, int? plannedRestSeconds, int position, List<WorkoutSetAggregate> sets
+ String id, String groupId, String name, MeasurementType measurementType, ExerciseMetadata metadata, int? plannedRestSeconds, String? libraryExerciseId, int position, List<WorkoutSetAggregate> sets
 });
 
 
@@ -911,7 +911,7 @@ class _$ExerciseAggregateCopyWithImpl<$Res>
 
 /// Create a copy of ExerciseAggregate
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? groupId = null,Object? name = null,Object? measurementType = null,Object? metadata = null,Object? plannedRestSeconds = freezed,Object? position = null,Object? sets = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? groupId = null,Object? name = null,Object? measurementType = null,Object? metadata = null,Object? plannedRestSeconds = freezed,Object? libraryExerciseId = freezed,Object? position = null,Object? sets = null,}) {
   return _then(_self.copyWith(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as String,groupId: null == groupId ? _self.groupId : groupId // ignore: cast_nullable_to_non_nullable
@@ -919,7 +919,8 @@ as String,name: null == name ? _self.name : name // ignore: cast_nullable_to_non
 as String,measurementType: null == measurementType ? _self.measurementType : measurementType // ignore: cast_nullable_to_non_nullable
 as MeasurementType,metadata: null == metadata ? _self.metadata : metadata // ignore: cast_nullable_to_non_nullable
 as ExerciseMetadata,plannedRestSeconds: freezed == plannedRestSeconds ? _self.plannedRestSeconds : plannedRestSeconds // ignore: cast_nullable_to_non_nullable
-as int?,position: null == position ? _self.position : position // ignore: cast_nullable_to_non_nullable
+as int?,libraryExerciseId: freezed == libraryExerciseId ? _self.libraryExerciseId : libraryExerciseId // ignore: cast_nullable_to_non_nullable
+as String?,position: null == position ? _self.position : position // ignore: cast_nullable_to_non_nullable
 as int,sets: null == sets ? _self.sets : sets // ignore: cast_nullable_to_non_nullable
 as List<WorkoutSetAggregate>,
   ));
@@ -1024,10 +1025,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id,  String groupId,  String name,  MeasurementType measurementType,  ExerciseMetadata metadata,  int? plannedRestSeconds,  int position,  List<WorkoutSetAggregate> sets)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id,  String groupId,  String name,  MeasurementType measurementType,  ExerciseMetadata metadata,  int? plannedRestSeconds,  String? libraryExerciseId,  int position,  List<WorkoutSetAggregate> sets)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _ExerciseAggregate() when $default != null:
-return $default(_that.id,_that.groupId,_that.name,_that.measurementType,_that.metadata,_that.plannedRestSeconds,_that.position,_that.sets);case _:
+return $default(_that.id,_that.groupId,_that.name,_that.measurementType,_that.metadata,_that.plannedRestSeconds,_that.libraryExerciseId,_that.position,_that.sets);case _:
   return orElse();
 
 }
@@ -1045,10 +1046,10 @@ return $default(_that.id,_that.groupId,_that.name,_that.measurementType,_that.me
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id,  String groupId,  String name,  MeasurementType measurementType,  ExerciseMetadata metadata,  int? plannedRestSeconds,  int position,  List<WorkoutSetAggregate> sets)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id,  String groupId,  String name,  MeasurementType measurementType,  ExerciseMetadata metadata,  int? plannedRestSeconds,  String? libraryExerciseId,  int position,  List<WorkoutSetAggregate> sets)  $default,) {final _that = this;
 switch (_that) {
 case _ExerciseAggregate():
-return $default(_that.id,_that.groupId,_that.name,_that.measurementType,_that.metadata,_that.plannedRestSeconds,_that.position,_that.sets);case _:
+return $default(_that.id,_that.groupId,_that.name,_that.measurementType,_that.metadata,_that.plannedRestSeconds,_that.libraryExerciseId,_that.position,_that.sets);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -1065,10 +1066,10 @@ return $default(_that.id,_that.groupId,_that.name,_that.measurementType,_that.me
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id,  String groupId,  String name,  MeasurementType measurementType,  ExerciseMetadata metadata,  int? plannedRestSeconds,  int position,  List<WorkoutSetAggregate> sets)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id,  String groupId,  String name,  MeasurementType measurementType,  ExerciseMetadata metadata,  int? plannedRestSeconds,  String? libraryExerciseId,  int position,  List<WorkoutSetAggregate> sets)?  $default,) {final _that = this;
 switch (_that) {
 case _ExerciseAggregate() when $default != null:
-return $default(_that.id,_that.groupId,_that.name,_that.measurementType,_that.metadata,_that.plannedRestSeconds,_that.position,_that.sets);case _:
+return $default(_that.id,_that.groupId,_that.name,_that.measurementType,_that.metadata,_that.plannedRestSeconds,_that.libraryExerciseId,_that.position,_that.sets);case _:
   return null;
 
 }
@@ -1080,7 +1081,7 @@ return $default(_that.id,_that.groupId,_that.name,_that.measurementType,_that.me
 
 
 class _ExerciseAggregate implements ExerciseAggregate {
-  const _ExerciseAggregate({required this.id, required this.groupId, required this.name, required this.measurementType, required this.metadata, required this.plannedRestSeconds, required this.position, required final  List<WorkoutSetAggregate> sets}): _sets = sets;
+  const _ExerciseAggregate({required this.id, required this.groupId, required this.name, required this.measurementType, required this.metadata, required this.plannedRestSeconds, required this.libraryExerciseId, required this.position, required final  List<WorkoutSetAggregate> sets}): _sets = sets;
   
 
 @override final  String id;
@@ -1089,6 +1090,7 @@ class _ExerciseAggregate implements ExerciseAggregate {
 @override final  MeasurementType measurementType;
 @override final  ExerciseMetadata metadata;
 @override final  int? plannedRestSeconds;
+@override final  String? libraryExerciseId;
 @override final  int position;
  final  List<WorkoutSetAggregate> _sets;
 @override List<WorkoutSetAggregate> get sets {
@@ -1108,16 +1110,16 @@ _$ExerciseAggregateCopyWith<_ExerciseAggregate> get copyWith => __$ExerciseAggre
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _ExerciseAggregate&&(identical(other.id, id) || other.id == id)&&(identical(other.groupId, groupId) || other.groupId == groupId)&&(identical(other.name, name) || other.name == name)&&(identical(other.measurementType, measurementType) || other.measurementType == measurementType)&&(identical(other.metadata, metadata) || other.metadata == metadata)&&(identical(other.plannedRestSeconds, plannedRestSeconds) || other.plannedRestSeconds == plannedRestSeconds)&&(identical(other.position, position) || other.position == position)&&const DeepCollectionEquality().equals(other._sets, _sets));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _ExerciseAggregate&&(identical(other.id, id) || other.id == id)&&(identical(other.groupId, groupId) || other.groupId == groupId)&&(identical(other.name, name) || other.name == name)&&(identical(other.measurementType, measurementType) || other.measurementType == measurementType)&&(identical(other.metadata, metadata) || other.metadata == metadata)&&(identical(other.plannedRestSeconds, plannedRestSeconds) || other.plannedRestSeconds == plannedRestSeconds)&&(identical(other.libraryExerciseId, libraryExerciseId) || other.libraryExerciseId == libraryExerciseId)&&(identical(other.position, position) || other.position == position)&&const DeepCollectionEquality().equals(other._sets, _sets));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,id,groupId,name,measurementType,metadata,plannedRestSeconds,position,const DeepCollectionEquality().hash(_sets));
+int get hashCode => Object.hash(runtimeType,id,groupId,name,measurementType,metadata,plannedRestSeconds,libraryExerciseId,position,const DeepCollectionEquality().hash(_sets));
 
 @override
 String toString() {
-  return 'ExerciseAggregate(id: $id, groupId: $groupId, name: $name, measurementType: $measurementType, metadata: $metadata, plannedRestSeconds: $plannedRestSeconds, position: $position, sets: $sets)';
+  return 'ExerciseAggregate(id: $id, groupId: $groupId, name: $name, measurementType: $measurementType, metadata: $metadata, plannedRestSeconds: $plannedRestSeconds, libraryExerciseId: $libraryExerciseId, position: $position, sets: $sets)';
 }
 
 
@@ -1128,7 +1130,7 @@ abstract mixin class _$ExerciseAggregateCopyWith<$Res> implements $ExerciseAggre
   factory _$ExerciseAggregateCopyWith(_ExerciseAggregate value, $Res Function(_ExerciseAggregate) _then) = __$ExerciseAggregateCopyWithImpl;
 @override @useResult
 $Res call({
- String id, String groupId, String name, MeasurementType measurementType, ExerciseMetadata metadata, int? plannedRestSeconds, int position, List<WorkoutSetAggregate> sets
+ String id, String groupId, String name, MeasurementType measurementType, ExerciseMetadata metadata, int? plannedRestSeconds, String? libraryExerciseId, int position, List<WorkoutSetAggregate> sets
 });
 
 
@@ -1145,7 +1147,7 @@ class __$ExerciseAggregateCopyWithImpl<$Res>
 
 /// Create a copy of ExerciseAggregate
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? groupId = null,Object? name = null,Object? measurementType = null,Object? metadata = null,Object? plannedRestSeconds = freezed,Object? position = null,Object? sets = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? groupId = null,Object? name = null,Object? measurementType = null,Object? metadata = null,Object? plannedRestSeconds = freezed,Object? libraryExerciseId = freezed,Object? position = null,Object? sets = null,}) {
   return _then(_ExerciseAggregate(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as String,groupId: null == groupId ? _self.groupId : groupId // ignore: cast_nullable_to_non_nullable
@@ -1153,7 +1155,8 @@ as String,name: null == name ? _self.name : name // ignore: cast_nullable_to_non
 as String,measurementType: null == measurementType ? _self.measurementType : measurementType // ignore: cast_nullable_to_non_nullable
 as MeasurementType,metadata: null == metadata ? _self.metadata : metadata // ignore: cast_nullable_to_non_nullable
 as ExerciseMetadata,plannedRestSeconds: freezed == plannedRestSeconds ? _self.plannedRestSeconds : plannedRestSeconds // ignore: cast_nullable_to_non_nullable
-as int?,position: null == position ? _self.position : position // ignore: cast_nullable_to_non_nullable
+as int?,libraryExerciseId: freezed == libraryExerciseId ? _self.libraryExerciseId : libraryExerciseId // ignore: cast_nullable_to_non_nullable
+as String?,position: null == position ? _self.position : position // ignore: cast_nullable_to_non_nullable
 as int,sets: null == sets ? _self._sets : sets // ignore: cast_nullable_to_non_nullable
 as List<WorkoutSetAggregate>,
   ));
