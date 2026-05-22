@@ -2,6 +2,7 @@ import 'package:clock/clock.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:zamaj/modules/domain/domain.dart';
+import 'package:zamaj/modules/exercise_library/navigation/exercise_library_router.dart';
 import 'package:zamaj/modules/export/navigation/export_router.dart';
 import 'package:zamaj/modules/focus_mode/bloc/bloc.dart';
 import 'package:zamaj/modules/focus_mode/models/focus_mode_args.dart';
@@ -22,7 +23,8 @@ abstract final class AppRouter {
       SessionRoutes.active => _sessionActiveRoute(settings),
       SessionRoutes.focus => _sessionFocusRoute(settings),
       _ =>
-        ExportRouter.onGenerateRoute(settings) ??
+        ExerciseLibraryRouter.onGenerateRoute(settings) ??
+            ExportRouter.onGenerateRoute(settings) ??
             ProgramManagementRouter.onGenerateRoute(settings),
     };
   }
