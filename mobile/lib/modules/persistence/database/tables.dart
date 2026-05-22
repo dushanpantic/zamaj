@@ -74,6 +74,9 @@ class Exercises extends Table {
   TextColumn get notes => text().nullable()();
   TextColumn get videoUrl => text().nullable()();
   IntColumn get plannedRestSeconds => integer().nullable()();
+  TextColumn get libraryExerciseId => text()
+      .nullable()
+      .references(LibraryExercises, #id, onDelete: KeyAction.setNull)();
   IntColumn get createdAtMs => integer()();
   IntColumn get updatedAtMs => integer()();
   IntColumn get schemaVersion => integer()();
@@ -85,6 +88,24 @@ class Exercises extends Table {
   List<Set<Column>> get uniqueKeys => [
     {exerciseGroupId, position},
   ];
+}
+
+@TableIndex(name: 'library_exercises_name_lower', columns: {#nameLower})
+class LibraryExercises extends Table {
+  TextColumn get id => text().withLength(min: 36, max: 36)();
+  TextColumn get name => text()();
+  TextColumn get nameLower => text()();
+  TextColumn get measurementTypeDiscriminator => text()();
+  TextColumn get measurementTypePayloadJson => text()();
+  TextColumn get videoUrl => text().nullable()();
+  TextColumn get cues => text().nullable()();
+  IntColumn get archivedAtMs => integer().nullable()();
+  IntColumn get createdAtMs => integer()();
+  IntColumn get updatedAtMs => integer()();
+  IntColumn get schemaVersion => integer()();
+
+  @override
+  Set<Column> get primaryKey => {id};
 }
 
 class WorkoutSets extends Table {

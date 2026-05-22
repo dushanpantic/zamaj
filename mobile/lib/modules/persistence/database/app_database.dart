@@ -19,6 +19,7 @@ part 'app_database.g.dart';
     ExecutedSets,
     SessionNotes,
     ExtraWorkItems,
+    LibraryExercises,
   ],
 )
 class AppDatabase extends _$AppDatabase {

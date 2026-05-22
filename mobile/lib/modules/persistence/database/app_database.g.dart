@@ -1703,6 +1703,720 @@ class ExerciseGroupsCompanion extends UpdateCompanion<ExerciseGroup> {
   }
 }
 
+class $LibraryExercisesTable extends LibraryExercises
+    with TableInfo<$LibraryExercisesTable, LibraryExercise> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $LibraryExercisesTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+    'id',
+    aliasedName,
+    false,
+    additionalChecks: GeneratedColumn.checkTextLength(
+      minTextLength: 36,
+      maxTextLength: 36,
+    ),
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _nameMeta = const VerificationMeta('name');
+  @override
+  late final GeneratedColumn<String> name = GeneratedColumn<String>(
+    'name',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _nameLowerMeta = const VerificationMeta(
+    'nameLower',
+  );
+  @override
+  late final GeneratedColumn<String> nameLower = GeneratedColumn<String>(
+    'name_lower',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _measurementTypeDiscriminatorMeta =
+      const VerificationMeta('measurementTypeDiscriminator');
+  @override
+  late final GeneratedColumn<String> measurementTypeDiscriminator =
+      GeneratedColumn<String>(
+        'measurement_type_discriminator',
+        aliasedName,
+        false,
+        type: DriftSqlType.string,
+        requiredDuringInsert: true,
+      );
+  static const VerificationMeta _measurementTypePayloadJsonMeta =
+      const VerificationMeta('measurementTypePayloadJson');
+  @override
+  late final GeneratedColumn<String> measurementTypePayloadJson =
+      GeneratedColumn<String>(
+        'measurement_type_payload_json',
+        aliasedName,
+        false,
+        type: DriftSqlType.string,
+        requiredDuringInsert: true,
+      );
+  static const VerificationMeta _videoUrlMeta = const VerificationMeta(
+    'videoUrl',
+  );
+  @override
+  late final GeneratedColumn<String> videoUrl = GeneratedColumn<String>(
+    'video_url',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _cuesMeta = const VerificationMeta('cues');
+  @override
+  late final GeneratedColumn<String> cues = GeneratedColumn<String>(
+    'cues',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _archivedAtMsMeta = const VerificationMeta(
+    'archivedAtMs',
+  );
+  @override
+  late final GeneratedColumn<int> archivedAtMs = GeneratedColumn<int>(
+    'archived_at_ms',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _createdAtMsMeta = const VerificationMeta(
+    'createdAtMs',
+  );
+  @override
+  late final GeneratedColumn<int> createdAtMs = GeneratedColumn<int>(
+    'created_at_ms',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _updatedAtMsMeta = const VerificationMeta(
+    'updatedAtMs',
+  );
+  @override
+  late final GeneratedColumn<int> updatedAtMs = GeneratedColumn<int>(
+    'updated_at_ms',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _schemaVersionMeta = const VerificationMeta(
+    'schemaVersion',
+  );
+  @override
+  late final GeneratedColumn<int> schemaVersion = GeneratedColumn<int>(
+    'schema_version',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    name,
+    nameLower,
+    measurementTypeDiscriminator,
+    measurementTypePayloadJson,
+    videoUrl,
+    cues,
+    archivedAtMs,
+    createdAtMs,
+    updatedAtMs,
+    schemaVersion,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'library_exercises';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<LibraryExercise> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
+    }
+    if (data.containsKey('name')) {
+      context.handle(
+        _nameMeta,
+        name.isAcceptableOrUnknown(data['name']!, _nameMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_nameMeta);
+    }
+    if (data.containsKey('name_lower')) {
+      context.handle(
+        _nameLowerMeta,
+        nameLower.isAcceptableOrUnknown(data['name_lower']!, _nameLowerMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_nameLowerMeta);
+    }
+    if (data.containsKey('measurement_type_discriminator')) {
+      context.handle(
+        _measurementTypeDiscriminatorMeta,
+        measurementTypeDiscriminator.isAcceptableOrUnknown(
+          data['measurement_type_discriminator']!,
+          _measurementTypeDiscriminatorMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_measurementTypeDiscriminatorMeta);
+    }
+    if (data.containsKey('measurement_type_payload_json')) {
+      context.handle(
+        _measurementTypePayloadJsonMeta,
+        measurementTypePayloadJson.isAcceptableOrUnknown(
+          data['measurement_type_payload_json']!,
+          _measurementTypePayloadJsonMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_measurementTypePayloadJsonMeta);
+    }
+    if (data.containsKey('video_url')) {
+      context.handle(
+        _videoUrlMeta,
+        videoUrl.isAcceptableOrUnknown(data['video_url']!, _videoUrlMeta),
+      );
+    }
+    if (data.containsKey('cues')) {
+      context.handle(
+        _cuesMeta,
+        cues.isAcceptableOrUnknown(data['cues']!, _cuesMeta),
+      );
+    }
+    if (data.containsKey('archived_at_ms')) {
+      context.handle(
+        _archivedAtMsMeta,
+        archivedAtMs.isAcceptableOrUnknown(
+          data['archived_at_ms']!,
+          _archivedAtMsMeta,
+        ),
+      );
+    }
+    if (data.containsKey('created_at_ms')) {
+      context.handle(
+        _createdAtMsMeta,
+        createdAtMs.isAcceptableOrUnknown(
+          data['created_at_ms']!,
+          _createdAtMsMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_createdAtMsMeta);
+    }
+    if (data.containsKey('updated_at_ms')) {
+      context.handle(
+        _updatedAtMsMeta,
+        updatedAtMs.isAcceptableOrUnknown(
+          data['updated_at_ms']!,
+          _updatedAtMsMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_updatedAtMsMeta);
+    }
+    if (data.containsKey('schema_version')) {
+      context.handle(
+        _schemaVersionMeta,
+        schemaVersion.isAcceptableOrUnknown(
+          data['schema_version']!,
+          _schemaVersionMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_schemaVersionMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  LibraryExercise map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return LibraryExercise(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+      name: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}name'],
+      )!,
+      nameLower: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}name_lower'],
+      )!,
+      measurementTypeDiscriminator: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}measurement_type_discriminator'],
+      )!,
+      measurementTypePayloadJson: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}measurement_type_payload_json'],
+      )!,
+      videoUrl: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}video_url'],
+      ),
+      cues: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}cues'],
+      ),
+      archivedAtMs: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}archived_at_ms'],
+      ),
+      createdAtMs: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}created_at_ms'],
+      )!,
+      updatedAtMs: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}updated_at_ms'],
+      )!,
+      schemaVersion: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}schema_version'],
+      )!,
+    );
+  }
+
+  @override
+  $LibraryExercisesTable createAlias(String alias) {
+    return $LibraryExercisesTable(attachedDatabase, alias);
+  }
+}
+
+class LibraryExercise extends DataClass implements Insertable<LibraryExercise> {
+  final String id;
+  final String name;
+  final String nameLower;
+  final String measurementTypeDiscriminator;
+  final String measurementTypePayloadJson;
+  final String? videoUrl;
+  final String? cues;
+  final int? archivedAtMs;
+  final int createdAtMs;
+  final int updatedAtMs;
+  final int schemaVersion;
+  const LibraryExercise({
+    required this.id,
+    required this.name,
+    required this.nameLower,
+    required this.measurementTypeDiscriminator,
+    required this.measurementTypePayloadJson,
+    this.videoUrl,
+    this.cues,
+    this.archivedAtMs,
+    required this.createdAtMs,
+    required this.updatedAtMs,
+    required this.schemaVersion,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    map['name'] = Variable<String>(name);
+    map['name_lower'] = Variable<String>(nameLower);
+    map['measurement_type_discriminator'] = Variable<String>(
+      measurementTypeDiscriminator,
+    );
+    map['measurement_type_payload_json'] = Variable<String>(
+      measurementTypePayloadJson,
+    );
+    if (!nullToAbsent || videoUrl != null) {
+      map['video_url'] = Variable<String>(videoUrl);
+    }
+    if (!nullToAbsent || cues != null) {
+      map['cues'] = Variable<String>(cues);
+    }
+    if (!nullToAbsent || archivedAtMs != null) {
+      map['archived_at_ms'] = Variable<int>(archivedAtMs);
+    }
+    map['created_at_ms'] = Variable<int>(createdAtMs);
+    map['updated_at_ms'] = Variable<int>(updatedAtMs);
+    map['schema_version'] = Variable<int>(schemaVersion);
+    return map;
+  }
+
+  LibraryExercisesCompanion toCompanion(bool nullToAbsent) {
+    return LibraryExercisesCompanion(
+      id: Value(id),
+      name: Value(name),
+      nameLower: Value(nameLower),
+      measurementTypeDiscriminator: Value(measurementTypeDiscriminator),
+      measurementTypePayloadJson: Value(measurementTypePayloadJson),
+      videoUrl: videoUrl == null && nullToAbsent
+          ? const Value.absent()
+          : Value(videoUrl),
+      cues: cues == null && nullToAbsent ? const Value.absent() : Value(cues),
+      archivedAtMs: archivedAtMs == null && nullToAbsent
+          ? const Value.absent()
+          : Value(archivedAtMs),
+      createdAtMs: Value(createdAtMs),
+      updatedAtMs: Value(updatedAtMs),
+      schemaVersion: Value(schemaVersion),
+    );
+  }
+
+  factory LibraryExercise.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return LibraryExercise(
+      id: serializer.fromJson<String>(json['id']),
+      name: serializer.fromJson<String>(json['name']),
+      nameLower: serializer.fromJson<String>(json['nameLower']),
+      measurementTypeDiscriminator: serializer.fromJson<String>(
+        json['measurementTypeDiscriminator'],
+      ),
+      measurementTypePayloadJson: serializer.fromJson<String>(
+        json['measurementTypePayloadJson'],
+      ),
+      videoUrl: serializer.fromJson<String?>(json['videoUrl']),
+      cues: serializer.fromJson<String?>(json['cues']),
+      archivedAtMs: serializer.fromJson<int?>(json['archivedAtMs']),
+      createdAtMs: serializer.fromJson<int>(json['createdAtMs']),
+      updatedAtMs: serializer.fromJson<int>(json['updatedAtMs']),
+      schemaVersion: serializer.fromJson<int>(json['schemaVersion']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'name': serializer.toJson<String>(name),
+      'nameLower': serializer.toJson<String>(nameLower),
+      'measurementTypeDiscriminator': serializer.toJson<String>(
+        measurementTypeDiscriminator,
+      ),
+      'measurementTypePayloadJson': serializer.toJson<String>(
+        measurementTypePayloadJson,
+      ),
+      'videoUrl': serializer.toJson<String?>(videoUrl),
+      'cues': serializer.toJson<String?>(cues),
+      'archivedAtMs': serializer.toJson<int?>(archivedAtMs),
+      'createdAtMs': serializer.toJson<int>(createdAtMs),
+      'updatedAtMs': serializer.toJson<int>(updatedAtMs),
+      'schemaVersion': serializer.toJson<int>(schemaVersion),
+    };
+  }
+
+  LibraryExercise copyWith({
+    String? id,
+    String? name,
+    String? nameLower,
+    String? measurementTypeDiscriminator,
+    String? measurementTypePayloadJson,
+    Value<String?> videoUrl = const Value.absent(),
+    Value<String?> cues = const Value.absent(),
+    Value<int?> archivedAtMs = const Value.absent(),
+    int? createdAtMs,
+    int? updatedAtMs,
+    int? schemaVersion,
+  }) => LibraryExercise(
+    id: id ?? this.id,
+    name: name ?? this.name,
+    nameLower: nameLower ?? this.nameLower,
+    measurementTypeDiscriminator:
+        measurementTypeDiscriminator ?? this.measurementTypeDiscriminator,
+    measurementTypePayloadJson:
+        measurementTypePayloadJson ?? this.measurementTypePayloadJson,
+    videoUrl: videoUrl.present ? videoUrl.value : this.videoUrl,
+    cues: cues.present ? cues.value : this.cues,
+    archivedAtMs: archivedAtMs.present ? archivedAtMs.value : this.archivedAtMs,
+    createdAtMs: createdAtMs ?? this.createdAtMs,
+    updatedAtMs: updatedAtMs ?? this.updatedAtMs,
+    schemaVersion: schemaVersion ?? this.schemaVersion,
+  );
+  LibraryExercise copyWithCompanion(LibraryExercisesCompanion data) {
+    return LibraryExercise(
+      id: data.id.present ? data.id.value : this.id,
+      name: data.name.present ? data.name.value : this.name,
+      nameLower: data.nameLower.present ? data.nameLower.value : this.nameLower,
+      measurementTypeDiscriminator: data.measurementTypeDiscriminator.present
+          ? data.measurementTypeDiscriminator.value
+          : this.measurementTypeDiscriminator,
+      measurementTypePayloadJson: data.measurementTypePayloadJson.present
+          ? data.measurementTypePayloadJson.value
+          : this.measurementTypePayloadJson,
+      videoUrl: data.videoUrl.present ? data.videoUrl.value : this.videoUrl,
+      cues: data.cues.present ? data.cues.value : this.cues,
+      archivedAtMs: data.archivedAtMs.present
+          ? data.archivedAtMs.value
+          : this.archivedAtMs,
+      createdAtMs: data.createdAtMs.present
+          ? data.createdAtMs.value
+          : this.createdAtMs,
+      updatedAtMs: data.updatedAtMs.present
+          ? data.updatedAtMs.value
+          : this.updatedAtMs,
+      schemaVersion: data.schemaVersion.present
+          ? data.schemaVersion.value
+          : this.schemaVersion,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('LibraryExercise(')
+          ..write('id: $id, ')
+          ..write('name: $name, ')
+          ..write('nameLower: $nameLower, ')
+          ..write(
+            'measurementTypeDiscriminator: $measurementTypeDiscriminator, ',
+          )
+          ..write('measurementTypePayloadJson: $measurementTypePayloadJson, ')
+          ..write('videoUrl: $videoUrl, ')
+          ..write('cues: $cues, ')
+          ..write('archivedAtMs: $archivedAtMs, ')
+          ..write('createdAtMs: $createdAtMs, ')
+          ..write('updatedAtMs: $updatedAtMs, ')
+          ..write('schemaVersion: $schemaVersion')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    id,
+    name,
+    nameLower,
+    measurementTypeDiscriminator,
+    measurementTypePayloadJson,
+    videoUrl,
+    cues,
+    archivedAtMs,
+    createdAtMs,
+    updatedAtMs,
+    schemaVersion,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is LibraryExercise &&
+          other.id == this.id &&
+          other.name == this.name &&
+          other.nameLower == this.nameLower &&
+          other.measurementTypeDiscriminator ==
+              this.measurementTypeDiscriminator &&
+          other.measurementTypePayloadJson == this.measurementTypePayloadJson &&
+          other.videoUrl == this.videoUrl &&
+          other.cues == this.cues &&
+          other.archivedAtMs == this.archivedAtMs &&
+          other.createdAtMs == this.createdAtMs &&
+          other.updatedAtMs == this.updatedAtMs &&
+          other.schemaVersion == this.schemaVersion);
+}
+
+class LibraryExercisesCompanion extends UpdateCompanion<LibraryExercise> {
+  final Value<String> id;
+  final Value<String> name;
+  final Value<String> nameLower;
+  final Value<String> measurementTypeDiscriminator;
+  final Value<String> measurementTypePayloadJson;
+  final Value<String?> videoUrl;
+  final Value<String?> cues;
+  final Value<int?> archivedAtMs;
+  final Value<int> createdAtMs;
+  final Value<int> updatedAtMs;
+  final Value<int> schemaVersion;
+  final Value<int> rowid;
+  const LibraryExercisesCompanion({
+    this.id = const Value.absent(),
+    this.name = const Value.absent(),
+    this.nameLower = const Value.absent(),
+    this.measurementTypeDiscriminator = const Value.absent(),
+    this.measurementTypePayloadJson = const Value.absent(),
+    this.videoUrl = const Value.absent(),
+    this.cues = const Value.absent(),
+    this.archivedAtMs = const Value.absent(),
+    this.createdAtMs = const Value.absent(),
+    this.updatedAtMs = const Value.absent(),
+    this.schemaVersion = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  LibraryExercisesCompanion.insert({
+    required String id,
+    required String name,
+    required String nameLower,
+    required String measurementTypeDiscriminator,
+    required String measurementTypePayloadJson,
+    this.videoUrl = const Value.absent(),
+    this.cues = const Value.absent(),
+    this.archivedAtMs = const Value.absent(),
+    required int createdAtMs,
+    required int updatedAtMs,
+    required int schemaVersion,
+    this.rowid = const Value.absent(),
+  }) : id = Value(id),
+       name = Value(name),
+       nameLower = Value(nameLower),
+       measurementTypeDiscriminator = Value(measurementTypeDiscriminator),
+       measurementTypePayloadJson = Value(measurementTypePayloadJson),
+       createdAtMs = Value(createdAtMs),
+       updatedAtMs = Value(updatedAtMs),
+       schemaVersion = Value(schemaVersion);
+  static Insertable<LibraryExercise> custom({
+    Expression<String>? id,
+    Expression<String>? name,
+    Expression<String>? nameLower,
+    Expression<String>? measurementTypeDiscriminator,
+    Expression<String>? measurementTypePayloadJson,
+    Expression<String>? videoUrl,
+    Expression<String>? cues,
+    Expression<int>? archivedAtMs,
+    Expression<int>? createdAtMs,
+    Expression<int>? updatedAtMs,
+    Expression<int>? schemaVersion,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (name != null) 'name': name,
+      if (nameLower != null) 'name_lower': nameLower,
+      if (measurementTypeDiscriminator != null)
+        'measurement_type_discriminator': measurementTypeDiscriminator,
+      if (measurementTypePayloadJson != null)
+        'measurement_type_payload_json': measurementTypePayloadJson,
+      if (videoUrl != null) 'video_url': videoUrl,
+      if (cues != null) 'cues': cues,
+      if (archivedAtMs != null) 'archived_at_ms': archivedAtMs,
+      if (createdAtMs != null) 'created_at_ms': createdAtMs,
+      if (updatedAtMs != null) 'updated_at_ms': updatedAtMs,
+      if (schemaVersion != null) 'schema_version': schemaVersion,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  LibraryExercisesCompanion copyWith({
+    Value<String>? id,
+    Value<String>? name,
+    Value<String>? nameLower,
+    Value<String>? measurementTypeDiscriminator,
+    Value<String>? measurementTypePayloadJson,
+    Value<String?>? videoUrl,
+    Value<String?>? cues,
+    Value<int?>? archivedAtMs,
+    Value<int>? createdAtMs,
+    Value<int>? updatedAtMs,
+    Value<int>? schemaVersion,
+    Value<int>? rowid,
+  }) {
+    return LibraryExercisesCompanion(
+      id: id ?? this.id,
+      name: name ?? this.name,
+      nameLower: nameLower ?? this.nameLower,
+      measurementTypeDiscriminator:
+          measurementTypeDiscriminator ?? this.measurementTypeDiscriminator,
+      measurementTypePayloadJson:
+          measurementTypePayloadJson ?? this.measurementTypePayloadJson,
+      videoUrl: videoUrl ?? this.videoUrl,
+      cues: cues ?? this.cues,
+      archivedAtMs: archivedAtMs ?? this.archivedAtMs,
+      createdAtMs: createdAtMs ?? this.createdAtMs,
+      updatedAtMs: updatedAtMs ?? this.updatedAtMs,
+      schemaVersion: schemaVersion ?? this.schemaVersion,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (name.present) {
+      map['name'] = Variable<String>(name.value);
+    }
+    if (nameLower.present) {
+      map['name_lower'] = Variable<String>(nameLower.value);
+    }
+    if (measurementTypeDiscriminator.present) {
+      map['measurement_type_discriminator'] = Variable<String>(
+        measurementTypeDiscriminator.value,
+      );
+    }
+    if (measurementTypePayloadJson.present) {
+      map['measurement_type_payload_json'] = Variable<String>(
+        measurementTypePayloadJson.value,
+      );
+    }
+    if (videoUrl.present) {
+      map['video_url'] = Variable<String>(videoUrl.value);
+    }
+    if (cues.present) {
+      map['cues'] = Variable<String>(cues.value);
+    }
+    if (archivedAtMs.present) {
+      map['archived_at_ms'] = Variable<int>(archivedAtMs.value);
+    }
+    if (createdAtMs.present) {
+      map['created_at_ms'] = Variable<int>(createdAtMs.value);
+    }
+    if (updatedAtMs.present) {
+      map['updated_at_ms'] = Variable<int>(updatedAtMs.value);
+    }
+    if (schemaVersion.present) {
+      map['schema_version'] = Variable<int>(schemaVersion.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('LibraryExercisesCompanion(')
+          ..write('id: $id, ')
+          ..write('name: $name, ')
+          ..write('nameLower: $nameLower, ')
+          ..write(
+            'measurementTypeDiscriminator: $measurementTypeDiscriminator, ',
+          )
+          ..write('measurementTypePayloadJson: $measurementTypePayloadJson, ')
+          ..write('videoUrl: $videoUrl, ')
+          ..write('cues: $cues, ')
+          ..write('archivedAtMs: $archivedAtMs, ')
+          ..write('createdAtMs: $createdAtMs, ')
+          ..write('updatedAtMs: $updatedAtMs, ')
+          ..write('schemaVersion: $schemaVersion, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
 class $ExercisesTable extends Exercises
     with TableInfo<$ExercisesTable, Exercise> {
   @override
@@ -1808,6 +2522,21 @@ class $ExercisesTable extends Exercises
     type: DriftSqlType.int,
     requiredDuringInsert: false,
   );
+  static const VerificationMeta _libraryExerciseIdMeta = const VerificationMeta(
+    'libraryExerciseId',
+  );
+  @override
+  late final GeneratedColumn<String> libraryExerciseId =
+      GeneratedColumn<String>(
+        'library_exercise_id',
+        aliasedName,
+        true,
+        type: DriftSqlType.string,
+        requiredDuringInsert: false,
+        defaultConstraints: GeneratedColumn.constraintIsAlways(
+          'REFERENCES library_exercises (id) ON DELETE SET NULL',
+        ),
+      );
   static const VerificationMeta _createdAtMsMeta = const VerificationMeta(
     'createdAtMs',
   );
@@ -1852,6 +2581,7 @@ class $ExercisesTable extends Exercises
     notes,
     videoUrl,
     plannedRestSeconds,
+    libraryExerciseId,
     createdAtMs,
     updatedAtMs,
     schemaVersion,
@@ -1943,6 +2673,15 @@ class $ExercisesTable extends Exercises
         ),
       );
     }
+    if (data.containsKey('library_exercise_id')) {
+      context.handle(
+        _libraryExerciseIdMeta,
+        libraryExerciseId.isAcceptableOrUnknown(
+          data['library_exercise_id']!,
+          _libraryExerciseIdMeta,
+        ),
+      );
+    }
     if (data.containsKey('created_at_ms')) {
       context.handle(
         _createdAtMsMeta,
@@ -2025,6 +2764,10 @@ class $ExercisesTable extends Exercises
         DriftSqlType.int,
         data['${effectivePrefix}planned_rest_seconds'],
       ),
+      libraryExerciseId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}library_exercise_id'],
+      ),
       createdAtMs: attachedDatabase.typeMapping.read(
         DriftSqlType.int,
         data['${effectivePrefix}created_at_ms'],
@@ -2056,6 +2799,7 @@ class Exercise extends DataClass implements Insertable<Exercise> {
   final String? notes;
   final String? videoUrl;
   final int? plannedRestSeconds;
+  final String? libraryExerciseId;
   final int createdAtMs;
   final int updatedAtMs;
   final int schemaVersion;
@@ -2069,6 +2813,7 @@ class Exercise extends DataClass implements Insertable<Exercise> {
     this.notes,
     this.videoUrl,
     this.plannedRestSeconds,
+    this.libraryExerciseId,
     required this.createdAtMs,
     required this.updatedAtMs,
     required this.schemaVersion,
@@ -2095,6 +2840,9 @@ class Exercise extends DataClass implements Insertable<Exercise> {
     if (!nullToAbsent || plannedRestSeconds != null) {
       map['planned_rest_seconds'] = Variable<int>(plannedRestSeconds);
     }
+    if (!nullToAbsent || libraryExerciseId != null) {
+      map['library_exercise_id'] = Variable<String>(libraryExerciseId);
+    }
     map['created_at_ms'] = Variable<int>(createdAtMs);
     map['updated_at_ms'] = Variable<int>(updatedAtMs);
     map['schema_version'] = Variable<int>(schemaVersion);
@@ -2118,6 +2866,9 @@ class Exercise extends DataClass implements Insertable<Exercise> {
       plannedRestSeconds: plannedRestSeconds == null && nullToAbsent
           ? const Value.absent()
           : Value(plannedRestSeconds),
+      libraryExerciseId: libraryExerciseId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(libraryExerciseId),
       createdAtMs: Value(createdAtMs),
       updatedAtMs: Value(updatedAtMs),
       schemaVersion: Value(schemaVersion),
@@ -2143,6 +2894,9 @@ class Exercise extends DataClass implements Insertable<Exercise> {
       notes: serializer.fromJson<String?>(json['notes']),
       videoUrl: serializer.fromJson<String?>(json['videoUrl']),
       plannedRestSeconds: serializer.fromJson<int?>(json['plannedRestSeconds']),
+      libraryExerciseId: serializer.fromJson<String?>(
+        json['libraryExerciseId'],
+      ),
       createdAtMs: serializer.fromJson<int>(json['createdAtMs']),
       updatedAtMs: serializer.fromJson<int>(json['updatedAtMs']),
       schemaVersion: serializer.fromJson<int>(json['schemaVersion']),
@@ -2165,6 +2919,7 @@ class Exercise extends DataClass implements Insertable<Exercise> {
       'notes': serializer.toJson<String?>(notes),
       'videoUrl': serializer.toJson<String?>(videoUrl),
       'plannedRestSeconds': serializer.toJson<int?>(plannedRestSeconds),
+      'libraryExerciseId': serializer.toJson<String?>(libraryExerciseId),
       'createdAtMs': serializer.toJson<int>(createdAtMs),
       'updatedAtMs': serializer.toJson<int>(updatedAtMs),
       'schemaVersion': serializer.toJson<int>(schemaVersion),
@@ -2181,6 +2936,7 @@ class Exercise extends DataClass implements Insertable<Exercise> {
     Value<String?> notes = const Value.absent(),
     Value<String?> videoUrl = const Value.absent(),
     Value<int?> plannedRestSeconds = const Value.absent(),
+    Value<String?> libraryExerciseId = const Value.absent(),
     int? createdAtMs,
     int? updatedAtMs,
     int? schemaVersion,
@@ -2198,6 +2954,9 @@ class Exercise extends DataClass implements Insertable<Exercise> {
     plannedRestSeconds: plannedRestSeconds.present
         ? plannedRestSeconds.value
         : this.plannedRestSeconds,
+    libraryExerciseId: libraryExerciseId.present
+        ? libraryExerciseId.value
+        : this.libraryExerciseId,
     createdAtMs: createdAtMs ?? this.createdAtMs,
     updatedAtMs: updatedAtMs ?? this.updatedAtMs,
     schemaVersion: schemaVersion ?? this.schemaVersion,
@@ -2221,6 +2980,9 @@ class Exercise extends DataClass implements Insertable<Exercise> {
       plannedRestSeconds: data.plannedRestSeconds.present
           ? data.plannedRestSeconds.value
           : this.plannedRestSeconds,
+      libraryExerciseId: data.libraryExerciseId.present
+          ? data.libraryExerciseId.value
+          : this.libraryExerciseId,
       createdAtMs: data.createdAtMs.present
           ? data.createdAtMs.value
           : this.createdAtMs,
@@ -2247,6 +3009,7 @@ class Exercise extends DataClass implements Insertable<Exercise> {
           ..write('notes: $notes, ')
           ..write('videoUrl: $videoUrl, ')
           ..write('plannedRestSeconds: $plannedRestSeconds, ')
+          ..write('libraryExerciseId: $libraryExerciseId, ')
           ..write('createdAtMs: $createdAtMs, ')
           ..write('updatedAtMs: $updatedAtMs, ')
           ..write('schemaVersion: $schemaVersion')
@@ -2265,6 +3028,7 @@ class Exercise extends DataClass implements Insertable<Exercise> {
     notes,
     videoUrl,
     plannedRestSeconds,
+    libraryExerciseId,
     createdAtMs,
     updatedAtMs,
     schemaVersion,
@@ -2283,6 +3047,7 @@ class Exercise extends DataClass implements Insertable<Exercise> {
           other.notes == this.notes &&
           other.videoUrl == this.videoUrl &&
           other.plannedRestSeconds == this.plannedRestSeconds &&
+          other.libraryExerciseId == this.libraryExerciseId &&
           other.createdAtMs == this.createdAtMs &&
           other.updatedAtMs == this.updatedAtMs &&
           other.schemaVersion == this.schemaVersion);
@@ -2298,6 +3063,7 @@ class ExercisesCompanion extends UpdateCompanion<Exercise> {
   final Value<String?> notes;
   final Value<String?> videoUrl;
   final Value<int?> plannedRestSeconds;
+  final Value<String?> libraryExerciseId;
   final Value<int> createdAtMs;
   final Value<int> updatedAtMs;
   final Value<int> schemaVersion;
@@ -2312,6 +3078,7 @@ class ExercisesCompanion extends UpdateCompanion<Exercise> {
     this.notes = const Value.absent(),
     this.videoUrl = const Value.absent(),
     this.plannedRestSeconds = const Value.absent(),
+    this.libraryExerciseId = const Value.absent(),
     this.createdAtMs = const Value.absent(),
     this.updatedAtMs = const Value.absent(),
     this.schemaVersion = const Value.absent(),
@@ -2327,6 +3094,7 @@ class ExercisesCompanion extends UpdateCompanion<Exercise> {
     this.notes = const Value.absent(),
     this.videoUrl = const Value.absent(),
     this.plannedRestSeconds = const Value.absent(),
+    this.libraryExerciseId = const Value.absent(),
     required int createdAtMs,
     required int updatedAtMs,
     required int schemaVersion,
@@ -2350,6 +3118,7 @@ class ExercisesCompanion extends UpdateCompanion<Exercise> {
     Expression<String>? notes,
     Expression<String>? videoUrl,
     Expression<int>? plannedRestSeconds,
+    Expression<String>? libraryExerciseId,
     Expression<int>? createdAtMs,
     Expression<int>? updatedAtMs,
     Expression<int>? schemaVersion,
@@ -2368,6 +3137,7 @@ class ExercisesCompanion extends UpdateCompanion<Exercise> {
       if (videoUrl != null) 'video_url': videoUrl,
       if (plannedRestSeconds != null)
         'planned_rest_seconds': plannedRestSeconds,
+      if (libraryExerciseId != null) 'library_exercise_id': libraryExerciseId,
       if (createdAtMs != null) 'created_at_ms': createdAtMs,
       if (updatedAtMs != null) 'updated_at_ms': updatedAtMs,
       if (schemaVersion != null) 'schema_version': schemaVersion,
@@ -2385,6 +3155,7 @@ class ExercisesCompanion extends UpdateCompanion<Exercise> {
     Value<String?>? notes,
     Value<String?>? videoUrl,
     Value<int?>? plannedRestSeconds,
+    Value<String?>? libraryExerciseId,
     Value<int>? createdAtMs,
     Value<int>? updatedAtMs,
     Value<int>? schemaVersion,
@@ -2402,6 +3173,7 @@ class ExercisesCompanion extends UpdateCompanion<Exercise> {
       notes: notes ?? this.notes,
       videoUrl: videoUrl ?? this.videoUrl,
       plannedRestSeconds: plannedRestSeconds ?? this.plannedRestSeconds,
+      libraryExerciseId: libraryExerciseId ?? this.libraryExerciseId,
       createdAtMs: createdAtMs ?? this.createdAtMs,
       updatedAtMs: updatedAtMs ?? this.updatedAtMs,
       schemaVersion: schemaVersion ?? this.schemaVersion,
@@ -2443,6 +3215,9 @@ class ExercisesCompanion extends UpdateCompanion<Exercise> {
     if (plannedRestSeconds.present) {
       map['planned_rest_seconds'] = Variable<int>(plannedRestSeconds.value);
     }
+    if (libraryExerciseId.present) {
+      map['library_exercise_id'] = Variable<String>(libraryExerciseId.value);
+    }
     if (createdAtMs.present) {
       map['created_at_ms'] = Variable<int>(createdAtMs.value);
     }
@@ -2472,6 +3247,7 @@ class ExercisesCompanion extends UpdateCompanion<Exercise> {
           ..write('notes: $notes, ')
           ..write('videoUrl: $videoUrl, ')
           ..write('plannedRestSeconds: $plannedRestSeconds, ')
+          ..write('libraryExerciseId: $libraryExerciseId, ')
           ..write('createdAtMs: $createdAtMs, ')
           ..write('updatedAtMs: $updatedAtMs, ')
           ..write('schemaVersion: $schemaVersion, ')
@@ -6030,6 +6806,9 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   late final $ProgramWorkoutDaysTable programWorkoutDays =
       $ProgramWorkoutDaysTable(this);
   late final $ExerciseGroupsTable exerciseGroups = $ExerciseGroupsTable(this);
+  late final $LibraryExercisesTable libraryExercises = $LibraryExercisesTable(
+    this,
+  );
   late final $ExercisesTable exercises = $ExercisesTable(this);
   late final $WorkoutSetsTable workoutSets = $WorkoutSetsTable(this);
   late final $SessionsTable sessions = $SessionsTable(this);
@@ -6055,6 +6834,10 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     'session_notes_session_id',
     'CREATE INDEX session_notes_session_id ON session_notes (session_id)',
   );
+  late final Index libraryExercisesNameLower = Index(
+    'library_exercises_name_lower',
+    'CREATE INDEX library_exercises_name_lower ON library_exercises (name_lower)',
+  );
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
@@ -6064,6 +6847,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     workoutDays,
     programWorkoutDays,
     exerciseGroups,
+    libraryExercises,
     exercises,
     workoutSets,
     sessions,
@@ -6075,6 +6859,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     sessionsWorkoutDayId,
     sessionExercisesSessionState,
     sessionNotesSessionId,
+    libraryExercisesNameLower,
   ];
   @override
   StreamQueryUpdateRules get streamUpdateRules => const StreamQueryUpdateRules([
@@ -6112,6 +6897,13 @@ abstract class _$AppDatabase extends GeneratedDatabase {
         limitUpdateKind: UpdateKind.delete,
       ),
       result: [TableUpdate('exercises', kind: UpdateKind.delete)],
+    ),
+    WritePropagation(
+      on: TableUpdateQuery.onTableName(
+        'library_exercises',
+        limitUpdateKind: UpdateKind.delete,
+      ),
+      result: [TableUpdate('exercises', kind: UpdateKind.update)],
     ),
     WritePropagation(
       on: TableUpdateQuery.onTableName(
@@ -8015,6 +8807,447 @@ typedef $$ExerciseGroupsTableProcessedTableManager =
       ExerciseGroup,
       PrefetchHooks Function({bool workoutDayId, bool exercisesRefs})
     >;
+typedef $$LibraryExercisesTableCreateCompanionBuilder =
+    LibraryExercisesCompanion Function({
+      required String id,
+      required String name,
+      required String nameLower,
+      required String measurementTypeDiscriminator,
+      required String measurementTypePayloadJson,
+      Value<String?> videoUrl,
+      Value<String?> cues,
+      Value<int?> archivedAtMs,
+      required int createdAtMs,
+      required int updatedAtMs,
+      required int schemaVersion,
+      Value<int> rowid,
+    });
+typedef $$LibraryExercisesTableUpdateCompanionBuilder =
+    LibraryExercisesCompanion Function({
+      Value<String> id,
+      Value<String> name,
+      Value<String> nameLower,
+      Value<String> measurementTypeDiscriminator,
+      Value<String> measurementTypePayloadJson,
+      Value<String?> videoUrl,
+      Value<String?> cues,
+      Value<int?> archivedAtMs,
+      Value<int> createdAtMs,
+      Value<int> updatedAtMs,
+      Value<int> schemaVersion,
+      Value<int> rowid,
+    });
+
+final class $$LibraryExercisesTableReferences
+    extends
+        BaseReferences<_$AppDatabase, $LibraryExercisesTable, LibraryExercise> {
+  $$LibraryExercisesTableReferences(
+    super.$_db,
+    super.$_table,
+    super.$_typedResult,
+  );
+
+  static MultiTypedResultKey<$ExercisesTable, List<Exercise>>
+  _exercisesRefsTable(_$AppDatabase db) => MultiTypedResultKey.fromTable(
+    db.exercises,
+    aliasName: $_aliasNameGenerator(
+      db.libraryExercises.id,
+      db.exercises.libraryExerciseId,
+    ),
+  );
+
+  $$ExercisesTableProcessedTableManager get exercisesRefs {
+    final manager = $$ExercisesTableTableManager($_db, $_db.exercises).filter(
+      (f) => f.libraryExerciseId.id.sqlEquals($_itemColumn<String>('id')!),
+    );
+
+    final cache = $_typedResult.readTableOrNull(_exercisesRefsTable($_db));
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: cache),
+    );
+  }
+}
+
+class $$LibraryExercisesTableFilterComposer
+    extends Composer<_$AppDatabase, $LibraryExercisesTable> {
+  $$LibraryExercisesTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get name => $composableBuilder(
+    column: $table.name,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get nameLower => $composableBuilder(
+    column: $table.nameLower,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get measurementTypeDiscriminator => $composableBuilder(
+    column: $table.measurementTypeDiscriminator,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get measurementTypePayloadJson => $composableBuilder(
+    column: $table.measurementTypePayloadJson,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get videoUrl => $composableBuilder(
+    column: $table.videoUrl,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get cues => $composableBuilder(
+    column: $table.cues,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get archivedAtMs => $composableBuilder(
+    column: $table.archivedAtMs,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get createdAtMs => $composableBuilder(
+    column: $table.createdAtMs,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get updatedAtMs => $composableBuilder(
+    column: $table.updatedAtMs,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get schemaVersion => $composableBuilder(
+    column: $table.schemaVersion,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  Expression<bool> exercisesRefs(
+    Expression<bool> Function($$ExercisesTableFilterComposer f) f,
+  ) {
+    final $$ExercisesTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.exercises,
+      getReferencedColumn: (t) => t.libraryExerciseId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$ExercisesTableFilterComposer(
+            $db: $db,
+            $table: $db.exercises,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
+}
+
+class $$LibraryExercisesTableOrderingComposer
+    extends Composer<_$AppDatabase, $LibraryExercisesTable> {
+  $$LibraryExercisesTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get name => $composableBuilder(
+    column: $table.name,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get nameLower => $composableBuilder(
+    column: $table.nameLower,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get measurementTypeDiscriminator =>
+      $composableBuilder(
+        column: $table.measurementTypeDiscriminator,
+        builder: (column) => ColumnOrderings(column),
+      );
+
+  ColumnOrderings<String> get measurementTypePayloadJson => $composableBuilder(
+    column: $table.measurementTypePayloadJson,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get videoUrl => $composableBuilder(
+    column: $table.videoUrl,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get cues => $composableBuilder(
+    column: $table.cues,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get archivedAtMs => $composableBuilder(
+    column: $table.archivedAtMs,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get createdAtMs => $composableBuilder(
+    column: $table.createdAtMs,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get updatedAtMs => $composableBuilder(
+    column: $table.updatedAtMs,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get schemaVersion => $composableBuilder(
+    column: $table.schemaVersion,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$LibraryExercisesTableAnnotationComposer
+    extends Composer<_$AppDatabase, $LibraryExercisesTable> {
+  $$LibraryExercisesTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get name =>
+      $composableBuilder(column: $table.name, builder: (column) => column);
+
+  GeneratedColumn<String> get nameLower =>
+      $composableBuilder(column: $table.nameLower, builder: (column) => column);
+
+  GeneratedColumn<String> get measurementTypeDiscriminator =>
+      $composableBuilder(
+        column: $table.measurementTypeDiscriminator,
+        builder: (column) => column,
+      );
+
+  GeneratedColumn<String> get measurementTypePayloadJson => $composableBuilder(
+    column: $table.measurementTypePayloadJson,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get videoUrl =>
+      $composableBuilder(column: $table.videoUrl, builder: (column) => column);
+
+  GeneratedColumn<String> get cues =>
+      $composableBuilder(column: $table.cues, builder: (column) => column);
+
+  GeneratedColumn<int> get archivedAtMs => $composableBuilder(
+    column: $table.archivedAtMs,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get createdAtMs => $composableBuilder(
+    column: $table.createdAtMs,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get updatedAtMs => $composableBuilder(
+    column: $table.updatedAtMs,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get schemaVersion => $composableBuilder(
+    column: $table.schemaVersion,
+    builder: (column) => column,
+  );
+
+  Expression<T> exercisesRefs<T extends Object>(
+    Expression<T> Function($$ExercisesTableAnnotationComposer a) f,
+  ) {
+    final $$ExercisesTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.exercises,
+      getReferencedColumn: (t) => t.libraryExerciseId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$ExercisesTableAnnotationComposer(
+            $db: $db,
+            $table: $db.exercises,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
+}
+
+class $$LibraryExercisesTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $LibraryExercisesTable,
+          LibraryExercise,
+          $$LibraryExercisesTableFilterComposer,
+          $$LibraryExercisesTableOrderingComposer,
+          $$LibraryExercisesTableAnnotationComposer,
+          $$LibraryExercisesTableCreateCompanionBuilder,
+          $$LibraryExercisesTableUpdateCompanionBuilder,
+          (LibraryExercise, $$LibraryExercisesTableReferences),
+          LibraryExercise,
+          PrefetchHooks Function({bool exercisesRefs})
+        > {
+  $$LibraryExercisesTableTableManager(
+    _$AppDatabase db,
+    $LibraryExercisesTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$LibraryExercisesTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$LibraryExercisesTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$LibraryExercisesTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                Value<String> name = const Value.absent(),
+                Value<String> nameLower = const Value.absent(),
+                Value<String> measurementTypeDiscriminator =
+                    const Value.absent(),
+                Value<String> measurementTypePayloadJson = const Value.absent(),
+                Value<String?> videoUrl = const Value.absent(),
+                Value<String?> cues = const Value.absent(),
+                Value<int?> archivedAtMs = const Value.absent(),
+                Value<int> createdAtMs = const Value.absent(),
+                Value<int> updatedAtMs = const Value.absent(),
+                Value<int> schemaVersion = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => LibraryExercisesCompanion(
+                id: id,
+                name: name,
+                nameLower: nameLower,
+                measurementTypeDiscriminator: measurementTypeDiscriminator,
+                measurementTypePayloadJson: measurementTypePayloadJson,
+                videoUrl: videoUrl,
+                cues: cues,
+                archivedAtMs: archivedAtMs,
+                createdAtMs: createdAtMs,
+                updatedAtMs: updatedAtMs,
+                schemaVersion: schemaVersion,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String id,
+                required String name,
+                required String nameLower,
+                required String measurementTypeDiscriminator,
+                required String measurementTypePayloadJson,
+                Value<String?> videoUrl = const Value.absent(),
+                Value<String?> cues = const Value.absent(),
+                Value<int?> archivedAtMs = const Value.absent(),
+                required int createdAtMs,
+                required int updatedAtMs,
+                required int schemaVersion,
+                Value<int> rowid = const Value.absent(),
+              }) => LibraryExercisesCompanion.insert(
+                id: id,
+                name: name,
+                nameLower: nameLower,
+                measurementTypeDiscriminator: measurementTypeDiscriminator,
+                measurementTypePayloadJson: measurementTypePayloadJson,
+                videoUrl: videoUrl,
+                cues: cues,
+                archivedAtMs: archivedAtMs,
+                createdAtMs: createdAtMs,
+                updatedAtMs: updatedAtMs,
+                schemaVersion: schemaVersion,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map(
+                (e) => (
+                  e.readTable(table),
+                  $$LibraryExercisesTableReferences(db, table, e),
+                ),
+              )
+              .toList(),
+          prefetchHooksCallback: ({exercisesRefs = false}) {
+            return PrefetchHooks(
+              db: db,
+              explicitlyWatchedTables: [if (exercisesRefs) db.exercises],
+              addJoins: null,
+              getPrefetchedDataCallback: (items) async {
+                return [
+                  if (exercisesRefs)
+                    await $_getPrefetchedData<
+                      LibraryExercise,
+                      $LibraryExercisesTable,
+                      Exercise
+                    >(
+                      currentTable: table,
+                      referencedTable: $$LibraryExercisesTableReferences
+                          ._exercisesRefsTable(db),
+                      managerFromTypedResult: (p0) =>
+                          $$LibraryExercisesTableReferences(
+                            db,
+                            table,
+                            p0,
+                          ).exercisesRefs,
+                      referencedItemsForCurrentItem: (item, referencedItems) =>
+                          referencedItems.where(
+                            (e) => e.libraryExerciseId == item.id,
+                          ),
+                      typedResults: items,
+                    ),
+                ];
+              },
+            );
+          },
+        ),
+      );
+}
+
+typedef $$LibraryExercisesTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $LibraryExercisesTable,
+      LibraryExercise,
+      $$LibraryExercisesTableFilterComposer,
+      $$LibraryExercisesTableOrderingComposer,
+      $$LibraryExercisesTableAnnotationComposer,
+      $$LibraryExercisesTableCreateCompanionBuilder,
+      $$LibraryExercisesTableUpdateCompanionBuilder,
+      (LibraryExercise, $$LibraryExercisesTableReferences),
+      LibraryExercise,
+      PrefetchHooks Function({bool exercisesRefs})
+    >;
 typedef $$ExercisesTableCreateCompanionBuilder =
     ExercisesCompanion Function({
       required String id,
@@ -8026,6 +9259,7 @@ typedef $$ExercisesTableCreateCompanionBuilder =
       Value<String?> notes,
       Value<String?> videoUrl,
       Value<int?> plannedRestSeconds,
+      Value<String?> libraryExerciseId,
       required int createdAtMs,
       required int updatedAtMs,
       required int schemaVersion,
@@ -8042,6 +9276,7 @@ typedef $$ExercisesTableUpdateCompanionBuilder =
       Value<String?> notes,
       Value<String?> videoUrl,
       Value<int?> plannedRestSeconds,
+      Value<String?> libraryExerciseId,
       Value<int> createdAtMs,
       Value<int> updatedAtMs,
       Value<int> schemaVersion,
@@ -8068,6 +9303,28 @@ final class $$ExercisesTableReferences
       $_db.exerciseGroups,
     ).filter((f) => f.id.sqlEquals($_column));
     final item = $_typedResult.readTableOrNull(_exerciseGroupIdTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: [item]),
+    );
+  }
+
+  static $LibraryExercisesTable _libraryExerciseIdTable(_$AppDatabase db) =>
+      db.libraryExercises.createAlias(
+        $_aliasNameGenerator(
+          db.exercises.libraryExerciseId,
+          db.libraryExercises.id,
+        ),
+      );
+
+  $$LibraryExercisesTableProcessedTableManager? get libraryExerciseId {
+    final $_column = $_itemColumn<String>('library_exercise_id');
+    if ($_column == null) return null;
+    final manager = $$LibraryExercisesTableTableManager(
+      $_db,
+      $_db.libraryExercises,
+    ).filter((f) => f.id.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_libraryExerciseIdTable($_db));
     if (item == null) return manager;
     return ProcessedTableManager(
       manager.$state.copyWith(prefetchedData: [item]),
@@ -8171,6 +9428,29 @@ class $$ExercisesTableFilterComposer
           }) => $$ExerciseGroupsTableFilterComposer(
             $db: $db,
             $table: $db.exerciseGroups,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+
+  $$LibraryExercisesTableFilterComposer get libraryExerciseId {
+    final $$LibraryExercisesTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.libraryExerciseId,
+      referencedTable: $db.libraryExercises,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$LibraryExercisesTableFilterComposer(
+            $db: $db,
+            $table: $db.libraryExercises,
             $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
             joinBuilder: joinBuilder,
             $removeJoinBuilderFromRootComposer:
@@ -8293,6 +9573,29 @@ class $$ExercisesTableOrderingComposer
     );
     return composer;
   }
+
+  $$LibraryExercisesTableOrderingComposer get libraryExerciseId {
+    final $$LibraryExercisesTableOrderingComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.libraryExerciseId,
+      referencedTable: $db.libraryExercises,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$LibraryExercisesTableOrderingComposer(
+            $db: $db,
+            $table: $db.libraryExercises,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
 }
 
 class $$ExercisesTableAnnotationComposer
@@ -8373,6 +9676,29 @@ class $$ExercisesTableAnnotationComposer
     return composer;
   }
 
+  $$LibraryExercisesTableAnnotationComposer get libraryExerciseId {
+    final $$LibraryExercisesTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.libraryExerciseId,
+      referencedTable: $db.libraryExercises,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$LibraryExercisesTableAnnotationComposer(
+            $db: $db,
+            $table: $db.libraryExercises,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+
   Expression<T> workoutSetsRefs<T extends Object>(
     Expression<T> Function($$WorkoutSetsTableAnnotationComposer a) f,
   ) {
@@ -8412,7 +9738,11 @@ class $$ExercisesTableTableManager
           $$ExercisesTableUpdateCompanionBuilder,
           (Exercise, $$ExercisesTableReferences),
           Exercise,
-          PrefetchHooks Function({bool exerciseGroupId, bool workoutSetsRefs})
+          PrefetchHooks Function({
+            bool exerciseGroupId,
+            bool libraryExerciseId,
+            bool workoutSetsRefs,
+          })
         > {
   $$ExercisesTableTableManager(_$AppDatabase db, $ExercisesTable table)
     : super(
@@ -8437,6 +9767,7 @@ class $$ExercisesTableTableManager
                 Value<String?> notes = const Value.absent(),
                 Value<String?> videoUrl = const Value.absent(),
                 Value<int?> plannedRestSeconds = const Value.absent(),
+                Value<String?> libraryExerciseId = const Value.absent(),
                 Value<int> createdAtMs = const Value.absent(),
                 Value<int> updatedAtMs = const Value.absent(),
                 Value<int> schemaVersion = const Value.absent(),
@@ -8451,6 +9782,7 @@ class $$ExercisesTableTableManager
                 notes: notes,
                 videoUrl: videoUrl,
                 plannedRestSeconds: plannedRestSeconds,
+                libraryExerciseId: libraryExerciseId,
                 createdAtMs: createdAtMs,
                 updatedAtMs: updatedAtMs,
                 schemaVersion: schemaVersion,
@@ -8467,6 +9799,7 @@ class $$ExercisesTableTableManager
                 Value<String?> notes = const Value.absent(),
                 Value<String?> videoUrl = const Value.absent(),
                 Value<int?> plannedRestSeconds = const Value.absent(),
+                Value<String?> libraryExerciseId = const Value.absent(),
                 required int createdAtMs,
                 required int updatedAtMs,
                 required int schemaVersion,
@@ -8481,6 +9814,7 @@ class $$ExercisesTableTableManager
                 notes: notes,
                 videoUrl: videoUrl,
                 plannedRestSeconds: plannedRestSeconds,
+                libraryExerciseId: libraryExerciseId,
                 createdAtMs: createdAtMs,
                 updatedAtMs: updatedAtMs,
                 schemaVersion: schemaVersion,
@@ -8495,7 +9829,11 @@ class $$ExercisesTableTableManager
               )
               .toList(),
           prefetchHooksCallback:
-              ({exerciseGroupId = false, workoutSetsRefs = false}) {
+              ({
+                exerciseGroupId = false,
+                libraryExerciseId = false,
+                workoutSetsRefs = false,
+              }) {
                 return PrefetchHooks(
                   db: db,
                   explicitlyWatchedTables: [
@@ -8526,6 +9864,19 @@ class $$ExercisesTableTableManager
                                         ._exerciseGroupIdTable(db),
                                     referencedColumn: $$ExercisesTableReferences
                                         ._exerciseGroupIdTable(db)
+                                        .id,
+                                  )
+                                  as T;
+                        }
+                        if (libraryExerciseId) {
+                          state =
+                              state.withJoin(
+                                    currentTable: table,
+                                    currentColumn: table.libraryExerciseId,
+                                    referencedTable: $$ExercisesTableReferences
+                                        ._libraryExerciseIdTable(db),
+                                    referencedColumn: $$ExercisesTableReferences
+                                        ._libraryExerciseIdTable(db)
                                         .id,
                                   )
                                   as T;
@@ -8576,7 +9927,11 @@ typedef $$ExercisesTableProcessedTableManager =
       $$ExercisesTableUpdateCompanionBuilder,
       (Exercise, $$ExercisesTableReferences),
       Exercise,
-      PrefetchHooks Function({bool exerciseGroupId, bool workoutSetsRefs})
+      PrefetchHooks Function({
+        bool exerciseGroupId,
+        bool libraryExerciseId,
+        bool workoutSetsRefs,
+      })
     >;
 typedef $$WorkoutSetsTableCreateCompanionBuilder =
     WorkoutSetsCompanion Function({
@@ -11275,6 +12630,8 @@ class $AppDatabaseManager {
       $$ProgramWorkoutDaysTableTableManager(_db, _db.programWorkoutDays);
   $$ExerciseGroupsTableTableManager get exerciseGroups =>
       $$ExerciseGroupsTableTableManager(_db, _db.exerciseGroups);
+  $$LibraryExercisesTableTableManager get libraryExercises =>
+      $$LibraryExercisesTableTableManager(_db, _db.libraryExercises);
   $$ExercisesTableTableManager get exercises =>
       $$ExercisesTableTableManager(_db, _db.exercises);
   $$WorkoutSetsTableTableManager get workoutSets =>

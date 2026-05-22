@@ -46,6 +46,11 @@ abstract final class AppMigrations {
       // in its own version to re-fire on the next open.
       await _backfillSessionSnapshotRole(db);
     }
+    if (from < 11) {
+      await m.createTable(db.libraryExercises);
+      await m.createIndex(db.libraryExercisesNameLower);
+      await m.addColumn(db.exercises, db.exercises.libraryExerciseId);
+    }
   }
 
   /// Rewrites every session's canonical snapshot JSON to include the new
