@@ -10,6 +10,7 @@ import 'package:zamaj/modules/domain/models/exercise_group_kind.dart';
 import 'package:zamaj/modules/domain/models/exercise_metadata.dart';
 import 'package:zamaj/modules/domain/models/exercise_state.dart';
 import 'package:zamaj/modules/domain/models/extra_work.dart';
+import 'package:zamaj/modules/domain/models/library_exercise.dart';
 import 'package:zamaj/modules/domain/models/measurement_type.dart';
 import 'package:zamaj/modules/domain/models/planned_set_values.dart';
 import 'package:zamaj/modules/domain/models/program.dart';
@@ -75,6 +76,32 @@ SubstituteExercise anySubstituteExercise(Random rng) {
     plannedValues: anyPlannedSetValuesForMeasurement(rng, mt),
     setCount: 1 + rng.nextInt(5),
     metadata: rng.nextBool() ? anyExerciseMetadata(rng) : null,
+    libraryExerciseId: rng.nextBool() ? anyUuidV4(rng) : null,
+  );
+}
+
+LibraryExercise anyLibraryExercise(Random rng) {
+  return LibraryExercise(
+    id: anyUuidV4(rng),
+    name: _anyTrimmedNonEmptyString(rng, maxLen: 40),
+    measurementType: anyMeasurementType(rng),
+    videoUrl: rng.nextBool()
+        ? 'https://example.com/${anyUuidV4(rng)}'
+        : null,
+    cues: rng.nextBool() ? _anyString(rng, maxLen: 200) : null,
+    archivedAt: rng.nextBool() ? anyUtcDateTime(rng) : null,
+    createdAt: anyUtcDateTime(rng),
+    updatedAt: anyUtcDateTime(rng),
+    schemaVersion: 1,
+  );
+}
+
+String _anyTrimmedNonEmptyString(Random rng, {required int maxLen}) {
+  const chars =
+      'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+  final len = 1 + rng.nextInt(maxLen);
+  return String.fromCharCodes(
+    List.generate(len, (_) => chars.codeUnitAt(rng.nextInt(chars.length))),
   );
 }
 
