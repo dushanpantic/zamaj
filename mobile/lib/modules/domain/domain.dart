@@ -11,6 +11,7 @@ export 'models/exercise_group_role.dart';
 export 'models/exercise_metadata.dart';
 export 'models/exercise_state.dart';
 export 'models/extra_work.dart';
+export 'models/library_exercise.dart';
 export 'models/measurement_type.dart';
 export 'models/planned_set_values.dart';
 export 'models/program.dart';
