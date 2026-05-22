@@ -95,6 +95,7 @@ class WorkoutDayMapper {
       measurementType: measurementType,
       metadata: ExerciseMetadata(notes: row.notes, videoUrl: row.videoUrl),
       plannedRestSeconds: row.plannedRestSeconds,
+      libraryExerciseId: row.libraryExerciseId,
       sets: sets.map(_setToDomain).toList(),
       createdAt: DateTime.fromMillisecondsSinceEpoch(
         row.createdAtMs,
@@ -177,6 +178,7 @@ class WorkoutDayMapper {
       notes: Value(exercise.metadata.notes),
       videoUrl: Value(exercise.metadata.videoUrl),
       plannedRestSeconds: Value(exercise.plannedRestSeconds),
+      libraryExerciseId: Value(exercise.libraryExerciseId),
       createdAtMs: Value(exercise.createdAt.millisecondsSinceEpoch),
       updatedAtMs: Value(exercise.updatedAt.millisecondsSinceEpoch),
       schemaVersion: Value(exercise.schemaVersion),

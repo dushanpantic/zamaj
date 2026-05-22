@@ -24,6 +24,7 @@ export 'models/session_snapshot.dart';
 export 'models/substitute_exercise.dart';
 export 'models/workout_day.dart';
 export 'models/workout_set.dart';
+export 'repositories/exercise_library_repository.dart';
 export 'repositories/program_repository.dart';
 export 'repositories/session_repository.dart';
 export 'services/log_target.dart';

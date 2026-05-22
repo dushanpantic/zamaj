@@ -15,12 +15,14 @@ class MainApp extends StatelessWidget {
     super.key,
     required this.programRepo,
     required this.sessionRepo,
+    required this.exerciseLibraryRepo,
     required this.sessionFlowEngine,
     required this.clock,
   });
 
   final ProgramRepository programRepo;
   final SessionRepository sessionRepo;
+  final ExerciseLibraryRepository exerciseLibraryRepo;
   final SessionFlowEngine sessionFlowEngine;
   final Clock clock;
 
@@ -30,6 +32,9 @@ class MainApp extends StatelessWidget {
       providers: [
         RepositoryProvider<ProgramRepository>.value(value: programRepo),
         RepositoryProvider<SessionRepository>.value(value: sessionRepo),
+        RepositoryProvider<ExerciseLibraryRepository>.value(
+          value: exerciseLibraryRepo,
+        ),
         RepositoryProvider<SessionFlowEngine>.value(value: sessionFlowEngine),
         RepositoryProvider<Clock>.value(value: clock),
         RepositoryProvider<ExternalLinkLauncher>(
