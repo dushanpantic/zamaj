@@ -305,11 +305,11 @@ class _ProgramList extends StatelessWidget {
         context.read<ProgramListBloc>().add(const ProgramListRefreshed());
       },
       child: ListView.separated(
-        padding: const EdgeInsets.only(
+        padding: EdgeInsets.only(
           left: AppSpacing.lg,
           right: AppSpacing.lg,
           top: AppSpacing.lg,
-          bottom: AppSpacing.xxxl,
+          bottom: AppSpacing.xxxl + MediaQuery.viewPaddingOf(context).bottom,
         ),
         itemCount: programs.length,
         separatorBuilder: (_, _) => const SizedBox(height: AppSpacing.sm),

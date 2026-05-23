@@ -330,7 +330,12 @@ class _ExerciseList extends StatelessWidget {
     }
 
     return ReorderableListView.builder(
-      padding: const EdgeInsets.all(AppSpacing.lg),
+      padding: EdgeInsets.fromLTRB(
+        AppSpacing.lg,
+        AppSpacing.lg,
+        AppSpacing.lg,
+        AppSpacing.lg + MediaQuery.viewPaddingOf(context).bottom,
+      ),
       itemCount: draft.groups.length,
       onReorder: (oldIndex, newIndex) {
         final ids = draft.groups.map((g) => g.draftId).toList();

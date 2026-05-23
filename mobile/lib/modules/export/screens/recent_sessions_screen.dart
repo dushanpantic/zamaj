@@ -100,11 +100,11 @@ class _LoadedBody extends StatelessWidget {
         context.read<RecentSessionsBloc>().add(const RecentSessionsRefreshed());
       },
       child: ListView(
-        padding: const EdgeInsets.fromLTRB(
+        padding: EdgeInsets.fromLTRB(
           AppSpacing.lg,
           AppSpacing.lg,
           AppSpacing.lg,
-          AppSpacing.xxxl,
+          AppSpacing.xxxl + MediaQuery.viewPaddingOf(context).bottom,
         ),
         children: [
           if (thisWeek.isNotEmpty) ...[

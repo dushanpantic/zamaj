@@ -343,7 +343,12 @@ class _ProgramEditorScreenState extends State<ProgramEditorScreen> {
     }
 
     return ReorderableListView.builder(
-      padding: const EdgeInsets.only(bottom: AppSpacing.xxxl + AppSpacing.xl),
+      padding: EdgeInsets.only(
+        bottom:
+            AppSpacing.xxxl +
+            AppSpacing.xl +
+            MediaQuery.viewPaddingOf(context).bottom,
+      ),
       itemCount: workoutDays.length,
       onReorder: (oldIndex, newIndex) {
         final days = List.of(workoutDays);

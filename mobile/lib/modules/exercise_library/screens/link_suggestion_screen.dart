@@ -131,7 +131,12 @@ class _LoadedView extends StatelessWidget {
         if (lastError != null) DomainErrorBanner(error: lastError!),
         Expanded(
           child: ListView.separated(
-            padding: const EdgeInsets.all(AppSpacing.lg),
+            padding: EdgeInsets.fromLTRB(
+              AppSpacing.lg,
+              AppSpacing.lg,
+              AppSpacing.lg,
+              AppSpacing.lg + MediaQuery.viewPaddingOf(context).bottom,
+            ),
             itemCount: clusters.length,
             separatorBuilder: (_, _) => const SizedBox(height: AppSpacing.md),
             itemBuilder: (context, index) {

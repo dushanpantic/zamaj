@@ -171,7 +171,12 @@ class _PlanPreviewScreenState extends State<PlanPreviewScreen> {
     }
 
     return ListView(
-      padding: const EdgeInsets.all(AppSpacing.lg),
+      padding: EdgeInsets.fromLTRB(
+        AppSpacing.lg,
+        AppSpacing.lg,
+        AppSpacing.lg,
+        AppSpacing.lg + MediaQuery.viewPaddingOf(context).bottom,
+      ),
       children: [
         Text(
           draft.name,

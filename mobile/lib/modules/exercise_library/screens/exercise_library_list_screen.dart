@@ -321,11 +321,13 @@ class _LoadedView extends StatelessWidget {
               : RefreshIndicator(
                   onRefresh: onRefresh,
                   child: ListView.separated(
-                    padding: const EdgeInsets.only(
+                    padding: EdgeInsets.only(
                       left: AppSpacing.lg,
                       right: AppSpacing.lg,
                       top: AppSpacing.md,
-                      bottom: AppSpacing.xxxl,
+                      bottom:
+                          AppSpacing.xxxl +
+                          MediaQuery.viewPaddingOf(context).bottom,
                     ),
                     itemCount: entries.length,
                     separatorBuilder: (_, _) =>

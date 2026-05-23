@@ -213,11 +213,12 @@ class _LoadedBody extends StatelessWidget {
               );
             },
             child: ListView.separated(
-              padding: const EdgeInsets.only(
+              padding: EdgeInsets.only(
                 left: AppSpacing.lg,
                 right: AppSpacing.lg,
                 top: AppSpacing.lg,
-                bottom: AppSpacing.xxxl,
+                bottom:
+                    AppSpacing.xxxl + MediaQuery.viewPaddingOf(context).bottom,
               ),
               itemCount: state.dayViewModels.length,
               separatorBuilder: (_, _) => const SizedBox(height: AppSpacing.sm),
