@@ -285,13 +285,14 @@ class _ActivePanelCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colors = Theme.of(context).appColors;
+    final accent = colors.loggableHint;
     return Container(
       key: ValueKey('active-panel-${panel.sessionExerciseId}'),
       padding: const EdgeInsets.all(AppSpacing.md),
       decoration: BoxDecoration(
         color: colors.surface.withValues(alpha: 0.5),
         borderRadius: BorderRadius.circular(AppRadius.lg),
-        border: Border.all(color: colors.outline, width: 1.5),
+        border: Border.all(color: accent.withValues(alpha: 0.7), width: 1.5),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -382,6 +383,11 @@ class _PartnerPanelCard extends StatelessWidget {
               FocusModeFocusedPanelSelected(panel.sessionExerciseId),
             );
           };
+    final accent = colors.loggableHint;
+    final borderColor = isCompleted
+        ? colors.outline.withValues(alpha: 0.4)
+        : accent.withValues(alpha: 0.7);
+    final backgroundColor = colors.surface.withValues(alpha: 0.3);
     return Material(
       color: Colors.transparent,
       borderRadius: BorderRadius.circular(AppRadius.lg),
@@ -395,9 +401,9 @@ class _PartnerPanelCard extends StatelessWidget {
             vertical: AppSpacing.sm,
           ),
           decoration: BoxDecoration(
-            color: colors.surface.withValues(alpha: 0.3),
+            color: backgroundColor,
             borderRadius: BorderRadius.circular(AppRadius.lg),
-            border: Border.all(color: colors.outline.withValues(alpha: 0.4)),
+            border: Border.all(color: borderColor),
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -738,19 +744,11 @@ class _PinnedBottomBar extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          if (activePanel != null)
-            FocusCompleteButton(
-              onPressed: () => bloc.add(
-                FocusModeSetCompleted(activePanel!.sessionExerciseId),
-              ),
-              label: 'LOG SET — ${activePanel!.displayExerciseName}',
-              subLabel: activePanel!.totalPlannedSets > 0
-                  ? 'Set ${activePanel!.currentSetIndex + 1} of ${activePanel!.totalPlannedSets}'
-                  : null,
-              enabled: canMutate,
-            ),
+          if (state.undoable != null) ...[
+            _UndoLastSetButton(undoable: state.undoable!, enabled: canMutate),
+            const SizedBox(height: AppSpacing.xs),
+          ],
           if (isResting) ...[
-            if (activePanel != null) const SizedBox(height: AppSpacing.sm),
             FocusRestTimerBar(
               timer: state.restTimer!,
               onPauseToggle: () => bloc.add(
@@ -761,12 +759,19 @@ class _PinnedBottomBar extends StatelessWidget {
               onExtend: () => bloc.add(const FocusModeRestExtended()),
               onSkip: () => bloc.add(const FocusModeRestSkipped()),
             ),
+            if (activePanel != null) const SizedBox(height: AppSpacing.sm),
           ],
-          if (state.undoable != null) ...[
-            if (activePanel != null || isResting)
-              const SizedBox(height: AppSpacing.xs),
-            _UndoLastSetButton(undoable: state.undoable!, enabled: canMutate),
-          ],
+          if (activePanel != null)
+            FocusCompleteButton(
+              onPressed: () => bloc.add(
+                FocusModeSetCompleted(activePanel!.sessionExerciseId),
+              ),
+              label: 'LOG SET',
+              subLabel: activePanel!.totalPlannedSets > 0
+                  ? 'Set ${activePanel!.currentSetIndex + 1} of ${activePanel!.totalPlannedSets}'
+                  : null,
+              enabled: canMutate,
+            ),
         ],
       ),
     );
