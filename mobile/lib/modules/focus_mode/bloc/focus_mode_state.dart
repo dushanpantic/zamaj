@@ -72,6 +72,7 @@ final class FocusModeReady extends FocusModeState {
     this.undoable,
     this.mutationInFlight = false,
     this.lastTransientError,
+    this.userPinnedPanelId,
   });
 
   /// Authoritative engine-emitted session state.
@@ -114,6 +115,12 @@ final class FocusModeReady extends FocusModeState {
 
   final DomainError? lastTransientError;
 
+  /// Session-exercise id the user has manually pinned as the active
+  /// panel in a superset group. Overrides auto-rotation in the
+  /// assembler. Cleared after the next set is logged on it, after a
+  /// group switch, or when the pinned panel is no longer loggable.
+  final String? userPinnedPanelId;
+
   ActualSetValues? draftFor(String sessionExerciseId) =>
       drafts[sessionExerciseId];
 
@@ -128,6 +135,7 @@ final class FocusModeReady extends FocusModeState {
     UndoableSet? Function()? undoable,
     bool? mutationInFlight,
     DomainError? Function()? lastTransientError,
+    String? Function()? userPinnedPanelId,
   }) {
     return FocusModeReady(
       sessionState: sessionState ?? this.sessionState,
@@ -145,6 +153,9 @@ final class FocusModeReady extends FocusModeState {
       lastTransientError: lastTransientError != null
           ? lastTransientError()
           : this.lastTransientError,
+      userPinnedPanelId: userPinnedPanelId != null
+          ? userPinnedPanelId()
+          : this.userPinnedPanelId,
     );
   }
 
@@ -160,5 +171,6 @@ final class FocusModeReady extends FocusModeState {
     undoable,
     mutationInFlight,
     lastTransientError,
+    userPinnedPanelId,
   ];
 }

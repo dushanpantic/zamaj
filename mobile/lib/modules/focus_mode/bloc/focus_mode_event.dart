@@ -37,6 +37,18 @@ final class FocusModeGroupSwitched extends FocusModeEvent {
   List<Object?> get props => [anchorSessionExerciseId];
 }
 
+/// User tapped a partner card in a superset to make it the active panel.
+/// Overrides auto-rotation until the next set is logged on it or the
+/// user switches groups.
+final class FocusModeFocusedPanelSelected extends FocusModeEvent {
+  const FocusModeFocusedPanelSelected(this.sessionExerciseId);
+
+  final String sessionExerciseId;
+
+  @override
+  List<Object?> get props => [sessionExerciseId];
+}
+
 /// Internal events ingest emissions from the engine's session watch-stream.
 /// They live inside the sealed hierarchy because Dart will not let outside
 /// classes extend a sealed type.

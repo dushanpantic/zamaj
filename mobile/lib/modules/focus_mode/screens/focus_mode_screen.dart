@@ -9,6 +9,7 @@ import 'package:zamaj/core/rep_target_formatter.dart';
 import 'package:zamaj/core/weight_formatter.dart';
 import 'package:zamaj/modules/domain/domain.dart';
 import 'package:zamaj/modules/focus_mode/bloc/bloc.dart';
+import 'package:zamaj/modules/focus_mode/models/focus_mode_group_view_model.dart';
 import 'package:zamaj/modules/focus_mode/models/focus_mode_view_model.dart';
 import 'package:zamaj/modules/focus_mode/models/stopwatch_view_model.dart';
 import 'package:zamaj/modules/focus_mode/models/undoable_set.dart';
@@ -19,17 +20,17 @@ import 'package:zamaj/modules/focus_mode/widgets/focus_rep_based_panel.dart';
 import 'package:zamaj/modules/focus_mode/widgets/focus_rest_timer_bar.dart';
 import 'package:zamaj/modules/focus_mode/widgets/focus_set_progress.dart';
 import 'package:zamaj/modules/focus_mode/widgets/focus_time_based_panel.dart';
-import 'package:zamaj/modules/focus_mode/widgets/focus_up_next.dart';
 import 'package:zamaj/modules/focus_mode/widgets/focus_workout_complete_view.dart';
 import 'package:zamaj/modules/program_management/services/domain_error_presenter.dart';
 import 'package:zamaj/modules/program_management/services/external_link_launcher.dart';
 import 'package:zamaj/modules/program_management/widgets/confirmation_dialog.dart';
 import 'package:zamaj/modules/workout_overview/widgets/replace_exercise_dialog.dart';
 
-/// Top-level execution screen. Renders the focused group as one or more
-/// panels stacked vertically; each panel owns its own editor and LOG SET
-/// button. The rest timer and the "switch exercise" affordance in the app
-/// bar are shared across panels.
+/// Top-level execution screen. Renders the focused group as one ACTIVE
+/// panel (with full editor) plus compact PARTNER cards for any other
+/// superset members. A single pinned LOG SET at the bottom targets the
+/// active panel. The rest timer and "switch exercise" affordance in the
+/// app bar are shared across panels.
 class FocusModeScreen extends StatefulWidget {
   const FocusModeScreen({super.key});
 
@@ -129,68 +130,76 @@ class _ReadyBody extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colors = Theme.of(context).appColors;
-    const typography = AppTypography.standard;
     final group = state.groupViewModel;
     final canMutate = !state.mutationInFlight;
+
+    final activeId = group.activeSessionExerciseId;
+    final activePanel = activeId == null
+        ? null
+        : group.panels.firstWhere(
+            (p) => p.sessionExerciseId == activeId,
+            orElse: () => group.panels.first,
+          );
+    final partnerPanels = [
+      for (final panel in group.panels)
+        if (panel.sessionExerciseId != activeId) panel,
+    ];
 
     return Stack(
       children: [
         Column(
           children: [
+            _SupersetUpNextStrip(group: group),
             Expanded(
-              child: SingleChildScrollView(
+              child: Padding(
                 padding: const EdgeInsets.fromLTRB(
                   AppSpacing.lg,
                   AppSpacing.md,
                   AppSpacing.lg,
-                  AppSpacing.lg,
+                  AppSpacing.md,
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    if (state.lastTransientError != null) ...[
-                      _TransientErrorBanner(
-                        error: state.lastTransientError!,
-                        onDismiss: () => context.read<FocusModeBloc>().add(
-                          const FocusModeErrorDismissed(),
-                        ),
-                      ),
-                      const SizedBox(height: AppSpacing.sm),
-                    ],
-                    if (group.supersetTag != null) ...[
-                      _SupersetHeader(panels: group.panels),
-                      const SizedBox(height: AppSpacing.md),
-                    ],
-                    for (var i = 0; i < group.panels.length; i++) ...[
-                      _PanelCard(
+                    if (activePanel != null) ...[
+                      _ActivePanelCard(
                         state: state,
-                        panel: group.panels[i],
+                        panel: activePanel,
                         canMutate: canMutate,
                       ),
-                      if (i < group.panels.length - 1)
-                        const SizedBox(height: AppSpacing.md),
+                      const SizedBox(height: AppSpacing.md),
                     ],
-                    const SizedBox(height: AppSpacing.lg),
-                    if (group.upNextGroupLabel != null)
-                      FocusUpNext(
-                        label: 'Up next',
-                        detail: group.upNextGroupLabel!,
-                      )
-                    else
-                      Text(
-                        'Last group in this session',
-                        style: typography.caption.copyWith(
-                          color: colors.onSurfaceMuted,
+                    if (partnerPanels.isNotEmpty)
+                      Expanded(
+                        child: _PartnerPanelList(
+                          state: state,
+                          panels: partnerPanels,
+                          canMutate: canMutate,
                         ),
                       ),
                   ],
                 ),
               ),
             ),
-            _PinnedBottomBar(state: state, canMutate: canMutate),
+            _PinnedBottomBar(
+              state: state,
+              activePanel: activePanel,
+              canMutate: canMutate,
+            ),
           ],
         ),
+        if (state.lastTransientError != null)
+          Positioned(
+            top: AppSpacing.sm,
+            left: AppSpacing.lg,
+            right: AppSpacing.lg,
+            child: _TransientErrorBanner(
+              error: state.lastTransientError!,
+              onDismiss: () => context.read<FocusModeBloc>().add(
+                const FocusModeErrorDismissed(),
+              ),
+            ),
+          ),
         if (state.mutationInFlight)
           const Positioned(
             top: 0,
@@ -203,40 +212,67 @@ class _ReadyBody extends StatelessWidget {
   }
 }
 
-/// Header above the panel stack for superset groups. Shows the participating
-/// exercise names so the user has a one-glance summary of what they're
-/// alternating between.
-class _SupersetHeader extends StatelessWidget {
-  const _SupersetHeader({required this.panels});
+/// Compact strip directly below the app bar. Shows the superset label
+/// (when applicable) and the "Up next" caption for the following group.
+/// Sized small so it doesn't eat into the editor area.
+class _SupersetUpNextStrip extends StatelessWidget {
+  const _SupersetUpNextStrip({required this.group});
 
-  final List<FocusModeViewModel> panels;
+  final FocusModeGroupViewModel group;
 
   @override
   Widget build(BuildContext context) {
     final colors = Theme.of(context).appColors;
     const typography = AppTypography.standard;
-    return Row(
-      children: [
-        Icon(Icons.link, size: 18, color: colors.onSurfaceMuted),
-        const SizedBox(width: AppSpacing.xs),
-        Expanded(
-          child: Text(
-            'Superset — ${panels.map((p) => p.displayExerciseName).join(' + ')}',
-            style: typography.label.copyWith(color: colors.onSurfaceMuted),
-            maxLines: 2,
-            overflow: TextOverflow.ellipsis,
-          ),
+    final isSuperset = group.supersetTag != null;
+    final upNext = group.upNextGroupLabel;
+    if (!isSuperset && upNext == null) {
+      return const SizedBox.shrink();
+    }
+    final supersetLabel = isSuperset
+        ? 'Superset · ${group.panels.map((p) => p.displayExerciseName).join(' + ')}'
+        : null;
+    final segments = <String>[
+      ?supersetLabel,
+      if (upNext != null) 'Up next: $upNext',
+    ];
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.lg,
+        vertical: AppSpacing.sm,
+      ),
+      decoration: BoxDecoration(
+        color: colors.surface.withValues(alpha: 0.25),
+        border: Border(
+          bottom: BorderSide(color: colors.outline.withValues(alpha: 0.4)),
         ),
-      ],
+      ),
+      child: Row(
+        children: [
+          if (isSuperset) ...[
+            Icon(Icons.link, size: 16, color: colors.onSurfaceMuted),
+            const SizedBox(width: AppSpacing.xs),
+          ],
+          Expanded(
+            child: Text(
+              segments.join('  ·  '),
+              style: typography.caption.copyWith(color: colors.onSurfaceMuted),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
 
-/// One panel in the focused group. Owns its own editor + LOG SET button.
-/// Loggable panels render a full editor; completed panels show a compact
-/// "done" indicator with an action menu.
-class _PanelCard extends StatelessWidget {
-  const _PanelCard({
+/// Full editor for the currently active panel — pips, planned/last,
+/// numeric hero + bump rows, 3-dot menu. The LOG SET button lives in the
+/// pinned bottom bar, not inside the card.
+class _ActivePanelCard extends StatelessWidget {
+  const _ActivePanelCard({
     required this.state,
     required this.panel,
     required this.canMutate,
@@ -249,18 +285,13 @@ class _PanelCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colors = Theme.of(context).appColors;
-    final isLoggable = panel.isLoggable;
     return Container(
-      key: ValueKey('panel-${panel.sessionExerciseId}'),
+      key: ValueKey('active-panel-${panel.sessionExerciseId}'),
       padding: const EdgeInsets.all(AppSpacing.md),
       decoration: BoxDecoration(
-        color: colors.surface.withValues(alpha: 0.4),
+        color: colors.surface.withValues(alpha: 0.5),
         borderRadius: BorderRadius.circular(AppRadius.lg),
-        border: Border.all(
-          color: isLoggable
-              ? colors.outline
-              : colors.outline.withValues(alpha: 0.4),
-        ),
+        border: Border.all(color: colors.outline, width: 1.5),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -269,14 +300,7 @@ class _PanelCard extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Expanded(child: _PanelHeader(panel: panel)),
-              if (isLoggable)
-                _PanelActionsMenu(state: state, panel: panel)
-              else
-                Icon(
-                  Icons.check_circle,
-                  color: colors.exerciseCompleted,
-                  size: 22,
-                ),
+              _PanelActionsMenu(state: state, panel: panel),
             ],
           ),
           const SizedBox(height: AppSpacing.sm),
@@ -287,23 +311,153 @@ class _PanelCard extends StatelessWidget {
           ),
           const SizedBox(height: AppSpacing.md),
           _PlannedAndLast(panel: panel),
-          if (isLoggable) ...[
-            const SizedBox(height: AppSpacing.md),
-            _CurrentValuesPanel(
+          const SizedBox(height: AppSpacing.md),
+          _CurrentValuesPanel(state: state, panel: panel, canMutate: canMutate),
+        ],
+      ),
+    );
+  }
+}
+
+/// Stack of partner cards for the non-active panels in a superset group.
+/// The cards stay non-scrolling when they fit; falls back to a scrollable
+/// list only when they overflow (e.g. a 3-exercise giant set on a small
+/// device). The active card + pinned LOG SET remain fixed regardless.
+class _PartnerPanelList extends StatelessWidget {
+  const _PartnerPanelList({
+    required this.state,
+    required this.panels,
+    required this.canMutate,
+  });
+
+  final FocusModeReady state;
+  final List<FocusModeViewModel> panels;
+  final bool canMutate;
+
+  @override
+  Widget build(BuildContext context) {
+    return SingleChildScrollView(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          for (var i = 0; i < panels.length; i++) ...[
+            _PartnerPanelCard(
               state: state,
-              panel: panel,
+              panel: panels[i],
               canMutate: canMutate,
             ),
-            const SizedBox(height: AppSpacing.md),
-            _PanelCompleteButton(
-              state: state,
-              panel: panel,
-              canMutate: canMutate,
-            ),
+            if (i < panels.length - 1) const SizedBox(height: AppSpacing.sm),
           ],
         ],
       ),
     );
+  }
+}
+
+/// Compact two-row card representing a non-active superset member. The
+/// whole card is a tap target → makes that exercise active (overrides
+/// auto-rotation). The 3-dot menu still works (replace / skip / mark
+/// done / open video) so the user doesn't have to switch first to skip.
+class _PartnerPanelCard extends StatelessWidget {
+  const _PartnerPanelCard({
+    required this.state,
+    required this.panel,
+    required this.canMutate,
+  });
+
+  final FocusModeReady state;
+  final FocusModeViewModel panel;
+  final bool canMutate;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = Theme.of(context).appColors;
+    const typography = AppTypography.standard;
+    final isCompleted = !panel.isLoggable;
+    final onTap = (isCompleted || !canMutate)
+        ? null
+        : () {
+            Haptics.tap();
+            context.read<FocusModeBloc>().add(
+              FocusModeFocusedPanelSelected(panel.sessionExerciseId),
+            );
+          };
+    return Material(
+      color: Colors.transparent,
+      borderRadius: BorderRadius.circular(AppRadius.lg),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(AppRadius.lg),
+        child: Container(
+          constraints: const BoxConstraints(minHeight: AppSpacing.touchMin + 8),
+          padding: const EdgeInsets.symmetric(
+            horizontal: AppSpacing.md,
+            vertical: AppSpacing.sm,
+          ),
+          decoration: BoxDecoration(
+            color: colors.surface.withValues(alpha: 0.3),
+            borderRadius: BorderRadius.circular(AppRadius.lg),
+            border: Border.all(color: colors.outline.withValues(alpha: 0.4)),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      panel.displayExerciseName,
+                      style: typography.titleSmall.copyWith(
+                        color: colors.onSurface,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                  const SizedBox(width: AppSpacing.sm),
+                  if (isCompleted)
+                    Icon(
+                      Icons.check_circle,
+                      color: colors.exerciseCompleted,
+                      size: 20,
+                    )
+                  else
+                    FocusSetProgress(
+                      completed: panel.completedSetsCount,
+                      total: panel.totalPlannedSets,
+                      currentIndex: panel.currentSetIndex,
+                    ),
+                  _PanelActionsMenu(state: state, panel: panel),
+                ],
+              ),
+              const SizedBox(height: 2),
+              Text(
+                _partnerSubtitle(panel),
+                style: typography.caption.copyWith(
+                  color: colors.onSurfaceMuted,
+                ),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  String _partnerSubtitle(FocusModeViewModel panel) {
+    final planned = _formatPlanned(
+      panel.currentPlannedValues,
+      panel.plannedSummary,
+    );
+    final last = _formatLast(panel.lastExecutedValues);
+    final segments = <String>[
+      'Planned: $planned',
+      if (last != null) 'Last: $last',
+    ];
+    return segments.join('  ·  ');
   }
 }
 
@@ -432,33 +586,33 @@ class _PlannedAndLast extends StatelessWidget {
       ],
     );
   }
+}
 
-  String _formatPlanned(PlannedSetValues? values, String summary) {
-    if (values == null) return summary;
-    return switch (values) {
-      PlannedRepBased(:final weightKg, :final repTarget) =>
-        '${WeightFormatter.formatKg(weightKg)}kg × ${RepTargetFormatter.format(repTarget)}',
-      PlannedTimeBased(:final durationSeconds, :final weightKg) =>
-        weightKg == null
-            ? '${durationSeconds}s'
-            : '${WeightFormatter.formatKg(weightKg)}kg × ${durationSeconds}s',
-      PlannedBodyweight(:final repTarget) =>
-        '× ${RepTargetFormatter.format(repTarget)}',
-    };
-  }
+String _formatPlanned(PlannedSetValues? values, String summary) {
+  if (values == null) return summary;
+  return switch (values) {
+    PlannedRepBased(:final weightKg, :final repTarget) =>
+      '${WeightFormatter.formatKg(weightKg)}kg × ${RepTargetFormatter.format(repTarget)}',
+    PlannedTimeBased(:final durationSeconds, :final weightKg) =>
+      weightKg == null
+          ? '${durationSeconds}s'
+          : '${WeightFormatter.formatKg(weightKg)}kg × ${durationSeconds}s',
+    PlannedBodyweight(:final repTarget) =>
+      '× ${RepTargetFormatter.format(repTarget)}',
+  };
+}
 
-  String? _formatLast(ActualSetValues? values) {
-    if (values == null) return null;
-    return switch (values) {
-      ActualRepBased(:final weightKg, :final reps) =>
-        '${WeightFormatter.formatKg(weightKg)}kg × $reps',
-      ActualTimeBased(:final durationSeconds, :final weightKg) =>
-        weightKg == null
-            ? '${durationSeconds}s'
-            : '${WeightFormatter.formatKg(weightKg)}kg × ${durationSeconds}s',
-      ActualBodyweight(:final reps) => '× $reps',
-    };
-  }
+String? _formatLast(ActualSetValues? values) {
+  if (values == null) return null;
+  return switch (values) {
+    ActualRepBased(:final weightKg, :final reps) =>
+      '${WeightFormatter.formatKg(weightKg)}kg × $reps',
+    ActualTimeBased(:final durationSeconds, :final weightKg) =>
+      weightKg == null
+          ? '${durationSeconds}s'
+          : '${WeightFormatter.formatKg(weightKg)}kg × ${durationSeconds}s',
+    ActualBodyweight(:final reps) => '× $reps',
+  };
 }
 
 class _CurrentValuesPanel extends StatelessWidget {
@@ -544,37 +698,19 @@ class _CurrentValuesPanel extends StatelessWidget {
   }
 }
 
-class _PanelCompleteButton extends StatelessWidget {
-  const _PanelCompleteButton({
+/// Pinned bottom region. Contains the LOG SET button (when an active
+/// panel is loggable), the rest timer (when active), and the undo
+/// affordance (when a set was just logged). Single primary action per
+/// screen — the LOG SET button always targets the active panel.
+class _PinnedBottomBar extends StatelessWidget {
+  const _PinnedBottomBar({
     required this.state,
-    required this.panel,
+    required this.activePanel,
     required this.canMutate,
   });
 
   final FocusModeReady state;
-  final FocusModeViewModel panel;
-  final bool canMutate;
-
-  @override
-  Widget build(BuildContext context) {
-    final bloc = context.read<FocusModeBloc>();
-    return FocusCompleteButton(
-      onPressed: () => bloc.add(FocusModeSetCompleted(panel.sessionExerciseId)),
-      label: 'LOG SET',
-      subLabel: panel.totalPlannedSets > 0
-          ? 'Set ${panel.currentSetIndex + 1} of ${panel.totalPlannedSets}'
-          : null,
-      enabled: canMutate,
-    );
-  }
-}
-
-/// Per-screen bottom bar. Shows the global rest timer when active, plus the
-/// undo affordance if a set was just logged in this group.
-class _PinnedBottomBar extends StatelessWidget {
-  const _PinnedBottomBar({required this.state, required this.canMutate});
-
-  final FocusModeReady state;
+  final FocusModeViewModel? activePanel;
   final bool canMutate;
 
   @override
@@ -582,7 +718,8 @@ class _PinnedBottomBar extends StatelessWidget {
     final colors = Theme.of(context).appColors;
     final bloc = context.read<FocusModeBloc>();
     final isResting = state.restTimer != null;
-    if (!isResting && state.undoable == null) {
+    final hasLogButton = activePanel != null;
+    if (!hasLogButton && !isResting && state.undoable == null) {
       return const SizedBox.shrink();
     }
 
@@ -601,7 +738,19 @@ class _PinnedBottomBar extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
+          if (activePanel != null)
+            FocusCompleteButton(
+              onPressed: () => bloc.add(
+                FocusModeSetCompleted(activePanel!.sessionExerciseId),
+              ),
+              label: 'LOG SET — ${activePanel!.displayExerciseName}',
+              subLabel: activePanel!.totalPlannedSets > 0
+                  ? 'Set ${activePanel!.currentSetIndex + 1} of ${activePanel!.totalPlannedSets}'
+                  : null,
+              enabled: canMutate,
+            ),
           if (isResting) ...[
+            if (activePanel != null) const SizedBox(height: AppSpacing.sm),
             FocusRestTimerBar(
               timer: state.restTimer!,
               onPauseToggle: () => bloc.add(
@@ -612,10 +761,12 @@ class _PinnedBottomBar extends StatelessWidget {
               onExtend: () => bloc.add(const FocusModeRestExtended()),
               onSkip: () => bloc.add(const FocusModeRestSkipped()),
             ),
-            if (state.undoable != null) const SizedBox(height: AppSpacing.xs),
           ],
-          if (state.undoable != null)
+          if (state.undoable != null) ...[
+            if (activePanel != null || isResting)
+              const SizedBox(height: AppSpacing.xs),
             _UndoLastSetButton(undoable: state.undoable!, enabled: canMutate),
+          ],
         ],
       ),
     );
@@ -942,44 +1093,56 @@ class _TransientErrorBanner extends StatelessWidget {
     final colors = Theme.of(context).appColors;
     const typography = AppTypography.standard;
     final presented = DomainErrorPresenter.present(error);
-    return Container(
-      padding: const EdgeInsets.all(AppSpacing.md),
-      decoration: BoxDecoration(
-        color: colors.error.withValues(alpha: 0.12),
-        borderRadius: BorderRadius.circular(AppRadius.md),
-        border: Border.all(color: colors.error.withValues(alpha: 0.4)),
-      ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Icon(Icons.error_outline, color: colors.error, size: 20),
-          const SizedBox(width: AppSpacing.sm),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  presented.title,
-                  style: typography.label.copyWith(color: colors.error),
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  presented.body,
-                  style: typography.bodySmall.copyWith(color: colors.onSurface),
-                ),
-              ],
+    return Material(
+      color: Colors.transparent,
+      child: Container(
+        padding: const EdgeInsets.all(AppSpacing.md),
+        decoration: BoxDecoration(
+          color: colors.background,
+          borderRadius: BorderRadius.circular(AppRadius.md),
+          border: Border.all(color: colors.error.withValues(alpha: 0.6)),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.2),
+              blurRadius: 8,
+              offset: const Offset(0, 2),
             ),
-          ),
-          IconButton(
-            onPressed: onDismiss,
-            tooltip: 'Dismiss',
-            icon: Icon(Icons.close, color: colors.onSurfaceMuted, size: 18),
-            constraints: const BoxConstraints(
-              minWidth: AppSpacing.touchMin,
-              minHeight: AppSpacing.touchMin,
+          ],
+        ),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Icon(Icons.error_outline, color: colors.error, size: 20),
+            const SizedBox(width: AppSpacing.sm),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    presented.title,
+                    style: typography.label.copyWith(color: colors.error),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    presented.body,
+                    style: typography.bodySmall.copyWith(
+                      color: colors.onSurface,
+                    ),
+                  ),
+                ],
+              ),
             ),
-          ),
-        ],
+            IconButton(
+              onPressed: onDismiss,
+              tooltip: 'Dismiss',
+              icon: Icon(Icons.close, color: colors.onSurfaceMuted, size: 18),
+              constraints: const BoxConstraints(
+                minWidth: AppSpacing.touchMin,
+                minHeight: AppSpacing.touchMin,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

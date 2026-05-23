@@ -24,7 +24,15 @@ mixin _$FocusModeGroupViewModel {
  String? get upNextGroupLabel;/// Session-exercise id of the first loggable exercise in the next
 /// group, used as the anchor when the user taps "switch to next".
 /// Null when no next group has open targets.
- String? get upNextGroupAnchorId;
+ String? get upNextGroupAnchorId;/// Session-exercise id of the panel that should render as ACTIVE
+/// (full editor + target of the pinned LOG SET button). Equals the
+/// only loggable panel for singles; chosen by auto-rotation or by a
+/// user pin in supersets. Null when no panel in the group is
+/// loggable (terminal group; bloc transitions away).
+ String? get activeSessionExerciseId;/// True when [activeSessionExerciseId] was chosen by the user via a
+/// manual pin, false when chosen by auto-rotation. Used for
+/// analytics/diagnostics only; UI doesn't need to differentiate.
+ bool get activeIsUserPinned;
 /// Create a copy of FocusModeGroupViewModel
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -35,16 +43,16 @@ $FocusModeGroupViewModelCopyWith<FocusModeGroupViewModel> get copyWith => _$Focu
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is FocusModeGroupViewModel&&(identical(other.sessionId, sessionId) || other.sessionId == sessionId)&&(identical(other.workoutDayName, workoutDayName) || other.workoutDayName == workoutDayName)&&(identical(other.supersetTag, supersetTag) || other.supersetTag == supersetTag)&&const DeepCollectionEquality().equals(other.panels, panels)&&(identical(other.upNextGroupLabel, upNextGroupLabel) || other.upNextGroupLabel == upNextGroupLabel)&&(identical(other.upNextGroupAnchorId, upNextGroupAnchorId) || other.upNextGroupAnchorId == upNextGroupAnchorId));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is FocusModeGroupViewModel&&(identical(other.sessionId, sessionId) || other.sessionId == sessionId)&&(identical(other.workoutDayName, workoutDayName) || other.workoutDayName == workoutDayName)&&(identical(other.supersetTag, supersetTag) || other.supersetTag == supersetTag)&&const DeepCollectionEquality().equals(other.panels, panels)&&(identical(other.upNextGroupLabel, upNextGroupLabel) || other.upNextGroupLabel == upNextGroupLabel)&&(identical(other.upNextGroupAnchorId, upNextGroupAnchorId) || other.upNextGroupAnchorId == upNextGroupAnchorId)&&(identical(other.activeSessionExerciseId, activeSessionExerciseId) || other.activeSessionExerciseId == activeSessionExerciseId)&&(identical(other.activeIsUserPinned, activeIsUserPinned) || other.activeIsUserPinned == activeIsUserPinned));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,sessionId,workoutDayName,supersetTag,const DeepCollectionEquality().hash(panels),upNextGroupLabel,upNextGroupAnchorId);
+int get hashCode => Object.hash(runtimeType,sessionId,workoutDayName,supersetTag,const DeepCollectionEquality().hash(panels),upNextGroupLabel,upNextGroupAnchorId,activeSessionExerciseId,activeIsUserPinned);
 
 @override
 String toString() {
-  return 'FocusModeGroupViewModel(sessionId: $sessionId, workoutDayName: $workoutDayName, supersetTag: $supersetTag, panels: $panels, upNextGroupLabel: $upNextGroupLabel, upNextGroupAnchorId: $upNextGroupAnchorId)';
+  return 'FocusModeGroupViewModel(sessionId: $sessionId, workoutDayName: $workoutDayName, supersetTag: $supersetTag, panels: $panels, upNextGroupLabel: $upNextGroupLabel, upNextGroupAnchorId: $upNextGroupAnchorId, activeSessionExerciseId: $activeSessionExerciseId, activeIsUserPinned: $activeIsUserPinned)';
 }
 
 
@@ -55,7 +63,7 @@ abstract mixin class $FocusModeGroupViewModelCopyWith<$Res>  {
   factory $FocusModeGroupViewModelCopyWith(FocusModeGroupViewModel value, $Res Function(FocusModeGroupViewModel) _then) = _$FocusModeGroupViewModelCopyWithImpl;
 @useResult
 $Res call({
- String sessionId, String workoutDayName, String? supersetTag, List<FocusModeViewModel> panels, String? upNextGroupLabel, String? upNextGroupAnchorId
+ String sessionId, String workoutDayName, String? supersetTag, List<FocusModeViewModel> panels, String? upNextGroupLabel, String? upNextGroupAnchorId, String? activeSessionExerciseId, bool activeIsUserPinned
 });
 
 
@@ -72,7 +80,7 @@ class _$FocusModeGroupViewModelCopyWithImpl<$Res>
 
 /// Create a copy of FocusModeGroupViewModel
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? sessionId = null,Object? workoutDayName = null,Object? supersetTag = freezed,Object? panels = null,Object? upNextGroupLabel = freezed,Object? upNextGroupAnchorId = freezed,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? sessionId = null,Object? workoutDayName = null,Object? supersetTag = freezed,Object? panels = null,Object? upNextGroupLabel = freezed,Object? upNextGroupAnchorId = freezed,Object? activeSessionExerciseId = freezed,Object? activeIsUserPinned = null,}) {
   return _then(_self.copyWith(
 sessionId: null == sessionId ? _self.sessionId : sessionId // ignore: cast_nullable_to_non_nullable
 as String,workoutDayName: null == workoutDayName ? _self.workoutDayName : workoutDayName // ignore: cast_nullable_to_non_nullable
@@ -80,7 +88,9 @@ as String,supersetTag: freezed == supersetTag ? _self.supersetTag : supersetTag 
 as String?,panels: null == panels ? _self.panels : panels // ignore: cast_nullable_to_non_nullable
 as List<FocusModeViewModel>,upNextGroupLabel: freezed == upNextGroupLabel ? _self.upNextGroupLabel : upNextGroupLabel // ignore: cast_nullable_to_non_nullable
 as String?,upNextGroupAnchorId: freezed == upNextGroupAnchorId ? _self.upNextGroupAnchorId : upNextGroupAnchorId // ignore: cast_nullable_to_non_nullable
-as String?,
+as String?,activeSessionExerciseId: freezed == activeSessionExerciseId ? _self.activeSessionExerciseId : activeSessionExerciseId // ignore: cast_nullable_to_non_nullable
+as String?,activeIsUserPinned: null == activeIsUserPinned ? _self.activeIsUserPinned : activeIsUserPinned // ignore: cast_nullable_to_non_nullable
+as bool,
   ));
 }
 
@@ -165,10 +175,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String sessionId,  String workoutDayName,  String? supersetTag,  List<FocusModeViewModel> panels,  String? upNextGroupLabel,  String? upNextGroupAnchorId)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String sessionId,  String workoutDayName,  String? supersetTag,  List<FocusModeViewModel> panels,  String? upNextGroupLabel,  String? upNextGroupAnchorId,  String? activeSessionExerciseId,  bool activeIsUserPinned)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _FocusModeGroupViewModel() when $default != null:
-return $default(_that.sessionId,_that.workoutDayName,_that.supersetTag,_that.panels,_that.upNextGroupLabel,_that.upNextGroupAnchorId);case _:
+return $default(_that.sessionId,_that.workoutDayName,_that.supersetTag,_that.panels,_that.upNextGroupLabel,_that.upNextGroupAnchorId,_that.activeSessionExerciseId,_that.activeIsUserPinned);case _:
   return orElse();
 
 }
@@ -186,10 +196,10 @@ return $default(_that.sessionId,_that.workoutDayName,_that.supersetTag,_that.pan
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String sessionId,  String workoutDayName,  String? supersetTag,  List<FocusModeViewModel> panels,  String? upNextGroupLabel,  String? upNextGroupAnchorId)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String sessionId,  String workoutDayName,  String? supersetTag,  List<FocusModeViewModel> panels,  String? upNextGroupLabel,  String? upNextGroupAnchorId,  String? activeSessionExerciseId,  bool activeIsUserPinned)  $default,) {final _that = this;
 switch (_that) {
 case _FocusModeGroupViewModel():
-return $default(_that.sessionId,_that.workoutDayName,_that.supersetTag,_that.panels,_that.upNextGroupLabel,_that.upNextGroupAnchorId);case _:
+return $default(_that.sessionId,_that.workoutDayName,_that.supersetTag,_that.panels,_that.upNextGroupLabel,_that.upNextGroupAnchorId,_that.activeSessionExerciseId,_that.activeIsUserPinned);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -206,10 +216,10 @@ return $default(_that.sessionId,_that.workoutDayName,_that.supersetTag,_that.pan
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String sessionId,  String workoutDayName,  String? supersetTag,  List<FocusModeViewModel> panels,  String? upNextGroupLabel,  String? upNextGroupAnchorId)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String sessionId,  String workoutDayName,  String? supersetTag,  List<FocusModeViewModel> panels,  String? upNextGroupLabel,  String? upNextGroupAnchorId,  String? activeSessionExerciseId,  bool activeIsUserPinned)?  $default,) {final _that = this;
 switch (_that) {
 case _FocusModeGroupViewModel() when $default != null:
-return $default(_that.sessionId,_that.workoutDayName,_that.supersetTag,_that.panels,_that.upNextGroupLabel,_that.upNextGroupAnchorId);case _:
+return $default(_that.sessionId,_that.workoutDayName,_that.supersetTag,_that.panels,_that.upNextGroupLabel,_that.upNextGroupAnchorId,_that.activeSessionExerciseId,_that.activeIsUserPinned);case _:
   return null;
 
 }
@@ -221,7 +231,7 @@ return $default(_that.sessionId,_that.workoutDayName,_that.supersetTag,_that.pan
 
 
 class _FocusModeGroupViewModel implements FocusModeGroupViewModel {
-  const _FocusModeGroupViewModel({required this.sessionId, required this.workoutDayName, required this.supersetTag, required final  List<FocusModeViewModel> panels, required this.upNextGroupLabel, required this.upNextGroupAnchorId}): _panels = panels;
+  const _FocusModeGroupViewModel({required this.sessionId, required this.workoutDayName, required this.supersetTag, required final  List<FocusModeViewModel> panels, required this.upNextGroupLabel, required this.upNextGroupAnchorId, required this.activeSessionExerciseId, this.activeIsUserPinned = false}): _panels = panels;
   
 
 @override final  String sessionId;
@@ -249,6 +259,16 @@ class _FocusModeGroupViewModel implements FocusModeGroupViewModel {
 /// group, used as the anchor when the user taps "switch to next".
 /// Null when no next group has open targets.
 @override final  String? upNextGroupAnchorId;
+/// Session-exercise id of the panel that should render as ACTIVE
+/// (full editor + target of the pinned LOG SET button). Equals the
+/// only loggable panel for singles; chosen by auto-rotation or by a
+/// user pin in supersets. Null when no panel in the group is
+/// loggable (terminal group; bloc transitions away).
+@override final  String? activeSessionExerciseId;
+/// True when [activeSessionExerciseId] was chosen by the user via a
+/// manual pin, false when chosen by auto-rotation. Used for
+/// analytics/diagnostics only; UI doesn't need to differentiate.
+@override@JsonKey() final  bool activeIsUserPinned;
 
 /// Create a copy of FocusModeGroupViewModel
 /// with the given fields replaced by the non-null parameter values.
@@ -260,16 +280,16 @@ _$FocusModeGroupViewModelCopyWith<_FocusModeGroupViewModel> get copyWith => __$F
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _FocusModeGroupViewModel&&(identical(other.sessionId, sessionId) || other.sessionId == sessionId)&&(identical(other.workoutDayName, workoutDayName) || other.workoutDayName == workoutDayName)&&(identical(other.supersetTag, supersetTag) || other.supersetTag == supersetTag)&&const DeepCollectionEquality().equals(other._panels, _panels)&&(identical(other.upNextGroupLabel, upNextGroupLabel) || other.upNextGroupLabel == upNextGroupLabel)&&(identical(other.upNextGroupAnchorId, upNextGroupAnchorId) || other.upNextGroupAnchorId == upNextGroupAnchorId));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _FocusModeGroupViewModel&&(identical(other.sessionId, sessionId) || other.sessionId == sessionId)&&(identical(other.workoutDayName, workoutDayName) || other.workoutDayName == workoutDayName)&&(identical(other.supersetTag, supersetTag) || other.supersetTag == supersetTag)&&const DeepCollectionEquality().equals(other._panels, _panels)&&(identical(other.upNextGroupLabel, upNextGroupLabel) || other.upNextGroupLabel == upNextGroupLabel)&&(identical(other.upNextGroupAnchorId, upNextGroupAnchorId) || other.upNextGroupAnchorId == upNextGroupAnchorId)&&(identical(other.activeSessionExerciseId, activeSessionExerciseId) || other.activeSessionExerciseId == activeSessionExerciseId)&&(identical(other.activeIsUserPinned, activeIsUserPinned) || other.activeIsUserPinned == activeIsUserPinned));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,sessionId,workoutDayName,supersetTag,const DeepCollectionEquality().hash(_panels),upNextGroupLabel,upNextGroupAnchorId);
+int get hashCode => Object.hash(runtimeType,sessionId,workoutDayName,supersetTag,const DeepCollectionEquality().hash(_panels),upNextGroupLabel,upNextGroupAnchorId,activeSessionExerciseId,activeIsUserPinned);
 
 @override
 String toString() {
-  return 'FocusModeGroupViewModel(sessionId: $sessionId, workoutDayName: $workoutDayName, supersetTag: $supersetTag, panels: $panels, upNextGroupLabel: $upNextGroupLabel, upNextGroupAnchorId: $upNextGroupAnchorId)';
+  return 'FocusModeGroupViewModel(sessionId: $sessionId, workoutDayName: $workoutDayName, supersetTag: $supersetTag, panels: $panels, upNextGroupLabel: $upNextGroupLabel, upNextGroupAnchorId: $upNextGroupAnchorId, activeSessionExerciseId: $activeSessionExerciseId, activeIsUserPinned: $activeIsUserPinned)';
 }
 
 
@@ -280,7 +300,7 @@ abstract mixin class _$FocusModeGroupViewModelCopyWith<$Res> implements $FocusMo
   factory _$FocusModeGroupViewModelCopyWith(_FocusModeGroupViewModel value, $Res Function(_FocusModeGroupViewModel) _then) = __$FocusModeGroupViewModelCopyWithImpl;
 @override @useResult
 $Res call({
- String sessionId, String workoutDayName, String? supersetTag, List<FocusModeViewModel> panels, String? upNextGroupLabel, String? upNextGroupAnchorId
+ String sessionId, String workoutDayName, String? supersetTag, List<FocusModeViewModel> panels, String? upNextGroupLabel, String? upNextGroupAnchorId, String? activeSessionExerciseId, bool activeIsUserPinned
 });
 
 
@@ -297,7 +317,7 @@ class __$FocusModeGroupViewModelCopyWithImpl<$Res>
 
 /// Create a copy of FocusModeGroupViewModel
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? sessionId = null,Object? workoutDayName = null,Object? supersetTag = freezed,Object? panels = null,Object? upNextGroupLabel = freezed,Object? upNextGroupAnchorId = freezed,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? sessionId = null,Object? workoutDayName = null,Object? supersetTag = freezed,Object? panels = null,Object? upNextGroupLabel = freezed,Object? upNextGroupAnchorId = freezed,Object? activeSessionExerciseId = freezed,Object? activeIsUserPinned = null,}) {
   return _then(_FocusModeGroupViewModel(
 sessionId: null == sessionId ? _self.sessionId : sessionId // ignore: cast_nullable_to_non_nullable
 as String,workoutDayName: null == workoutDayName ? _self.workoutDayName : workoutDayName // ignore: cast_nullable_to_non_nullable
@@ -305,7 +325,9 @@ as String,supersetTag: freezed == supersetTag ? _self.supersetTag : supersetTag 
 as String?,panels: null == panels ? _self._panels : panels // ignore: cast_nullable_to_non_nullable
 as List<FocusModeViewModel>,upNextGroupLabel: freezed == upNextGroupLabel ? _self.upNextGroupLabel : upNextGroupLabel // ignore: cast_nullable_to_non_nullable
 as String?,upNextGroupAnchorId: freezed == upNextGroupAnchorId ? _self.upNextGroupAnchorId : upNextGroupAnchorId // ignore: cast_nullable_to_non_nullable
-as String?,
+as String?,activeSessionExerciseId: freezed == activeSessionExerciseId ? _self.activeSessionExerciseId : activeSessionExerciseId // ignore: cast_nullable_to_non_nullable
+as String?,activeIsUserPinned: null == activeIsUserPinned ? _self.activeIsUserPinned : activeIsUserPinned // ignore: cast_nullable_to_non_nullable
+as bool,
   ));
 }
 

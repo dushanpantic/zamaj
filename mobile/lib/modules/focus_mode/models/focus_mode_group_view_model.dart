@@ -31,6 +31,18 @@ abstract class FocusModeGroupViewModel with _$FocusModeGroupViewModel {
     /// group, used as the anchor when the user taps "switch to next".
     /// Null when no next group has open targets.
     required String? upNextGroupAnchorId,
+
+    /// Session-exercise id of the panel that should render as ACTIVE
+    /// (full editor + target of the pinned LOG SET button). Equals the
+    /// only loggable panel for singles; chosen by auto-rotation or by a
+    /// user pin in supersets. Null when no panel in the group is
+    /// loggable (terminal group; bloc transitions away).
+    required String? activeSessionExerciseId,
+
+    /// True when [activeSessionExerciseId] was chosen by the user via a
+    /// manual pin, false when chosen by auto-rotation. Used for
+    /// analytics/diagnostics only; UI doesn't need to differentiate.
+    @Default(false) bool activeIsUserPinned,
   }) = _FocusModeGroupViewModel;
 }
 

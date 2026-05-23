@@ -30,6 +30,7 @@ class FocusModeBloc extends Bloc<FocusModeEvent, FocusModeState> {
     on<FocusModeOpened>(_onOpened);
     on<FocusModeRetried>(_onRetried);
     on<FocusModeGroupSwitched>(_onGroupSwitched);
+    on<FocusModeFocusedPanelSelected>(_onFocusedPanelSelected);
     on<InternalFocusSessionPushed>(_onSessionPushed);
     on<InternalFocusSessionMissing>(_onSessionMissing);
     on<InternalFocusSessionFailed>(_onSessionFailed);
@@ -110,6 +111,31 @@ class FocusModeBloc extends Bloc<FocusModeEvent, FocusModeState> {
         current.sessionState,
         anchor: event.anchorSessionExerciseId,
         priorDrafts: const {},
+        userPinnedPanelId: null,
+      ),
+    );
+  }
+
+  Future<void> _onFocusedPanelSelected(
+    FocusModeFocusedPanelSelected event,
+    Emitter<FocusModeState> emit,
+  ) async {
+    final current = state;
+    if (current is! FocusModeReady) return;
+    // Only honor pins that name a loggable panel in the current group.
+    final panel = _findPanel(current, event.sessionExerciseId);
+    if (panel == null || !panel.isLoggable) return;
+    if (current.userPinnedPanelId == event.sessionExerciseId) return;
+    final group = FocusModeAssembler.assemble(
+      current.sessionState,
+      anchorSessionExerciseId: current.anchorSessionExerciseId,
+      userPinnedPanelId: event.sessionExerciseId,
+    );
+    if (group == null) return;
+    emit(
+      current.copyWith(
+        groupViewModel: group,
+        userPinnedPanelId: () => event.sessionExerciseId,
       ),
     );
   }
@@ -706,6 +732,7 @@ class FocusModeBloc extends Bloc<FocusModeEvent, FocusModeState> {
     SessionState sessionState, {
     required String anchor,
     required Map<String, ActualSetValues> priorDrafts,
+    String? userPinnedPanelId,
   }) {
     if (sessionState.isComplete) {
       return FocusModeWorkoutComplete(sessionState: sessionState);
@@ -713,6 +740,7 @@ class FocusModeBloc extends Bloc<FocusModeEvent, FocusModeState> {
     final group = FocusModeAssembler.assemble(
       sessionState,
       anchorSessionExerciseId: anchor,
+      userPinnedPanelId: userPinnedPanelId,
     );
     if (group == null) {
       final fallback = FocusModeAssembler.findNextAnchorAfter(
@@ -739,6 +767,7 @@ class FocusModeBloc extends Bloc<FocusModeEvent, FocusModeState> {
       groupViewModel: group,
       drafts: drafts,
       stopwatch: StopwatchViewModel.idle(),
+      userPinnedPanelId: group.activeIsUserPinned ? userPinnedPanelId : null,
     );
   }
 
@@ -755,6 +784,7 @@ class FocusModeBloc extends Bloc<FocusModeEvent, FocusModeState> {
       final group = FocusModeAssembler.assemble(
         sessionState,
         anchorSessionExerciseId: anchor,
+        userPinnedPanelId: current.userPinnedPanelId,
       );
       if (group == null) {
         // Anchor's group disappeared (everything skipped).
@@ -769,10 +799,15 @@ class FocusModeBloc extends Bloc<FocusModeEvent, FocusModeState> {
         group: group,
         priorDrafts: current.drafts,
       );
+      // If the pin no longer resolves to a loggable panel, drop it.
+      final effectivePin = group.activeIsUserPinned
+          ? current.userPinnedPanelId
+          : null;
       return current.copyWith(
         sessionState: sessionState,
         groupViewModel: group,
         drafts: drafts,
+        userPinnedPanelId: () => effectivePin,
       );
     }
     return _assembleFromSessionState(
@@ -798,14 +833,23 @@ class FocusModeBloc extends Bloc<FocusModeEvent, FocusModeState> {
       return FocusModeWorkoutComplete(sessionState: sessionState);
     }
     final anchor = _currentAnchorOrNull() ?? completedExerciseId;
+    // Clear the pin if the mutation targeted the pinned panel — the user
+    // logged on it, so auto-rotation resumes.
+    final priorPin = switch (state) {
+      FocusModeReady(:final userPinnedPanelId) => userPinnedPanelId,
+      _ => null,
+    };
+    final carriedPin = priorPin == completedExerciseId ? null : priorPin;
     final group = FocusModeAssembler.assemble(
       sessionState,
       anchorSessionExerciseId: anchor,
+      userPinnedPanelId: carriedPin,
     );
     final hasLoggableInGroup = group?.panels.any((p) => p.isLoggable) ?? false;
 
     String? effectiveAnchor = anchor;
     FocusModeGroupViewModel? effectiveGroup = group;
+    String? effectivePin = carriedPin;
     if (group == null || !hasLoggableInGroup) {
       final next = FocusModeAssembler.findNextAnchorAfter(
         sessionState,
@@ -815,6 +859,7 @@ class FocusModeBloc extends Bloc<FocusModeEvent, FocusModeState> {
         return FocusModeWorkoutComplete(sessionState: sessionState);
       }
       effectiveAnchor = next;
+      effectivePin = null;
       effectiveGroup = FocusModeAssembler.assemble(
         sessionState,
         anchorSessionExerciseId: next,
@@ -822,6 +867,11 @@ class FocusModeBloc extends Bloc<FocusModeEvent, FocusModeState> {
     }
     if (effectiveGroup == null) {
       return FocusModeWorkoutComplete(sessionState: sessionState);
+    }
+    // If the pin no longer resolves to a loggable panel in the resolved
+    // group, drop it.
+    if (effectivePin != null && !effectiveGroup.activeIsUserPinned) {
+      effectivePin = null;
     }
 
     // Drop the just-completed exercise's draft from `priorDrafts` so that
@@ -841,6 +891,7 @@ class FocusModeBloc extends Bloc<FocusModeEvent, FocusModeState> {
       stopwatch: StopwatchViewModel.idle(),
       restTimer: restTimer,
       undoable: undoable,
+      userPinnedPanelId: effectivePin,
     );
   }
 
