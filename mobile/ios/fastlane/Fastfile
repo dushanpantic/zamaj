@@ -35,6 +35,11 @@ platform :ios do
   private_lane :prepare_signing do
     keychain_password = ENV.fetch("IOS_KEYCHAIN_PASSWORD")
 
+    # Capture the original default keychain so we can restore it in cleanup_keychain
+    # even if the run aborts. Without this, a failed build leaves the Mac pointing at
+    # a temp keychain (or a deleted one), which breaks Xcode/codesign for the user.
+    ENV["ZAMAJ_ORIGINAL_DEFAULT_KEYCHAIN"] = sh("security default-keychain", log: false).strip
+
     create_keychain(
       name: KEYCHAIN_NAME,
       password: keychain_password,
@@ -143,7 +148,19 @@ platform :ios do
   end
 
   private_lane :cleanup_keychain do
-    keychain_db = File.expand_path("~/Library/Keychains/#{KEYCHAIN_NAME}-db")
-    delete_keychain(name: KEYCHAIN_NAME) if File.exist?(keychain_db)
+    # Restore the original default keychain first — if anything else in this lane
+    # blows up, the user's Mac is still left in a sane state.
+    original = ENV["ZAMAJ_ORIGINAL_DEFAULT_KEYCHAIN"]
+    if original && !original.empty?
+      stripped = original.gsub(/\A"|"\z/, "")
+      sh("security", "default-keychain", "-s", stripped, log: false) rescue nil
+      sh("security", "list-keychains", "-d", "user", "-s", stripped, log: false) rescue nil
+      ENV.delete("ZAMAJ_ORIGINAL_DEFAULT_KEYCHAIN")
+    end
+
+    [KEYCHAIN_NAME, "fastlane_tmp_keychain"].each do |name|
+      keychain_db = File.expand_path("~/Library/Keychains/#{name}-db")
+      delete_keychain(name: name) if File.exist?(keychain_db)
+    end
   end
 end
