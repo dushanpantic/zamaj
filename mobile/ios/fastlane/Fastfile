@@ -10,9 +10,13 @@ EXPORT_OPTIONS_PATH = File.join(IOS_ROOT, "ExportOptions.plist")
 IPA_OUTPUT_DIR = File.join(FLUTTER_ROOT, "build/ios/ipa")
 
 platform :ios do
-  before_all do
-    setup_ci if is_ci
-  end
+  # Note: deliberately no `setup_ci` here. setup_ci creates its own
+  # `fastlane_tmp_keychain` and makes it the default, which on a self-hosted
+  # runner (where it runs against the user's real macOS keychain state) means
+  # our `prepare_signing` would capture *that* as the "original" default. On
+  # cleanup we'd then restore to a temp keychain that we also delete — leaving
+  # the user's Mac with a default pointing at nothing. We manage our own
+  # keychain end-to-end and don't need setup_ci.
 
   desc "Upload a new build to TestFlight (internal testers only)"
   lane :internal do |options|

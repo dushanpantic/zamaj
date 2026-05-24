@@ -107,3 +107,18 @@ jobs:
         run: |
           rm -rf "${RUNNER_TEMP}/ios-signing"
           rm -f mobile/ios/ExportOptions.plist
+
+      - name: Restore keychain state (self-hosted safety net)
+        if: always()
+        run: |
+          # Safety net for self-hosted runners: even if fastlane's `error` block
+          # never ran (process killed, timeout, runner reboot), force the user's
+          # default keychain back to login and remove any leftover temp keychains.
+          # On macos-latest GitHub runners this is a no-op against a throwaway VM.
+          LOGIN_KEYCHAIN="$HOME/Library/Keychains/login.keychain-db"
+          if [ -f "$LOGIN_KEYCHAIN" ]; then
+            security default-keychain -s "$LOGIN_KEYCHAIN" || true
+            security list-keychains -d user -s "$LOGIN_KEYCHAIN" || true
+          fi
+          security delete-keychain "$HOME/Library/Keychains/zamaj_ci_keychain-db" 2>/dev/null || true
+          security delete-keychain "$HOME/Library/Keychains/fastlane_tmp_keychain-db" 2>/dev/null || true
