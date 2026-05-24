@@ -1,0 +1,48 @@
+# Product context — Zamaj
+
+## What it is
+
+A Flutter workout-execution app. Currently single-user (built for the maintainer); positioned to go public if it earns its keep against existing tracker apps. Architecture details live in [CLAUDE.md](CLAUDE.md); this doc is the **why and what**.
+
+## Who it's for
+
+A solo lifter following a structured strength program — squats, bench, accessory work — who logs every set on a sweaty phone in the gym and wants the record to reflect *both* what was planned and what actually happened.
+
+## Two pillars
+
+1. **Planned vs. actual are first-class.** Every set carries its planned target (weight × reps, time, bodyweight reps, etc.) and a separately-tracked actual value. The UI never collapses one into the other. This is what enables honest retros, deload decisions, and the future progress charts.
+2. **Sweaty-hands ergonomics in-session.** The two live-session surfaces ([workout_overview/](mobile/lib/modules/workout_overview/), [focus_mode/](mobile/lib/modules/focus_mode/)) are tuned for wet hands and quick taps between sets: 64 dp counter buttons, 36 px numeric readouts, ≥56 dp primary actions. Outside the gym (program editing, settings) the standard 48 dp tap target is fine.
+
+## How a session works
+
+Starting a session takes a **snapshot** of the planned workout day at that moment. The program template can keep evolving afterwards, but this session's plan is frozen at start. Completed sessions are meant to read as a faithful record of "the plan I was on, and what I did against it" — with room to allow editing of recently-completed entries if something got mis-logged in the moment (not yet built; a deliberate softening of strict immutability).
+
+## Features by screen
+
+### Program management — [program_management/](mobile/lib/modules/program_management/)
+- **Program list** — [program_list_screen.dart](mobile/lib/modules/program_management/screens/program_list_screen.dart). Browse / create / delete programs. Entry point to the library and to text import.
+- **Program editor** — [program_editor_screen.dart](mobile/lib/modules/program_management/screens/program_editor_screen.dart). Rename a program, manage its workout days.
+- **Workout-day editor** — [workout_day_editor_screen.dart](mobile/lib/modules/program_management/screens/workout_day_editor_screen.dart). Order and group exercises (supersets); add via library picker or as a one-off.
+- **Exercise editor** — [exercise_editor_screen.dart](mobile/lib/modules/program_management/screens/exercise_editor_screen.dart). Name, measurement type, planned sets, rest, notes, video URL, optional link to a library entry.
+- **Plan import** — [plan_import_screen.dart](mobile/lib/modules/program_management/screens/plan_import_screen.dart) → [plan_preview_screen.dart](mobile/lib/modules/program_management/screens/plan_preview_screen.dart). Paste a coach's plan as plain text, parse it into a structured program, preview before saving.
+
+### Exercise library — [exercise_library/](mobile/lib/modules/exercise_library/)
+Durable identity for each movement so the same "BB Bench Press" on PUSH day and UPPER day point to one entry — prerequisite for cross-session progress aggregation.
+- **List** — [exercise_library_list_screen.dart](mobile/lib/modules/exercise_library/screens/exercise_library_list_screen.dart). Search, filter active/archived, manage entries.
+- **Editor** — [exercise_library_editor_screen.dart](mobile/lib/modules/exercise_library/screens/exercise_library_editor_screen.dart). Name, measurement type (locked after first save), video, cues, archive/unarchive.
+- **Link suggestions** — [link_suggestion_screen.dart](mobile/lib/modules/exercise_library/screens/link_suggestion_screen.dart). Bulk-link existing program exercises that match by normalised name.
+
+### Starting a session — [workout_day_picker/](mobile/lib/modules/workout_day_picker/)
+- **Workout-day picker** — [workout_day_picker_screen.dart](mobile/lib/modules/workout_day_picker/screens/workout_day_picker_screen.dart). Choose which day of the program to do today; resume an in-progress session if one exists.
+
+### In-session (sweaty-hands)
+- **Workout overview** — [workout_overview_screen.dart](mobile/lib/modules/workout_overview/screens/workout_overview_screen.dart). The full session: every exercise card expandable for inline set logging, drag-to-reorder between cards, drag-onto-card to form a superset, ungroup, replace / skip / mark-done per exercise, session notes, extra work, end session.
+- **Focus mode** — [focus_mode_screen.dart](mobile/lib/modules/focus_mode/screens/focus_mode_screen.dart). One exercise (or one superset group) at a time. Large LOG SET button, rest timer with overtime indicator, undo last set, partner cards for superset members. Optimised for between-set use.
+
+### After a session — [export/](mobile/lib/modules/export/)
+- **Recent sessions** — [recent_sessions_screen.dart](mobile/lib/modules/export/screens/recent_sessions_screen.dart). Completed sessions bucketed into "This week" and "Earlier", with a one-tap "export this week" action.
+
+## Explicit non-goals
+- **No social, streaks, badges, friends, or leaderboards.** This is a logbook, not a community app.
+- **No cloud sync, accounts, or server today.** Data lives in local SQLite. May change if the app grows a "coach edits my plan remotely" use case — currently out of scope because there's no second user.
+- **No coaching / AI recommendations.** The app records what you do; it does not tell you what to lift.
