@@ -233,21 +233,6 @@ final class FocusModeRestTicked extends FocusModeEvent {
   const FocusModeRestTicked();
 }
 
-final class FocusModeRestPaused extends FocusModeEvent {
-  const FocusModeRestPaused();
-}
-
-final class FocusModeRestResumed extends FocusModeEvent {
-  const FocusModeRestResumed();
-}
-
-final class FocusModeRestExtended extends FocusModeEvent {
-  const FocusModeRestExtended({this.deltaSeconds = 15});
-  final int deltaSeconds;
-  @override
-  List<Object?> get props => [deltaSeconds];
-}
-
 final class FocusModeRestSkipped extends FocusModeEvent {
   const FocusModeRestSkipped();
 }

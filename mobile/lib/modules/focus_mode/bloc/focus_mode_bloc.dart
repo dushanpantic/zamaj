@@ -55,9 +55,6 @@ class FocusModeBloc extends Bloc<FocusModeEvent, FocusModeState> {
     on<FocusModeExerciseReplaced>(_onExerciseReplaced);
 
     on<FocusModeRestTicked>(_onRestTicked);
-    on<FocusModeRestPaused>(_onRestPaused);
-    on<FocusModeRestResumed>(_onRestResumed);
-    on<FocusModeRestExtended>(_onRestExtended);
     on<FocusModeRestSkipped>(_onRestSkipped);
   }
 
@@ -640,76 +637,18 @@ class FocusModeBloc extends Bloc<FocusModeEvent, FocusModeState> {
     final current = state;
     if (current is! FocusModeReady) return;
     final timer = current.restTimer;
-    if (timer == null || timer.isPaused) return;
-    emit(
-      current.copyWith(
-        restTimer: () => RestTimerViewModel(
-          plannedSeconds: timer.plannedSeconds,
-          elapsedSeconds: timer.elapsedSeconds + 1,
-          extensionSeconds: timer.extensionSeconds,
-          isPaused: false,
-        ),
-      ),
-    );
-  }
-
-  Future<void> _onRestPaused(
-    FocusModeRestPaused event,
-    Emitter<FocusModeState> emit,
-  ) async {
-    final current = state;
-    if (current is! FocusModeReady) return;
-    final timer = current.restTimer;
-    if (timer == null || timer.isPaused) return;
-    _stopRestTicker();
-    emit(
-      current.copyWith(
-        restTimer: () => RestTimerViewModel(
-          plannedSeconds: timer.plannedSeconds,
-          elapsedSeconds: timer.elapsedSeconds,
-          extensionSeconds: timer.extensionSeconds,
-          isPaused: true,
-        ),
-      ),
-    );
-  }
-
-  Future<void> _onRestResumed(
-    FocusModeRestResumed event,
-    Emitter<FocusModeState> emit,
-  ) async {
-    final current = state;
-    if (current is! FocusModeReady) return;
-    final timer = current.restTimer;
-    if (timer == null || !timer.isPaused) return;
-    _startRestTicker();
-    emit(
-      current.copyWith(
-        restTimer: () => RestTimerViewModel(
-          plannedSeconds: timer.plannedSeconds,
-          elapsedSeconds: timer.elapsedSeconds,
-          extensionSeconds: timer.extensionSeconds,
-          isPaused: false,
-        ),
-      ),
-    );
-  }
-
-  Future<void> _onRestExtended(
-    FocusModeRestExtended event,
-    Emitter<FocusModeState> emit,
-  ) async {
-    final current = state;
-    if (current is! FocusModeReady) return;
-    final timer = current.restTimer;
     if (timer == null) return;
+    final nextElapsed = timer.elapsedSeconds + 1;
+    if (nextElapsed >= timer.plannedSeconds) {
+      _stopRestTicker();
+      emit(current.copyWith(restTimer: () => null));
+      return;
+    }
     emit(
       current.copyWith(
         restTimer: () => RestTimerViewModel(
-          plannedSeconds: timer.plannedSeconds ?? timer.elapsedSeconds,
-          elapsedSeconds: timer.elapsedSeconds,
-          extensionSeconds: timer.extensionSeconds + event.deltaSeconds,
-          isPaused: timer.isPaused,
+          plannedSeconds: timer.plannedSeconds,
+          elapsedSeconds: nextElapsed,
         ),
       ),
     );
@@ -953,12 +892,9 @@ class FocusModeBloc extends Bloc<FocusModeEvent, FocusModeState> {
   }
 
   RestTimerViewModel? _restTimerFromPanel(FocusModeViewModel panel) {
-    return RestTimerViewModel(
-      plannedSeconds: panel.plannedRestSeconds,
-      elapsedSeconds: 0,
-      extensionSeconds: 0,
-      isPaused: false,
-    );
+    final planned = panel.plannedRestSeconds;
+    if (planned == null || planned <= 0) return null;
+    return RestTimerViewModel(plannedSeconds: planned, elapsedSeconds: 0);
   }
 
   FocusModeViewModel? _findPanel(

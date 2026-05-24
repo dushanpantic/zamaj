@@ -5,46 +5,33 @@ part 'rest_timer_view_model.freezed.dart';
 /// Snapshot of the inline rest-timer state.
 ///
 /// Owned by [FocusModeBloc]; ticking is driven by `Timer.periodic(1s)` in
-/// the bloc itself. Persistence/foreground notification is deliberately
-/// out of scope for spec 6 — that lands in spec 7.
+/// the bloc itself. The timer always has a planned target — when the
+/// planned exercise has no rest, the bloc skips starting one rather than
+/// surfacing an open-ended count-up. The timer auto-dismisses when
+/// elapsed catches up to planned; there is no overtime state.
 @freezed
 abstract class RestTimerViewModel with _$RestTimerViewModel {
   const RestTimerViewModel._();
 
   const factory RestTimerViewModel({
-    /// Coach-defined target rest in seconds, or null when the planned
-    /// exercise doesn't specify rest. When null, the timer counts up
-    /// without an "overtime" threshold.
-    required int? plannedSeconds,
-
-    /// Real seconds elapsed since [startedAt], not counting time spent
-    /// paused.
+    required int plannedSeconds,
     required int elapsedSeconds,
-
-    /// Cumulative seconds added via the +15s control. Folded into the
-    /// effective planned target so "remaining" reflects user extensions.
-    required int extensionSeconds,
-
-    /// True while the timer is paused. Tick events are ignored while
-    /// paused.
-    required bool isPaused,
   }) = _RestTimerViewModel;
 
-  /// Effective planned target (planned + extensions). Null if no plan.
-  int? get effectivePlannedSeconds =>
-      plannedSeconds == null ? null : plannedSeconds! + extensionSeconds;
-
-  /// Seconds remaining until the effective planned target, or null when no
-  /// plan exists. Negative values mean the timer has gone over.
-  int? get remainingSeconds {
-    final target = effectivePlannedSeconds;
-    if (target == null) return null;
-    return target - elapsedSeconds;
+  /// Seconds remaining until the planned target. Never negative — the
+  /// bloc dismisses the timer the moment elapsed catches up.
+  int get remainingSeconds {
+    final r = plannedSeconds - elapsedSeconds;
+    return r < 0 ? 0 : r;
   }
 
-  /// True when an effective planned target exists and elapsed has passed it.
-  bool get isOvertime {
-    final remaining = remainingSeconds;
-    return remaining != null && remaining < 0;
+  /// Fraction of the rest still ahead, in `[0, 1]`. Drives the shrinking
+  /// progress bar.
+  double get remainingFraction {
+    if (plannedSeconds <= 0) return 0;
+    final r = remainingSeconds / plannedSeconds;
+    if (r < 0) return 0;
+    if (r > 1) return 1;
+    return r;
   }
 }

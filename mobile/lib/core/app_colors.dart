@@ -28,7 +28,6 @@ class AppColors {
     required this.warmupBg,
     required this.loggableHint,
     required this.restTimer,
-    required this.restTimerOvertime,
     required this.scrim,
   });
 
@@ -70,7 +69,6 @@ class AppColors {
   final Color loggableHint;
 
   final Color restTimer;
-  final Color restTimerOvertime;
 
   /// Translucent overlay color for modal/scrim layers behind dialogs and
   /// saving indicators. Always combined with an alpha around 0.4-0.6.
@@ -99,7 +97,6 @@ class AppColors {
     warmupBg: Color(0xFF1E293B),
     loggableHint: Color(0xFFF97316),
     restTimer: Color(0xFFF97316),
-    restTimerOvertime: Color(0xFFEF4444),
     scrim: Color(0xCC000000),
   );
 
@@ -126,7 +123,6 @@ class AppColors {
     warmupBg: Color(0xFFE0F2FE),
     loggableHint: Color(0xFFEA580C),
     restTimer: Color(0xFFEA580C),
-    restTimerOvertime: Color(0xFFDC2626),
     scrim: Color(0x99000000),
   );
 }

@@ -17,7 +17,7 @@ void main() {
     return (repo: repo, engine: engine, bloc: bloc);
   }
 
-  WorkoutDay buildDay({int benchSets = 2}) {
+  WorkoutDay buildDay({int benchSets = 2, int? plannedRestSeconds = 90}) {
     final t = DateTime.utc(2024);
     return WorkoutDay(
       id: 'wd-1',
@@ -37,7 +37,7 @@ void main() {
               name: 'Bench',
               measurementType: const MeasurementType.repBased(),
               metadata: ExerciseMetadata.empty,
-              plannedRestSeconds: 90,
+              plannedRestSeconds: plannedRestSeconds,
               sets: [
                 for (var i = 0; i < benchSets; i++)
                   WorkoutSet(
@@ -587,61 +587,44 @@ void main() {
 
   group('rest timer', () {
     test(
-      'pause + resume preserve elapsed; +15s grows the planned target',
+      'ticks accumulate then auto-dismiss when elapsed reaches planned',
       () async {
         final s = setup();
         addTearDown(s.bloc.close);
-        final info = await startSimpleSession(s.repo);
+        s.repo.seedWorkoutDay(buildDay(plannedRestSeconds: 3));
+        final session = await s.repo.startSession(workoutDayId: 'wd-1');
+        final anchorId = session.sessionExercises.first.id;
+
         s.bloc.add(
           FocusModeOpened(
-            sessionId: info.sessionId,
-            anchorSessionExerciseId: info.anchorId,
+            sessionId: session.id,
+            anchorSessionExerciseId: anchorId,
           ),
         );
         await waitFor<FocusModeReady>(s.bloc, (st) => st is FocusModeReady);
 
-        s.bloc.add(FocusModeSetCompleted(info.anchorId));
-        await waitFor<FocusModeReady>(
+        s.bloc.add(FocusModeSetCompleted(anchorId));
+        var t = await waitFor<FocusModeReady>(
           s.bloc,
           (st) => st is FocusModeReady && st.restTimer != null,
         );
+        expect(t.restTimer!.plannedSeconds, 3);
+        expect(t.restTimer!.elapsedSeconds, 0);
 
-        // Synthesise three ticks
+        s.bloc.add(const FocusModeRestTicked());
+        t = await waitFor<FocusModeReady>(
+          s.bloc,
+          (st) =>
+              st is FocusModeReady && (st.restTimer?.elapsedSeconds ?? 0) == 1,
+        );
+        expect(t.restTimer!.remainingSeconds, 2);
+
+        // Two more ticks should drive the timer to dismissal — the final tick
+        // is the one that "catches up" to plannedSeconds, so the bloc emits
+        // restTimer: null instead of an overtime state.
         s.bloc
           ..add(const FocusModeRestTicked())
-          ..add(const FocusModeRestTicked())
           ..add(const FocusModeRestTicked());
-        var t = await waitFor<FocusModeReady>(
-          s.bloc,
-          (st) =>
-              st is FocusModeReady && (st.restTimer?.elapsedSeconds ?? 0) >= 3,
-        );
-        expect(t.restTimer!.elapsedSeconds, greaterThanOrEqualTo(3));
-
-        s.bloc.add(const FocusModeRestPaused());
-        t = await waitFor<FocusModeReady>(
-          s.bloc,
-          (st) => st is FocusModeReady && st.restTimer?.isPaused == true,
-        );
-        final pausedAt = t.restTimer!.elapsedSeconds;
-
-        // Tick while paused should be ignored
-        s.bloc.add(const FocusModeRestTicked());
-        await Future<void>.delayed(Duration.zero);
-        expect(s.bloc.state, isA<FocusModeReady>());
-        final mid = s.bloc.state as FocusModeReady;
-        expect(mid.restTimer!.elapsedSeconds, pausedAt);
-
-        s.bloc.add(const FocusModeRestExtended());
-        t = await waitFor<FocusModeReady>(
-          s.bloc,
-          (st) =>
-              st is FocusModeReady &&
-              (st.restTimer?.extensionSeconds ?? 0) == 15,
-        );
-        expect(t.restTimer!.effectivePlannedSeconds, 90 + 15);
-
-        s.bloc.add(const FocusModeRestSkipped());
         t = await waitFor<FocusModeReady>(
           s.bloc,
           (st) => st is FocusModeReady && st.restTimer == null,
@@ -649,5 +632,56 @@ void main() {
         expect(t.restTimer, isNull);
       },
     );
+
+    test('skip clears the timer immediately', () async {
+      final s = setup();
+      addTearDown(s.bloc.close);
+      final info = await startSimpleSession(s.repo);
+      s.bloc.add(
+        FocusModeOpened(
+          sessionId: info.sessionId,
+          anchorSessionExerciseId: info.anchorId,
+        ),
+      );
+      await waitFor<FocusModeReady>(s.bloc, (st) => st is FocusModeReady);
+
+      s.bloc.add(FocusModeSetCompleted(info.anchorId));
+      await waitFor<FocusModeReady>(
+        s.bloc,
+        (st) => st is FocusModeReady && st.restTimer != null,
+      );
+
+      s.bloc.add(const FocusModeRestSkipped());
+      final after = await waitFor<FocusModeReady>(
+        s.bloc,
+        (st) => st is FocusModeReady && st.restTimer == null,
+      );
+      expect(after.restTimer, isNull);
+    });
+
+    test('no timer started when the panel has no planned rest', () async {
+      final s = setup();
+      addTearDown(s.bloc.close);
+      s.repo.seedWorkoutDay(buildDay(plannedRestSeconds: null));
+      final session = await s.repo.startSession(workoutDayId: 'wd-1');
+      final anchorId = session.sessionExercises.first.id;
+
+      s.bloc.add(
+        FocusModeOpened(
+          sessionId: session.id,
+          anchorSessionExerciseId: anchorId,
+        ),
+      );
+      await waitFor<FocusModeReady>(s.bloc, (st) => st is FocusModeReady);
+
+      s.bloc.add(FocusModeSetCompleted(anchorId));
+      final after = await waitFor<FocusModeReady>(
+        s.bloc,
+        (st) =>
+            st is FocusModeReady &&
+            st.groupViewModel.panels.single.completedSetsCount == 1,
+      );
+      expect(after.restTimer, isNull);
+    });
   });
 }

@@ -4,90 +4,79 @@ import 'package:zamaj/core/app_theme.dart';
 import 'package:zamaj/core/app_typography.dart';
 import 'package:zamaj/modules/focus_mode/models/rest_timer_view_model.dart';
 
-/// Inline rest-timer bar.
-///
-/// Shows mm:ss elapsed (or remaining when a plan exists), with controls for
-/// pause/resume, +15s, and skip. Tints orange normally, red once overtime.
-/// Buttons are sized to [AppSpacing.touchMin] so sweaty mid-set fingers don't
-/// miss. Persistence and foreground notifications land in spec 7.
+/// Slim rest-timer bar. A thin progress line shrinks left-to-right as the
+/// rest depletes; mm:ss remaining sits on the left, a SKIP affordance on
+/// the right. The bloc auto-dismisses the timer when it reaches zero, so
+/// there is no overtime state to render.
 class FocusRestTimerBar extends StatelessWidget {
   const FocusRestTimerBar({
     super.key,
     required this.timer,
-    required this.onPauseToggle,
-    required this.onExtend,
     required this.onSkip,
   });
 
   final RestTimerViewModel timer;
-  final VoidCallback onPauseToggle;
-  final VoidCallback onExtend;
   final VoidCallback onSkip;
+
+  static const double _barHeight = 3;
 
   @override
   Widget build(BuildContext context) {
     final colors = Theme.of(context).appColors;
     const typography = AppTypography.standard;
-    final isOvertime = timer.isOvertime;
-    final tint = isOvertime ? colors.restTimerOvertime : colors.restTimer;
-    final remaining = timer.remainingSeconds;
-    final showRemaining = remaining != null;
-    final displaySeconds = showRemaining
-        ? remaining.abs()
-        : timer.elapsedSeconds;
-    final prefix = showRemaining ? (isOvertime ? '-' : '') : '';
+    final tint = colors.restTimer;
 
-    return Container(
-      padding: const EdgeInsets.symmetric(
-        horizontal: AppSpacing.md,
-        vertical: AppSpacing.sm,
-      ),
-      decoration: BoxDecoration(
-        color: tint.withValues(alpha: 0.12),
-        borderRadius: BorderRadius.circular(AppRadius.lg),
-        border: Border.all(color: tint.withValues(alpha: 0.45)),
-      ),
-      child: Row(
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: AppSpacing.xs),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(Icons.timer_outlined, color: tint, size: 20),
-          const SizedBox(width: AppSpacing.sm),
-          Text(
-            '$prefix${_formatMmss(displaySeconds)}',
-            style: typography.numericMd.copyWith(color: tint),
-          ),
-          const SizedBox(width: AppSpacing.xs),
-          Text(
-            showRemaining ? (isOvertime ? 'over' : 'rest') : 'resting',
-            style: typography.caption.copyWith(color: colors.onSurfaceMuted),
-          ),
-          const Spacer(),
-          IconButton(
-            tooltip: timer.isPaused ? 'Resume' : 'Pause',
-            onPressed: onPauseToggle,
-            icon: Icon(timer.isPaused ? Icons.play_arrow : Icons.pause),
-            color: colors.onSurface,
-            constraints: const BoxConstraints(
-              minWidth: AppSpacing.touchMin,
-              minHeight: AppSpacing.touchMin,
+          ClipRRect(
+            borderRadius: BorderRadius.circular(_barHeight / 2),
+            child: SizedBox(
+              height: _barHeight,
+              child: LinearProgressIndicator(
+                value: timer.remainingFraction,
+                backgroundColor: tint.withValues(alpha: 0.18),
+                valueColor: AlwaysStoppedAnimation<Color>(tint),
+                minHeight: _barHeight,
+              ),
             ),
           ),
-          TextButton(
-            onPressed: onExtend,
-            style: TextButton.styleFrom(
-              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
-              minimumSize: const Size(0, AppSpacing.touchMin),
-              foregroundColor: colors.onSurface,
-            ),
-            child: const Text('+15'),
-          ),
-          TextButton(
-            onPressed: onSkip,
-            style: TextButton.styleFrom(
-              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
-              minimumSize: const Size(0, AppSpacing.touchMin),
-              foregroundColor: colors.onSurfaceMuted,
-            ),
-            child: const Text('Skip'),
+          const SizedBox(height: AppSpacing.xs),
+          Row(
+            children: [
+              Text(
+                _formatMmss(timer.remainingSeconds),
+                style: typography.caption.copyWith(color: tint),
+              ),
+              const Spacer(),
+              InkWell(
+                onTap: onSkip,
+                borderRadius: BorderRadius.circular(AppRadius.sm),
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(
+                    minHeight: AppSpacing.touchMin,
+                    minWidth: AppSpacing.touchMin,
+                  ),
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: AppSpacing.sm,
+                    ),
+                    child: Center(
+                      child: Text(
+                        'SKIP',
+                        style: typography.caption.copyWith(
+                          color: colors.onSurfaceMuted,
+                          letterSpacing: 1.2,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ],
           ),
         ],
       ),

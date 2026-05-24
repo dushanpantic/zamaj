@@ -14,16 +14,7 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$RestTimerViewModel {
 
-/// Coach-defined target rest in seconds, or null when the planned
-/// exercise doesn't specify rest. When null, the timer counts up
-/// without an "overtime" threshold.
- int? get plannedSeconds;/// Real seconds elapsed since [startedAt], not counting time spent
-/// paused.
- int get elapsedSeconds;/// Cumulative seconds added via the +15s control. Folded into the
-/// effective planned target so "remaining" reflects user extensions.
- int get extensionSeconds;/// True while the timer is paused. Tick events are ignored while
-/// paused.
- bool get isPaused;
+ int get plannedSeconds; int get elapsedSeconds;
 /// Create a copy of RestTimerViewModel
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -34,16 +25,16 @@ $RestTimerViewModelCopyWith<RestTimerViewModel> get copyWith => _$RestTimerViewM
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is RestTimerViewModel&&(identical(other.plannedSeconds, plannedSeconds) || other.plannedSeconds == plannedSeconds)&&(identical(other.elapsedSeconds, elapsedSeconds) || other.elapsedSeconds == elapsedSeconds)&&(identical(other.extensionSeconds, extensionSeconds) || other.extensionSeconds == extensionSeconds)&&(identical(other.isPaused, isPaused) || other.isPaused == isPaused));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is RestTimerViewModel&&(identical(other.plannedSeconds, plannedSeconds) || other.plannedSeconds == plannedSeconds)&&(identical(other.elapsedSeconds, elapsedSeconds) || other.elapsedSeconds == elapsedSeconds));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,plannedSeconds,elapsedSeconds,extensionSeconds,isPaused);
+int get hashCode => Object.hash(runtimeType,plannedSeconds,elapsedSeconds);
 
 @override
 String toString() {
-  return 'RestTimerViewModel(plannedSeconds: $plannedSeconds, elapsedSeconds: $elapsedSeconds, extensionSeconds: $extensionSeconds, isPaused: $isPaused)';
+  return 'RestTimerViewModel(plannedSeconds: $plannedSeconds, elapsedSeconds: $elapsedSeconds)';
 }
 
 
@@ -54,7 +45,7 @@ abstract mixin class $RestTimerViewModelCopyWith<$Res>  {
   factory $RestTimerViewModelCopyWith(RestTimerViewModel value, $Res Function(RestTimerViewModel) _then) = _$RestTimerViewModelCopyWithImpl;
 @useResult
 $Res call({
- int? plannedSeconds, int elapsedSeconds, int extensionSeconds, bool isPaused
+ int plannedSeconds, int elapsedSeconds
 });
 
 
@@ -71,13 +62,11 @@ class _$RestTimerViewModelCopyWithImpl<$Res>
 
 /// Create a copy of RestTimerViewModel
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? plannedSeconds = freezed,Object? elapsedSeconds = null,Object? extensionSeconds = null,Object? isPaused = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? plannedSeconds = null,Object? elapsedSeconds = null,}) {
   return _then(_self.copyWith(
-plannedSeconds: freezed == plannedSeconds ? _self.plannedSeconds : plannedSeconds // ignore: cast_nullable_to_non_nullable
-as int?,elapsedSeconds: null == elapsedSeconds ? _self.elapsedSeconds : elapsedSeconds // ignore: cast_nullable_to_non_nullable
-as int,extensionSeconds: null == extensionSeconds ? _self.extensionSeconds : extensionSeconds // ignore: cast_nullable_to_non_nullable
-as int,isPaused: null == isPaused ? _self.isPaused : isPaused // ignore: cast_nullable_to_non_nullable
-as bool,
+plannedSeconds: null == plannedSeconds ? _self.plannedSeconds : plannedSeconds // ignore: cast_nullable_to_non_nullable
+as int,elapsedSeconds: null == elapsedSeconds ? _self.elapsedSeconds : elapsedSeconds // ignore: cast_nullable_to_non_nullable
+as int,
   ));
 }
 
@@ -162,10 +151,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( int? plannedSeconds,  int elapsedSeconds,  int extensionSeconds,  bool isPaused)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( int plannedSeconds,  int elapsedSeconds)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _RestTimerViewModel() when $default != null:
-return $default(_that.plannedSeconds,_that.elapsedSeconds,_that.extensionSeconds,_that.isPaused);case _:
+return $default(_that.plannedSeconds,_that.elapsedSeconds);case _:
   return orElse();
 
 }
@@ -183,10 +172,10 @@ return $default(_that.plannedSeconds,_that.elapsedSeconds,_that.extensionSeconds
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( int? plannedSeconds,  int elapsedSeconds,  int extensionSeconds,  bool isPaused)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( int plannedSeconds,  int elapsedSeconds)  $default,) {final _that = this;
 switch (_that) {
 case _RestTimerViewModel():
-return $default(_that.plannedSeconds,_that.elapsedSeconds,_that.extensionSeconds,_that.isPaused);case _:
+return $default(_that.plannedSeconds,_that.elapsedSeconds);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -203,10 +192,10 @@ return $default(_that.plannedSeconds,_that.elapsedSeconds,_that.extensionSeconds
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( int? plannedSeconds,  int elapsedSeconds,  int extensionSeconds,  bool isPaused)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( int plannedSeconds,  int elapsedSeconds)?  $default,) {final _that = this;
 switch (_that) {
 case _RestTimerViewModel() when $default != null:
-return $default(_that.plannedSeconds,_that.elapsedSeconds,_that.extensionSeconds,_that.isPaused);case _:
+return $default(_that.plannedSeconds,_that.elapsedSeconds);case _:
   return null;
 
 }
@@ -218,22 +207,11 @@ return $default(_that.plannedSeconds,_that.elapsedSeconds,_that.extensionSeconds
 
 
 class _RestTimerViewModel extends RestTimerViewModel {
-  const _RestTimerViewModel({required this.plannedSeconds, required this.elapsedSeconds, required this.extensionSeconds, required this.isPaused}): super._();
+  const _RestTimerViewModel({required this.plannedSeconds, required this.elapsedSeconds}): super._();
   
 
-/// Coach-defined target rest in seconds, or null when the planned
-/// exercise doesn't specify rest. When null, the timer counts up
-/// without an "overtime" threshold.
-@override final  int? plannedSeconds;
-/// Real seconds elapsed since [startedAt], not counting time spent
-/// paused.
+@override final  int plannedSeconds;
 @override final  int elapsedSeconds;
-/// Cumulative seconds added via the +15s control. Folded into the
-/// effective planned target so "remaining" reflects user extensions.
-@override final  int extensionSeconds;
-/// True while the timer is paused. Tick events are ignored while
-/// paused.
-@override final  bool isPaused;
 
 /// Create a copy of RestTimerViewModel
 /// with the given fields replaced by the non-null parameter values.
@@ -245,16 +223,16 @@ _$RestTimerViewModelCopyWith<_RestTimerViewModel> get copyWith => __$RestTimerVi
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _RestTimerViewModel&&(identical(other.plannedSeconds, plannedSeconds) || other.plannedSeconds == plannedSeconds)&&(identical(other.elapsedSeconds, elapsedSeconds) || other.elapsedSeconds == elapsedSeconds)&&(identical(other.extensionSeconds, extensionSeconds) || other.extensionSeconds == extensionSeconds)&&(identical(other.isPaused, isPaused) || other.isPaused == isPaused));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _RestTimerViewModel&&(identical(other.plannedSeconds, plannedSeconds) || other.plannedSeconds == plannedSeconds)&&(identical(other.elapsedSeconds, elapsedSeconds) || other.elapsedSeconds == elapsedSeconds));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,plannedSeconds,elapsedSeconds,extensionSeconds,isPaused);
+int get hashCode => Object.hash(runtimeType,plannedSeconds,elapsedSeconds);
 
 @override
 String toString() {
-  return 'RestTimerViewModel(plannedSeconds: $plannedSeconds, elapsedSeconds: $elapsedSeconds, extensionSeconds: $extensionSeconds, isPaused: $isPaused)';
+  return 'RestTimerViewModel(plannedSeconds: $plannedSeconds, elapsedSeconds: $elapsedSeconds)';
 }
 
 
@@ -265,7 +243,7 @@ abstract mixin class _$RestTimerViewModelCopyWith<$Res> implements $RestTimerVie
   factory _$RestTimerViewModelCopyWith(_RestTimerViewModel value, $Res Function(_RestTimerViewModel) _then) = __$RestTimerViewModelCopyWithImpl;
 @override @useResult
 $Res call({
- int? plannedSeconds, int elapsedSeconds, int extensionSeconds, bool isPaused
+ int plannedSeconds, int elapsedSeconds
 });
 
 
@@ -282,13 +260,11 @@ class __$RestTimerViewModelCopyWithImpl<$Res>
 
 /// Create a copy of RestTimerViewModel
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? plannedSeconds = freezed,Object? elapsedSeconds = null,Object? extensionSeconds = null,Object? isPaused = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? plannedSeconds = null,Object? elapsedSeconds = null,}) {
   return _then(_RestTimerViewModel(
-plannedSeconds: freezed == plannedSeconds ? _self.plannedSeconds : plannedSeconds // ignore: cast_nullable_to_non_nullable
-as int?,elapsedSeconds: null == elapsedSeconds ? _self.elapsedSeconds : elapsedSeconds // ignore: cast_nullable_to_non_nullable
-as int,extensionSeconds: null == extensionSeconds ? _self.extensionSeconds : extensionSeconds // ignore: cast_nullable_to_non_nullable
-as int,isPaused: null == isPaused ? _self.isPaused : isPaused // ignore: cast_nullable_to_non_nullable
-as bool,
+plannedSeconds: null == plannedSeconds ? _self.plannedSeconds : plannedSeconds // ignore: cast_nullable_to_non_nullable
+as int,elapsedSeconds: null == elapsedSeconds ? _self.elapsedSeconds : elapsedSeconds // ignore: cast_nullable_to_non_nullable
+as int,
   ));
 }
 

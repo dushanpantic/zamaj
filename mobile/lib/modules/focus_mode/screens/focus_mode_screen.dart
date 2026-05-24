@@ -54,7 +54,7 @@ class _FocusModeScreenState extends State<FocusModeScreen> {
           listener: (_, _) => Haptics.emphasis(),
         ),
         BlocListener<FocusModeBloc, FocusModeState>(
-          listenWhen: _restJustWentOvertime,
+          listenWhen: _restJustEnded,
           listener: (_, _) => Haptics.emphasis(),
         ),
       ],
@@ -77,13 +77,12 @@ class _FocusModeScreenState extends State<FocusModeScreen> {
     return nextId != null && nextId != priorId;
   }
 
-  static bool _restJustWentOvertime(FocusModeState p, FocusModeState c) {
-    if (c is! FocusModeReady) return false;
-    final nextOver = c.restTimer?.isOvertime ?? false;
-    if (!nextOver) return false;
-    final priorOver =
-        (p is FocusModeReady ? p.restTimer?.isOvertime : null) ?? false;
-    return !priorOver;
+  static bool _restJustEnded(FocusModeState p, FocusModeState c) {
+    if (p is! FocusModeReady || c is! FocusModeReady) return false;
+    final priorTimer = p.restTimer;
+    if (priorTimer == null) return false;
+    if (c.restTimer != null) return false;
+    return priorTimer.remainingSeconds <= 1;
   }
 
   PreferredSizeWidget _appBarFor(BuildContext context, FocusModeState state) {
@@ -751,12 +750,6 @@ class _PinnedBottomBar extends StatelessWidget {
           if (isResting) ...[
             FocusRestTimerBar(
               timer: state.restTimer!,
-              onPauseToggle: () => bloc.add(
-                state.restTimer!.isPaused
-                    ? const FocusModeRestResumed()
-                    : const FocusModeRestPaused(),
-              ),
-              onExtend: () => bloc.add(const FocusModeRestExtended()),
               onSkip: () => bloc.add(const FocusModeRestSkipped()),
             ),
             if (activePanel != null) const SizedBox(height: AppSpacing.sm),
