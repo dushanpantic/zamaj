@@ -139,10 +139,6 @@ class _ReadyBody extends StatelessWidget {
             (p) => p.sessionExerciseId == activeId,
             orElse: () => group.panels.first,
           );
-    final partnerPanels = [
-      for (final panel in group.panels)
-        if (panel.sessionExerciseId != activeId) panel,
-    ];
 
     return Stack(
       children: [
@@ -150,32 +146,24 @@ class _ReadyBody extends StatelessWidget {
           children: [
             _SupersetUpNextStrip(group: group),
             Expanded(
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(
-                  AppSpacing.lg,
-                  AppSpacing.md,
-                  AppSpacing.lg,
-                  AppSpacing.md,
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: AppSpacing.lg,
+                  vertical: AppSpacing.md,
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    if (activePanel != null) ...[
-                      _ActivePanelCard(
+                    for (var i = 0; i < group.panels.length; i++) ...[
+                      _PanelSlot(
                         state: state,
-                        panel: activePanel,
+                        panel: group.panels[i],
+                        role: _roleFor(group, i),
                         canMutate: canMutate,
                       ),
-                      const SizedBox(height: AppSpacing.md),
+                      if (i < group.panels.length - 1)
+                        const SizedBox(height: AppSpacing.sm),
                     ],
-                    if (partnerPanels.isNotEmpty)
-                      Expanded(
-                        child: _PartnerPanelList(
-                          state: state,
-                          panels: partnerPanels,
-                          canMutate: canMutate,
-                        ),
-                      ),
                   ],
                 ),
               ),
@@ -267,11 +255,74 @@ class _SupersetUpNextStrip extends StatelessWidget {
   }
 }
 
+/// Position-relative role of a panel within its group. Derived from the
+/// panel's index versus the group's `activeSessionExerciseId` so the UI
+/// can render three visual sizes (previous → current → upcoming) without
+/// reordering panels as the active rotates.
+enum FocusPanelRole { previous, current, upcoming }
+
+FocusPanelRole _roleFor(FocusModeGroupViewModel group, int panelIndex) {
+  final activeId = group.activeSessionExerciseId;
+  if (activeId == null) return FocusPanelRole.previous;
+  final activeIndex = group.panels.indexWhere(
+    (p) => p.sessionExerciseId == activeId,
+  );
+  if (activeIndex < 0) return FocusPanelRole.upcoming;
+  if (panelIndex == activeIndex) return FocusPanelRole.current;
+  return panelIndex < activeIndex
+      ? FocusPanelRole.previous
+      : FocusPanelRole.upcoming;
+}
+
+/// Dispatches a panel to the right card variant for its role and wraps
+/// the result in `AnimatedSize` so a role change (e.g. when the active
+/// rotates after a logged set) animates as an in-place resize instead of
+/// a translation.
+class _PanelSlot extends StatelessWidget {
+  const _PanelSlot({
+    required this.state,
+    required this.panel,
+    required this.role,
+    required this.canMutate,
+  });
+
+  final FocusModeReady state;
+  final FocusModeViewModel panel;
+  final FocusPanelRole role;
+  final bool canMutate;
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedSize(
+      duration: const Duration(milliseconds: 220),
+      curve: Curves.easeOutCubic,
+      alignment: Alignment.topCenter,
+      child: switch (role) {
+        FocusPanelRole.previous => _PreviousPanelCard(
+          state: state,
+          panel: panel,
+          canMutate: canMutate,
+        ),
+        FocusPanelRole.current => _CurrentPanelCard(
+          state: state,
+          panel: panel,
+          canMutate: canMutate,
+        ),
+        FocusPanelRole.upcoming => _UpcomingPanelCard(
+          state: state,
+          panel: panel,
+          canMutate: canMutate,
+        ),
+      },
+    );
+  }
+}
+
 /// Full editor for the currently active panel — pips, planned/last,
 /// numeric hero + bump rows, 3-dot menu. The LOG SET button lives in the
 /// pinned bottom bar, not inside the card.
-class _ActivePanelCard extends StatelessWidget {
-  const _ActivePanelCard({
+class _CurrentPanelCard extends StatelessWidget {
+  const _CurrentPanelCard({
     required this.state,
     required this.panel,
     required this.canMutate,
@@ -286,7 +337,7 @@ class _ActivePanelCard extends StatelessWidget {
     final colors = Theme.of(context).appColors;
     final accent = colors.loggableHint;
     return Container(
-      key: ValueKey('active-panel-${panel.sessionExerciseId}'),
+      key: ValueKey('current-panel-${panel.sessionExerciseId}'),
       padding: const EdgeInsets.all(AppSpacing.md),
       decoration: BoxDecoration(
         color: colors.surface.withValues(alpha: 0.5),
@@ -319,47 +370,14 @@ class _ActivePanelCard extends StatelessWidget {
   }
 }
 
-/// Stack of partner cards for the non-active panels in a superset group.
-/// The cards stay non-scrolling when they fit; falls back to a scrollable
-/// list only when they overflow (e.g. a 3-exercise giant set on a small
-/// device). The active card + pinned LOG SET remain fixed regardless.
-class _PartnerPanelList extends StatelessWidget {
-  const _PartnerPanelList({
-    required this.state,
-    required this.panels,
-    required this.canMutate,
-  });
-
-  final FocusModeReady state;
-  final List<FocusModeViewModel> panels;
-  final bool canMutate;
-
-  @override
-  Widget build(BuildContext context) {
-    return SingleChildScrollView(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          for (var i = 0; i < panels.length; i++) ...[
-            _PartnerPanelCard(
-              state: state,
-              panel: panels[i],
-              canMutate: canMutate,
-            ),
-            if (i < panels.length - 1) const SizedBox(height: AppSpacing.sm),
-          ],
-        ],
-      ),
-    );
-  }
-}
-
-/// Compact two-row card representing a non-active superset member. The
-/// whole card is a tap target → makes that exercise active (overrides
-/// auto-rotation). The 3-dot menu still works (replace / skip / mark
-/// done / open video) so the user doesn't have to switch first to skip.
-class _PartnerPanelCard extends StatelessWidget {
-  const _PartnerPanelCard({
+/// Smallest card variant — used for panels whose position is *before*
+/// the active. Single line: name + completion count or check. The whole
+/// row is a tap target (≥ 48 dp hitbox) that pins this panel as active
+/// when it's still loggable; the 3-dot menu remains available for
+/// completed panels too so replace / skip / mark-done work without
+/// re-focusing first.
+class _PreviousPanelCard extends StatelessWidget {
+  const _PreviousPanelCard({
     required this.state,
     required this.panel,
     required this.canMutate,
@@ -382,11 +400,6 @@ class _PartnerPanelCard extends StatelessWidget {
               FocusModeFocusedPanelSelected(panel.sessionExerciseId),
             );
           };
-    final accent = colors.loggableHint;
-    final borderColor = isCompleted
-        ? colors.outline.withValues(alpha: 0.4)
-        : accent.withValues(alpha: 0.7);
-    final backgroundColor = colors.surface.withValues(alpha: 0.3);
     return Material(
       color: Colors.transparent,
       borderRadius: BorderRadius.circular(AppRadius.lg),
@@ -394,15 +407,99 @@ class _PartnerPanelCard extends StatelessWidget {
         onTap: onTap,
         borderRadius: BorderRadius.circular(AppRadius.lg),
         child: Container(
-          constraints: const BoxConstraints(minHeight: AppSpacing.touchMin + 8),
+          key: ValueKey('previous-panel-${panel.sessionExerciseId}'),
+          constraints: const BoxConstraints(minHeight: AppSpacing.touchMin),
+          padding: const EdgeInsets.symmetric(
+            horizontal: AppSpacing.md,
+            vertical: AppSpacing.xs,
+          ),
+          decoration: BoxDecoration(
+            color: colors.surface.withValues(alpha: 0.18),
+            borderRadius: BorderRadius.circular(AppRadius.lg),
+          ),
+          child: Row(
+            children: [
+              Expanded(
+                child: Text(
+                  panel.displayExerciseName,
+                  style: typography.labelSmall.copyWith(
+                    color: colors.onSurfaceMuted,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+              const SizedBox(width: AppSpacing.sm),
+              if (isCompleted)
+                Icon(
+                  Icons.check_circle,
+                  color: colors.exerciseCompleted,
+                  size: 18,
+                )
+              else
+                Text(
+                  '${panel.completedSetsCount}/${panel.totalPlannedSets}',
+                  style: typography.caption.copyWith(
+                    color: colors.onSurfaceMuted,
+                  ),
+                ),
+              _PanelActionsMenu(state: state, panel: panel),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Medium card variant — used for panels whose position is *after* the
+/// active. Two-line content: name on top, current set's planned values
+/// alongside the set-progress pips. Same tap-to-pin and 3-dot menu
+/// affordances as the previous card.
+class _UpcomingPanelCard extends StatelessWidget {
+  const _UpcomingPanelCard({
+    required this.state,
+    required this.panel,
+    required this.canMutate,
+  });
+
+  final FocusModeReady state;
+  final FocusModeViewModel panel;
+  final bool canMutate;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = Theme.of(context).appColors;
+    const typography = AppTypography.standard;
+    final isCompleted = !panel.isLoggable;
+    final onTap = (isCompleted || !canMutate)
+        ? null
+        : () {
+            Haptics.tap();
+            context.read<FocusModeBloc>().add(
+              FocusModeFocusedPanelSelected(panel.sessionExerciseId),
+            );
+          };
+    final plannedLabel = _formatPlanned(
+      panel.currentPlannedValues,
+      panel.plannedSummary,
+    );
+    return Material(
+      color: Colors.transparent,
+      borderRadius: BorderRadius.circular(AppRadius.lg),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(AppRadius.lg),
+        child: Container(
+          key: ValueKey('upcoming-panel-${panel.sessionExerciseId}'),
           padding: const EdgeInsets.symmetric(
             horizontal: AppSpacing.md,
             vertical: AppSpacing.sm,
           ),
           decoration: BoxDecoration(
-            color: backgroundColor,
+            color: colors.surface.withValues(alpha: 0.3),
             borderRadius: BorderRadius.circular(AppRadius.lg),
-            border: Border.all(color: borderColor),
+            border: Border.all(color: colors.outline.withValues(alpha: 0.6)),
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -420,6 +517,20 @@ class _PartnerPanelCard extends StatelessWidget {
                       overflow: TextOverflow.ellipsis,
                     ),
                   ),
+                  _PanelActionsMenu(state: state, panel: panel),
+                ],
+              ),
+              const SizedBox(height: AppSpacing.xs),
+              Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      plannedLabel,
+                      style: typography.caption.copyWith(color: colors.planned),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
                   const SizedBox(width: AppSpacing.sm),
                   if (isCompleted)
                     Icon(
@@ -433,36 +544,13 @@ class _PartnerPanelCard extends StatelessWidget {
                       total: panel.totalPlannedSets,
                       currentIndex: panel.currentSetIndex,
                     ),
-                  _PanelActionsMenu(state: state, panel: panel),
                 ],
-              ),
-              const SizedBox(height: 2),
-              Text(
-                _partnerSubtitle(panel),
-                style: typography.caption.copyWith(
-                  color: colors.onSurfaceMuted,
-                ),
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
               ),
             ],
           ),
         ),
       ),
     );
-  }
-
-  String _partnerSubtitle(FocusModeViewModel panel) {
-    final planned = _formatPlanned(
-      panel.currentPlannedValues,
-      panel.plannedSummary,
-    );
-    final last = _formatLast(panel.lastExecutedValues);
-    final segments = <String>[
-      'Planned: $planned',
-      if (last != null) 'Last: $last',
-    ];
-    return segments.join('  ·  ');
   }
 }
 
