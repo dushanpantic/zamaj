@@ -11,16 +11,25 @@ sealed class WorkoutDayPickerState extends Equatable {
 }
 
 final class WorkoutDayPickerInitial extends WorkoutDayPickerState {
-  const WorkoutDayPickerInitial();
+  const WorkoutDayPickerInitial(this.programName);
+
+  final String programName;
+
+  @override
+  List<Object?> get props => [programName];
 }
 
 final class WorkoutDayPickerLoading extends WorkoutDayPickerState {
-  const WorkoutDayPickerLoading(this.programId);
+  const WorkoutDayPickerLoading({
+    required this.programId,
+    required this.programName,
+  });
 
   final String programId;
+  final String programName;
 
   @override
-  List<Object?> get props => [programId];
+  List<Object?> get props => [programId, programName];
 }
 
 final class WorkoutDayPickerProgramNotFound extends WorkoutDayPickerState {
@@ -35,14 +44,16 @@ final class WorkoutDayPickerProgramNotFound extends WorkoutDayPickerState {
 final class WorkoutDayPickerScreenFailure extends WorkoutDayPickerState {
   const WorkoutDayPickerScreenFailure({
     required this.programId,
+    required this.programName,
     required this.error,
   });
 
   final String programId;
+  final String programName;
   final DomainError error;
 
   @override
-  List<Object?> get props => [programId, error];
+  List<Object?> get props => [programId, programName, error];
 }
 
 final class WorkoutDayPickerLoaded extends WorkoutDayPickerState {

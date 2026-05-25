@@ -8,12 +8,16 @@ sealed class WorkoutDayPickerEvent extends Equatable {
 }
 
 final class WorkoutDayPickerOpened extends WorkoutDayPickerEvent {
-  const WorkoutDayPickerOpened(this.programId);
+  const WorkoutDayPickerOpened({
+    required this.programId,
+    required this.programName,
+  });
 
   final String programId;
+  final String programName;
 
   @override
-  List<Object?> get props => [programId];
+  List<Object?> get props => [programId, programName];
 }
 
 final class WorkoutDayPickerRefreshRequested extends WorkoutDayPickerEvent {

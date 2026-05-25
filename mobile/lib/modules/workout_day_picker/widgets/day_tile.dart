@@ -2,9 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:zamaj/core/app_spacing.dart';
 import 'package:zamaj/core/app_theme.dart';
 import 'package:zamaj/core/app_typography.dart';
+import 'package:zamaj/modules/domain/domain.dart';
 import 'package:zamaj/modules/program_management/services/domain_error_presenter.dart';
 import 'package:zamaj/modules/workout_day_picker/models/day_view_model.dart';
-import 'package:zamaj/modules/workout_day_picker/widgets/day_recommendation_badge.dart';
 import 'package:zamaj/modules/workout_day_picker/widgets/day_tile_history_labels.dart';
 import 'package:zamaj/modules/workout_day_picker/widgets/start_resume_action_button.dart';
 
@@ -32,12 +32,20 @@ class DayTile extends StatelessWidget {
     final colors = Theme.of(context).appColors;
     const typography = AppTypography.standard;
     final day = viewModel.workoutDay;
-    final groupCount = day.exerciseGroups.length;
-    final groupLabel = groupCount == 1
-        ? '1 exercise group'
-        : '$groupCount exercise groups';
+    final exerciseCount = day.exerciseGroups
+        .where((g) => g.role == ExerciseGroupRole.main)
+        .fold<int>(0, (sum, g) => sum + g.exercises.length);
+    final exerciseLabel = exerciseCount == 1
+        ? '1 exercise'
+        : '$exerciseCount exercises';
 
-    return Container(
+    final activeSessionId = switch (viewModel.status) {
+      DayTileLoaded(:final summary) => summary.activeSessionId,
+      _ => null,
+    };
+    final hasActiveSession = activeSessionId != null;
+
+    final body = Container(
       padding: const EdgeInsets.symmetric(
         horizontal: AppSpacing.lg,
         vertical: AppSpacing.md,
@@ -67,20 +75,15 @@ class DayTile extends StatelessWidget {
                         overflow: TextOverflow.ellipsis,
                       ),
                     ),
-                    if (viewModel.status case DayTileLoaded(
-                      :final summary,
-                    )) ...[
+                    if (hasActiveSession) ...[
                       const SizedBox(width: AppSpacing.sm),
-                      DayRecommendationBadge(
-                        summary: summary,
-                        referenceNow: referenceNow,
-                      ),
+                      _InProgressChip(),
                     ],
                   ],
                 ),
                 const SizedBox(height: AppSpacing.xs),
                 Text(
-                  groupLabel,
+                  exerciseLabel,
                   style: typography.caption.copyWith(
                     color: colors.onSurfaceMuted,
                   ),
@@ -95,6 +98,54 @@ class DayTile extends StatelessWidget {
         ],
       ),
     );
+
+    final content = hasActiveSession
+        ? Stack(
+            children: [
+              body,
+              Positioned(
+                left: 0,
+                top: 0,
+                bottom: 0,
+                child: IgnorePointer(
+                  child: Container(
+                    width: 4,
+                    decoration: BoxDecoration(
+                      color: colors.primary,
+                      borderRadius: const BorderRadius.only(
+                        topLeft: Radius.circular(AppRadius.md),
+                        bottomLeft: Radius.circular(AppRadius.md),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          )
+        : body;
+
+    final tapHandler = _resolveTapHandler(activeSessionId);
+
+    return Material(
+      color: Colors.transparent,
+      borderRadius: BorderRadius.circular(AppRadius.md),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(AppRadius.md),
+        onTap: tapHandler,
+        child: content,
+      ),
+    );
+  }
+
+  VoidCallback? _resolveTapHandler(String? activeSessionId) {
+    if (viewModel.status is! DayTileLoaded) return null;
+    final anyInFlight = launchInFlightWorkoutDayId != null;
+    if (anyInFlight) return null;
+    final workoutDayId = viewModel.workoutDay.id;
+    if (activeSessionId != null) {
+      return () => onResumePressed(workoutDayId, activeSessionId);
+    }
+    return () => onStartPressed(workoutDayId);
   }
 
   Widget _statusBody(BuildContext context) {
@@ -139,6 +190,28 @@ class DayTile extends StatelessWidget {
         ),
       ),
     };
+  }
+}
+
+class _InProgressChip extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    final colors = Theme.of(context).appColors;
+    return Container(
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.sm,
+        vertical: 2,
+      ),
+      decoration: BoxDecoration(
+        color: colors.primary.withValues(alpha: 0.15),
+        borderRadius: BorderRadius.circular(AppRadius.pill),
+        border: Border.all(color: colors.primary.withValues(alpha: 0.5)),
+      ),
+      child: Text(
+        'IN PROGRESS',
+        style: AppTypography.standard.badge.copyWith(color: colors.primary),
+      ),
+    );
   }
 }
 

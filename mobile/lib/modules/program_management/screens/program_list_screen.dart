@@ -148,6 +148,7 @@ class _ProgramListScreenState extends State<ProgramListScreen> {
                                         WorkoutDayPickerRoutes.picker,
                                         arguments: WorkoutDayPickerArgs(
                                           programId: program.id,
+                                          programName: program.name,
                                         ),
                                       );
                                     }

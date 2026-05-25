@@ -17,11 +17,12 @@ class WorkoutDayPickerBloc
     required SessionRepository sessionRepository,
     required SessionFlowEngine sessionFlowEngine,
     required Clock clock,
+    required String initialProgramName,
   }) : _programRepository = programRepository,
        _sessionRepository = sessionRepository,
        _sessionFlowEngine = sessionFlowEngine,
        _clock = clock,
-       super(const WorkoutDayPickerInitial()) {
+       super(WorkoutDayPickerInitial(initialProgramName)) {
     on<WorkoutDayPickerOpened>(_onOpened);
     on<WorkoutDayPickerScreenRetryRequested>(_onScreenRetryRequested);
     on<WorkoutDayPickerTileRetryRequested>(_onTileRetryRequested);
@@ -51,16 +52,24 @@ class WorkoutDayPickerBloc
     WorkoutDayPickerOpened event,
     Emitter<WorkoutDayPickerState> emit,
   ) async {
-    await _runFullLoad(programId: event.programId, emit: emit);
+    await _runFullLoad(
+      programId: event.programId,
+      programName: event.programName,
+      emit: emit,
+    );
   }
 
   Future<void> _onScreenRetryRequested(
     WorkoutDayPickerScreenRetryRequested event,
     Emitter<WorkoutDayPickerState> emit,
   ) async {
-    final programId = _currentProgramId();
-    if (programId == null) return;
-    await _runFullLoad(programId: programId, emit: emit);
+    final identity = _currentProgramIdentity();
+    if (identity == null) return;
+    await _runFullLoad(
+      programId: identity.id,
+      programName: identity.name,
+      emit: emit,
+    );
   }
 
   Future<void> _onRefreshRequested(
@@ -69,7 +78,11 @@ class WorkoutDayPickerBloc
   ) async {
     final current = state;
     if (current is! WorkoutDayPickerLoaded) return;
-    await _runFullLoad(programId: current.program.id, emit: emit);
+    await _runFullLoad(
+      programId: current.program.id,
+      programName: current.program.name,
+      emit: emit,
+    );
   }
 
   Future<void> _onReturnedFromSession(
@@ -78,7 +91,11 @@ class WorkoutDayPickerBloc
   ) async {
     final current = state;
     if (current is! WorkoutDayPickerLoaded) return;
-    await _runFullLoad(programId: current.program.id, emit: emit);
+    await _runFullLoad(
+      programId: current.program.id,
+      programName: current.program.name,
+      emit: emit,
+    );
   }
 
   Future<void> _onTileRetryRequested(
@@ -256,9 +273,12 @@ class WorkoutDayPickerBloc
 
   Future<void> _runFullLoad({
     required String programId,
+    required String programName,
     required Emitter<WorkoutDayPickerState> emit,
   }) async {
-    emit(WorkoutDayPickerLoading(programId));
+    emit(
+      WorkoutDayPickerLoading(programId: programId, programName: programName),
+    );
 
     final Program? program;
     final List<WorkoutDay> workoutDays;
@@ -272,7 +292,13 @@ class WorkoutDayPickerBloc
         programId,
       );
     } on DomainError catch (e) {
-      emit(WorkoutDayPickerScreenFailure(programId: programId, error: e));
+      emit(
+        WorkoutDayPickerScreenFailure(
+          programId: programId,
+          programName: programName,
+          error: e,
+        ),
+      );
       return;
     }
 
@@ -318,13 +344,22 @@ class WorkoutDayPickerBloc
     }
   }
 
-  String? _currentProgramId() {
+  ({String id, String name})? _currentProgramIdentity() {
     final current = state;
     return switch (current) {
-      WorkoutDayPickerLoaded(:final program) => program.id,
-      WorkoutDayPickerLoading(:final programId) => programId,
-      WorkoutDayPickerProgramNotFound(:final programId) => programId,
-      WorkoutDayPickerScreenFailure(:final programId) => programId,
+      WorkoutDayPickerLoaded(:final program) => (
+        id: program.id,
+        name: program.name,
+      ),
+      WorkoutDayPickerLoading(:final programId, :final programName) => (
+        id: programId,
+        name: programName,
+      ),
+      WorkoutDayPickerScreenFailure(:final programId, :final programName) => (
+        id: programId,
+        name: programName,
+      ),
+      WorkoutDayPickerProgramNotFound() => null,
       WorkoutDayPickerInitial() => null,
     };
   }

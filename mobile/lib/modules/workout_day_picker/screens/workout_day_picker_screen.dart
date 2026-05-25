@@ -125,11 +125,6 @@ class _WorkoutDayPickerScreenState extends State<WorkoutDayPickerScreen> {
                       icon: const Icon(Icons.history),
                       tooltip: 'Recent sessions',
                     ),
-                    IconButton(
-                      onPressed: _onRefresh,
-                      icon: const Icon(Icons.refresh),
-                      tooltip: 'Refresh',
-                    ),
                   ]
                 : null,
           ),
@@ -141,10 +136,10 @@ class _WorkoutDayPickerScreenState extends State<WorkoutDayPickerScreen> {
 
   String _titleFor(WorkoutDayPickerState state) {
     return switch (state) {
-      WorkoutDayPickerInitial() => 'Loading…',
-      WorkoutDayPickerLoading() => 'Loading…',
+      WorkoutDayPickerInitial(:final programName) => programName,
+      WorkoutDayPickerLoading(:final programName) => programName,
       WorkoutDayPickerProgramNotFound() => 'Program not found',
-      WorkoutDayPickerScreenFailure() => 'Could not load program',
+      WorkoutDayPickerScreenFailure(:final programName) => programName,
       WorkoutDayPickerLoaded(:final program) => program.name,
     };
   }

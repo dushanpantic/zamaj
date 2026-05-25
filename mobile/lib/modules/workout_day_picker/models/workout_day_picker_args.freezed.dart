@@ -14,7 +14,7 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$WorkoutDayPickerArgs {
 
- String get programId;
+ String get programId; String get programName;
 /// Create a copy of WorkoutDayPickerArgs
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -25,16 +25,16 @@ $WorkoutDayPickerArgsCopyWith<WorkoutDayPickerArgs> get copyWith => _$WorkoutDay
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is WorkoutDayPickerArgs&&(identical(other.programId, programId) || other.programId == programId));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is WorkoutDayPickerArgs&&(identical(other.programId, programId) || other.programId == programId)&&(identical(other.programName, programName) || other.programName == programName));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,programId);
+int get hashCode => Object.hash(runtimeType,programId,programName);
 
 @override
 String toString() {
-  return 'WorkoutDayPickerArgs(programId: $programId)';
+  return 'WorkoutDayPickerArgs(programId: $programId, programName: $programName)';
 }
 
 
@@ -45,7 +45,7 @@ abstract mixin class $WorkoutDayPickerArgsCopyWith<$Res>  {
   factory $WorkoutDayPickerArgsCopyWith(WorkoutDayPickerArgs value, $Res Function(WorkoutDayPickerArgs) _then) = _$WorkoutDayPickerArgsCopyWithImpl;
 @useResult
 $Res call({
- String programId
+ String programId, String programName
 });
 
 
@@ -62,9 +62,10 @@ class _$WorkoutDayPickerArgsCopyWithImpl<$Res>
 
 /// Create a copy of WorkoutDayPickerArgs
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? programId = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? programId = null,Object? programName = null,}) {
   return _then(_self.copyWith(
 programId: null == programId ? _self.programId : programId // ignore: cast_nullable_to_non_nullable
+as String,programName: null == programName ? _self.programName : programName // ignore: cast_nullable_to_non_nullable
 as String,
   ));
 }
@@ -150,10 +151,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String programId)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String programId,  String programName)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _WorkoutDayPickerArgs() when $default != null:
-return $default(_that.programId);case _:
+return $default(_that.programId,_that.programName);case _:
   return orElse();
 
 }
@@ -171,10 +172,10 @@ return $default(_that.programId);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String programId)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String programId,  String programName)  $default,) {final _that = this;
 switch (_that) {
 case _WorkoutDayPickerArgs():
-return $default(_that.programId);case _:
+return $default(_that.programId,_that.programName);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -191,10 +192,10 @@ return $default(_that.programId);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String programId)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String programId,  String programName)?  $default,) {final _that = this;
 switch (_that) {
 case _WorkoutDayPickerArgs() when $default != null:
-return $default(_that.programId);case _:
+return $default(_that.programId,_that.programName);case _:
   return null;
 
 }
@@ -206,10 +207,11 @@ return $default(_that.programId);case _:
 
 
 class _WorkoutDayPickerArgs implements WorkoutDayPickerArgs {
-  const _WorkoutDayPickerArgs({required this.programId});
+  const _WorkoutDayPickerArgs({required this.programId, required this.programName});
   
 
 @override final  String programId;
+@override final  String programName;
 
 /// Create a copy of WorkoutDayPickerArgs
 /// with the given fields replaced by the non-null parameter values.
@@ -221,16 +223,16 @@ _$WorkoutDayPickerArgsCopyWith<_WorkoutDayPickerArgs> get copyWith => __$Workout
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _WorkoutDayPickerArgs&&(identical(other.programId, programId) || other.programId == programId));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _WorkoutDayPickerArgs&&(identical(other.programId, programId) || other.programId == programId)&&(identical(other.programName, programName) || other.programName == programName));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,programId);
+int get hashCode => Object.hash(runtimeType,programId,programName);
 
 @override
 String toString() {
-  return 'WorkoutDayPickerArgs(programId: $programId)';
+  return 'WorkoutDayPickerArgs(programId: $programId, programName: $programName)';
 }
 
 
@@ -241,7 +243,7 @@ abstract mixin class _$WorkoutDayPickerArgsCopyWith<$Res> implements $WorkoutDay
   factory _$WorkoutDayPickerArgsCopyWith(_WorkoutDayPickerArgs value, $Res Function(_WorkoutDayPickerArgs) _then) = __$WorkoutDayPickerArgsCopyWithImpl;
 @override @useResult
 $Res call({
- String programId
+ String programId, String programName
 });
 
 
@@ -258,9 +260,10 @@ class __$WorkoutDayPickerArgsCopyWithImpl<$Res>
 
 /// Create a copy of WorkoutDayPickerArgs
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? programId = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? programId = null,Object? programName = null,}) {
   return _then(_WorkoutDayPickerArgs(
 programId: null == programId ? _self.programId : programId // ignore: cast_nullable_to_non_nullable
+as String,programName: null == programName ? _self.programName : programName // ignore: cast_nullable_to_non_nullable
 as String,
   ));
 }

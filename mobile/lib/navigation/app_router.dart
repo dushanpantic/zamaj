@@ -34,12 +34,19 @@ abstract final class AppRouter {
     return MaterialPageRoute<void>(
       settings: settings,
       builder: (context) => BlocProvider(
-        create: (_) => WorkoutDayPickerBloc(
-          programRepository: context.read<ProgramRepository>(),
-          sessionRepository: context.read<SessionRepository>(),
-          sessionFlowEngine: context.read<SessionFlowEngine>(),
-          clock: context.read<Clock>(),
-        )..add(WorkoutDayPickerOpened(args.programId)),
+        create: (_) =>
+            WorkoutDayPickerBloc(
+              programRepository: context.read<ProgramRepository>(),
+              sessionRepository: context.read<SessionRepository>(),
+              sessionFlowEngine: context.read<SessionFlowEngine>(),
+              clock: context.read<Clock>(),
+              initialProgramName: args.programName,
+            )..add(
+              WorkoutDayPickerOpened(
+                programId: args.programId,
+                programName: args.programName,
+              ),
+            ),
         child: const WorkoutDayPickerScreen(),
       ),
     );

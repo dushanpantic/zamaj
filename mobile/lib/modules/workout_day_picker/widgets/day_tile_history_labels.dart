@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:zamaj/core/app_spacing.dart';
 import 'package:zamaj/core/app_theme.dart';
 import 'package:zamaj/core/app_typography.dart';
 import 'package:zamaj/core/relative_date_formatter.dart';
@@ -21,62 +20,18 @@ class DayTileHistoryLabels extends StatelessWidget {
     const typography = AppTypography.standard;
 
     final lastCompleted = summary.lastCompleted;
-    final weekCount = summary.thisWeekCount;
-
-    final primary = _primaryLine(lastCompleted, weekCount);
-    final secondary = _secondaryLine(lastCompleted, weekCount);
-    final total = summary.totalCompletedCount > 0
-        ? '${summary.totalCompletedCount} total'
-        : null;
-
-    final invariantViolation = lastCompleted == null && weekCount > 0;
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        if (invariantViolation)
-          Text(
-            'no_last_completed_with_nonzero_week_count',
-            style: typography.bodySmall.copyWith(color: colors.error),
-          )
-        else ...[
-          Text(
-            primary,
-            style: typography.bodySmall.copyWith(color: colors.onSurface),
-          ),
-          if (secondary != null) ...[
-            const SizedBox(height: AppSpacing.xs),
-            Text(
-              total == null ? secondary : '$secondary · $total',
-              style: typography.caption.copyWith(color: colors.onSurfaceMuted),
-            ),
-          ] else if (total != null) ...[
-            const SizedBox(height: AppSpacing.xs),
-            Text(
-              total,
-              style: typography.caption.copyWith(color: colors.onSurfaceMuted),
-            ),
-          ],
-        ],
-      ],
+    assert(
+      !(lastCompleted == null && summary.thisWeekCount > 0),
+      'thisWeekCount > 0 implies a lastCompleted timestamp exists',
     );
-  }
 
-  String _primaryLine(DateTime? lastCompleted, int weekCount) {
-    if (lastCompleted == null) {
-      return 'Not completed yet';
-    }
-    final relative = RelativeDateFormatter.format(lastCompleted, referenceNow);
-    return 'Last completed: $relative';
-  }
+    final label = lastCompleted == null
+        ? 'Not done yet'
+        : RelativeDateFormatter.format(lastCompleted, referenceNow);
+    final tone = lastCompleted == null
+        ? colors.onSurfaceMuted
+        : colors.onSurface;
 
-  String? _secondaryLine(DateTime? lastCompleted, int weekCount) {
-    if (lastCompleted == null) {
-      return null;
-    }
-    if (weekCount == 0) {
-      return 'Not completed this week';
-    }
-    return '$weekCount× this week';
+    return Text(label, style: typography.bodySmall.copyWith(color: tone));
   }
 }

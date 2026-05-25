@@ -4,6 +4,8 @@ part 'workout_day_picker_args.freezed.dart';
 
 @freezed
 abstract class WorkoutDayPickerArgs with _$WorkoutDayPickerArgs {
-  const factory WorkoutDayPickerArgs({required String programId}) =
-      _WorkoutDayPickerArgs;
+  const factory WorkoutDayPickerArgs({
+    required String programId,
+    required String programName,
+  }) = _WorkoutDayPickerArgs;
 }
