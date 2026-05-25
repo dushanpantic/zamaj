@@ -5,7 +5,6 @@ import 'package:zamaj/core/app_spacing.dart';
 import 'package:zamaj/core/app_theme.dart';
 import 'package:zamaj/core/app_typography.dart';
 import 'package:zamaj/core/rest_formatter.dart';
-import 'package:zamaj/core/weight_formatter.dart';
 import 'package:zamaj/modules/domain/domain.dart';
 import 'package:zamaj/modules/exercise_library/widgets/library_picker_sheet.dart';
 import 'package:zamaj/modules/program_management/bloc/workout_day_editor/workout_day_editor_bloc.dart';
@@ -13,6 +12,7 @@ import 'package:zamaj/modules/program_management/bloc/workout_day_editor/workout
 import 'package:zamaj/modules/program_management/bloc/workout_day_editor/workout_day_editor_state.dart';
 import 'package:zamaj/modules/program_management/models/program_editor_draft.dart';
 import 'package:zamaj/modules/program_management/navigation/program_management_routes.dart';
+import 'package:zamaj/modules/program_management/services/planned_draft_summary_formatter.dart';
 import 'package:zamaj/modules/program_management/widgets/confirmation_dialog.dart';
 
 class WorkoutDayEditorScreen extends StatefulWidget {
@@ -178,7 +178,7 @@ class _NotFoundView extends StatelessWidget {
   }
 }
 
-class _EditingBody extends StatelessWidget {
+class _EditingBody extends StatefulWidget {
   const _EditingBody({
     required this.nameController,
     required this.draft,
@@ -194,68 +194,122 @@ class _EditingBody extends StatelessWidget {
   final DomainError? lastSaveError;
 
   @override
+  State<_EditingBody> createState() => _EditingBodyState();
+}
+
+class _EditingBodyState extends State<_EditingBody> {
+  static bool _coachMarkShownThisSession = false;
+  bool _saveErrorDismissed = false;
+  DomainError? _lastSeenError;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (!_coachMarkShownThisSession && widget.draft.groups.isNotEmpty) {
+      _coachMarkShownThisSession = true;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+        final colors = Theme.of(context).appColors;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            duration: const Duration(seconds: 6),
+            backgroundColor: colors.surface,
+            content: Text(
+              'Swipe left to delete · Long-press to reorder · '
+              'Use the ⋮ menu for more',
+              style: AppTypography.standard.bodySmall.copyWith(
+                color: colors.onSurface,
+              ),
+            ),
+            action: SnackBarAction(
+              label: 'Got it',
+              textColor: colors.primary,
+              onPressed: () {},
+            ),
+          ),
+        );
+      });
+    }
+  }
+
+  @override
+  void didUpdateWidget(covariant _EditingBody old) {
+    super.didUpdateWidget(old);
+    if (widget.lastSaveError != _lastSeenError) {
+      _lastSeenError = widget.lastSaveError;
+      _saveErrorDismissed = false;
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
     final colors = Theme.of(context).appColors;
     final bloc = context.read<WorkoutDayEditorBloc>();
+    final showErrorBanner =
+        widget.lastSaveError != null && !_saveErrorDismissed;
 
     return Scaffold(
       backgroundColor: colors.background,
       appBar: AppBar(
         title: _NameField(
-          controller: nameController,
-          isValid: validation.isNameValid,
+          controller: widget.nameController,
+          isValid: widget.validation.isNameValid,
           onChanged: (name) => bloc.add(WorkoutDayNameChanged(name: name)),
         ),
         actions: [
-          if (isSaving)
-            Padding(
-              padding: const EdgeInsets.only(right: AppSpacing.md),
-              child: SizedBox(
-                width: 16,
-                height: 16,
-                child: CircularProgressIndicator(
-                  strokeWidth: 2,
-                  color: colors.onSurfaceMuted,
-                ),
-              ),
-            ),
+          _SaveChip(
+            isSaving: widget.isSaving,
+            hasError: widget.lastSaveError != null,
+            onRetry: () => bloc.add(const WorkoutDaySaveRetryRequested()),
+          ),
           IconButton(
             icon: Icon(Icons.add, color: colors.primary),
             tooltip: 'Add exercise',
-            onPressed: isSaving ? null : () => _startAddExercise(context, bloc),
+            onPressed: widget.isSaving
+                ? null
+                : () => _startAddExercise(context, bloc),
           ),
         ],
       ),
       body: Column(
         children: [
-          if (lastSaveError != null) _SaveErrorBanner(error: lastSaveError!),
-          Expanded(child: _ExerciseList(draft: draft)),
+          if (showErrorBanner)
+            _SaveErrorBanner(
+              error: widget.lastSaveError!,
+              onDismiss: () => setState(() => _saveErrorDismissed = true),
+            ),
+          Expanded(
+            child: _ExerciseList(
+              draft: widget.draft,
+              validation: widget.validation,
+            ),
+          ),
         ],
       ),
     );
   }
+}
 
-  Future<void> _startAddExercise(
-    BuildContext context,
-    WorkoutDayEditorBloc bloc,
-  ) async {
-    final result = await LibraryPickerSheet.show(context);
-    if (!context.mounted) return;
-    switch (result) {
-      case LibraryPickerSelected(:final entry):
-        bloc.add(LibraryExerciseAddedAsNew(entry: entry));
-      case LibraryPickerCreateOneOff():
-        await showDialog<void>(
-          context: context,
-          builder: (_) => _AddExerciseDialog(bloc: bloc),
-        );
-      case null:
-        return;
-    }
+Future<void> _startAddExercise(
+  BuildContext context,
+  WorkoutDayEditorBloc bloc,
+) async {
+  final result = await LibraryPickerSheet.show(context);
+  if (!context.mounted) return;
+  switch (result) {
+    case LibraryPickerSelected(:final entry):
+      bloc.add(LibraryExerciseAddedAsNew(entry: entry));
+    case LibraryPickerCreateOneOff():
+      await showDialog<void>(
+        context: context,
+        builder: (_) => _AddExerciseDialog(bloc: bloc),
+      );
+    case null:
+      return;
   }
 }
 
-class _NameField extends StatelessWidget {
+class _NameField extends StatefulWidget {
   const _NameField({
     required this.controller,
     required this.isValid,
@@ -267,11 +321,32 @@ class _NameField extends StatelessWidget {
   final void Function(String) onChanged;
 
   @override
+  State<_NameField> createState() => _NameFieldState();
+}
+
+class _NameFieldState extends State<_NameField> {
+  final FocusNode _focusNode = FocusNode();
+
+  @override
+  void initState() {
+    super.initState();
+    _focusNode.addListener(() => setState(() {}));
+  }
+
+  @override
+  void dispose() {
+    _focusNode.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     final colors = Theme.of(context).appColors;
+    final showEditAffordance = !_focusNode.hasFocus;
     return TextField(
-      controller: controller,
-      onChanged: onChanged,
+      controller: widget.controller,
+      focusNode: _focusNode,
+      onChanged: widget.onChanged,
       style: AppTypography.standard.body.copyWith(color: colors.onSurface),
       decoration: InputDecoration(
         hintText: 'Day name',
@@ -279,7 +354,14 @@ class _NameField extends StatelessWidget {
           color: colors.onSurfaceMuted,
         ),
         border: InputBorder.none,
-        errorText: isValid || controller.text.isEmpty
+        suffixIcon: showEditAffordance
+            ? Icon(Icons.edit, size: 14, color: colors.onSurfaceMuted)
+            : null,
+        suffixIconConstraints: const BoxConstraints(
+          minWidth: 24,
+          minHeight: 24,
+        ),
+        errorText: widget.isValid || widget.controller.text.isEmpty
             ? null
             : 'Name must be 1–100 characters',
         errorStyle: AppTypography.standard.caption.copyWith(
@@ -294,9 +376,10 @@ class _NameField extends StatelessWidget {
 }
 
 class _ExerciseList extends StatelessWidget {
-  const _ExerciseList({required this.draft});
+  const _ExerciseList({required this.draft, required this.validation});
 
   final WorkoutDayDraft draft;
+  final WorkoutDayDraftValidation validation;
 
   @override
   Widget build(BuildContext context) {
@@ -317,11 +400,25 @@ class _ExerciseList extends StatelessWidget {
               ),
               const SizedBox(height: AppSpacing.lg),
               Text(
-                'No exercises yet.\nTap + to add one.',
+                'No exercises yet.',
                 style: AppTypography.standard.bodySmall.copyWith(
                   color: colors.onSurfaceMuted,
                 ),
                 textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: AppSpacing.lg),
+              FilledButton.icon(
+                onPressed: () => _startAddExercise(context, bloc),
+                icon: const Icon(Icons.add),
+                label: const Text('Add exercise'),
+                style: FilledButton.styleFrom(
+                  backgroundColor: colors.primary,
+                  foregroundColor: colors.onPrimary,
+                  minimumSize: const Size(0, AppSpacing.touchMin),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: AppSpacing.lg,
+                  ),
+                ),
               ),
             ],
           ),
@@ -347,14 +444,21 @@ class _ExerciseList extends StatelessWidget {
       itemBuilder: (context, index) {
         final group = draft.groups[index];
         if (group.exercises.length == 1) {
+          final exercise = group.exercises.first;
           return Padding(
             key: ValueKey(group.draftId),
             padding: const EdgeInsets.only(bottom: AppSpacing.sm),
             child: _FlatExerciseRow(
               group: group,
-              exercise: group.exercises.first,
+              exercise: exercise,
               reorderIndex: index,
               bloc: bloc,
+              isInvalid: validation.invalidExerciseDraftIds.contains(
+                exercise.draftId,
+              ),
+              otherGroups: draft.groups
+                  .where((g) => g.draftId != group.draftId)
+                  .toList(),
               onNavigateToExercise: (id) {
                 final screenState = context
                     .findAncestorStateOfType<_WorkoutDayEditorScreenState>();
@@ -368,6 +472,7 @@ class _ExerciseList extends StatelessWidget {
           group: group,
           reorderIndex: index,
           bloc: bloc,
+          validation: validation,
           onNavigateToExercise: (id) {
             final screenState = context
                 .findAncestorStateOfType<_WorkoutDayEditorScreenState>();
@@ -404,7 +509,7 @@ class _WarmupBadge extends StatelessWidget {
   }
 }
 
-enum _GroupMenuAction { toggleWarmup, ungroup, delete }
+enum _GroupMenuAction { toggleWarmup, group, ungroup, delete }
 
 class _ExerciseDragPayload {
   const _ExerciseDragPayload({
@@ -422,6 +527,8 @@ class _FlatExerciseRow extends StatelessWidget {
     required this.exercise,
     required this.reorderIndex,
     required this.bloc,
+    required this.isInvalid,
+    required this.otherGroups,
     required this.onNavigateToExercise,
   });
 
@@ -429,7 +536,74 @@ class _FlatExerciseRow extends StatelessWidget {
   final ExerciseDraft exercise;
   final int reorderIndex;
   final WorkoutDayEditorBloc bloc;
+  final bool isInvalid;
+  final List<ExerciseGroupDraft> otherGroups;
   final void Function(String exerciseId) onNavigateToExercise;
+
+  Future<void> _promptGroupInto(BuildContext context) async {
+    if (otherGroups.isEmpty) return;
+    final candidates = <({String groupDraftId, ExerciseDraft exercise})>[
+      for (final g in otherGroups)
+        for (final e in g.exercises) (groupDraftId: g.draftId, exercise: e),
+    ];
+    if (candidates.isEmpty) return;
+    final picked =
+        await showDialog<({String groupDraftId, String exerciseDraftId})>(
+          context: context,
+          builder: (ctx) {
+            final colors = Theme.of(ctx).appColors;
+            return AlertDialog(
+              backgroundColor: colors.surface,
+              title: Text(
+                'Group with…',
+                style: TextStyle(color: colors.onSurface),
+              ),
+              contentPadding: const EdgeInsets.symmetric(
+                vertical: AppSpacing.sm,
+              ),
+              content: SizedBox(
+                width: double.maxFinite,
+                child: ListView(
+                  shrinkWrap: true,
+                  children: [
+                    for (final c in candidates)
+                      ListTile(
+                        title: Text(
+                          c.exercise.name.isEmpty
+                              ? 'Unnamed exercise'
+                              : c.exercise.name,
+                          style: TextStyle(color: colors.onSurface),
+                        ),
+                        onTap: () => Navigator.of(ctx).pop((
+                          groupDraftId: c.groupDraftId,
+                          exerciseDraftId: c.exercise.draftId,
+                        )),
+                      ),
+                  ],
+                ),
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.of(ctx).pop(),
+                  child: Text(
+                    'Cancel',
+                    style: TextStyle(color: colors.onSurfaceMuted),
+                  ),
+                ),
+              ],
+            );
+          },
+        );
+    if (picked == null) return;
+    bloc.add(
+      ExerciseDraggedOntoExercise(
+        sourceGroupDraftId: group.draftId,
+        sourceExerciseDraftId: exercise.draftId,
+        targetGroupDraftId: picked.groupDraftId,
+        targetExerciseDraftId: picked.exerciseDraftId,
+      ),
+    );
+  }
 
   Future<void> _confirmAndDelete(BuildContext context) async {
     final confirmed = await ConfirmationDialog.show(
@@ -519,13 +693,18 @@ class _FlatExerciseRow extends StatelessWidget {
             ),
             child: Container(
               decoration: BoxDecoration(
+                color: isDropTarget
+                    ? colors.primary.withValues(alpha: 0.10)
+                    : null,
                 borderRadius: BorderRadius.circular(AppRadius.sm),
                 border: isDropTarget
                     ? Border.all(color: colors.primary, width: 2)
                     : null,
               ),
               child: Material(
-                color: colors.surfaceVariant,
+                color: isDropTarget
+                    ? Colors.transparent
+                    : colors.surfaceVariant,
                 borderRadius: BorderRadius.circular(AppRadius.sm),
                 child: InkWell(
                   onTap: () {
@@ -560,6 +739,7 @@ class _FlatExerciseRow extends StatelessWidget {
                             exercise: exercise,
                             colors: colors,
                             isWarmup: isWarmup,
+                            isInvalid: isInvalid,
                           ),
                         ),
                         PopupMenuButton<_GroupMenuAction>(
@@ -581,6 +761,8 @@ class _FlatExerciseRow extends StatelessWidget {
                                         : ExerciseGroupRole.warmup,
                                   ),
                                 );
+                              case _GroupMenuAction.group:
+                                _promptGroupInto(context);
                               case _GroupMenuAction.delete:
                                 _confirmAndDelete(context);
                               case _GroupMenuAction.ungroup:
@@ -603,6 +785,16 @@ class _FlatExerciseRow extends StatelessWidget {
                                 dense: true,
                               ),
                             ),
+                            if (otherGroups.isNotEmpty)
+                              const PopupMenuItem(
+                                value: _GroupMenuAction.group,
+                                child: ListTile(
+                                  leading: Icon(Icons.merge_type),
+                                  title: Text('Group into superset'),
+                                  contentPadding: EdgeInsets.zero,
+                                  dense: true,
+                                ),
+                              ),
                             const PopupMenuItem(
                               value: _GroupMenuAction.delete,
                               child: ListTile(
@@ -632,16 +824,22 @@ class _ExerciseTileContent extends StatelessWidget {
     required this.exercise,
     required this.colors,
     this.isWarmup = false,
+    this.isInvalid = false,
+    this.supersetPositionLabel,
   });
 
   final ExerciseDraft exercise;
   final AppColors colors;
   final bool isWarmup;
+  final bool isInvalid;
+  final String? supersetPositionLabel;
 
   @override
   Widget build(BuildContext context) {
-    final subtitle = _subtitleFor(exercise);
+    final subtitle = PlannedDraftSummaryFormatter.summarize(exercise);
+    final hasNoSets = PlannedDraftSummaryFormatter.isNoSetsPlanned(exercise);
     final rest = exercise.plannedRestSeconds;
+    final showWarning = isInvalid && !hasNoSets;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -649,6 +847,13 @@ class _ExerciseTileContent extends StatelessWidget {
       children: [
         Row(
           children: [
+            if (supersetPositionLabel != null) ...[
+              _SupersetPositionBadge(
+                label: supersetPositionLabel!,
+                colors: colors,
+              ),
+              const SizedBox(width: AppSpacing.sm),
+            ],
             Flexible(
               child: Text(
                 exercise.name.isEmpty ? 'Unnamed exercise' : exercise.name,
@@ -671,11 +876,23 @@ class _ExerciseTileContent extends StatelessWidget {
               child: Text(
                 subtitle,
                 style: AppTypography.standard.caption.copyWith(
-                  color: colors.onSurfaceMuted,
+                  color: hasNoSets ? colors.error : colors.onSurfaceMuted,
                 ),
                 overflow: TextOverflow.ellipsis,
               ),
             ),
+            if (showWarning) ...[
+              const SizedBox(width: AppSpacing.sm),
+              Tooltip(
+                message: 'Incomplete sets',
+                child: Icon(
+                  Icons.warning_amber_rounded,
+                  color: colors.error,
+                  size: 14,
+                  semanticLabel: 'Incomplete sets',
+                ),
+              ),
+            ],
             if (rest != null) ...[
               const SizedBox(width: AppSpacing.sm),
               _RestChip(seconds: rest, colors: colors),
@@ -685,75 +902,32 @@ class _ExerciseTileContent extends StatelessWidget {
       ],
     );
   }
+}
 
-  static String _subtitleFor(ExerciseDraft exercise) {
-    final sets = exercise.sets;
-    final typeLabel = switch (exercise.measurementType) {
-      RepBasedMeasurement() => 'Rep-based',
-      TimeBasedMeasurement() => 'Time-based',
-      BodyweightMeasurement() => 'Bodyweight',
-    };
-    if (sets.isEmpty) return typeLabel;
+class _SupersetPositionBadge extends StatelessWidget {
+  const _SupersetPositionBadge({required this.label, required this.colors});
 
-    final summary = _uniformSummary(sets);
-    if (summary != null) return summary;
-    return '${sets.length} sets · $typeLabel';
-  }
+  final String label;
+  final AppColors colors;
 
-  static String? _uniformSummary(List<PlannedSetDraft> sets) {
-    final first = sets.first.values;
-    switch (first) {
-      case PlannedSetDraftRepBased():
-        double? weight;
-        int? reps;
-        for (final set in sets) {
-          final values = set.values;
-          if (values is! PlannedSetDraftRepBased) return null;
-          final w = double.tryParse(values.weightInput);
-          final r = int.tryParse(values.repsInput);
-          if (w == null || r == null) return null;
-          weight ??= w;
-          reps ??= r;
-          if (w != weight || r != reps) return null;
-        }
-        return '${WeightFormatter.formatKg(weight!)}kg ${sets.length}×$reps';
-      case PlannedSetDraftTimeBased():
-        int? duration;
-        double? weight;
-        var weightSeen = false;
-        for (final set in sets) {
-          final values = set.values;
-          if (values is! PlannedSetDraftTimeBased) return null;
-          final d = int.tryParse(values.durationInput);
-          if (d == null) return null;
-          duration ??= d;
-          if (d != duration) return null;
-
-          final wInput = values.weightInput.trim();
-          if (wInput.isEmpty) {
-            if (weightSeen && weight != null) return null;
-            weightSeen = true;
-          } else {
-            final w = double.tryParse(wInput);
-            if (w == null) return null;
-            if (weightSeen && weight != w) return null;
-            weight = w;
-            weightSeen = true;
-          }
-        }
-        if (weight == null) return '${sets.length}×${duration}s';
-        return '${WeightFormatter.formatKg(weight)}kg '
-            '${sets.length}×${duration}s';
-      case PlannedSetDraftBodyweight():
-        String? reps;
-        for (final set in sets) {
-          final values = set.values;
-          if (values is! PlannedSetDraftBodyweight) return null;
-          reps ??= values.repsInput;
-          if (values.repsInput != reps) return null;
-        }
-        return '${sets.length}×$reps';
-    }
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.sm,
+        vertical: 1,
+      ),
+      decoration: BoxDecoration(
+        color: colors.surfaceVariant,
+        borderRadius: BorderRadius.circular(AppRadius.sm),
+      ),
+      child: Text(
+        label,
+        style: AppTypography.standard.badge.copyWith(
+          color: colors.onSurfaceMuted,
+        ),
+      ),
+    );
   }
 }
 
@@ -787,13 +961,19 @@ class _SupersetCard extends StatelessWidget {
     required this.group,
     required this.reorderIndex,
     required this.bloc,
+    required this.validation,
     required this.onNavigateToExercise,
   });
 
   final ExerciseGroupDraft group;
   final int reorderIndex;
   final WorkoutDayEditorBloc bloc;
+  final WorkoutDayDraftValidation validation;
   final void Function(String exerciseId) onNavigateToExercise;
+
+  static String _positionLabel(int index) {
+    return 'A${index + 1}';
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -873,6 +1053,7 @@ class _SupersetCard extends StatelessWidget {
                         bloc.add(
                           SupersetUngrouped(groupDraftId: group.draftId),
                         );
+                      case _GroupMenuAction.group:
                       case _GroupMenuAction.delete:
                         break;
                     }
@@ -946,6 +1127,9 @@ class _SupersetCard extends StatelessWidget {
                   },
                   builder: (context, candidateData, rejectedData) {
                     final isDropTarget = candidateData.isNotEmpty;
+                    final positionLabel = _positionLabel(index);
+                    final isInvalid = validation.invalidExerciseDraftIds
+                        .contains(exercise.draftId);
                     return LongPressDraggable<_ExerciseDragPayload>(
                       data: payload,
                       feedback: Material(
@@ -958,6 +1142,8 @@ class _SupersetCard extends StatelessWidget {
                           child: _ExerciseTileContent(
                             exercise: exercise,
                             colors: colors,
+                            isInvalid: isInvalid,
+                            supersetPositionLabel: positionLabel,
                           ),
                         ),
                       ),
@@ -966,11 +1152,16 @@ class _SupersetCard extends StatelessWidget {
                         child: _ExerciseTileContent(
                           exercise: exercise,
                           colors: colors,
+                          isInvalid: isInvalid,
+                          supersetPositionLabel: positionLabel,
                         ),
                       ),
                       child: Container(
                         margin: const EdgeInsets.only(bottom: AppSpacing.xs),
                         decoration: BoxDecoration(
+                          color: isDropTarget
+                              ? colors.primary.withValues(alpha: 0.10)
+                              : null,
                           borderRadius: BorderRadius.circular(AppRadius.sm),
                           border: isDropTarget
                               ? Border.all(color: colors.primary, width: 2)
@@ -1014,7 +1205,9 @@ class _SupersetCard extends StatelessWidget {
                             ),
                           ),
                           child: Material(
-                            color: colors.surfaceVariant,
+                            color: isDropTarget
+                                ? Colors.transparent
+                                : colors.surfaceVariant,
                             borderRadius: BorderRadius.circular(AppRadius.sm),
                             child: InkWell(
                               onTap: () {
@@ -1047,6 +1240,8 @@ class _SupersetCard extends StatelessWidget {
                                       child: _ExerciseTileContent(
                                         exercise: exercise,
                                         colors: colors,
+                                        isInvalid: isInvalid,
+                                        supersetPositionLabel: positionLabel,
                                       ),
                                     ),
                                   ],
@@ -1069,9 +1264,10 @@ class _SupersetCard extends StatelessWidget {
 }
 
 class _SaveErrorBanner extends StatelessWidget {
-  const _SaveErrorBanner({required this.error});
+  const _SaveErrorBanner({required this.error, required this.onDismiss});
 
   final DomainError error;
+  final VoidCallback onDismiss;
 
   @override
   Widget build(BuildContext context) {
@@ -1095,7 +1291,74 @@ class _SaveErrorBanner extends StatelessWidget {
               ),
             ),
           ),
+          IconButton(
+            iconSize: 16,
+            visualDensity: VisualDensity.compact,
+            padding: EdgeInsets.zero,
+            constraints: const BoxConstraints(),
+            tooltip: 'Dismiss',
+            icon: Icon(Icons.close, color: colors.error),
+            onPressed: onDismiss,
+          ),
         ],
+      ),
+    );
+  }
+}
+
+class _SaveChip extends StatelessWidget {
+  const _SaveChip({
+    required this.isSaving,
+    required this.hasError,
+    required this.onRetry,
+  });
+
+  final bool isSaving;
+  final bool hasError;
+  final VoidCallback onRetry;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = Theme.of(context).appColors;
+    final isError = hasError && !isSaving;
+    final label = isError
+        ? 'Save failed — tap to retry'
+        : isSaving
+        ? 'Saving…'
+        : 'Saved';
+    final color = isError ? colors.error : colors.onSurfaceMuted;
+    return Padding(
+      padding: const EdgeInsets.only(right: AppSpacing.sm),
+      child: InkWell(
+        onTap: isError ? onRetry : null,
+        borderRadius: BorderRadius.circular(AppRadius.pill),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(
+            horizontal: AppSpacing.sm,
+            vertical: AppSpacing.xs,
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              if (isSaving)
+                Padding(
+                  padding: const EdgeInsets.only(right: AppSpacing.xs),
+                  child: SizedBox(
+                    width: 12,
+                    height: 12,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 1.5,
+                      color: color,
+                    ),
+                  ),
+                ),
+              Text(
+                label,
+                style: AppTypography.standard.caption.copyWith(color: color),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }

@@ -21,6 +21,13 @@ final class WorkoutDayEditorRefreshed extends WorkoutDayEditorEvent {
   List<Object?> get props => [];
 }
 
+final class WorkoutDaySaveRetryRequested extends WorkoutDayEditorEvent {
+  const WorkoutDaySaveRetryRequested();
+
+  @override
+  List<Object?> get props => [];
+}
+
 final class WorkoutDayNameChanged extends WorkoutDayEditorEvent {
   const WorkoutDayNameChanged({required this.name});
 

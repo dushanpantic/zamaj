@@ -3,6 +3,7 @@ import 'package:uuid/uuid.dart';
 import 'package:zamaj/core/schema_versions.dart';
 import 'package:zamaj/modules/domain/domain.dart';
 import 'package:zamaj/modules/program_management/models/program_editor_draft.dart';
+import 'package:zamaj/modules/program_management/services/draft_parsing.dart';
 
 import 'workout_day_editor_event.dart';
 import 'workout_day_editor_state.dart';
@@ -14,6 +15,7 @@ class WorkoutDayEditorBloc
       super(const WorkoutDayEditorInitial()) {
     on<WorkoutDayEditorOpened>(_onOpened);
     on<WorkoutDayEditorRefreshed>(_onRefreshed);
+    on<WorkoutDaySaveRetryRequested>(_onSaveRetryRequested);
     on<WorkoutDayNameChanged>(_onNameChanged);
     on<QuickExerciseAdded>(_onQuickExerciseAdded);
     on<LibraryExerciseAddedAsNew>(_onLibraryExerciseAddedAsNew);
@@ -90,6 +92,16 @@ class WorkoutDayEditorBloc
         validation: WorkoutDayDraftValidation.of(draft),
       ),
     );
+  }
+
+  Future<void> _onSaveRetryRequested(
+    WorkoutDaySaveRetryRequested event,
+    Emitter<WorkoutDayEditorState> emit,
+  ) async {
+    final current = state;
+    if (current is! WorkoutDayEditorEditing) return;
+    emit(current.copyWith(lastSaveError: () => null));
+    await _persist(emit);
   }
 
   Future<void> _onNameChanged(
@@ -684,41 +696,23 @@ class WorkoutDayEditorBloc
     );
   }
 
-  static double? _parseOptionalWeight(String input) {
-    final trimmed = input.trim();
-    if (trimmed.isEmpty) return null;
-    return double.tryParse(trimmed);
-  }
-
   static PlannedSetValues _draftValuesToPlanned(PlannedSetDraftValues values) {
     return switch (values) {
       PlannedSetDraftRepBased(:final weightInput, :final repsInput) =>
         PlannedSetValues.repBased(
           weightKg: double.tryParse(weightInput) ?? 0.0,
-          repTarget: _parseRepTargetOrZero(repsInput),
+          repTarget: DraftParsing.parseRepTargetOrZero(repsInput),
         ),
       PlannedSetDraftTimeBased(:final durationInput, :final weightInput) =>
         PlannedSetValues.timeBased(
           durationSeconds: int.tryParse(durationInput) ?? 0,
-          weightKg: _parseOptionalWeight(weightInput),
+          weightKg: DraftParsing.parseOptionalWeight(weightInput),
         ),
       PlannedSetDraftBodyweight(:final repsInput) =>
         PlannedSetValues.bodyweight(
-          repTarget: _parseRepTargetOrZero(repsInput),
+          repTarget: DraftParsing.parseRepTargetOrZero(repsInput),
         ),
     };
-  }
-
-  static RepTarget _parseRepTargetOrZero(String input) {
-    final trimmed = input.trim();
-    final rangeMatch = RegExp(r'^(\d+)\s*[-–]\s*(\d+)$').firstMatch(trimmed);
-    if (rangeMatch != null) {
-      final min = int.tryParse(rangeMatch.group(1)!) ?? 0;
-      final max = int.tryParse(rangeMatch.group(2)!) ?? 0;
-      if (max > min) return RepTarget.range(minReps: min, maxReps: max);
-      return RepTarget.fixed(reps: min);
-    }
-    return RepTarget.fixed(reps: int.tryParse(trimmed) ?? 0);
   }
 
   List<String> _liveGroupIdOrder(WorkoutDayDraft draft, WorkoutDay reloaded) {

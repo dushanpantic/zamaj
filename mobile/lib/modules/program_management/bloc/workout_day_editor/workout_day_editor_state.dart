@@ -1,21 +1,73 @@
 import 'package:equatable/equatable.dart';
 import 'package:zamaj/modules/domain/domain.dart';
 import 'package:zamaj/modules/program_management/models/program_editor_draft.dart';
+import 'package:zamaj/modules/program_management/services/program_validation.dart';
 
 final class WorkoutDayDraftValidation extends Equatable {
-  const WorkoutDayDraftValidation({required this.isNameValid});
+  const WorkoutDayDraftValidation({
+    required this.isNameValid,
+    this.invalidExerciseDraftIds = const {},
+  });
 
   final bool isNameValid;
 
+  /// Draft IDs of exercises that are incomplete or have invalid set values.
+  /// Surface this on the per-tile UI so the user can see *which* exercise
+  /// is blocking save without having to drill in.
+  final Set<String> invalidExerciseDraftIds;
+
   static WorkoutDayDraftValidation of(WorkoutDayDraft draft) {
     final trimmed = draft.name.trim();
+    final invalid = <String>{};
+    for (final group in draft.groups) {
+      for (final exercise in group.exercises) {
+        if (_isExerciseInvalid(exercise)) {
+          invalid.add(exercise.draftId);
+        }
+      }
+    }
     return WorkoutDayDraftValidation(
       isNameValid: trimmed.isNotEmpty && trimmed.length <= 100,
+      invalidExerciseDraftIds: invalid,
     );
   }
 
+  static bool _isExerciseInvalid(ExerciseDraft exercise) {
+    if (exercise.sets.isEmpty) return true;
+    final type = exercise.measurementType;
+    for (final set in exercise.sets) {
+      if (!_isSetValid(set, type)) return true;
+    }
+    return false;
+  }
+
+  static bool _isSetValid(PlannedSetDraft set, MeasurementType type) {
+    return switch ((set.values, type)) {
+      (
+        PlannedSetDraftRepBased(:final weightInput, :final repsInput),
+        RepBasedMeasurement(),
+      ) =>
+        ProgramValidation.validateRepBasedSet(
+              weightInput: weightInput,
+              repsInput: repsInput,
+            )
+            is Valid,
+      (
+        PlannedSetDraftTimeBased(:final durationInput, :final weightInput),
+        TimeBasedMeasurement(),
+      ) =>
+        ProgramValidation.validateTimeBasedSet(durationInput) is Valid<int> &&
+            ProgramValidation.validateTimeBasedSetWeight(weightInput)
+                is Valid<double?>,
+      (PlannedSetDraftBodyweight(:final repsInput), BodyweightMeasurement()) =>
+        ProgramValidation.validateBodyweightSet(repsInput: repsInput)
+            is Valid<RepTarget>,
+      _ => false,
+    };
+  }
+
   @override
-  List<Object?> get props => [isNameValid];
+  List<Object?> get props => [isNameValid, invalidExerciseDraftIds];
 }
 
 sealed class WorkoutDayEditorState extends Equatable {

@@ -2,6 +2,7 @@ import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:uuid/uuid.dart';
 import 'package:zamaj/core/schema_versions.dart';
 import 'package:zamaj/modules/domain/domain.dart';
+import 'package:zamaj/modules/program_management/services/draft_parsing.dart';
 
 part 'program_editor_draft.freezed.dart';
 part 'program_editor_draft.g.dart';
@@ -114,43 +115,23 @@ abstract class ProgramDraft with _$ProgramDraft {
     );
   }
 
-  static double? _parseOptionalWeight(String input) {
-    final trimmed = input.trim();
-    if (trimmed.isEmpty) return null;
-    final parsed = double.tryParse(trimmed);
-    if (parsed == null) return null;
-    return parsed;
-  }
-
   static PlannedSetValues _toPlannedSetValues(PlannedSetDraftValues values) {
     return switch (values) {
       PlannedSetDraftRepBased(:final weightInput, :final repsInput) =>
         PlannedSetValues.repBased(
           weightKg: double.tryParse(weightInput) ?? 0.0,
-          repTarget: _parseRepTargetOrZero(repsInput),
+          repTarget: DraftParsing.parseRepTargetOrZero(repsInput),
         ),
       PlannedSetDraftTimeBased(:final durationInput, :final weightInput) =>
         PlannedSetValues.timeBased(
           durationSeconds: int.tryParse(durationInput) ?? 0,
-          weightKg: _parseOptionalWeight(weightInput),
+          weightKg: DraftParsing.parseOptionalWeight(weightInput),
         ),
       PlannedSetDraftBodyweight(:final repsInput) =>
         PlannedSetValues.bodyweight(
-          repTarget: _parseRepTargetOrZero(repsInput),
+          repTarget: DraftParsing.parseRepTargetOrZero(repsInput),
         ),
     };
-  }
-
-  static RepTarget _parseRepTargetOrZero(String input) {
-    final trimmed = input.trim();
-    final rangeMatch = RegExp(r'^(\d+)\s*[-–]\s*(\d+)$').firstMatch(trimmed);
-    if (rangeMatch != null) {
-      final min = int.tryParse(rangeMatch.group(1)!) ?? 0;
-      final max = int.tryParse(rangeMatch.group(2)!) ?? 0;
-      if (max > min) return RepTarget.range(minReps: min, maxReps: max);
-      return RepTarget.fixed(reps: min);
-    }
-    return RepTarget.fixed(reps: int.tryParse(trimmed) ?? 0);
   }
 }
 
