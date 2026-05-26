@@ -468,4 +468,67 @@ void main() {
       );
     });
   });
+
+  group('duplicateWorkoutDay', () {
+    test(
+      'clones day with new ids, fresh name, and inserts after source',
+      () async {
+        final program = await repo.createProgram(name: 'P');
+        final day1 = await repo.createWorkoutDay(
+          programId: program.id,
+          name: 'Push A',
+        );
+        final day2 = await repo.createWorkoutDay(
+          programId: program.id,
+          name: 'Pull A',
+        );
+        final group = await repo.createExerciseGroup(
+          workoutDayId: day1.id,
+          kind: const ExerciseGroupKind.single(),
+          exercises: [
+            domain.Exercise(
+              id: '00000000-0000-4000-8000-0000000000aa',
+              exerciseGroupId: '',
+              position: 0,
+              name: 'Bench Press',
+              measurementType: const MeasurementType.repBased(),
+              metadata: ExerciseMetadata.empty,
+              sets: [],
+              createdAt: DateTime.utc(2024),
+              updatedAt: DateTime.utc(2024),
+              schemaVersion: 1,
+            ),
+          ],
+        );
+        await repo.createSet(
+          exerciseId: group.exercises.first.id,
+          plannedValues: PlannedSetValues.repBased(
+            weightKg: 80,
+            repTarget: RepTarget.fixed(reps: 5),
+          ),
+        );
+
+        final clone = await repo.duplicateWorkoutDay(day1.id);
+
+        expect(clone.id, isNot(day1.id));
+        expect(clone.name, 'Push A (copy)');
+        expect(clone.exerciseGroups, hasLength(1));
+        final clonedGroup = clone.exerciseGroups.first;
+        expect(clonedGroup.id, isNot(group.id));
+        expect(clonedGroup.exercises.first.name, 'Bench Press');
+        expect(clonedGroup.exercises.first.id, isNot(group.exercises.first.id));
+        expect(clonedGroup.exercises.first.sets, hasLength(1));
+
+        final ordered = await repo.listWorkoutDaysForProgram(program.id);
+        expect(ordered.map((d) => d.id).toList(), [day1.id, clone.id, day2.id]);
+      },
+    );
+
+    test('throws NotFoundError for unknown id', () async {
+      expect(
+        () => repo.duplicateWorkoutDay('00000000-0000-4000-8000-000000000000'),
+        throwsA(isA<NotFoundError>()),
+      );
+    });
+  });
 }

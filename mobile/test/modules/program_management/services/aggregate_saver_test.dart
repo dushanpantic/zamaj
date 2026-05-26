@@ -60,6 +60,10 @@ class _ThrowingProgramRepository implements ProgramRepository {
   ) => throw UnimplementedError();
 
   @override
+  Future<WorkoutDay> duplicateWorkoutDay(String workoutDayId) =>
+      throw UnimplementedError();
+
+  @override
   Future<ExerciseGroup> createExerciseGroup({
     required String workoutDayId,
     required ExerciseGroupKind kind,

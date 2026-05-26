@@ -36,6 +36,11 @@ abstract class ProgramRepository {
     List<String> orderedWorkoutDayIds,
   );
 
+  /// Deep-copies a workout day (and its groups, exercises, and sets) with
+  /// fresh ids. The clone is inserted directly after the source in the
+  /// program's day ordering and named "<source name> (copy)".
+  Future<WorkoutDay> duplicateWorkoutDay(String workoutDayId);
+
   Future<ExerciseGroup> createExerciseGroup({
     required String workoutDayId,
     required ExerciseGroupKind kind,

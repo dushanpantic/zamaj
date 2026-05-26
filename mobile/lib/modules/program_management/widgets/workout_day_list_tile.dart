@@ -20,6 +20,9 @@ class WorkoutDayListTile extends StatefulWidget {
     required this.isEditing,
     required this.onEnterRename,
     required this.onExitRename,
+    this.exercisePreview = const [],
+    this.isExpanded = false,
+    this.onToggleExpand,
   });
 
   final int index;
@@ -35,6 +38,18 @@ class WorkoutDayListTile extends StatefulWidget {
   final bool isEditing;
   final VoidCallback onEnterRename;
   final VoidCallback onExitRename;
+
+  /// Ordered list of exercise names shown in the inline-expand peek. Caller
+  /// is responsible for trimming to the desired preview length.
+  final List<String> exercisePreview;
+
+  /// When true the tile renders the [exercisePreview] panel below its
+  /// header row.
+  final bool isExpanded;
+
+  /// Toggle for the expand/collapse chevron. `null` hides the chevron
+  /// (e.g. when the day is not persisted yet or has no exercises to peek).
+  final VoidCallback? onToggleExpand;
 
   @override
   State<WorkoutDayListTile> createState() => _WorkoutDayListTileState();
@@ -104,6 +119,8 @@ class _WorkoutDayListTileState extends State<WorkoutDayListTile> {
     final isEmpty = widget.summary.isEmpty;
     final subtitleColor = isEmpty ? colors.error : colors.onSurfaceMuted;
     final tapHandler = widget.isEditing ? null : widget.onTap;
+    final canExpand =
+        widget.onToggleExpand != null && widget.exercisePreview.isNotEmpty;
 
     return Padding(
       padding: const EdgeInsets.symmetric(
@@ -129,77 +146,209 @@ class _WorkoutDayListTileState extends State<WorkoutDayListTile> {
               borderRadius: BorderRadius.circular(AppRadius.md),
               border: Border.all(color: colors.outline),
             ),
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.center,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                _DragHandle(index: widget.index),
-                const SizedBox(width: AppSpacing.xs),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        crossAxisAlignment: CrossAxisAlignment.center,
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    _DragHandle(index: widget.index),
+                    const SizedBox(width: AppSpacing.xs),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Expanded(
-                            child: widget.isEditing
-                                ? _RenameField(
-                                    controller: _renameController,
-                                    focusNode: _renameFocus,
-                                    onSubmit: _commitRename,
-                                    onCancel: _cancelRename,
-                                  )
-                                : Text(
-                                    widget.name,
-                                    style: typography.titleSmall.copyWith(
-                                      color: colors.onSurface,
-                                    ),
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
-                                  ),
+                          Row(
+                            crossAxisAlignment: CrossAxisAlignment.center,
+                            children: [
+                              Expanded(
+                                child: widget.isEditing
+                                    ? _RenameField(
+                                        controller: _renameController,
+                                        focusNode: _renameFocus,
+                                        onSubmit: _commitRename,
+                                        onCancel: _cancelRename,
+                                      )
+                                    : Text(
+                                        widget.name,
+                                        style: typography.titleSmall.copyWith(
+                                          color: colors.onSurface,
+                                        ),
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
+                              ),
+                              if (isEmpty && !widget.isEditing) ...[
+                                const SizedBox(width: AppSpacing.sm),
+                                const _EmptyBadge(),
+                              ],
+                            ],
                           ),
-                          if (isEmpty && !widget.isEditing) ...[
-                            const SizedBox(width: AppSpacing.sm),
-                            const _EmptyBadge(),
-                          ],
+                          const SizedBox(height: AppSpacing.xs),
+                          Text(
+                            WorkoutDaySummaryFormatter.format(widget.summary),
+                            style: typography.caption.copyWith(
+                              color: subtitleColor,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
                         ],
                       ),
-                      const SizedBox(height: AppSpacing.xs),
-                      Text(
-                        WorkoutDaySummaryFormatter.format(widget.summary),
-                        style: typography.caption.copyWith(
-                          color: subtitleColor,
-                        ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
+                    ),
+                    const SizedBox(width: AppSpacing.xs),
+                    if (canExpand && !widget.isEditing)
+                      _ExpandToggle(
+                        isExpanded: widget.isExpanded,
+                        onPressed: widget.onToggleExpand!,
                       ),
-                    ],
-                  ),
+                    if (widget.isEditing)
+                      _RenameActions(
+                        onCommit: _commitRename,
+                        onCancel: _cancelRename,
+                      )
+                    else
+                      _DayMenu(
+                        isPersisted: widget.isPersisted,
+                        canDuplicate: widget.onDuplicate != null,
+                        onSelected: (action) {
+                          switch (action) {
+                            case WorkoutDayMenuAction.rename:
+                              widget.onEnterRename();
+                            case WorkoutDayMenuAction.duplicate:
+                              widget.onDuplicate?.call();
+                            case WorkoutDayMenuAction.delete:
+                              widget.onDelete();
+                          }
+                        },
+                      ),
+                  ],
                 ),
-                const SizedBox(width: AppSpacing.xs),
-                if (widget.isEditing)
-                  _RenameActions(
-                    onCommit: _commitRename,
-                    onCancel: _cancelRename,
-                  )
-                else
-                  _DayMenu(
-                    isPersisted: widget.isPersisted,
-                    onSelected: (action) {
-                      switch (action) {
-                        case WorkoutDayMenuAction.rename:
-                          widget.onEnterRename();
-                        case WorkoutDayMenuAction.duplicate:
-                          widget.onDuplicate?.call();
-                        case WorkoutDayMenuAction.delete:
-                          widget.onDelete();
-                      }
-                    },
+                if (widget.isExpanded && widget.exercisePreview.isNotEmpty)
+                  _ExercisePreviewPanel(
+                    exerciseNames: widget.exercisePreview,
+                    totalExerciseCount:
+                        widget.summary.exerciseCount +
+                        widget.summary.warmupExerciseCount,
+                    onEditDay: widget.onTap,
                   ),
               ],
             ),
           ),
         ),
+      ),
+    );
+  }
+}
+
+class _ExpandToggle extends StatelessWidget {
+  const _ExpandToggle({required this.isExpanded, required this.onPressed});
+
+  final bool isExpanded;
+  final VoidCallback onPressed;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = Theme.of(context).appColors;
+    return IconButton(
+      icon: AnimatedRotation(
+        turns: isExpanded ? 0.25 : 0,
+        duration: const Duration(milliseconds: 150),
+        child: Icon(Icons.chevron_right, color: colors.onSurfaceMuted),
+      ),
+      onPressed: onPressed,
+      tooltip: isExpanded ? 'Hide exercises' : 'Peek exercises',
+    );
+  }
+}
+
+class _ExercisePreviewPanel extends StatelessWidget {
+  const _ExercisePreviewPanel({
+    required this.exerciseNames,
+    required this.totalExerciseCount,
+    required this.onEditDay,
+  });
+
+  final List<String> exerciseNames;
+  final int totalExerciseCount;
+  final VoidCallback? onEditDay;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = Theme.of(context).appColors;
+    const typography = AppTypography.standard;
+    final remaining = totalExerciseCount - exerciseNames.length;
+
+    return Padding(
+      padding: const EdgeInsets.only(
+        left: AppSpacing.xxl + AppSpacing.xs,
+        right: AppSpacing.sm,
+        top: AppSpacing.sm,
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          for (final name in exerciseNames)
+            Padding(
+              padding: const EdgeInsets.only(bottom: AppSpacing.xs),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.only(top: 6),
+                    child: Container(
+                      width: 4,
+                      height: 4,
+                      decoration: BoxDecoration(
+                        color: colors.onSurfaceMuted,
+                        shape: BoxShape.circle,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: AppSpacing.sm),
+                  Expanded(
+                    child: Text(
+                      name,
+                      style: typography.bodySmall.copyWith(
+                        color: colors.onSurface,
+                      ),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          if (remaining > 0)
+            Padding(
+              padding: const EdgeInsets.only(bottom: AppSpacing.xs),
+              child: Text(
+                '+ $remaining more',
+                style: typography.caption.copyWith(
+                  color: colors.onSurfaceMuted,
+                ),
+              ),
+            ),
+          if (onEditDay != null)
+            Align(
+              alignment: Alignment.centerRight,
+              child: TextButton.icon(
+                onPressed: onEditDay,
+                icon: Icon(Icons.edit, size: 16, color: colors.primary),
+                label: Text(
+                  'Edit day',
+                  style: typography.label.copyWith(color: colors.primary),
+                ),
+                style: TextButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: AppSpacing.md,
+                    vertical: AppSpacing.xs,
+                  ),
+                  minimumSize: const Size(0, 36),
+                ),
+              ),
+            ),
+        ],
       ),
     );
   }
@@ -256,9 +405,14 @@ class _EmptyBadge extends StatelessWidget {
 }
 
 class _DayMenu extends StatelessWidget {
-  const _DayMenu({required this.isPersisted, required this.onSelected});
+  const _DayMenu({
+    required this.isPersisted,
+    required this.canDuplicate,
+    required this.onSelected,
+  });
 
   final bool isPersisted;
+  final bool canDuplicate;
   final ValueChanged<WorkoutDayMenuAction> onSelected;
 
   @override
@@ -288,12 +442,12 @@ class _DayMenu extends StatelessWidget {
         ),
         PopupMenuItem(
           value: WorkoutDayMenuAction.duplicate,
-          enabled: false,
+          enabled: canDuplicate,
           child: _MenuRow(
             icon: Icons.copy,
             label: 'Duplicate',
             color: colors.onSurface,
-            disabled: true,
+            disabled: !canDuplicate,
             typography: typography,
           ),
         ),

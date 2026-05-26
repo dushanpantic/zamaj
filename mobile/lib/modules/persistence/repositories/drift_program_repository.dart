@@ -274,6 +274,192 @@ class DriftProgramRepository implements ProgramRepository {
   }
 
   @override
+  Future<domain.WorkoutDay> duplicateWorkoutDay(String workoutDayId) async {
+    return _db.transaction(() async {
+      final sourceDayRow = await (_db.select(
+        _db.workoutDays,
+      )..where((t) => t.id.equals(workoutDayId))).getSingleOrNull();
+      if (sourceDayRow == null) {
+        throw NotFoundError(entityType: 'WorkoutDay', id: workoutDayId);
+      }
+      final programId = sourceDayRow.programId;
+
+      final sourceLink =
+          await (_db.select(_db.programWorkoutDays)..where(
+                (t) =>
+                    t.programId.equals(programId) &
+                    t.workoutDayId.equals(workoutDayId),
+              ))
+              .getSingleOrNull();
+      if (sourceLink == null) {
+        throw NotFoundError(entityType: 'WorkoutDay', id: workoutDayId);
+      }
+
+      final groupRows =
+          await (_db.select(_db.exerciseGroups)
+                ..where((t) => t.workoutDayId.equals(workoutDayId))
+                ..orderBy([(t) => OrderingTerm.asc(t.position)]))
+              .get();
+      final groupIds = groupRows.map((g) => g.id).toList();
+      final exerciseRows = groupIds.isEmpty
+          ? <Exercise>[]
+          : await (_db.select(_db.exercises)
+                  ..where((t) => t.exerciseGroupId.isIn(groupIds))
+                  ..orderBy([(t) => OrderingTerm.asc(t.position)]))
+                .get();
+      final exerciseIds = exerciseRows.map((e) => e.id).toList();
+      final setRows = exerciseIds.isEmpty
+          ? <WorkoutSet>[]
+          : await (_db.select(_db.workoutSets)
+                  ..where((t) => t.exerciseId.isIn(exerciseIds))
+                  ..orderBy([(t) => OrderingTerm.asc(t.position)]))
+                .get();
+
+      final now = _clock.now().toUtc();
+      final newDayId = _uuid.v4();
+      await _db
+          .into(_db.workoutDays)
+          .insert(
+            WorkoutDaysCompanion.insert(
+              id: newDayId,
+              programId: programId,
+              name: '${sourceDayRow.name} (copy)',
+              createdAtMs: utcToMs(now),
+              updatedAtMs: utcToMs(now),
+              schemaVersion: SchemaVersions.domain,
+            ),
+          );
+
+      final insertPosition = sourceLink.position + 1;
+      // Shift existing links at or after insertPosition by +1, using parked
+      // negative values to dodge the (programId, position) unique constraint.
+      final laterLinks =
+          await (_db.select(_db.programWorkoutDays)
+                ..where(
+                  (t) =>
+                      t.programId.equals(programId) &
+                      t.position.isBiggerOrEqualValue(insertPosition),
+                )
+                ..orderBy([(t) => OrderingTerm.desc(t.position)]))
+              .get();
+      await _db.batch((b) {
+        for (final link in laterLinks) {
+          b.update(
+            _db.programWorkoutDays,
+            ProgramWorkoutDaysCompanion(position: Value(-(link.position + 1))),
+            where: (t) =>
+                t.programId.equals(programId) &
+                t.workoutDayId.equals(link.workoutDayId),
+          );
+        }
+        for (final link in laterLinks) {
+          b.update(
+            _db.programWorkoutDays,
+            ProgramWorkoutDaysCompanion(position: Value(link.position + 1)),
+            where: (t) =>
+                t.programId.equals(programId) &
+                t.workoutDayId.equals(link.workoutDayId),
+          );
+        }
+      });
+      await _db
+          .into(_db.programWorkoutDays)
+          .insert(
+            ProgramWorkoutDaysCompanion.insert(
+              programId: programId,
+              workoutDayId: newDayId,
+              position: insertPosition,
+            ),
+          );
+
+      final groupIdMap = <String, String>{};
+      for (final group in groupRows) {
+        final newGroupId = _uuid.v4();
+        groupIdMap[group.id] = newGroupId;
+        await _db
+            .into(_db.exerciseGroups)
+            .insert(
+              ExerciseGroupsCompanion.insert(
+                id: newGroupId,
+                workoutDayId: newDayId,
+                position: group.position,
+                kindDiscriminator: group.kindDiscriminator,
+                kindPayloadJson: group.kindPayloadJson,
+                roleDiscriminator: Value(group.roleDiscriminator),
+                createdAtMs: utcToMs(now),
+                updatedAtMs: utcToMs(now),
+                schemaVersion: SchemaVersions.domain,
+              ),
+            );
+      }
+
+      final exerciseIdMap = <String, String>{};
+      for (final exercise in exerciseRows) {
+        final newExerciseId = _uuid.v4();
+        exerciseIdMap[exercise.id] = newExerciseId;
+        await _db
+            .into(_db.exercises)
+            .insert(
+              ExercisesCompanion.insert(
+                id: newExerciseId,
+                exerciseGroupId: groupIdMap[exercise.exerciseGroupId]!,
+                position: exercise.position,
+                name: exercise.name,
+                measurementTypeDiscriminator:
+                    exercise.measurementTypeDiscriminator,
+                measurementTypePayloadJson: exercise.measurementTypePayloadJson,
+                notes: Value(exercise.notes),
+                videoUrl: Value(exercise.videoUrl),
+                plannedRestSeconds: Value(exercise.plannedRestSeconds),
+                libraryExerciseId: Value(exercise.libraryExerciseId),
+                createdAtMs: utcToMs(now),
+                updatedAtMs: utcToMs(now),
+                schemaVersion: SchemaVersions.domain,
+              ),
+            );
+      }
+
+      for (final set in setRows) {
+        await _db
+            .into(_db.workoutSets)
+            .insert(
+              WorkoutSetsCompanion.insert(
+                id: _uuid.v4(),
+                exerciseId: exerciseIdMap[set.exerciseId]!,
+                position: set.position,
+                plannedValuesDiscriminator: set.plannedValuesDiscriminator,
+                plannedValuesPayloadJson: set.plannedValuesPayloadJson,
+                createdAtMs: utcToMs(now),
+                updatedAtMs: utcToMs(now),
+                schemaVersion: SchemaVersions.domain,
+              ),
+            );
+      }
+
+      final programRow = await (_db.select(
+        _db.programs,
+      )..where((t) => t.id.equals(programId))).getSingleOrNull();
+      if (programRow != null) {
+        final updatedAt = _timestamps.nextUpdatedAt(
+          previousUpdatedAt: msToUtc(programRow.updatedAtMs),
+          createdAt: msToUtc(programRow.createdAtMs),
+        );
+        await (_db.update(
+          _db.programs,
+        )..where((t) => t.id.equals(programId))).write(
+          ProgramsCompanion(
+            updatedAtMs: Value(utcToMs(updatedAt)),
+            schemaVersion: const Value(SchemaVersions.domain),
+          ),
+        );
+      }
+
+      final loaded = await _loadWorkoutDay(newDayId);
+      return loaded!;
+    });
+  }
+
+  @override
   Future<void> reorderWorkoutDays(
     String programId,
     List<String> orderedWorkoutDayIds,

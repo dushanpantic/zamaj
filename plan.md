@@ -102,28 +102,28 @@ This gives an alt-path to delete that doesn't rely on swipe (accessibility win) 
 **P0-7. Program-name edit affordance.** ✅
 Mirror the workout-day editor's `_NameField` pattern: faint `Icons.edit` suffix when unfocused, hide when focused. ~10 lines.
 
-### P1 — high impact, medium effort
+### P1 — high impact, medium effort  ✅ shipped
 
-**P1-1. Duplicate day.**
+**P1-1. Duplicate day.** ✅
 - Menu action *Duplicate*.
 - Bloc event `ProgramEditorWorkoutDayDuplicated(draftId)`.
 - Repo: clone the WorkoutDay + its ExerciseGroups + Exercises + WorkoutSets with new IDs, inserted **immediately after** the source. New name: `"<original> (copy)"`.
 - This is the highest-value single feature missing; users currently re-author every variation by hand.
 
-**P1-2. "Add workout day" sheet replacing the AlertDialog.**
+**P1-2. "Add workout day" sheet replacing the AlertDialog.** ✅
 A `showModalBottomSheet` with three options:
 - Empty day (current behavior; name field)
 - Duplicate of… (picker over existing days)
 - Paste plain text (forward to `plan_import` scoped to "append to current program" — requires a small extension to the import flow)
 Bottom sheets keep the input above the keyboard, give room for icons + descriptions, and avoid the AlertDialog focus issues.
 
-**P1-3. Inline expand: peek at the day's exercises without leaving.**
+**P1-3. Inline expand: peek at the day's exercises without leaving.** ✅
 Tap a `chevron_right` (or the row body) → tile expands to show the first ~3–5 exercises as a static list. "Edit day →" link at the bottom of the expanded panel goes to the full editor.
-- Requires loading the full ProgramAggregate (see P0-1 alt path).
+- Requires loading the full ProgramAggregate (see P0-1 alt path). Done by reusing the full `listWorkoutDaysForProgram` data the bloc was already loading for summaries; preview names are surfaced via `ProgramEditorEditing.dayExercisePreviews`.
 - Lets users scan "is this the day with the bench work?" without navigating.
 - Keep collapse state local to the screen (don't persist).
 
-**P1-4. Header strip with program stats.**
+**P1-4. Header strip with program stats.** ✅
 Below the AppBar, a slim row with: `N days · M exercises · last edited <relative>` rendered in `caption` / `bodySmall`. Free orientation, helps the user know if they're in the right program. Reuses existing fields (`updatedAt`, derived counts).
 
 ### P2 — nice-to-have, lower priority

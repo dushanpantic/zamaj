@@ -1,8 +1,11 @@
+import 'package:clock/clock.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:zamaj/core/app_colors.dart';
 import 'package:zamaj/core/app_spacing.dart';
 import 'package:zamaj/core/app_theme.dart';
 import 'package:zamaj/core/app_typography.dart';
+import 'package:zamaj/core/relative_date_formatter.dart';
 import 'package:zamaj/modules/program_management/bloc/program_editor/program_editor_bloc.dart';
 import 'package:zamaj/modules/program_management/bloc/program_editor/program_editor_event.dart';
 import 'package:zamaj/modules/program_management/bloc/program_editor/program_editor_state.dart';
@@ -33,6 +36,7 @@ class _ProgramEditorScreenState extends State<ProgramEditorScreen> {
   String? _shownDeletionCandidate;
   String? _shownPendingDeletion;
   String? _editingDayDraftId;
+  final Set<String> _expandedDayDraftIds = {};
 
   @override
   void initState() {
@@ -63,81 +67,33 @@ class _ProgramEditorScreenState extends State<ProgramEditorScreen> {
     }
   }
 
-  Future<void> _showAddWorkoutDayDialog() async {
+  Future<void> _showAddWorkoutDaySheet(ProgramEditorEditing state) async {
     final colors = Theme.of(context).appColors;
-    const typography = AppTypography.standard;
-    final nameController = TextEditingController();
-    String? errorText;
+    final bloc = context.read<ProgramEditorBloc>();
+    final duplicatable = state.draft.workoutDays
+        .where((d) => d.persistedId != null)
+        .toList();
 
-    await showDialog<void>(
+    await showModalBottomSheet<void>(
       context: context,
-      builder: (dialogContext) => StatefulBuilder(
-        builder: (ctx, setDialogState) => AlertDialog(
-          backgroundColor: colors.surface,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(AppRadius.lg),
-            side: BorderSide(color: colors.outline),
-          ),
-          title: Text(
-            'Add Workout Day',
-            style: typography.titleSmall.copyWith(color: colors.onSurface),
-          ),
-          content: TextField(
-            controller: nameController,
-            autofocus: true,
-            style: typography.body.copyWith(color: colors.onSurface),
-            decoration: InputDecoration(
-              hintText: 'Day name',
-              errorText: errorText,
-            ),
-            onSubmitted: (_) => _submitAddDay(
-              dialogContext,
-              nameController,
-              setDialogState,
-              (e) => errorText = e,
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(dialogContext).pop(),
-              child: Text(
-                'Cancel',
-                style: typography.label.copyWith(color: colors.onSurfaceMuted),
-              ),
-            ),
-            TextButton(
-              onPressed: () => _submitAddDay(
-                dialogContext,
-                nameController,
-                setDialogState,
-                (e) => errorText = e,
-              ),
-              child: Text(
-                'Add',
-                style: typography.label.copyWith(color: colors.primary),
-              ),
-            ),
-          ],
-        ),
+      backgroundColor: colors.surface,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(AppRadius.lg)),
+      ),
+      builder: (sheetContext) => _AddWorkoutDaySheet(
+        existingDays: duplicatable,
+        onCreateEmpty: (name) {
+          bloc.add(ProgramEditorWorkoutDayAdded(name: name));
+        },
+        onDuplicateExisting: (draftId) {
+          bloc.add(ProgramEditorWorkoutDayDuplicated(draftId: draftId));
+        },
+        onOpenPasteImport: () {
+          Navigator.of(context).pushNamed(ProgramManagementRoutes.planImport);
+        },
       ),
     );
-  }
-
-  void _submitAddDay(
-    BuildContext dialogContext,
-    TextEditingController controller,
-    StateSetter setDialogState,
-    void Function(String?) setError,
-  ) {
-    final trimmed = controller.text.trim();
-    if (trimmed.isEmpty) {
-      setDialogState(() => setError('Name cannot be empty'));
-      return;
-    }
-    context.read<ProgramEditorBloc>().add(
-      ProgramEditorWorkoutDayAdded(name: trimmed),
-    );
-    Navigator.of(dialogContext).pop();
   }
 
   @override
@@ -322,7 +278,7 @@ class _ProgramEditorScreenState extends State<ProgramEditorScreen> {
             floatingActionButton: FloatingActionButton(
               backgroundColor: colors.primary,
               foregroundColor: colors.onPrimary,
-              onPressed: _showAddWorkoutDayDialog,
+              onPressed: () => _showAddWorkoutDaySheet(state),
               tooltip: 'Add workout day',
               child: const Icon(Icons.add),
             ),
@@ -330,6 +286,12 @@ class _ProgramEditorScreenState extends State<ProgramEditorScreen> {
               children: [
                 if (lastSaveError != null)
                   DomainErrorBanner(error: lastSaveError),
+                if (!isCreateMode)
+                  _ProgramStatsHeader(
+                    dayCount: draft.workoutDays.length,
+                    exerciseCount: state.totalExerciseCount,
+                    lastEdited: state.programUpdatedAt,
+                  ),
                 Expanded(
                   child: _buildWorkoutDayList(context, state, visibleDays),
                 ),
@@ -437,7 +399,7 @@ class _ProgramEditorScreenState extends State<ProgramEditorScreen> {
               ),
               const SizedBox(height: AppSpacing.xl),
               FilledButton.icon(
-                onPressed: _showAddWorkoutDayDialog,
+                onPressed: () => _showAddWorkoutDaySheet(state),
                 icon: const Icon(Icons.add),
                 label: const Text('Add workout day'),
                 style: FilledButton.styleFrom(
@@ -490,6 +452,9 @@ class _ProgramEditorScreenState extends State<ProgramEditorScreen> {
       itemBuilder: (context, index) {
         final day = workoutDays[index];
         final summary = state.summaryFor(day);
+        final preview = state.exercisePreviewFor(day);
+        final canDuplicate = day.persistedId != null;
+        final isExpanded = _expandedDayDraftIds.contains(day.draftId);
 
         return WorkoutDayListTile(
           key: ValueKey(day.draftId),
@@ -511,7 +476,11 @@ class _ProgramEditorScreenState extends State<ProgramEditorScreen> {
               ),
             );
           },
-          onDuplicate: null,
+          onDuplicate: canDuplicate
+              ? () => context.read<ProgramEditorBloc>().add(
+                  ProgramEditorWorkoutDayDuplicated(draftId: day.draftId),
+                )
+              : null,
           onDelete: () =>
               _onDeletePressed(draftId: day.draftId, summary: summary),
           isEditing: _editingDayDraftId == day.draftId,
@@ -521,8 +490,346 @@ class _ProgramEditorScreenState extends State<ProgramEditorScreen> {
               setState(() => _editingDayDraftId = null);
             }
           },
+          exercisePreview: preview,
+          isExpanded: isExpanded,
+          onToggleExpand: preview.isEmpty
+              ? null
+              : () => setState(() {
+                  if (isExpanded) {
+                    _expandedDayDraftIds.remove(day.draftId);
+                  } else {
+                    _expandedDayDraftIds.add(day.draftId);
+                  }
+                }),
         );
       },
+    );
+  }
+}
+
+class _ProgramStatsHeader extends StatelessWidget {
+  const _ProgramStatsHeader({
+    required this.dayCount,
+    required this.exerciseCount,
+    required this.lastEdited,
+  });
+
+  final int dayCount;
+  final int exerciseCount;
+  final DateTime? lastEdited;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = Theme.of(context).appColors;
+    const typography = AppTypography.standard;
+    final parts = <String>[
+      '$dayCount ${dayCount == 1 ? 'day' : 'days'}',
+      '$exerciseCount ${exerciseCount == 1 ? 'exercise' : 'exercises'}',
+    ];
+    if (lastEdited != null) {
+      final relative = RelativeDateFormatter.format(
+        lastEdited!,
+        clock.now().toUtc(),
+      );
+      parts.add('edited $relative');
+    }
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.lg,
+        vertical: AppSpacing.sm,
+      ),
+      decoration: BoxDecoration(
+        border: Border(bottom: BorderSide(color: colors.outline)),
+      ),
+      child: Text(
+        parts.join(' · '),
+        style: typography.caption.copyWith(color: colors.onSurfaceMuted),
+      ),
+    );
+  }
+}
+
+class _AddWorkoutDaySheet extends StatefulWidget {
+  const _AddWorkoutDaySheet({
+    required this.existingDays,
+    required this.onCreateEmpty,
+    required this.onDuplicateExisting,
+    required this.onOpenPasteImport,
+  });
+
+  final List<WorkoutDayDraft> existingDays;
+  final ValueChanged<String> onCreateEmpty;
+  final ValueChanged<String> onDuplicateExisting;
+  final VoidCallback onOpenPasteImport;
+
+  @override
+  State<_AddWorkoutDaySheet> createState() => _AddWorkoutDaySheetState();
+}
+
+enum _AddWorkoutDayMode { menu, empty, duplicate }
+
+class _AddWorkoutDaySheetState extends State<_AddWorkoutDaySheet> {
+  _AddWorkoutDayMode _mode = _AddWorkoutDayMode.menu;
+  final TextEditingController _nameController = TextEditingController();
+  String? _nameError;
+
+  @override
+  void dispose() {
+    _nameController.dispose();
+    super.dispose();
+  }
+
+  void _submitEmpty() {
+    final trimmed = _nameController.text.trim();
+    if (trimmed.isEmpty) {
+      setState(() => _nameError = 'Name cannot be empty');
+      return;
+    }
+    Navigator.of(context).pop();
+    widget.onCreateEmpty(trimmed);
+  }
+
+  void _submitDuplicate(String draftId) {
+    Navigator.of(context).pop();
+    widget.onDuplicateExisting(draftId);
+  }
+
+  void _submitPasteImport() {
+    Navigator.of(context).pop();
+    widget.onOpenPasteImport();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = Theme.of(context).appColors;
+    const typography = AppTypography.standard;
+
+    return SafeArea(
+      top: false,
+      child: Padding(
+        padding: EdgeInsets.only(
+          bottom: MediaQuery.of(context).viewInsets.bottom,
+        ),
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(
+            AppSpacing.lg,
+            AppSpacing.md,
+            AppSpacing.lg,
+            AppSpacing.lg,
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Center(
+                child: Container(
+                  width: 40,
+                  height: 4,
+                  margin: const EdgeInsets.only(bottom: AppSpacing.md),
+                  decoration: BoxDecoration(
+                    color: colors.outline,
+                    borderRadius: BorderRadius.circular(AppRadius.pill),
+                  ),
+                ),
+              ),
+              Row(
+                children: [
+                  if (_mode != _AddWorkoutDayMode.menu)
+                    IconButton(
+                      icon: Icon(
+                        Icons.arrow_back,
+                        color: colors.onSurfaceMuted,
+                      ),
+                      onPressed: () => setState(() {
+                        _mode = _AddWorkoutDayMode.menu;
+                        _nameError = null;
+                      }),
+                      tooltip: 'Back',
+                    ),
+                  Expanded(
+                    child: Text(
+                      switch (_mode) {
+                        _AddWorkoutDayMode.menu => 'Add workout day',
+                        _AddWorkoutDayMode.empty => 'New empty day',
+                        _AddWorkoutDayMode.duplicate => 'Duplicate a day',
+                      },
+                      style: typography.titleSmall.copyWith(
+                        color: colors.onSurface,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: AppSpacing.md),
+              switch (_mode) {
+                _AddWorkoutDayMode.menu => _buildMenu(colors, typography),
+                _AddWorkoutDayMode.empty => _buildEmptyForm(colors, typography),
+                _AddWorkoutDayMode.duplicate => _buildDuplicatePicker(
+                  colors,
+                  typography,
+                ),
+              },
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildMenu(AppColors colors, AppTypography typography) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        _SheetOption(
+          icon: Icons.add,
+          title: 'Empty day',
+          subtitle: 'Start from a blank workout day.',
+          onTap: () => setState(() => _mode = _AddWorkoutDayMode.empty),
+        ),
+        _SheetOption(
+          icon: Icons.copy,
+          title: 'Duplicate of…',
+          subtitle: widget.existingDays.isEmpty
+              ? 'No existing days to copy yet.'
+              : 'Copy an existing day as a starting point.',
+          enabled: widget.existingDays.isNotEmpty,
+          onTap: () => setState(() => _mode = _AddWorkoutDayMode.duplicate),
+        ),
+        _SheetOption(
+          icon: Icons.content_paste,
+          title: 'Paste plain text',
+          subtitle: 'Import a typed-out plan from your clipboard.',
+          onTap: _submitPasteImport,
+        ),
+      ],
+    );
+  }
+
+  Widget _buildEmptyForm(AppColors colors, AppTypography typography) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        TextField(
+          controller: _nameController,
+          autofocus: true,
+          textInputAction: TextInputAction.done,
+          style: typography.body.copyWith(color: colors.onSurface),
+          decoration: InputDecoration(
+            labelText: 'Day name',
+            hintText: 'e.g. Push A',
+            errorText: _nameError,
+          ),
+          onChanged: (_) {
+            if (_nameError != null) setState(() => _nameError = null);
+          },
+          onSubmitted: (_) => _submitEmpty(),
+        ),
+        const SizedBox(height: AppSpacing.lg),
+        FilledButton(
+          onPressed: _submitEmpty,
+          style: FilledButton.styleFrom(
+            backgroundColor: colors.primary,
+            foregroundColor: colors.onPrimary,
+            minimumSize: const Size.fromHeight(AppSpacing.touchMin),
+          ),
+          child: const Text('Add day'),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildDuplicatePicker(AppColors colors, AppTypography typography) {
+    return ConstrainedBox(
+      constraints: BoxConstraints(
+        maxHeight: MediaQuery.of(context).size.height * 0.5,
+      ),
+      child: ListView.separated(
+        shrinkWrap: true,
+        itemCount: widget.existingDays.length,
+        separatorBuilder: (_, _) => const SizedBox(height: AppSpacing.xs),
+        itemBuilder: (context, index) {
+          final day = widget.existingDays[index];
+          return _SheetOption(
+            icon: Icons.copy,
+            title: day.name,
+            subtitle: 'Copies the day and renames it "<name> (copy)".',
+            onTap: () => _submitDuplicate(day.draftId),
+          );
+        },
+      ),
+    );
+  }
+}
+
+class _SheetOption extends StatelessWidget {
+  const _SheetOption({
+    required this.icon,
+    required this.title,
+    required this.subtitle,
+    required this.onTap,
+    this.enabled = true,
+  });
+
+  final IconData icon;
+  final String title;
+  final String subtitle;
+  final VoidCallback onTap;
+  final bool enabled;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = Theme.of(context).appColors;
+    const typography = AppTypography.standard;
+    final fg = enabled ? colors.onSurface : colors.onSurfaceMuted;
+    return Padding(
+      padding: const EdgeInsets.only(bottom: AppSpacing.sm),
+      child: Material(
+        color: Colors.transparent,
+        borderRadius: BorderRadius.circular(AppRadius.md),
+        child: InkWell(
+          borderRadius: BorderRadius.circular(AppRadius.md),
+          onTap: enabled ? onTap : null,
+          child: Container(
+            padding: const EdgeInsets.symmetric(
+              horizontal: AppSpacing.md,
+              vertical: AppSpacing.md,
+            ),
+            decoration: BoxDecoration(
+              color: colors.surface,
+              borderRadius: BorderRadius.circular(AppRadius.md),
+              border: Border.all(color: colors.outline),
+            ),
+            child: Row(
+              children: [
+                Icon(icon, color: fg),
+                const SizedBox(width: AppSpacing.md),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        title,
+                        style: typography.titleSmall.copyWith(color: fg),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        subtitle,
+                        style: typography.caption.copyWith(
+                          color: colors.onSurfaceMuted,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                if (enabled)
+                  Icon(Icons.chevron_right, color: colors.onSurfaceMuted),
+              ],
+            ),
+          ),
+        ),
+      ),
     );
   }
 }

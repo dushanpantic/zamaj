@@ -26,7 +26,11 @@ class ProgramEditorBloc extends Bloc<ProgramEditorEvent, ProgramEditorState> {
     on<ProgramEditorWorkoutDayDeleteUndone>(_onWorkoutDayDeleteUndone);
     on<ProgramEditorWorkoutDayDeleteFinalized>(_onWorkoutDayDeleteFinalized);
     on<ProgramEditorWorkoutDaysReordered>(_onWorkoutDaysReordered);
+    on<ProgramEditorWorkoutDayDuplicated>(_onWorkoutDayDuplicated);
   }
+
+  /// First N exercise names surfaced in the inline-expand peek.
+  static const int _exercisePreviewLimit = 5;
 
   final ProgramRepository _programRepository;
   final AggregateSaver _aggregateSaver;
@@ -38,6 +42,27 @@ class ProgramEditorBloc extends Bloc<ProgramEditorEvent, ProgramEditorState> {
     return {
       for (final day in days) day.id: WorkoutDaySummary.fromWorkoutDay(day),
     };
+  }
+
+  Map<String, List<String>> _previewsFor(List<WorkoutDay> days) {
+    return {for (final day in days) day.id: _previewExerciseNames(day)};
+  }
+
+  List<String> _previewExerciseNames(WorkoutDay day) {
+    final mainNames = <String>[];
+    final warmupNames = <String>[];
+    for (final group in day.exerciseGroups) {
+      for (final exercise in group.exercises) {
+        if (group.role == ExerciseGroupRole.warmup) {
+          warmupNames.add(exercise.name);
+        } else {
+          mainNames.add(exercise.name);
+        }
+      }
+    }
+    final ordered = [...mainNames, ...warmupNames];
+    if (ordered.length <= _exercisePreviewLimit) return ordered;
+    return ordered.sublist(0, _exercisePreviewLimit);
   }
 
   Future<void> _onOpened(
@@ -105,6 +130,8 @@ class ProgramEditorBloc extends Bloc<ProgramEditorEvent, ProgramEditorState> {
             isCreateMode: false,
           ),
           daySummaries: _summariesFor(workoutDays),
+          dayExercisePreviews: _previewsFor(workoutDays),
+          programUpdatedAt: program.updatedAt,
         ),
       );
     } on DomainError catch (e) {
@@ -399,6 +426,8 @@ class ProgramEditorBloc extends Bloc<ProgramEditorEvent, ProgramEditorState> {
           isCreateMode: false,
         ),
         daySummaries: _summariesFor(workoutDays),
+        dayExercisePreviews: _previewsFor(workoutDays),
+        programUpdatedAt: saved.updatedAt,
       ),
     );
   }
@@ -507,6 +536,71 @@ class ProgramEditorBloc extends Bloc<ProgramEditorEvent, ProgramEditorState> {
           isCreateMode: false,
         ),
         daySummaries: _summariesFor(reloadedDays),
+        dayExercisePreviews: _previewsFor(reloadedDays),
+        programUpdatedAt: reloadedProgram.updatedAt,
+      ),
+    );
+  }
+
+  Future<void> _onWorkoutDayDuplicated(
+    ProgramEditorWorkoutDayDuplicated event,
+    Emitter<ProgramEditorState> emit,
+  ) async {
+    final current = state;
+    if (current is! ProgramEditorEditing) return;
+
+    final source = current.draft.workoutDays
+        .where((d) => d.draftId == event.draftId)
+        .firstOrNull;
+    final sourcePersistedId = source?.persistedId;
+    if (sourcePersistedId == null) return;
+
+    try {
+      await _programRepository.duplicateWorkoutDay(sourcePersistedId);
+    } on DomainError catch (e) {
+      final latest = state;
+      if (latest is ProgramEditorEditing) {
+        emit(latest.copyWith(lastSaveError: () => e));
+      }
+      return;
+    }
+
+    final programId = current.draft.programId;
+    if (programId == null) return;
+
+    final reloadedProgram = await _programRepository.getProgram(programId);
+    if (reloadedProgram == null) {
+      emit(ProgramEditorNotFound(programId: programId));
+      return;
+    }
+    final reloadedDays = await _programRepository.listWorkoutDaysForProgram(
+      programId,
+    );
+    _baselineWorkoutDays = List.unmodifiable(reloadedDays);
+
+    final reloadedDraft = ProgramDraft(
+      programId: reloadedProgram.id,
+      name: reloadedProgram.name,
+      workoutDays: reloadedDays
+          .map(
+            (day) => WorkoutDayDraft(
+              draftId: day.id,
+              persistedId: day.id,
+              name: day.name,
+              groups: const [],
+            ),
+          )
+          .toList(),
+      schemaVersion: reloadedProgram.schemaVersion,
+    );
+
+    emit(
+      current.copyWith(
+        draft: reloadedDraft,
+        daySummaries: _summariesFor(reloadedDays),
+        dayExercisePreviews: _previewsFor(reloadedDays),
+        programUpdatedAt: () => reloadedProgram.updatedAt,
+        lastSaveError: () => null,
       ),
     );
   }

@@ -100,3 +100,12 @@ final class ProgramEditorWorkoutDayDeleteFinalized extends ProgramEditorEvent {
   @override
   List<Object?> get props => [];
 }
+
+final class ProgramEditorWorkoutDayDuplicated extends ProgramEditorEvent {
+  const ProgramEditorWorkoutDayDuplicated({required this.draftId});
+
+  final String draftId;
+
+  @override
+  List<Object?> get props => [draftId];
+}

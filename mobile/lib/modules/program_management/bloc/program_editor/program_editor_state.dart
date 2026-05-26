@@ -77,7 +77,9 @@ final class ProgramEditorEditing extends ProgramEditorState {
     this.deletionCandidateDraftId,
     this.lastSaveError,
     this.daySummaries = const {},
+    this.dayExercisePreviews = const {},
     this.pendingDeletion,
+    this.programUpdatedAt,
   });
 
   final ProgramDraft draft;
@@ -92,15 +94,38 @@ final class ProgramEditorEditing extends ProgramEditorState {
   /// should fall back to [WorkoutDaySummary.empty].
   final Map<String, WorkoutDaySummary> daySummaries;
 
+  /// Per-day ordered list of exercise names (main groups, then warmups)
+  /// keyed by `persistedId`. Used by the inline-expand peek.
+  final Map<String, List<String>> dayExercisePreviews;
+
   /// Set when the user triggers an optimistic delete that hasn't yet been
   /// finalised. The UI filters this day from the visible list and shows a
   /// snackbar; the deletion is only persisted when finalised.
   final PendingDeletion? pendingDeletion;
 
+  /// Last time the program (or any of its children) was saved. Used by the
+  /// header strip's "last edited" label. `null` while the program is still
+  /// in create mode (not yet persisted).
+  final DateTime? programUpdatedAt;
+
   WorkoutDaySummary summaryFor(WorkoutDayDraft day) {
     final id = day.persistedId;
     if (id == null) return WorkoutDaySummary.empty;
     return daySummaries[id] ?? WorkoutDaySummary.empty;
+  }
+
+  List<String> exercisePreviewFor(WorkoutDayDraft day) {
+    final id = day.persistedId;
+    if (id == null) return const [];
+    return dayExercisePreviews[id] ?? const [];
+  }
+
+  int get totalExerciseCount {
+    var total = 0;
+    for (final summary in daySummaries.values) {
+      total += summary.exerciseCount + summary.warmupExerciseCount;
+    }
+    return total;
   }
 
   ProgramEditorEditing copyWith({
@@ -111,7 +136,9 @@ final class ProgramEditorEditing extends ProgramEditorState {
     String? Function()? deletionCandidateDraftId,
     DomainError? Function()? lastSaveError,
     Map<String, WorkoutDaySummary>? daySummaries,
+    Map<String, List<String>>? dayExercisePreviews,
     PendingDeletion? Function()? pendingDeletion,
+    DateTime? Function()? programUpdatedAt,
   }) {
     return ProgramEditorEditing(
       draft: draft ?? this.draft,
@@ -125,9 +152,13 @@ final class ProgramEditorEditing extends ProgramEditorState {
           ? lastSaveError()
           : this.lastSaveError,
       daySummaries: daySummaries ?? this.daySummaries,
+      dayExercisePreviews: dayExercisePreviews ?? this.dayExercisePreviews,
       pendingDeletion: pendingDeletion != null
           ? pendingDeletion()
           : this.pendingDeletion,
+      programUpdatedAt: programUpdatedAt != null
+          ? programUpdatedAt()
+          : this.programUpdatedAt,
     );
   }
 
@@ -140,6 +171,8 @@ final class ProgramEditorEditing extends ProgramEditorState {
     validation,
     lastSaveError,
     daySummaries,
+    dayExercisePreviews,
     pendingDeletion,
+    programUpdatedAt,
   ];
 }
