@@ -11,9 +11,20 @@ import 'package:zamaj/modules/workout_overview/widgets/set_row.dart';
 /// Drag payload that travels with a LongPressDraggable started on this
 /// card's handle. Lives at the screen level too: the screen's DragTarget
 /// regions resolve drops via [DropResolver].
+///
+/// [supersetTag] is the dragged exercise's current `supersetTag`. Drop
+/// targets gate on it: main-list reorder gaps and onto-card targets accept
+/// only payloads with `supersetTag == null`, while reorder gaps inside a
+/// superset accept only payloads whose `supersetTag` matches the group.
+/// This keeps within-superset reordering contiguous and prevents accidental
+/// breakage of an existing group.
 class ExerciseDragPayload {
-  const ExerciseDragPayload(this.sessionExerciseId);
+  const ExerciseDragPayload({
+    required this.sessionExerciseId,
+    required this.supersetTag,
+  });
   final String sessionExerciseId;
+  final String? supersetTag;
 }
 
 /// Vertical card showing a single session exercise with its set rows, notes,
@@ -182,12 +193,18 @@ class _Header extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               if (showDragHandle)
-                Padding(
-                  padding: const EdgeInsets.only(right: AppSpacing.xs),
+                // P3.1: pad the visible handle into a 48 dp square hit target
+                // so users who reach for the handle land on it cleanly. The
+                // whole card already accepts long-press; this just sizes the
+                // affordance up for the instinctive grab.
+                SizedBox(
+                  width: AppSpacing.touchMin,
+                  height: AppSpacing.touchMin,
                   child: Icon(
                     Icons.drag_indicator,
                     color: colors.onSurfaceMuted,
                     size: 20,
+                    semanticLabel: 'Drag handle',
                   ),
                 )
               else

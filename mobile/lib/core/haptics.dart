@@ -17,4 +17,9 @@ abstract final class Haptics {
   /// One-shot emphasis: rest-timer crossed into overtime, workout
   /// finished.
   static Future<void> emphasis() => HapticFeedback.heavyImpact();
+
+  /// Pointer-state transition: drag entered a new drop target, dial
+  /// detents, etc. Cheaper than [tap]; safe to fire on hover transitions
+  /// without feeling spammy.
+  static Future<void> selectionChange() => HapticFeedback.selectionClick();
 }

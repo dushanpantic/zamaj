@@ -4,21 +4,29 @@ import 'package:zamaj/core/app_theme.dart';
 import 'package:zamaj/core/app_typography.dart';
 import 'package:zamaj/modules/domain/domain.dart';
 import 'package:zamaj/modules/workout_overview/models/exercise_view_model.dart';
+import 'package:zamaj/modules/workout_overview/models/superset_group_view_model.dart';
 
-/// Modal picker that lists every unfinished, non-grouped exercise other
-/// than the source. Resolves to the picked exercise's `sessionExerciseId`,
-/// which the caller feeds back through the same drop-resolved event the
-/// drag-onto-card flow uses — so the bloc logic stays one code path.
+/// Modal picker that lists every unfinished, non-grouped exercise *and*
+/// every existing unfinished superset other than the source. Resolves to
+/// any one `sessionExerciseId` belonging to the chosen target — the caller
+/// feeds it through the same drop-resolved event the drag-onto-card flow
+/// uses, and the resolver routes it to either createSuperset or
+/// addToSuperset depending on whether the target is grouped.
 abstract final class GroupWithPickerDialog {
+  /// [candidates] — standalone unfinished, non-grouped exercises.
+  /// [supersetGroups] — existing unfinished supersets to allow joining; pass
+  /// an empty list if the source can only create new supersets.
   static Future<String?> show({
     required BuildContext context,
     required List<ExerciseViewModel> candidates,
+    List<SupersetGroup> supersetGroups = const [],
   }) {
     return showDialog<String>(
       context: context,
       builder: (ctx) {
         final colors = Theme.of(ctx).appColors;
         const typography = AppTypography.standard;
+        final totalRows = candidates.length + supersetGroups.length;
         return AlertDialog(
           backgroundColor: colors.surface,
           title: Text(
@@ -30,9 +38,25 @@ abstract final class GroupWithPickerDialog {
             width: double.maxFinite,
             child: ListView.builder(
               shrinkWrap: true,
-              itemCount: candidates.length,
+              itemCount: totalRows,
               itemBuilder: (_, i) {
-                final c = candidates[i];
+                if (i < supersetGroups.length) {
+                  final group = supersetGroups[i];
+                  return ListTile(
+                    leading: Icon(Icons.link, color: colors.primary),
+                    title: Text(
+                      'Add to: ${_groupLabel(group)}',
+                      style: typography.body.copyWith(color: colors.onSurface),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    onTap: () => Navigator.of(
+                      ctx,
+                    ).pop(group.exercises.first.sessionExercise.id),
+                    minVerticalPadding: AppSpacing.sm,
+                  );
+                }
+                final c = candidates[i - supersetGroups.length];
                 return ListTile(
                   leading: Icon(Icons.link, color: colors.primary),
                   title: Text(
@@ -67,5 +91,9 @@ abstract final class GroupWithPickerDialog {
       ReplacedState(:final substitute) => substitute.name,
       _ => vm.plannedExerciseName,
     };
+  }
+
+  static String _groupLabel(SupersetGroup group) {
+    return group.exercises.map(_displayName).join(' + ');
   }
 }

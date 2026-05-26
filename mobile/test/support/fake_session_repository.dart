@@ -478,6 +478,97 @@ class FakeSessionRepository implements SessionRepository {
   }
 
   @override
+  Future<Session> addToSuperset({
+    required String sessionId,
+    required String supersetTag,
+    required String sessionExerciseId,
+  }) async {
+    final session = _requireSession(sessionId);
+    final now = clock.now().toUtc();
+
+    final members = session.sessionExercises
+        .where((e) => e.supersetTag == supersetTag)
+        .toList();
+    if (members.isEmpty) {
+      throw NotFoundError(entityType: 'Superset', id: supersetTag);
+    }
+    for (final m in members) {
+      if (m.state is! UnfinishedState) {
+        throw OrderingError(
+          sessionExerciseId: m.id,
+          currentState: m.state.discriminator,
+          message:
+              'Cannot append to superset $supersetTag: member ${m.id} is '
+              '${m.state.discriminator}, not unfinished',
+        );
+      }
+    }
+    final dragged = session.sessionExercises.firstWhere(
+      (e) => e.id == sessionExerciseId,
+      orElse: () => throw NotFoundError(
+        entityType: 'SessionExercise',
+        id: sessionExerciseId,
+      ),
+    );
+    if (dragged.state is! UnfinishedState) {
+      throw OrderingError(
+        sessionExerciseId: sessionExerciseId,
+        currentState: dragged.state.discriminator,
+        message:
+            'Cannot append exercise $sessionExerciseId to superset: state '
+            'is ${dragged.state.discriminator}',
+      );
+    }
+    if (dragged.supersetTag != null) {
+      throw ValidationError(
+        entityId: sessionExerciseId,
+        invariant: 'append_to_superset_dragged_already_grouped',
+        message:
+            'Exercise $sessionExerciseId is already in superset '
+            '${dragged.supersetTag}',
+      );
+    }
+
+    final unfinishedSorted =
+        session.sessionExercises
+            .where((e) => e.state is UnfinishedState)
+            .toList()
+          ..sort((a, b) => a.position.compareTo(b.position));
+    final unfinishedIds = unfinishedSorted.map((e) => e.id).toList()
+      ..remove(sessionExerciseId);
+    final insertAfter = unfinishedIds.indexOf(members.last.id);
+    unfinishedIds.insert(insertAfter + 1, sessionExerciseId);
+
+    final slots = unfinishedSorted.map((e) => e.position).toList()..sort();
+    final newPositionById = <String, int>{
+      for (var i = 0; i < unfinishedIds.length; i++) unfinishedIds[i]: slots[i],
+    };
+
+    final updatedExercises = session.sessionExercises.map((e) {
+      final newPos = newPositionById[e.id];
+      if (e.id == sessionExerciseId) {
+        return e.copyWith(
+          supersetTag: supersetTag,
+          position: newPos ?? e.position,
+          updatedAt: now,
+        );
+      }
+      if (newPos != null && newPos != e.position) {
+        return e.copyWith(position: newPos, updatedAt: now);
+      }
+      return e;
+    }).toList();
+
+    final updated = session.copyWith(
+      sessionExercises: updatedExercises,
+      updatedAt: now,
+    );
+    _sessions[sessionId] = updated;
+    _notify(sessionId);
+    return updated;
+  }
+
+  @override
   Future<Session> removeSuperset({
     required String sessionId,
     required List<String> sessionExerciseIds,

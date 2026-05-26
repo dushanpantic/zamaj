@@ -121,11 +121,13 @@ class _WorkoutOverviewScreenState extends State<WorkoutOverviewScreen> {
   Future<void> _handleGroupInto(
     ExerciseViewModel source,
     List<ExerciseViewModel> candidates,
+    List<SupersetGroup> supersetGroups,
   ) async {
-    if (candidates.isEmpty) return;
+    if (candidates.isEmpty && supersetGroups.isEmpty) return;
     final pickedId = await GroupWithPickerDialog.show(
       context: context,
       candidates: candidates,
+      supersetGroups: supersetGroups,
     );
     if (!mounted || pickedId == null) return;
     context.read<WorkoutOverviewBloc>().add(
@@ -284,7 +286,12 @@ class _LoadedBody extends StatefulWidget {
   final void Function(ExerciseViewModel) onSkip;
   final void Function(ExerciseViewModel) onMarkDone;
   final void Function(String tag) onUngroup;
-  final void Function(ExerciseViewModel, List<ExerciseViewModel>) onGroupInto;
+  final void Function(
+    ExerciseViewModel,
+    List<ExerciseViewModel>,
+    List<SupersetGroup>,
+  )
+  onGroupInto;
   final void Function(String url) onOpenVideo;
   final VoidCallback onAddNote;
   final VoidCallback onAddExtraWork;
@@ -303,6 +310,7 @@ class _LoadedBodyState extends State<_LoadedBody>
   final ScrollController _scrollController = ScrollController();
   final GlobalKey _scrollViewKey = GlobalKey();
   late final _DragAutoScroller _autoScroller;
+  final _DragSession _dragSession = _DragSession();
 
   @override
   void initState() {
@@ -321,6 +329,7 @@ class _LoadedBodyState extends State<_LoadedBody>
   void dispose() {
     _autoScroller.dispose();
     _scrollController.dispose();
+    _dragSession.dispose();
     super.dispose();
   }
 
@@ -423,6 +432,7 @@ class _LoadedBodyState extends State<_LoadedBody>
                         gapIndex,
                       ),
                       enabled: canMutate,
+                      dragSession: _dragSession,
                     );
                   }
                   final groupIndex = (index - 1) ~/ 2;
@@ -439,6 +449,7 @@ class _LoadedBodyState extends State<_LoadedBody>
                       onOpenVideo: widget.onOpenVideo,
                       canMutate: canMutate,
                       autoScroller: _autoScroller,
+                      dragSession: _dragSession,
                     ),
                   );
                 },
@@ -507,6 +518,7 @@ class _GroupBuilder extends StatelessWidget {
     required this.onOpenVideo,
     required this.canMutate,
     required this.autoScroller,
+    required this.dragSession,
   });
 
   final SupersetGroupViewModel group;
@@ -515,15 +527,21 @@ class _GroupBuilder extends StatelessWidget {
   final void Function(ExerciseViewModel) onSkip;
   final void Function(ExerciseViewModel) onMarkDone;
   final void Function(String tag) onUngroup;
-  final void Function(ExerciseViewModel, List<ExerciseViewModel>) onGroupInto;
+  final void Function(
+    ExerciseViewModel,
+    List<ExerciseViewModel>,
+    List<SupersetGroup>,
+  )
+  onGroupInto;
   final void Function(String url) onOpenVideo;
   final bool canMutate;
   final _DragAutoScroller autoScroller;
+  final _DragSession dragSession;
 
   /// Other unfinished, non-grouped exercises in the session — the set of
-  /// valid partners for a "Group into superset…" pairing started from
-  /// [source]. Used only for the menu-driven path; the drag path resolves
-  /// the same way through the drop resolver.
+  /// valid partners for a *new* superset paired with [source]. Used only
+  /// for the menu-driven path; the drag path resolves the same way through
+  /// the drop resolver.
   List<ExerciseViewModel> _groupCandidatesFor(ExerciseViewModel source) {
     final result = <ExerciseViewModel>[];
     for (final g in state.groups) {
@@ -533,6 +551,22 @@ class _GroupBuilder extends StatelessWidget {
       if (other.sessionExercise.state is! UnfinishedState) continue;
       if (other.sessionExercise.supersetTag != null) continue;
       result.add(other);
+    }
+    return result;
+  }
+
+  /// Existing supersets [source] can be appended to. A group is eligible
+  /// only when every member is still unfinished — mixing terminal and
+  /// live members in one group is the unsafe state addToSuperset refuses.
+  List<SupersetGroup> _eligibleSupersetGroupsFor(ExerciseViewModel source) {
+    final result = <SupersetGroup>[];
+    if (source.sessionExercise.supersetTag != null) return result;
+    for (final g in state.groups) {
+      if (g is! SupersetGroup) continue;
+      final allUnfinished = g.exercises.every(
+        (e) => e.sessionExercise.state is UnfinishedState,
+      );
+      if (allUnfinished) result.add(g);
     }
     return result;
   }
@@ -553,11 +587,15 @@ class _GroupBuilder extends StatelessWidget {
     final candidates = canMutate
         ? _groupCandidatesFor(exercise)
         : const <ExerciseViewModel>[];
+    final eligibleGroups = canMutate
+        ? _eligibleSupersetGroupsFor(exercise)
+        : const <SupersetGroup>[];
     return _DraggableExercise(
       exercise: exercise,
       isInSuperset: false,
       canMutate: canMutate,
       autoScroller: autoScroller,
+      dragSession: dragSession,
       child: ExerciseCard(
         viewModel: exercise,
         isExpanded: state.expandedExerciseIds.contains(
@@ -590,9 +628,9 @@ class _GroupBuilder extends StatelessWidget {
         onMarkDonePressed: () => onMarkDone(exercise),
         onReplacePressed: () => onReplace(exercise),
         onOpenVideo: onOpenVideo,
-        onGroupIntoPressed: candidates.isEmpty
+        onGroupIntoPressed: (candidates.isEmpty && eligibleGroups.isEmpty)
             ? null
-            : () => onGroupInto(exercise, candidates),
+            : () => onGroupInto(exercise, candidates, eligibleGroups),
         showDragHandle: true,
       ),
     );
@@ -603,6 +641,87 @@ class _GroupBuilder extends StatelessWidget {
     String tag,
     List<ExerciseViewModel> exercises,
   ) {
+    // Per-member absolute unfinishedIndex (index into the global unfinished
+    // sequence). `reorderUnfinished` operates on that absolute index, so each
+    // intra-superset gap dispatches a [DropTarget.beforeIndex] computed from
+    // this map.
+    final unfinishedIndexById = <String, int>{};
+    var unfinishedCounter = 0;
+    for (final g in state.groups) {
+      for (final ex in g.allExercises) {
+        if (ex.sessionExercise.state is UnfinishedState) {
+          unfinishedIndexById[ex.sessionExercise.id] = unfinishedCounter++;
+        }
+      }
+    }
+
+    Widget memberWrap(ExerciseViewModel member, Widget card) {
+      if (!canMutate) return card;
+      if (member.sessionExercise.state is! UnfinishedState) return card;
+      return _SupersetMemberDraggable(
+        exercise: member,
+        autoScroller: autoScroller,
+        dragSession: dragSession,
+        child: card,
+      );
+    }
+
+    // Gap position: 0..exercises.length. Map each position to the absolute
+    // unfinishedIndex the drop should target:
+    //   - position 0 → above the first unfinished member.
+    //   - position k (between two members) → just before exercises[k] when
+    //     it's unfinished; otherwise no gap.
+    //   - position N → just after the last unfinished member.
+    Widget gapWrap(int position) {
+      if (!canMutate) return const SizedBox.shrink();
+      // Find the unfinishedIndex this gap targets, if any.
+      int? targetIndex;
+      if (position == 0) {
+        // Gap above first member — anchor to the first unfinished member of
+        // the group, if any.
+        for (final ex in exercises) {
+          final idx = unfinishedIndexById[ex.sessionExercise.id];
+          if (idx != null) {
+            targetIndex = idx;
+            break;
+          }
+        }
+      } else if (position == exercises.length) {
+        // Gap below last member — one past the last unfinished member.
+        for (var i = exercises.length - 1; i >= 0; i--) {
+          final idx = unfinishedIndexById[exercises[i].sessionExercise.id];
+          if (idx != null) {
+            targetIndex = idx + 1;
+            break;
+          }
+        }
+      } else {
+        // Between two consecutive members. Anchor to the member *below* the
+        // gap (its unfinishedIndex), so dropping here inserts before it.
+        // Only render the gap when both neighbours are unfinished — otherwise
+        // a drop would either be impossible or could break contiguity.
+        final upper = exercises[position - 1];
+        final lower = exercises[position];
+        final upperUnf = upper.sessionExercise.state is UnfinishedState;
+        final lowerUnf = lower.sessionExercise.state is UnfinishedState;
+        if (upperUnf && lowerUnf) {
+          targetIndex = unfinishedIndexById[lower.sessionExercise.id];
+        }
+      }
+      if (targetIndex == null) {
+        // Default visual spacing between members; nothing draggable.
+        if (position == 0 || position == exercises.length) {
+          return const SizedBox.shrink();
+        }
+        return const SizedBox(height: AppSpacing.sm);
+      }
+      return _SupersetReorderGap(
+        supersetTag: tag,
+        unfinishedIndex: targetIndex,
+        dragSession: dragSession,
+      );
+    }
+
     return SupersetCard(
       tag: tag,
       exercises: exercises,
@@ -637,6 +756,8 @@ class _GroupBuilder extends StatelessWidget {
       onReplacePressed: (id) =>
           onReplace(exercises.firstWhere((e) => e.sessionExercise.id == id)),
       onOpenVideo: onOpenVideo,
+      memberBuilder: memberWrap,
+      gapBuilder: gapWrap,
     );
   }
 }
@@ -655,12 +776,13 @@ String _exerciseDisplayName(ExerciseViewModel viewModel) {
 /// Wraps an exercise card with both a Draggable (handle on the card)
 /// and a DragTarget (the whole card body accepts drops to start a
 /// superset). The reorder gaps between cards are separate widgets.
-class _DraggableExercise extends StatelessWidget {
+class _DraggableExercise extends StatefulWidget {
   const _DraggableExercise({
     required this.exercise,
     required this.isInSuperset,
     required this.canMutate,
     required this.autoScroller,
+    required this.dragSession,
     required this.child,
   });
 
@@ -668,45 +790,95 @@ class _DraggableExercise extends StatelessWidget {
   final bool isInSuperset;
   final bool canMutate;
   final _DragAutoScroller autoScroller;
+  final _DragSession dragSession;
   final Widget child;
 
   @override
+  State<_DraggableExercise> createState() => _DraggableExerciseState();
+}
+
+class _DraggableExerciseState extends State<_DraggableExercise> {
+  bool _registered = false;
+
+  void _setRegistered(bool value) {
+    if (_registered == value) return;
+    _registered = value;
+    if (value) {
+      Haptics.selectionChange();
+      widget.dragSession.hoverEntered();
+    } else {
+      widget.dragSession.hoverLeft();
+    }
+  }
+
+  @override
+  void dispose() {
+    if (_registered) {
+      _registered = false;
+      widget.dragSession.hoverLeft();
+    }
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
-    final isUnfinished = exercise.sessionExercise.state is UnfinishedState;
-    final canDrag = canMutate && isUnfinished && !isInSuperset;
+    final isUnfinished =
+        widget.exercise.sessionExercise.state is UnfinishedState;
+    final canDrag = widget.canMutate && isUnfinished && !widget.isInSuperset;
 
     return DragTarget<ExerciseDragPayload>(
       onWillAcceptWithDetails: (details) {
-        if (!canMutate) return false;
-        if (details.data.sessionExerciseId == exercise.sessionExercise.id) {
+        if (!widget.canMutate) return false;
+        if (details.data.sessionExerciseId ==
+            widget.exercise.sessionExercise.id) {
           return false;
         }
         if (!isUnfinished) return false;
-        if (exercise.sessionExercise.supersetTag != null) return false;
+        if (widget.exercise.sessionExercise.supersetTag != null) return false;
+        // A dragged exercise that is itself part of a superset cannot
+        // create or append to a new superset by being dropped onto a
+        // standalone card. Drag-to-ungroup remains the supported flow
+        // for leaving a superset; the within-superset reorder gaps
+        // handle in-place moves.
+        if (details.data.supersetTag != null) return false;
         return true;
       },
+      onLeave: (_) => _setRegistered(false),
       onAcceptWithDetails: (details) {
+        _setRegistered(false);
         Haptics.tap();
         context.read<WorkoutOverviewBloc>().add(
           WorkoutOverviewDropResolved(
             draggedSessionExerciseId: details.data.sessionExerciseId,
-            target: DropTarget.ontoExercise(exercise.sessionExercise.id),
+            target: DropTarget.ontoExercise(widget.exercise.sessionExercise.id),
           ),
         );
       },
       builder: (context, candidate, _) {
         final highlight = candidate.isNotEmpty;
+        if (highlight != _registered) {
+          // candidate count changed via builder rebuild; sync our flag in a
+          // post-frame callback so the haptic fires on the enter transition.
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            if (!mounted) return;
+            _setRegistered(highlight);
+          });
+        }
         final card = _MaybeDraggable(
           canDrag: canDrag,
-          payload: ExerciseDragPayload(exercise.sessionExercise.id),
-          exerciseName: _exerciseDisplayName(exercise),
-          autoScroller: autoScroller,
+          payload: ExerciseDragPayload(
+            sessionExerciseId: widget.exercise.sessionExercise.id,
+            supersetTag: widget.exercise.sessionExercise.supersetTag,
+          ),
+          exerciseName: _exerciseDisplayName(widget.exercise),
+          autoScroller: widget.autoScroller,
+          dragSession: widget.dragSession,
           child: AnimatedScale(
             duration: const Duration(milliseconds: 80),
             scale: highlight ? 0.98 : 1,
             child: Stack(
               children: [
-                child,
+                widget.child,
                 Positioned.fill(
                   child: IgnorePointer(
                     child: AnimatedOpacity(
@@ -773,6 +945,7 @@ class _MaybeDraggable extends StatelessWidget {
     required this.payload,
     required this.exerciseName,
     required this.autoScroller,
+    required this.dragSession,
     required this.child,
   });
 
@@ -780,6 +953,7 @@ class _MaybeDraggable extends StatelessWidget {
   final ExerciseDragPayload payload;
   final String exerciseName;
   final _DragAutoScroller autoScroller;
+  final _DragSession dragSession;
   final Widget child;
 
   @override
@@ -793,12 +967,23 @@ class _MaybeDraggable extends StatelessWidget {
       onDragStarted: () {
         Haptics.grab();
         autoScroller.begin();
+        dragSession.begin();
       },
       onDragUpdate: (details) =>
           autoScroller.updatePointer(details.globalPosition.dy),
-      onDragEnd: (_) => autoScroller.end(),
-      onDraggableCanceled: (_, _) => autoScroller.end(),
-      feedback: _DragFeedbackPill(exerciseName: exerciseName, width: pillWidth),
+      onDragEnd: (_) {
+        autoScroller.end();
+        dragSession.end();
+      },
+      onDraggableCanceled: (_, _) {
+        autoScroller.end();
+        dragSession.end();
+      },
+      feedback: _DragFeedbackPill(
+        exerciseName: exerciseName,
+        width: pillWidth,
+        dragSession: dragSession,
+      ),
       childWhenDragging: Opacity(opacity: 0.3, child: child),
       child: child,
     );
@@ -807,104 +992,396 @@ class _MaybeDraggable extends StatelessWidget {
 
 /// Compact pill shown under the finger while dragging an exercise card.
 /// Occludes far less of the screen than dragging the full card, so the
-/// user can see and aim at the reorder gaps between groups.
+/// user can see and aim at the reorder gaps between groups. Fades to 60%
+/// opacity (P3.2) when the pointer has been outside every valid drop
+/// target for more than 250 ms, signalling "no target here".
 class _DragFeedbackPill extends StatelessWidget {
-  const _DragFeedbackPill({required this.exerciseName, required this.width});
+  const _DragFeedbackPill({
+    required this.exerciseName,
+    required this.width,
+    required this.dragSession,
+  });
 
   final String exerciseName;
   final double width;
+  final _DragSession dragSession;
 
   @override
   Widget build(BuildContext context) {
     final colors = Theme.of(context).appColors;
     const typography = AppTypography.standard;
-    return Material(
-      elevation: 8,
-      color: Colors.transparent,
-      borderRadius: BorderRadius.circular(AppRadius.pill),
-      child: Container(
-        width: width,
-        height: AppSpacing.touchMin,
-        padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
-        decoration: BoxDecoration(
-          color: colors.surface,
-          borderRadius: BorderRadius.circular(AppRadius.pill),
-          border: Border.all(color: colors.primary, width: 2),
-        ),
-        child: Row(
-          children: [
-            Icon(Icons.drag_indicator, size: 20, color: colors.primary),
-            const SizedBox(width: AppSpacing.sm),
-            Expanded(
-              child: Text(
-                exerciseName,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: typography.label.copyWith(color: colors.onSurface),
+    return AnimatedBuilder(
+      animation: dragSession,
+      builder: (context, _) {
+        final dimmed = dragSession.isOutsideStable;
+        return AnimatedOpacity(
+          duration: const Duration(milliseconds: 150),
+          opacity: dimmed ? 0.6 : 1.0,
+          child: Material(
+            elevation: 8,
+            color: Colors.transparent,
+            borderRadius: BorderRadius.circular(AppRadius.pill),
+            child: Container(
+              width: width,
+              height: AppSpacing.touchMin,
+              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
+              decoration: BoxDecoration(
+                color: colors.surface,
+                borderRadius: BorderRadius.circular(AppRadius.pill),
+                border: Border.all(color: colors.primary, width: 2),
+              ),
+              child: Row(
+                children: [
+                  Icon(Icons.drag_indicator, size: 20, color: colors.primary),
+                  const SizedBox(width: AppSpacing.sm),
+                  Expanded(
+                    child: Text(
+                      exerciseName,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: typography.label.copyWith(color: colors.onSurface),
+                    ),
+                  ),
+                  const SizedBox(width: AppSpacing.sm),
+                  Icon(Icons.swap_vert, size: 18, color: colors.onSurfaceMuted),
+                ],
               ),
             ),
-            const SizedBox(width: AppSpacing.sm),
-            Icon(Icons.swap_vert, size: 18, color: colors.onSurfaceMuted),
-          ],
-        ),
-      ),
+          ),
+        );
+      },
     );
   }
 }
 
 /// Drop zone between two exercise groups. The hit area is always
 /// [_restHitHeight] tall so the user has a comfortable target while
-/// dragging; the visible indicator is just a thin centered line at rest
-/// and expands into a full-width primary bar when a drag is hovering.
-class _ReorderGap extends StatelessWidget {
+/// dragging; the visible indicator is a thin centered line at rest, a
+/// taller bar with a muted "Move here" label while a drag is active, and
+/// a full-width primary bar when a drag is hovering directly over it.
+class _ReorderGap extends StatefulWidget {
   const _ReorderGap({
     required this.sessionId,
     required this.unfinishedIndex,
     required this.enabled,
+    required this.dragSession,
   });
 
   final String sessionId;
   final int unfinishedIndex;
   final bool enabled;
+  final _DragSession dragSession;
 
+  @override
+  State<_ReorderGap> createState() => _ReorderGapState();
+}
+
+class _ReorderGapState extends State<_ReorderGap> {
   static const double _restHitHeight = 32;
+  static const double _activeHitHeight = 40;
   static const double _hoverHitHeight = 48;
+
+  bool _registered = false;
+
+  void _setRegistered(bool value) {
+    if (_registered == value) return;
+    _registered = value;
+    if (value) {
+      Haptics.selectionChange();
+      widget.dragSession.hoverEntered();
+    } else {
+      widget.dragSession.hoverLeft();
+    }
+  }
+
+  @override
+  void dispose() {
+    if (_registered) {
+      _registered = false;
+      widget.dragSession.hoverLeft();
+    }
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
     final colors = Theme.of(context).appColors;
-    return DragTarget<ExerciseDragPayload>(
-      onWillAcceptWithDetails: (_) => enabled,
-      onAcceptWithDetails: (details) {
-        Haptics.tap();
-        context.read<WorkoutOverviewBloc>().add(
-          WorkoutOverviewDropResolved(
-            draggedSessionExerciseId: details.data.sessionExerciseId,
-            target: DropTarget.beforeIndex(unfinishedIndex),
-          ),
+    const typography = AppTypography.standard;
+    return AnimatedBuilder(
+      animation: widget.dragSession,
+      builder: (context, _) {
+        final dragActive = widget.dragSession.active && widget.enabled;
+        return DragTarget<ExerciseDragPayload>(
+          onWillAcceptWithDetails: (details) {
+            if (!widget.enabled) return false;
+            // Members of a superset reorder inside their own group via the
+            // intra-superset gaps. Letting them land on a top-level gap
+            // would split the contiguous run and silently break the group.
+            if (details.data.supersetTag != null) return false;
+            return true;
+          },
+          onLeave: (_) => _setRegistered(false),
+          onAcceptWithDetails: (details) {
+            _setRegistered(false);
+            Haptics.tap();
+            context.read<WorkoutOverviewBloc>().add(
+              WorkoutOverviewDropResolved(
+                draggedSessionExerciseId: details.data.sessionExerciseId,
+                target: DropTarget.beforeIndex(widget.unfinishedIndex),
+              ),
+            );
+          },
+          builder: (context, candidate, _) {
+            final hovering = candidate.isNotEmpty && widget.enabled;
+            if (hovering != _registered) {
+              WidgetsBinding.instance.addPostFrameCallback((_) {
+                if (!mounted) return;
+                _setRegistered(hovering);
+              });
+            }
+            final height = hovering
+                ? _hoverHitHeight
+                : dragActive
+                ? _activeHitHeight
+                : _restHitHeight;
+            final barHeight = hovering
+                ? 6.0
+                : dragActive
+                ? 4.0
+                : 2.0;
+            final barMargin = hovering
+                ? 0.0
+                : dragActive
+                ? AppSpacing.lg
+                : AppSpacing.xl;
+            final barColor = hovering
+                ? colors.primary
+                : dragActive
+                ? colors.primary.withValues(alpha: 0.55)
+                : colors.outline.withValues(alpha: 0.4);
+            return AnimatedContainer(
+              duration: const Duration(milliseconds: 120),
+              curve: Curves.easeOut,
+              height: height,
+              alignment: Alignment.center,
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Expanded(
+                    child: AnimatedContainer(
+                      duration: const Duration(milliseconds: 120),
+                      curve: Curves.easeOut,
+                      height: barHeight,
+                      margin: EdgeInsets.symmetric(horizontal: barMargin),
+                      decoration: BoxDecoration(
+                        color: barColor,
+                        borderRadius: BorderRadius.circular(AppRadius.pill),
+                      ),
+                    ),
+                  ),
+                  if (dragActive && !hovering) ...[
+                    const SizedBox(width: AppSpacing.sm),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: AppSpacing.sm,
+                      ),
+                      child: Text(
+                        'Move here',
+                        style: typography.caption.copyWith(
+                          color: colors.onSurfaceMuted,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: AppSpacing.sm),
+                    Expanded(
+                      child: AnimatedContainer(
+                        duration: const Duration(milliseconds: 120),
+                        curve: Curves.easeOut,
+                        height: barHeight,
+                        margin: EdgeInsets.symmetric(horizontal: barMargin),
+                        decoration: BoxDecoration(
+                          color: barColor,
+                          borderRadius: BorderRadius.circular(AppRadius.pill),
+                        ),
+                      ),
+                    ),
+                  ],
+                ],
+              ),
+            );
+          },
         );
       },
-      builder: (context, candidate, _) {
-        final hovering = candidate.isNotEmpty && enabled;
-        return AnimatedContainer(
-          duration: const Duration(milliseconds: 120),
-          curve: Curves.easeOut,
-          height: hovering ? _hoverHitHeight : _restHitHeight,
-          alignment: Alignment.center,
-          child: AnimatedContainer(
-            duration: const Duration(milliseconds: 120),
-            curve: Curves.easeOut,
-            height: hovering ? 6 : 2,
-            margin: EdgeInsets.symmetric(
-              horizontal: hovering ? 0 : AppSpacing.xl,
-            ),
-            decoration: BoxDecoration(
-              color: hovering
-                  ? colors.primary
-                  : colors.outline.withValues(alpha: 0.4),
-              borderRadius: BorderRadius.circular(AppRadius.pill),
-            ),
-          ),
+    );
+  }
+}
+
+/// Wraps an unfinished superset member with a [LongPressDraggable] so it can
+/// be dragged onto a [_SupersetReorderGap] inside the same group to reorder.
+/// The payload carries the source `supersetTag`; only intra-superset gaps
+/// with the matching tag will accept it (the main-list reorder gaps and the
+/// onto-card targets both refuse non-null tags).
+class _SupersetMemberDraggable extends StatelessWidget {
+  const _SupersetMemberDraggable({
+    required this.exercise,
+    required this.autoScroller,
+    required this.dragSession,
+    required this.child,
+  });
+
+  final ExerciseViewModel exercise;
+  final _DragAutoScroller autoScroller;
+  final _DragSession dragSession;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final pillWidth = (screenWidth * 0.7).clamp(220.0, 360.0);
+    return LongPressDraggable<ExerciseDragPayload>(
+      data: ExerciseDragPayload(
+        sessionExerciseId: exercise.sessionExercise.id,
+        supersetTag: exercise.sessionExercise.supersetTag,
+      ),
+      delay: const Duration(milliseconds: 250),
+      onDragStarted: () {
+        Haptics.grab();
+        autoScroller.begin();
+        dragSession.begin();
+      },
+      onDragUpdate: (details) =>
+          autoScroller.updatePointer(details.globalPosition.dy),
+      onDragEnd: (_) {
+        autoScroller.end();
+        dragSession.end();
+      },
+      onDraggableCanceled: (_, _) {
+        autoScroller.end();
+        dragSession.end();
+      },
+      feedback: _DragFeedbackPill(
+        exerciseName: _exerciseDisplayName(exercise),
+        width: pillWidth,
+        dragSession: dragSession,
+      ),
+      childWhenDragging: Opacity(opacity: 0.3, child: child),
+      child: child,
+    );
+  }
+}
+
+/// Drop zone between two members of the same superset (or at the top/bottom
+/// edges of the member list). Accepts only payloads whose `supersetTag`
+/// matches [supersetTag] — that gating is what keeps the contiguous run
+/// intact: an outsider dropped here would split the group, and a member
+/// dropped onto a top-level gap would do the same in reverse.
+///
+/// On accept, dispatches a [DropTarget.beforeIndex] with the absolute
+/// unfinishedIndex this gap was anchored to. The existing reorder path in
+/// the engine permutes positions among unfinished slots; tags are
+/// untouched, so the assembler still treats the group as one superset.
+class _SupersetReorderGap extends StatefulWidget {
+  const _SupersetReorderGap({
+    required this.supersetTag,
+    required this.unfinishedIndex,
+    required this.dragSession,
+  });
+
+  final String supersetTag;
+  final int unfinishedIndex;
+  final _DragSession dragSession;
+
+  @override
+  State<_SupersetReorderGap> createState() => _SupersetReorderGapState();
+}
+
+class _SupersetReorderGapState extends State<_SupersetReorderGap> {
+  static const double _restHitHeight = 8;
+  static const double _activeHitHeight = 24;
+  static const double _hoverHitHeight = 32;
+
+  bool _registered = false;
+
+  void _setRegistered(bool value) {
+    if (_registered == value) return;
+    _registered = value;
+    if (value) {
+      Haptics.selectionChange();
+      widget.dragSession.hoverEntered();
+    } else {
+      widget.dragSession.hoverLeft();
+    }
+  }
+
+  @override
+  void dispose() {
+    if (_registered) {
+      _registered = false;
+      widget.dragSession.hoverLeft();
+    }
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = Theme.of(context).appColors;
+    return AnimatedBuilder(
+      animation: widget.dragSession,
+      builder: (context, _) {
+        final dragActive = widget.dragSession.active;
+        return DragTarget<ExerciseDragPayload>(
+          onWillAcceptWithDetails: (details) {
+            return details.data.supersetTag == widget.supersetTag;
+          },
+          onLeave: (_) => _setRegistered(false),
+          onAcceptWithDetails: (details) {
+            _setRegistered(false);
+            Haptics.tap();
+            context.read<WorkoutOverviewBloc>().add(
+              WorkoutOverviewDropResolved(
+                draggedSessionExerciseId: details.data.sessionExerciseId,
+                target: DropTarget.beforeIndex(widget.unfinishedIndex),
+              ),
+            );
+          },
+          builder: (context, candidate, _) {
+            final hovering = candidate.isNotEmpty;
+            if (hovering != _registered) {
+              WidgetsBinding.instance.addPostFrameCallback((_) {
+                if (!mounted) return;
+                _setRegistered(hovering);
+              });
+            }
+            final height = hovering
+                ? _hoverHitHeight
+                : dragActive
+                ? _activeHitHeight
+                : _restHitHeight;
+            final barHeight = hovering
+                ? 4.0
+                : dragActive
+                ? 2.0
+                : 0.0;
+            final barColor = hovering
+                ? colors.primary
+                : colors.primary.withValues(alpha: 0.55);
+            return AnimatedContainer(
+              duration: const Duration(milliseconds: 120),
+              curve: Curves.easeOut,
+              height: height,
+              alignment: Alignment.center,
+              child: AnimatedContainer(
+                duration: const Duration(milliseconds: 120),
+                curve: Curves.easeOut,
+                height: barHeight,
+                margin: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
+                decoration: BoxDecoration(
+                  color: barColor,
+                  borderRadius: BorderRadius.circular(AppRadius.pill),
+                ),
+              ),
+            );
+          },
         );
       },
     );
@@ -1303,5 +1780,80 @@ class _DragAutoScroller {
     if (target != position.pixels) {
       position.jumpTo(target);
     }
+  }
+}
+
+/// Shared in-flight drag state for the workout-overview list. Tracks:
+///
+/// - `active`: whether a long-press drag is currently in flight. Drives the
+///   reorder-gap "Move here" affordance (P2.1).
+/// - hover entries / exits across every [DragTarget] in the list. When the
+///   pointer has been outside every valid target for more than 250 ms the
+///   carried [_DragFeedbackPill] fades to 60 % opacity (P3.2).
+class _DragSession extends ChangeNotifier {
+  bool _active = false;
+  int _hoverCount = 0;
+  Timer? _outsideTimer;
+  bool _isOutsideStable = false;
+
+  bool get active => _active;
+
+  /// `true` when a drag is active, the pointer is not currently inside any
+  /// valid drop target, and it has been outside for ≥ 250 ms. Used by the
+  /// drag-feedback pill to signal "no target here".
+  bool get isOutsideStable => _active && _isOutsideStable;
+
+  void begin() {
+    if (_active) return;
+    _active = true;
+    _hoverCount = 0;
+    _isOutsideStable = false;
+    _scheduleOutsideTimer();
+    notifyListeners();
+  }
+
+  void end() {
+    if (!_active && _hoverCount == 0 && !_isOutsideStable) return;
+    _active = false;
+    _hoverCount = 0;
+    _isOutsideStable = false;
+    _outsideTimer?.cancel();
+    _outsideTimer = null;
+    notifyListeners();
+  }
+
+  void hoverEntered() {
+    _hoverCount++;
+    if (_hoverCount == 1) {
+      _outsideTimer?.cancel();
+      _outsideTimer = null;
+      if (_isOutsideStable) {
+        _isOutsideStable = false;
+        notifyListeners();
+      }
+    }
+  }
+
+  void hoverLeft() {
+    if (_hoverCount == 0) return;
+    _hoverCount--;
+    if (_hoverCount == 0 && _active) {
+      _scheduleOutsideTimer();
+    }
+  }
+
+  void _scheduleOutsideTimer() {
+    _outsideTimer?.cancel();
+    _outsideTimer = Timer(const Duration(milliseconds: 250), () {
+      if (!_active || _hoverCount > 0) return;
+      _isOutsideStable = true;
+      notifyListeners();
+    });
+  }
+
+  @override
+  void dispose() {
+    _outsideTimer?.cancel();
+    super.dispose();
   }
 }

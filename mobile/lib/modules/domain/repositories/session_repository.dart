@@ -113,4 +113,25 @@ abstract class SessionRepository {
     required String sessionId,
     required List<String> sessionExerciseIds,
   });
+
+  /// Appends [sessionExerciseId] to the existing superset identified by
+  /// [supersetTag]. Atomic: the new member receives the same tag, is
+  /// repositioned to sit immediately after the last existing member of the
+  /// group, and any displaced exercises shift one slot to make room. All in
+  /// a single transaction.
+  ///
+  /// Preconditions (engine-validated, repo re-asserts):
+  /// - [supersetTag] names a non-empty contiguous run of members in
+  ///   [sessionId], all in `UnfinishedState`.
+  /// - The exercise at [sessionExerciseId] is in `UnfinishedState` and has
+  ///   `supersetTag == null`.
+  ///
+  /// The tag is preserved (never rotated) so anything observing tag identity
+  /// — the assembler that groups by tag, the "Ungroup" handler that fetches
+  /// all members by tag, etc — keeps working across appends.
+  Future<Session> addToSuperset({
+    required String sessionId,
+    required String supersetTag,
+    required String sessionExerciseId,
+  });
 }

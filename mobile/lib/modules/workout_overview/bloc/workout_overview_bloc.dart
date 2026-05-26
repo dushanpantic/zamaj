@@ -240,6 +240,19 @@ class WorkoutOverviewBloc
             sessionExerciseIds: sessionExerciseIds,
           ),
         );
+      case AppendToSupersetIntent(
+        :final sessionId,
+        :final supersetTag,
+        :final sessionExerciseId,
+      ):
+        await _runMutation(
+          emit,
+          () => _engine.addToSuperset(
+            sessionId: sessionId,
+            supersetTag: supersetTag,
+            sessionExerciseId: sessionExerciseId,
+          ),
+        );
     }
   }
 

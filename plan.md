@@ -97,17 +97,17 @@ The workout *overview* screen (in-session, sweaty hands) has none of these affor
 - Per [CLAUDE.md](CLAUDE.md), tests are domain + persistence only. Auto-scroll is widget-layer logic and is not directly testable in this project's test rules.
 - However, the helper class `_DragAutoScroller` (or whatever we extract) should expose a pure function `computeScrollDelta({double pointerY, double viewportTop, double viewportBottom, double edgeZone, double maxSpeed})` returning a signed dp/frame value. Move *that* to `lib/modules/workout_overview/services/drag_auto_scroll.dart` and add unit tests under `test/modules/workout_overview/services/`. Property-test: pointer inside the safe band returns 0; pointer at exact edge returns ±maxSpeed; ramp is monotonic.
 
-### P2 — Reduce drag friction further
+### P2 — Reduce drag friction further ✅ done
 
-**P2.1 Differentiate the two drop-target visuals when the same drag is in flight.**
+**P2.1 Differentiate the two drop-target visuals when the same drag is in flight.** ✅ done
 
 - Already partially covered by P0.3. Pair it: when a drag is active, every visible `_ReorderGap` should *also* expand its visible bar height a notch (e.g., 4 dp instead of 2 dp) and tag itself with a tiny "Move here" label in muted text. That tells the user the two options exist and what each means.
 
-**P2.2 Haptic on hover-zone transitions.**
+**P2.2 Haptic on hover-zone transitions.** ✅ done
 
 - File: [workout_overview_screen.dart](mobile/lib/modules/workout_overview/screens/workout_overview_screen.dart). Today we only `Haptics.grab` on drag start and `Haptics.tap` on drop. Add a light `Haptics.selectionChange` (add to [haptics.dart](mobile/lib/core/haptics.dart) if not present — use `HapticFeedback.selectionClick`) on each `DragTarget`'s first `onWillAccept → true` after a candidate enters. Use a small state field on `_DraggableExercise` / `_ReorderGap` so the haptic fires once per entry, not on every frame.
 
-**P2.3 Append an exercise to an existing superset.**
+**P2.3 Append an exercise to an existing superset.** ✅ done
 
 This is a real workflow ("I want to add a third exercise to the pair I already made"). The risk vector — the assembler groups by *contiguous run* of matching `supersetTag` — is real but manageable if the engine handles position + tag together. The design below stays away from the unsafe path (overwriting tags from the bloc with two sequential calls).
 
@@ -153,9 +153,9 @@ This is a real workflow ("I want to add a third exercise to the pair I already m
 
 ### P3 — Polish
 
-**P3.1 Wider drag-handle hit target on cards.** Today the handle is a 20 px icon inside an inset Row — the *long-press anywhere on the card* is what actually triggers drag. That's fine, but pad the visible `Icons.drag_indicator` to a 48 dp square so users who instinctively grab the handle hit it cleanly. No behavioural change — long-press anywhere still works.
+**P3.1 Wider drag-handle hit target on cards.** ✅ done Today the handle is a 20 px icon inside an inset Row — the *long-press anywhere on the card* is what actually triggers drag. That's fine, but pad the visible `Icons.drag_indicator` to a 48 dp square so users who instinctively grab the handle hit it cleanly. No behavioural change — long-press anywhere still works.
 
-**P3.2 "Drop to cancel" affordance.** When a drag is in flight and the pointer is outside every valid target for >250 ms, fade the carried pill to 60 % opacity to signal "no target here". Pure UI; no resolver change.
+**P3.2 "Drop to cancel" affordance.** ✅ done When a drag is in flight and the pointer is outside every valid target for >250 ms, fade the carried pill to 60 % opacity to signal "no target here". Pure UI; no resolver change.
 
 **P3.3 Bottom-bar Focus button placement.** Today FOCUS is the only primary action and lives in the bottom bar next to two outlined icons. Consider an unrelated polish pass on its label hierarchy — out of scope for this plan but flagging.
 

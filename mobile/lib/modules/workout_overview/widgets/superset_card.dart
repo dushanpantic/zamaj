@@ -28,6 +28,8 @@ class SupersetCard extends StatelessWidget {
     this.lastTouchedSessionExerciseId,
     this.showDragHandle = false,
     this.isDropTarget = false,
+    this.memberBuilder,
+    this.gapBuilder,
   });
 
   final String tag;
@@ -50,6 +52,26 @@ class SupersetCard extends StatelessWidget {
   final String? lastTouchedSessionExerciseId;
   final bool showDragHandle;
   final bool isDropTarget;
+
+  /// Optional wrapper applied to each member's [ExerciseCard]. The workout-
+  /// overview screen passes one that wraps unfinished members in a
+  /// [LongPressDraggable] so they can be dragged onto the [betweenMembersBuilder]
+  /// gaps to reorder within the group.
+  final Widget Function(ExerciseViewModel member, Widget memberCard)?
+  memberBuilder;
+
+  /// Optional builder for the gap widgets surrounding each member.
+  /// `position` ranges over `0..exercises.length` inclusive:
+  ///
+  /// - `0` is the gap above the first member,
+  /// - `k` for `0 < k < exercises.length` is the gap between
+  ///   `exercises[k - 1]` and `exercises[k]`,
+  /// - `exercises.length` is the gap below the last member.
+  ///
+  /// Return [SizedBox.shrink] for positions that should render nothing.
+  /// When this builder is null, a plain [AppSpacing.sm] spacer is rendered
+  /// only between consecutive members (no top/bottom gaps).
+  final Widget Function(int position)? gapBuilder;
 
   @override
   Widget build(BuildContext context) {
@@ -112,30 +134,43 @@ class SupersetCard extends StatelessWidget {
               ],
             ),
           ),
-          for (var i = 0; i < exercises.length; i++) ...[
-            if (i > 0) const SizedBox(height: AppSpacing.sm),
-            ExerciseCard(
-              viewModel: exercises[i],
-              isExpanded: expandedExerciseIds.contains(
-                exercises[i].sessionExercise.id,
+          for (var i = 0; i <= exercises.length; i++) ...[
+            if (gapBuilder != null)
+              gapBuilder!(i)
+            else if (i > 0 && i < exercises.length)
+              const SizedBox(height: AppSpacing.sm),
+            if (i < exercises.length)
+              Builder(
+                builder: (context) {
+                  final card = ExerciseCard(
+                    viewModel: exercises[i],
+                    isExpanded: expandedExerciseIds.contains(
+                      exercises[i].sessionExercise.id,
+                    ),
+                    canMutate: canMutate,
+                    isLastTouched:
+                        lastTouchedSessionExerciseId ==
+                        exercises[i].sessionExercise.id,
+                    onToggleExpansion: () =>
+                        onToggleExpansion(exercises[i].sessionExercise.id),
+                    onLogSet: (values, plannedId) => onLogSet(
+                      exercises[i].sessionExercise.id,
+                      values,
+                      plannedId,
+                    ),
+                    onEditSet: onEditSet,
+                    onSkipPressed: () =>
+                        onSkipPressed(exercises[i].sessionExercise.id),
+                    onMarkDonePressed: () =>
+                        onMarkDonePressed(exercises[i].sessionExercise.id),
+                    onReplacePressed: () =>
+                        onReplacePressed(exercises[i].sessionExercise.id),
+                    onOpenVideo: onOpenVideo,
+                    showDragHandle: memberBuilder != null,
+                  );
+                  return memberBuilder?.call(exercises[i], card) ?? card;
+                },
               ),
-              canMutate: canMutate,
-              isLastTouched:
-                  lastTouchedSessionExerciseId ==
-                  exercises[i].sessionExercise.id,
-              onToggleExpansion: () =>
-                  onToggleExpansion(exercises[i].sessionExercise.id),
-              onLogSet: (values, plannedId) =>
-                  onLogSet(exercises[i].sessionExercise.id, values, plannedId),
-              onEditSet: onEditSet,
-              onSkipPressed: () =>
-                  onSkipPressed(exercises[i].sessionExercise.id),
-              onMarkDonePressed: () =>
-                  onMarkDonePressed(exercises[i].sessionExercise.id),
-              onReplacePressed: () =>
-                  onReplacePressed(exercises[i].sessionExercise.id),
-              onOpenVideo: onOpenVideo,
-            ),
           ],
         ],
       ),

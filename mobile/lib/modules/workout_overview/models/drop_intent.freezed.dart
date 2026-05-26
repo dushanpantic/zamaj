@@ -385,12 +385,13 @@ extension DropIntentPatterns on DropIntent {
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeMap<TResult extends Object?>({TResult Function( ReorderIntent value)?  reorder,TResult Function( CreateSupersetIntent value)?  createSuperset,TResult Function( NoopIntent value)?  noop,required TResult orElse(),}){
+@optionalTypeArgs TResult maybeMap<TResult extends Object?>({TResult Function( ReorderIntent value)?  reorder,TResult Function( CreateSupersetIntent value)?  createSuperset,TResult Function( AppendToSupersetIntent value)?  appendToSuperset,TResult Function( NoopIntent value)?  noop,required TResult orElse(),}){
 final _that = this;
 switch (_that) {
 case ReorderIntent() when reorder != null:
 return reorder(_that);case CreateSupersetIntent() when createSuperset != null:
-return createSuperset(_that);case NoopIntent() when noop != null:
+return createSuperset(_that);case AppendToSupersetIntent() when appendToSuperset != null:
+return appendToSuperset(_that);case NoopIntent() when noop != null:
 return noop(_that);case _:
   return orElse();
 
@@ -409,12 +410,13 @@ return noop(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult map<TResult extends Object?>({required TResult Function( ReorderIntent value)  reorder,required TResult Function( CreateSupersetIntent value)  createSuperset,required TResult Function( NoopIntent value)  noop,}){
+@optionalTypeArgs TResult map<TResult extends Object?>({required TResult Function( ReorderIntent value)  reorder,required TResult Function( CreateSupersetIntent value)  createSuperset,required TResult Function( AppendToSupersetIntent value)  appendToSuperset,required TResult Function( NoopIntent value)  noop,}){
 final _that = this;
 switch (_that) {
 case ReorderIntent():
 return reorder(_that);case CreateSupersetIntent():
-return createSuperset(_that);case NoopIntent():
+return createSuperset(_that);case AppendToSupersetIntent():
+return appendToSuperset(_that);case NoopIntent():
 return noop(_that);}
 }
 /// A variant of `map` that fallback to returning `null`.
@@ -429,12 +431,13 @@ return noop(_that);}
 /// }
 /// ```
 
-@optionalTypeArgs TResult? mapOrNull<TResult extends Object?>({TResult? Function( ReorderIntent value)?  reorder,TResult? Function( CreateSupersetIntent value)?  createSuperset,TResult? Function( NoopIntent value)?  noop,}){
+@optionalTypeArgs TResult? mapOrNull<TResult extends Object?>({TResult? Function( ReorderIntent value)?  reorder,TResult? Function( CreateSupersetIntent value)?  createSuperset,TResult? Function( AppendToSupersetIntent value)?  appendToSuperset,TResult? Function( NoopIntent value)?  noop,}){
 final _that = this;
 switch (_that) {
 case ReorderIntent() when reorder != null:
 return reorder(_that);case CreateSupersetIntent() when createSuperset != null:
-return createSuperset(_that);case NoopIntent() when noop != null:
+return createSuperset(_that);case AppendToSupersetIntent() when appendToSuperset != null:
+return appendToSuperset(_that);case NoopIntent() when noop != null:
 return noop(_that);case _:
   return null;
 
@@ -452,11 +455,12 @@ return noop(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>({TResult Function( String sessionId,  List<String> orderedUnfinishedIds)?  reorder,TResult Function( String sessionId,  List<String> sessionExerciseIds)?  createSuperset,TResult Function()?  noop,required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>({TResult Function( String sessionId,  List<String> orderedUnfinishedIds)?  reorder,TResult Function( String sessionId,  List<String> sessionExerciseIds)?  createSuperset,TResult Function( String sessionId,  String supersetTag,  String sessionExerciseId)?  appendToSuperset,TResult Function()?  noop,required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case ReorderIntent() when reorder != null:
 return reorder(_that.sessionId,_that.orderedUnfinishedIds);case CreateSupersetIntent() when createSuperset != null:
-return createSuperset(_that.sessionId,_that.sessionExerciseIds);case NoopIntent() when noop != null:
+return createSuperset(_that.sessionId,_that.sessionExerciseIds);case AppendToSupersetIntent() when appendToSuperset != null:
+return appendToSuperset(_that.sessionId,_that.supersetTag,_that.sessionExerciseId);case NoopIntent() when noop != null:
 return noop();case _:
   return orElse();
 
@@ -475,11 +479,12 @@ return noop();case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>({required TResult Function( String sessionId,  List<String> orderedUnfinishedIds)  reorder,required TResult Function( String sessionId,  List<String> sessionExerciseIds)  createSuperset,required TResult Function()  noop,}) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>({required TResult Function( String sessionId,  List<String> orderedUnfinishedIds)  reorder,required TResult Function( String sessionId,  List<String> sessionExerciseIds)  createSuperset,required TResult Function( String sessionId,  String supersetTag,  String sessionExerciseId)  appendToSuperset,required TResult Function()  noop,}) {final _that = this;
 switch (_that) {
 case ReorderIntent():
 return reorder(_that.sessionId,_that.orderedUnfinishedIds);case CreateSupersetIntent():
-return createSuperset(_that.sessionId,_that.sessionExerciseIds);case NoopIntent():
+return createSuperset(_that.sessionId,_that.sessionExerciseIds);case AppendToSupersetIntent():
+return appendToSuperset(_that.sessionId,_that.supersetTag,_that.sessionExerciseId);case NoopIntent():
 return noop();}
 }
 /// A variant of `when` that fallback to returning `null`
@@ -494,11 +499,12 @@ return noop();}
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>({TResult? Function( String sessionId,  List<String> orderedUnfinishedIds)?  reorder,TResult? Function( String sessionId,  List<String> sessionExerciseIds)?  createSuperset,TResult? Function()?  noop,}) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>({TResult? Function( String sessionId,  List<String> orderedUnfinishedIds)?  reorder,TResult? Function( String sessionId,  List<String> sessionExerciseIds)?  createSuperset,TResult? Function( String sessionId,  String supersetTag,  String sessionExerciseId)?  appendToSuperset,TResult? Function()?  noop,}) {final _that = this;
 switch (_that) {
 case ReorderIntent() when reorder != null:
 return reorder(_that.sessionId,_that.orderedUnfinishedIds);case CreateSupersetIntent() when createSuperset != null:
-return createSuperset(_that.sessionId,_that.sessionExerciseIds);case NoopIntent() when noop != null:
+return createSuperset(_that.sessionId,_that.sessionExerciseIds);case AppendToSupersetIntent() when appendToSuperset != null:
+return appendToSuperset(_that.sessionId,_that.supersetTag,_that.sessionExerciseId);case NoopIntent() when noop != null:
 return noop();case _:
   return null;
 
@@ -649,6 +655,76 @@ class _$CreateSupersetIntentCopyWithImpl<$Res>
 sessionId: null == sessionId ? _self.sessionId : sessionId // ignore: cast_nullable_to_non_nullable
 as String,sessionExerciseIds: null == sessionExerciseIds ? _self._sessionExerciseIds : sessionExerciseIds // ignore: cast_nullable_to_non_nullable
 as List<String>,
+  ));
+}
+
+
+}
+
+/// @nodoc
+
+
+class AppendToSupersetIntent implements DropIntent {
+  const AppendToSupersetIntent({required this.sessionId, required this.supersetTag, required this.sessionExerciseId});
+  
+
+ final  String sessionId;
+ final  String supersetTag;
+ final  String sessionExerciseId;
+
+/// Create a copy of DropIntent
+/// with the given fields replaced by the non-null parameter values.
+@JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+$AppendToSupersetIntentCopyWith<AppendToSupersetIntent> get copyWith => _$AppendToSupersetIntentCopyWithImpl<AppendToSupersetIntent>(this, _$identity);
+
+
+
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is AppendToSupersetIntent&&(identical(other.sessionId, sessionId) || other.sessionId == sessionId)&&(identical(other.supersetTag, supersetTag) || other.supersetTag == supersetTag)&&(identical(other.sessionExerciseId, sessionExerciseId) || other.sessionExerciseId == sessionExerciseId));
+}
+
+
+@override
+int get hashCode => Object.hash(runtimeType,sessionId,supersetTag,sessionExerciseId);
+
+@override
+String toString() {
+  return 'DropIntent.appendToSuperset(sessionId: $sessionId, supersetTag: $supersetTag, sessionExerciseId: $sessionExerciseId)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class $AppendToSupersetIntentCopyWith<$Res> implements $DropIntentCopyWith<$Res> {
+  factory $AppendToSupersetIntentCopyWith(AppendToSupersetIntent value, $Res Function(AppendToSupersetIntent) _then) = _$AppendToSupersetIntentCopyWithImpl;
+@useResult
+$Res call({
+ String sessionId, String supersetTag, String sessionExerciseId
+});
+
+
+
+
+}
+/// @nodoc
+class _$AppendToSupersetIntentCopyWithImpl<$Res>
+    implements $AppendToSupersetIntentCopyWith<$Res> {
+  _$AppendToSupersetIntentCopyWithImpl(this._self, this._then);
+
+  final AppendToSupersetIntent _self;
+  final $Res Function(AppendToSupersetIntent) _then;
+
+/// Create a copy of DropIntent
+/// with the given fields replaced by the non-null parameter values.
+@pragma('vm:prefer-inline') $Res call({Object? sessionId = null,Object? supersetTag = null,Object? sessionExerciseId = null,}) {
+  return _then(AppendToSupersetIntent(
+sessionId: null == sessionId ? _self.sessionId : sessionId // ignore: cast_nullable_to_non_nullable
+as String,supersetTag: null == supersetTag ? _self.supersetTag : supersetTag // ignore: cast_nullable_to_non_nullable
+as String,sessionExerciseId: null == sessionExerciseId ? _self.sessionExerciseId : sessionExerciseId // ignore: cast_nullable_to_non_nullable
+as String,
   ));
 }
 

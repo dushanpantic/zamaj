@@ -24,5 +24,11 @@ sealed class DropIntent with _$DropIntent {
     required List<String> sessionExerciseIds,
   }) = CreateSupersetIntent;
 
+  const factory DropIntent.appendToSuperset({
+    required String sessionId,
+    required String supersetTag,
+    required String sessionExerciseId,
+  }) = AppendToSupersetIntent;
+
   const factory DropIntent.noop() = NoopIntent;
 }

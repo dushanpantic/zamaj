@@ -867,6 +867,142 @@ class DriftSessionRepository implements SessionRepository {
   }
 
   @override
+  Future<domain.Session> addToSuperset({
+    required String sessionId,
+    required String supersetTag,
+    required String sessionExerciseId,
+  }) async {
+    return _db.transaction(() async {
+      await _requireSessionRow(sessionId);
+
+      final allExercises =
+          await (_db.select(_db.sessionExercises)
+                ..where((t) => t.sessionId.equals(sessionId))
+                ..orderBy([(t) => OrderingTerm.asc(t.position)]))
+              .get();
+
+      final members = allExercises
+          .where((e) => e.supersetTag == supersetTag)
+          .toList();
+      if (members.isEmpty) {
+        throw NotFoundError(entityType: 'Superset', id: supersetTag);
+      }
+      for (final m in members) {
+        if (m.stateDiscriminator != 'unfinished') {
+          throw OrderingError(
+            sessionExerciseId: m.id,
+            currentState: m.stateDiscriminator,
+            message:
+                'Cannot append to superset $supersetTag: member ${m.id} is '
+                '${m.stateDiscriminator}, not unfinished',
+          );
+        }
+      }
+      final dragged = allExercises.firstWhere(
+        (e) => e.id == sessionExerciseId,
+        orElse: () => throw NotFoundError(
+          entityType: 'SessionExercise',
+          id: sessionExerciseId,
+        ),
+      );
+      if (dragged.stateDiscriminator != 'unfinished') {
+        throw OrderingError(
+          sessionExerciseId: sessionExerciseId,
+          currentState: dragged.stateDiscriminator,
+          message:
+              'Cannot append exercise $sessionExerciseId to superset: state '
+              'is ${dragged.stateDiscriminator}',
+        );
+      }
+      if (dragged.supersetTag != null) {
+        throw ValidationError(
+          entityId: sessionExerciseId,
+          invariant: 'append_to_superset_dragged_already_grouped',
+          message:
+              'Exercise $sessionExerciseId is already in superset '
+              '${dragged.supersetTag}',
+        );
+      }
+
+      // Compute the new unfinished order: keep the current unfinished slots
+      // exactly as they are, but extract the dragged and reinsert it
+      // immediately after the last existing group member. Locked exercises
+      // keep their positions — only the unfinished slots get permuted, same
+      // approach `reorderUnfinished` uses.
+      final unfinished = allExercises
+          .where((e) => e.stateDiscriminator == 'unfinished')
+          .toList();
+      final unfinishedIds = unfinished.map((e) => e.id).toList();
+      unfinishedIds.remove(sessionExerciseId);
+      final lastMemberId = members.last.id;
+      final insertAfter = unfinishedIds.indexOf(lastMemberId);
+      unfinishedIds.insert(insertAfter + 1, sessionExerciseId);
+
+      final unfinishedById = {for (final e in unfinished) e.id: e};
+      final slots = unfinished.map((e) => e.position).toList()..sort();
+
+      // Two-phase write to dodge the (session_id, position) UNIQUE
+      // constraint, mirroring `reorderUnfinished`.
+      final movers = <({String id, int newPosition, SessionExercise row})>[];
+      for (var i = 0; i < unfinishedIds.length; i++) {
+        final id = unfinishedIds[i];
+        final row = unfinishedById[id]!;
+        final newPosition = slots[i];
+        if (newPosition == row.position) continue;
+        movers.add((id: id, newPosition: newPosition, row: row));
+      }
+
+      for (final mover in movers) {
+        await (_db.update(
+          _db.sessionExercises,
+        )..where((t) => t.id.equals(mover.id))).write(
+          SessionExercisesCompanion(position: Value(-1 - mover.row.position)),
+        );
+      }
+      for (final mover in movers) {
+        final updatedAt = _timestamps.nextUpdatedAt(
+          previousUpdatedAt: msToUtc(mover.row.updatedAtMs),
+          createdAt: msToUtc(mover.row.createdAtMs),
+        );
+        await (_db.update(
+          _db.sessionExercises,
+        )..where((t) => t.id.equals(mover.id))).write(
+          SessionExercisesCompanion(
+            position: Value(mover.newPosition),
+            updatedAtMs: Value(utcToMs(updatedAt)),
+          ),
+        );
+      }
+
+      final draggedUpdatedAt = _timestamps.nextUpdatedAt(
+        previousUpdatedAt: msToUtc(dragged.updatedAtMs),
+        createdAt: msToUtc(dragged.createdAtMs),
+      );
+      await (_db.update(
+        _db.sessionExercises,
+      )..where((t) => t.id.equals(sessionExerciseId))).write(
+        SessionExercisesCompanion(
+          supersetTag: Value(supersetTag),
+          updatedAtMs: Value(utcToMs(draggedUpdatedAt)),
+        ),
+      );
+
+      final sessionRow = await _requireSessionRow(sessionId);
+      final sessionUpdatedAt = _timestamps.nextUpdatedAt(
+        previousUpdatedAt: msToUtc(sessionRow.updatedAtMs),
+        createdAt: msToUtc(sessionRow.createdAtMs),
+      );
+      await (_db.update(
+        _db.sessions,
+      )..where((t) => t.id.equals(sessionId))).write(
+        SessionsCompanion(updatedAtMs: Value(utcToMs(sessionUpdatedAt))),
+      );
+
+      return _loadSession(sessionId);
+    });
+  }
+
+  @override
   Future<domain.Session> removeSuperset({
     required String sessionId,
     required List<String> sessionExerciseIds,

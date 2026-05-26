@@ -139,6 +139,65 @@ void main() {
       expect(intent, isA<NoopIntent>());
     });
 
+    test('drop ungrouped onto member of an unfinished superset → '
+        'appendToSuperset with the target group tag', () {
+      final groups = _groups([
+        _spec(
+          'a',
+          state: const ExerciseState.unfinished(),
+          supersetTag: 'tag-x',
+        ),
+        _spec(
+          'b',
+          state: const ExerciseState.unfinished(),
+          supersetTag: 'tag-x',
+        ),
+        _spec('c', state: const ExerciseState.unfinished()),
+      ]);
+      final intent = DropResolver.resolve(
+        sessionId: _sessionId,
+        groups: groups,
+        draggedSessionExerciseId: 'c',
+        target: const DropTarget.ontoExercise('a'),
+      );
+      expect(
+        intent,
+        const DropIntent.appendToSuperset(
+          sessionId: _sessionId,
+          supersetTag: 'tag-x',
+          sessionExerciseId: 'c',
+        ),
+      );
+    });
+
+    test('drop grouped onto member of an unfinished superset → noop '
+        '(dragged is already in a superset)', () {
+      final groups = _groups([
+        _spec(
+          'a',
+          state: const ExerciseState.unfinished(),
+          supersetTag: 'tag-x',
+        ),
+        _spec(
+          'b',
+          state: const ExerciseState.unfinished(),
+          supersetTag: 'tag-x',
+        ),
+        _spec(
+          'c',
+          state: const ExerciseState.unfinished(),
+          supersetTag: 'tag-y',
+        ),
+      ]);
+      final intent = DropResolver.resolve(
+        sessionId: _sessionId,
+        groups: groups,
+        draggedSessionExerciseId: 'c',
+        target: const DropTarget.ontoExercise('a'),
+      );
+      expect(intent, isA<NoopIntent>());
+    });
+
     test('drop across supersets → noop', () {
       final groups = _groups([
         _spec(

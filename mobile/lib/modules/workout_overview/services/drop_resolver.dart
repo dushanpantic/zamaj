@@ -71,10 +71,16 @@ abstract final class DropResolver {
     );
   }
 
-  /// "Drop onto" semantics: pair the dragged exercise with the target into
-  /// a superset. We do not support moving an exercise that already belongs
-  /// to a superset onto a different exercise — drag-to-ungroup is the
-  /// supported flow for leaving a superset, then drop-to-superset to join.
+  /// "Drop onto" semantics. Three sub-cases for a dragged unfinished,
+  /// ungrouped exercise:
+  ///
+  /// - target is unfinished and ungrouped → pair them into a new superset.
+  /// - target is unfinished and already in a superset → append the dragged
+  ///   exercise to that existing group (P2.3). The whole existing group must
+  ///   still be unfinished — the engine re-asserts.
+  /// - any other shape (target locked, dragged already grouped, drop on
+  ///   self) → noop. Drag-to-ungroup remains the supported flow for leaving
+  ///   a superset.
   static DropIntent _resolveOnto({
     required String sessionId,
     required Map<String, ExerciseViewModel> byId,
@@ -89,7 +95,15 @@ abstract final class DropResolver {
 
     if (dragged.supersetTag != null) return const DropIntent.noop();
     if (target.state is! UnfinishedState) return const DropIntent.noop();
-    if (target.supersetTag != null) return const DropIntent.noop();
+
+    final targetTag = target.supersetTag;
+    if (targetTag != null) {
+      return DropIntent.appendToSuperset(
+        sessionId: sessionId,
+        supersetTag: targetTag,
+        sessionExerciseId: draggedId,
+      );
+    }
 
     return DropIntent.createSuperset(
       sessionId: sessionId,

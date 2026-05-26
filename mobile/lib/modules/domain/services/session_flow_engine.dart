@@ -434,6 +434,82 @@ class SessionFlowEngine {
     return _buildState(updatedSession);
   }
 
+  /// Appends an unfinished, ungrouped exercise to an existing superset.
+  ///
+  /// The existing tag is preserved (never rotated). The new exercise is
+  /// re-positioned to sit immediately after the last current member of the
+  /// group so the assembler's contiguous-run detection still works. All
+  /// validation runs in the engine; the repository performs the row updates
+  /// in a single transaction.
+  ///
+  /// Preconditions:
+  /// - Every existing member of [supersetTag] is in `UnfinishedState`. Refuse
+  ///   if any member is Completed/Skipped/Replaced — mixing terminal and
+  ///   live members in one group is the unsafe state the workflow avoids.
+  /// - The exercise at [sessionExerciseId] exists, is in `UnfinishedState`,
+  ///   and currently has `supersetTag == null`.
+  Future<SessionState> addToSuperset({
+    required String sessionId,
+    required String supersetTag,
+    required String sessionExerciseId,
+  }) async {
+    final session = await _repository.getSession(sessionId);
+    if (session == null) {
+      throw NotFoundError(entityType: 'Session', id: sessionId);
+    }
+
+    final existingMembers = session.sessionExercises
+        .where((e) => e.supersetTag == supersetTag)
+        .toList();
+    if (existingMembers.isEmpty) {
+      throw NotFoundError(entityType: 'Superset', id: supersetTag);
+    }
+    for (final member in existingMembers) {
+      if (member.state is! UnfinishedState) {
+        throw OrderingError(
+          sessionExerciseId: member.id,
+          currentState: member.state.discriminator,
+          message:
+              'Cannot append to superset $supersetTag: member ${member.id} is '
+              '${member.state.discriminator}, not unfinished',
+        );
+      }
+    }
+
+    final dragged = session.sessionExercises.firstWhere(
+      (e) => e.id == sessionExerciseId,
+      orElse: () => throw NotFoundError(
+        entityType: 'SessionExercise',
+        id: sessionExerciseId,
+      ),
+    );
+    if (dragged.state is! UnfinishedState) {
+      throw OrderingError(
+        sessionExerciseId: sessionExerciseId,
+        currentState: dragged.state.discriminator,
+        message:
+            'Cannot append exercise $sessionExerciseId to superset: state is '
+            '${dragged.state.discriminator}',
+      );
+    }
+    if (dragged.supersetTag != null) {
+      throw ValidationError(
+        entityId: sessionExerciseId,
+        invariant: 'append_to_superset_dragged_already_grouped',
+        message:
+            'Exercise $sessionExerciseId is already in superset '
+            '${dragged.supersetTag}; remove it before appending elsewhere',
+      );
+    }
+
+    final updatedSession = await _repository.addToSuperset(
+      sessionId: sessionId,
+      supersetTag: supersetTag,
+      sessionExerciseId: sessionExerciseId,
+    );
+    return _buildState(updatedSession);
+  }
+
   /// Removes superset grouping from exercises.
   Future<SessionState> removeSuperset({
     required String sessionId,
