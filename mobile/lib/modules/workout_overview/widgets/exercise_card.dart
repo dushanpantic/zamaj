@@ -33,6 +33,7 @@ class ExerciseCard extends StatelessWidget {
     required this.onMarkDonePressed,
     required this.onReplacePressed,
     required this.onOpenVideo,
+    this.onGroupIntoPressed,
     this.isLastTouched = false,
     this.showDragHandle = false,
     this.isDropTarget = false,
@@ -49,6 +50,11 @@ class ExerciseCard extends StatelessWidget {
   final VoidCallback onMarkDonePressed;
   final VoidCallback onReplacePressed;
   final void Function(String videoUrl) onOpenVideo;
+
+  /// When non-null, the per-card ⋮ menu surfaces a "Group into superset…"
+  /// entry that opens the picker dialog. Null hides the entry — used inside
+  /// already-grouped supersets and whenever no eligible partner exists.
+  final VoidCallback? onGroupIntoPressed;
 
   /// True when this exercise was the target of the most recent log/edit
   /// action. The loggable row inside receives a subtle accent so the eye
@@ -89,6 +95,7 @@ class ExerciseCard extends StatelessWidget {
             onMarkDone: onMarkDonePressed,
             onReplace: onReplacePressed,
             onOpenVideo: onOpenVideo,
+            onGroupInto: onGroupIntoPressed,
             typography: typography,
             colors: colors,
           ),
@@ -121,6 +128,7 @@ class _Header extends StatelessWidget {
     required this.onMarkDone,
     required this.onReplace,
     required this.onOpenVideo,
+    required this.onGroupInto,
     required this.typography,
     required this.colors,
   });
@@ -135,6 +143,7 @@ class _Header extends StatelessWidget {
   final VoidCallback onMarkDone;
   final VoidCallback onReplace;
   final void Function(String videoUrl) onOpenVideo;
+  final VoidCallback? onGroupInto;
   final AppTypography typography;
   final AppColors colors;
 
@@ -256,6 +265,7 @@ class _Header extends StatelessWidget {
                 onMarkDone: onMarkDone,
                 onReplace: onReplace,
                 onOpenVideo: onOpenVideo,
+                onGroupInto: onGroupInto,
                 colors: colors,
               ),
             ],
@@ -362,6 +372,7 @@ class _Actions extends StatelessWidget {
     required this.onMarkDone,
     required this.onReplace,
     required this.onOpenVideo,
+    required this.onGroupInto,
     required this.colors,
   });
 
@@ -374,12 +385,15 @@ class _Actions extends StatelessWidget {
   final VoidCallback onMarkDone;
   final VoidCallback onReplace;
   final void Function(String videoUrl) onOpenVideo;
+  final VoidCallback? onGroupInto;
   final AppColors colors;
 
   @override
   Widget build(BuildContext context) {
+    final canGroupInto = canMutate && isUnfinished && onGroupInto != null;
     final hasMenu =
         (canMutate && isUnfinished) ||
+        canGroupInto ||
         (videoUrl != null && videoUrl!.isNotEmpty);
     return Row(
       mainAxisSize: MainAxisSize.min,
@@ -396,6 +410,8 @@ class _Actions extends StatelessWidget {
             padding: EdgeInsets.zero,
             onSelected: (action) {
               switch (action) {
+                case _MenuAction.groupInto:
+                  onGroupInto?.call();
                 case _MenuAction.skip:
                   onSkip();
                 case _MenuAction.markDone:
@@ -408,6 +424,16 @@ class _Actions extends StatelessWidget {
               }
             },
             itemBuilder: (context) => [
+              if (canGroupInto)
+                const PopupMenuItem(
+                  value: _MenuAction.groupInto,
+                  child: ListTile(
+                    leading: Icon(Icons.link),
+                    title: Text('Group into superset…'),
+                    contentPadding: EdgeInsets.zero,
+                    dense: true,
+                  ),
+                ),
               if (canMutate && isUnfinished)
                 const PopupMenuItem(
                   value: _MenuAction.replace,
@@ -457,7 +483,7 @@ class _Actions extends StatelessWidget {
   }
 }
 
-enum _MenuAction { skip, markDone, replace, openVideo }
+enum _MenuAction { groupInto, skip, markDone, replace, openVideo }
 
 class _ExpandedBody extends StatelessWidget {
   const _ExpandedBody({

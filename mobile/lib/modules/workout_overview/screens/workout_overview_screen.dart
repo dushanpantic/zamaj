@@ -16,6 +16,7 @@ import 'package:zamaj/modules/workout_overview/models/drop_intent.dart';
 import 'package:zamaj/modules/workout_overview/models/exercise_view_model.dart';
 import 'package:zamaj/modules/workout_overview/models/superset_group_view_model.dart';
 import 'package:zamaj/modules/workout_overview/widgets/exercise_card.dart';
+import 'package:zamaj/modules/workout_overview/widgets/group_with_picker_dialog.dart';
 import 'package:zamaj/modules/workout_overview/widgets/notes_section.dart';
 import 'package:zamaj/modules/workout_overview/widgets/replace_exercise_dialog.dart';
 import 'package:zamaj/modules/workout_overview/widgets/superset_card.dart';
@@ -112,6 +113,24 @@ class _WorkoutOverviewScreenState extends State<WorkoutOverviewScreen> {
   Future<void> _handleUngroup(String tag) async {
     context.read<WorkoutOverviewBloc>().add(
       WorkoutOverviewSupersetUngrouped(tag),
+    );
+  }
+
+  Future<void> _handleGroupInto(
+    ExerciseViewModel source,
+    List<ExerciseViewModel> candidates,
+  ) async {
+    if (candidates.isEmpty) return;
+    final pickedId = await GroupWithPickerDialog.show(
+      context: context,
+      candidates: candidates,
+    );
+    if (!mounted || pickedId == null) return;
+    context.read<WorkoutOverviewBloc>().add(
+      WorkoutOverviewDropResolved(
+        draggedSessionExerciseId: source.sessionExercise.id,
+        target: DropTarget.ontoExercise(pickedId),
+      ),
     );
   }
 
@@ -236,6 +255,7 @@ class _WorkoutOverviewScreenState extends State<WorkoutOverviewScreen> {
         onSkip: _handleSkip,
         onMarkDone: _handleMarkDone,
         onUngroup: _handleUngroup,
+        onGroupInto: _handleGroupInto,
         onOpenVideo: _openVideo,
         onAddNote: _handleAddNote,
         onAddExtraWork: _handleAddExtraWork,
@@ -244,13 +264,14 @@ class _WorkoutOverviewScreenState extends State<WorkoutOverviewScreen> {
   }
 }
 
-class _LoadedBody extends StatelessWidget {
+class _LoadedBody extends StatefulWidget {
   const _LoadedBody({
     required this.state,
     required this.onReplace,
     required this.onSkip,
     required this.onMarkDone,
     required this.onUngroup,
+    required this.onGroupInto,
     required this.onOpenVideo,
     required this.onAddNote,
     required this.onAddExtraWork,
@@ -261,12 +282,68 @@ class _LoadedBody extends StatelessWidget {
   final void Function(ExerciseViewModel) onSkip;
   final void Function(ExerciseViewModel) onMarkDone;
   final void Function(String tag) onUngroup;
+  final void Function(ExerciseViewModel, List<ExerciseViewModel>) onGroupInto;
   final void Function(String url) onOpenVideo;
   final VoidCallback onAddNote;
   final VoidCallback onAddExtraWork;
 
   @override
+  State<_LoadedBody> createState() => _LoadedBodyState();
+}
+
+class _LoadedBodyState extends State<_LoadedBody> {
+  /// Per-process gate: the coach-mark fires once per cold start, then never
+  /// again until the app is killed. Persisting "once-ever" is deferred to
+  /// the planned cross-screen coach-mark refactor.
+  static bool _coachMarkShownThisSession = false;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _maybeShowCoachMark();
+  }
+
+  @override
+  void didUpdateWidget(covariant _LoadedBody old) {
+    super.didUpdateWidget(old);
+    _maybeShowCoachMark();
+  }
+
+  void _maybeShowCoachMark() {
+    if (_coachMarkShownThisSession) return;
+    final unfinishedStandalone = widget.state.groups.where((g) {
+      if (g is! SingleGroupViewModel) return false;
+      return g.exercise.sessionExercise.state is UnfinishedState;
+    }).length;
+    if (unfinishedStandalone < 2) return;
+    _coachMarkShownThisSession = true;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      final colors = Theme.of(context).appColors;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          duration: const Duration(seconds: 8),
+          backgroundColor: colors.surface,
+          content: Text(
+            'Tip: Tap ⋮ on any exercise → Group into superset to combine '
+            'two. Or long-press and drag one card onto another.',
+            style: AppTypography.standard.bodySmall.copyWith(
+              color: colors.onSurface,
+            ),
+          ),
+          action: SnackBarAction(
+            label: 'Got it',
+            textColor: colors.primary,
+            onPressed: () {},
+          ),
+        ),
+      );
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final state = widget.state;
     final bloc = context.read<WorkoutOverviewBloc>();
     final transient = state.lastTransientError;
     final canMutate = !state.isEnded && !state.mutationInFlight;
@@ -312,11 +389,12 @@ class _LoadedBody extends StatelessWidget {
                     child: _GroupBuilder(
                       group: state.groups[groupIndex],
                       state: state,
-                      onReplace: onReplace,
-                      onSkip: onSkip,
-                      onMarkDone: onMarkDone,
-                      onUngroup: onUngroup,
-                      onOpenVideo: onOpenVideo,
+                      onReplace: widget.onReplace,
+                      onSkip: widget.onSkip,
+                      onMarkDone: widget.onMarkDone,
+                      onUngroup: widget.onUngroup,
+                      onGroupInto: widget.onGroupInto,
+                      onOpenVideo: widget.onOpenVideo,
                       canMutate: canMutate,
                     ),
                   );
@@ -335,13 +413,13 @@ class _LoadedBody extends StatelessWidget {
                   SessionNotesSection(
                     notes: state.sessionState.session.notes,
                     canAdd: canMutate,
-                    onAddPressed: onAddNote,
+                    onAddPressed: widget.onAddNote,
                   ),
                   const SizedBox(height: AppSpacing.md),
                   ExtraWorkSection(
                     extraWork: state.sessionState.session.extraWork,
                     canAdd: canMutate,
-                    onAddPressed: onAddExtraWork,
+                    onAddPressed: widget.onAddExtraWork,
                   ),
                   const SizedBox(height: AppSpacing.xxl),
                 ],
@@ -382,6 +460,7 @@ class _GroupBuilder extends StatelessWidget {
     required this.onSkip,
     required this.onMarkDone,
     required this.onUngroup,
+    required this.onGroupInto,
     required this.onOpenVideo,
     required this.canMutate,
   });
@@ -392,68 +471,65 @@ class _GroupBuilder extends StatelessWidget {
   final void Function(ExerciseViewModel) onSkip;
   final void Function(ExerciseViewModel) onMarkDone;
   final void Function(String tag) onUngroup;
+  final void Function(ExerciseViewModel, List<ExerciseViewModel>) onGroupInto;
   final void Function(String url) onOpenVideo;
   final bool canMutate;
+
+  /// Other unfinished, non-grouped exercises in the session — the set of
+  /// valid partners for a "Group into superset…" pairing started from
+  /// [source]. Used only for the menu-driven path; the drag path resolves
+  /// the same way through the drop resolver.
+  List<ExerciseViewModel> _groupCandidatesFor(ExerciseViewModel source) {
+    final result = <ExerciseViewModel>[];
+    for (final g in state.groups) {
+      if (g is! SingleGroupViewModel) continue;
+      final other = g.exercise;
+      if (other.sessionExercise.id == source.sessionExercise.id) continue;
+      if (other.sessionExercise.state is! UnfinishedState) continue;
+      if (other.sessionExercise.supersetTag != null) continue;
+      result.add(other);
+    }
+    return result;
+  }
 
   @override
   Widget build(BuildContext context) {
     return switch (group) {
-      SingleGroupViewModel(:final exercise) => _DraggableExercise(
-        exercise: exercise,
-        isInSuperset: false,
-        canMutate: canMutate,
-        child: ExerciseCard(
-          viewModel: exercise,
-          isExpanded: state.expandedExerciseIds.contains(
-            exercise.sessionExercise.id,
-          ),
-          canMutate: canMutate,
-          isLastTouched:
-              state.lastTouchedSessionExerciseId == exercise.sessionExercise.id,
-          onToggleExpansion: () => context.read<WorkoutOverviewBloc>().add(
-            WorkoutOverviewExpansionToggled(exercise.sessionExercise.id),
-          ),
-          onLogSet: (values, plannedSetId) {
-            Haptics.tap();
-            context.read<WorkoutOverviewBloc>().add(
-              WorkoutOverviewSetLogged(
-                sessionExerciseId: exercise.sessionExercise.id,
-                actualValues: values,
-                plannedSetIdInSnapshot: plannedSetId,
-              ),
-            );
-          },
-          onEditSet: (executedSetId, values) =>
-              context.read<WorkoutOverviewBloc>().add(
-                WorkoutOverviewSetEdited(
-                  executedSetId: executedSetId,
-                  actualValues: values,
-                ),
-              ),
-          onSkipPressed: () => onSkip(exercise),
-          onMarkDonePressed: () => onMarkDone(exercise),
-          onReplacePressed: () => onReplace(exercise),
-          onOpenVideo: onOpenVideo,
-          showDragHandle: true,
-        ),
+      SingleGroupViewModel(:final exercise) => _buildSingle(context, exercise),
+      SupersetGroup(:final tag, :final exercises) => _buildSuperset(
+        context,
+        tag,
+        exercises,
       ),
-      SupersetGroup(:final tag, :final exercises) => SupersetCard(
-        tag: tag,
-        exercises: exercises,
-        expandedExerciseIds: state.expandedExerciseIds,
-        canMutate: canMutate,
-        lastTouchedSessionExerciseId: state.lastTouchedSessionExerciseId,
-        onUngroupPressed: () => onUngroup(tag),
-        onToggleExpansion: (id) => context.read<WorkoutOverviewBloc>().add(
-          WorkoutOverviewExpansionToggled(id),
+    };
+  }
+
+  Widget _buildSingle(BuildContext context, ExerciseViewModel exercise) {
+    final candidates = canMutate
+        ? _groupCandidatesFor(exercise)
+        : const <ExerciseViewModel>[];
+    return _DraggableExercise(
+      exercise: exercise,
+      isInSuperset: false,
+      canMutate: canMutate,
+      child: ExerciseCard(
+        viewModel: exercise,
+        isExpanded: state.expandedExerciseIds.contains(
+          exercise.sessionExercise.id,
         ),
-        onLogSet: (id, values, plannedId) {
+        canMutate: canMutate,
+        isLastTouched:
+            state.lastTouchedSessionExerciseId == exercise.sessionExercise.id,
+        onToggleExpansion: () => context.read<WorkoutOverviewBloc>().add(
+          WorkoutOverviewExpansionToggled(exercise.sessionExercise.id),
+        ),
+        onLogSet: (values, plannedSetId) {
           Haptics.tap();
           context.read<WorkoutOverviewBloc>().add(
             WorkoutOverviewSetLogged(
-              sessionExerciseId: id,
+              sessionExerciseId: exercise.sessionExercise.id,
               actualValues: values,
-              plannedSetIdInSnapshot: plannedId,
+              plannedSetIdInSnapshot: plannedSetId,
             ),
           );
         },
@@ -464,15 +540,58 @@ class _GroupBuilder extends StatelessWidget {
                 actualValues: values,
               ),
             ),
-        onSkipPressed: (id) =>
-            onSkip(exercises.firstWhere((e) => e.sessionExercise.id == id)),
-        onMarkDonePressed: (id) =>
-            onMarkDone(exercises.firstWhere((e) => e.sessionExercise.id == id)),
-        onReplacePressed: (id) =>
-            onReplace(exercises.firstWhere((e) => e.sessionExercise.id == id)),
+        onSkipPressed: () => onSkip(exercise),
+        onMarkDonePressed: () => onMarkDone(exercise),
+        onReplacePressed: () => onReplace(exercise),
         onOpenVideo: onOpenVideo,
+        onGroupIntoPressed: candidates.isEmpty
+            ? null
+            : () => onGroupInto(exercise, candidates),
+        showDragHandle: true,
       ),
-    };
+    );
+  }
+
+  Widget _buildSuperset(
+    BuildContext context,
+    String tag,
+    List<ExerciseViewModel> exercises,
+  ) {
+    return SupersetCard(
+      tag: tag,
+      exercises: exercises,
+      expandedExerciseIds: state.expandedExerciseIds,
+      canMutate: canMutate,
+      lastTouchedSessionExerciseId: state.lastTouchedSessionExerciseId,
+      onUngroupPressed: () => onUngroup(tag),
+      onToggleExpansion: (id) => context.read<WorkoutOverviewBloc>().add(
+        WorkoutOverviewExpansionToggled(id),
+      ),
+      onLogSet: (id, values, plannedId) {
+        Haptics.tap();
+        context.read<WorkoutOverviewBloc>().add(
+          WorkoutOverviewSetLogged(
+            sessionExerciseId: id,
+            actualValues: values,
+            plannedSetIdInSnapshot: plannedId,
+          ),
+        );
+      },
+      onEditSet: (executedSetId, values) =>
+          context.read<WorkoutOverviewBloc>().add(
+            WorkoutOverviewSetEdited(
+              executedSetId: executedSetId,
+              actualValues: values,
+            ),
+          ),
+      onSkipPressed: (id) =>
+          onSkip(exercises.firstWhere((e) => e.sessionExercise.id == id)),
+      onMarkDonePressed: (id) =>
+          onMarkDone(exercises.firstWhere((e) => e.sessionExercise.id == id)),
+      onReplacePressed: (id) =>
+          onReplace(exercises.firstWhere((e) => e.sessionExercise.id == id)),
+      onOpenVideo: onOpenVideo,
+    );
   }
 }
 
@@ -536,11 +655,65 @@ class _DraggableExercise extends StatelessWidget {
           child: AnimatedScale(
             duration: const Duration(milliseconds: 80),
             scale: highlight ? 0.98 : 1,
-            child: child,
+            child: Stack(
+              children: [
+                child,
+                Positioned.fill(
+                  child: IgnorePointer(
+                    child: AnimatedOpacity(
+                      duration: const Duration(milliseconds: 120),
+                      opacity: highlight ? 1 : 0,
+                      child: _SupersetDropOverlay(),
+                    ),
+                  ),
+                ),
+              ],
+            ),
           ),
         );
         return card;
       },
+    );
+  }
+}
+
+/// Hover overlay shown on a card that's a valid drop target for a
+/// superset-create gesture. Tints the card with the primary colour at low
+/// alpha and centres a "Group as superset" pill so the user can tell this
+/// drop is different from a reorder-into-gap drop.
+class _SupersetDropOverlay extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    final colors = Theme.of(context).appColors;
+    const typography = AppTypography.standard;
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: colors.primary.withValues(alpha: 0.08),
+        borderRadius: BorderRadius.circular(AppRadius.md),
+      ),
+      child: Center(
+        child: Container(
+          padding: const EdgeInsets.symmetric(
+            horizontal: AppSpacing.md,
+            vertical: AppSpacing.sm,
+          ),
+          decoration: BoxDecoration(
+            color: colors.primary,
+            borderRadius: BorderRadius.circular(AppRadius.pill),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(Icons.link, size: 18, color: colors.onPrimary),
+              const SizedBox(width: AppSpacing.xs),
+              Text(
+                'Group as superset',
+                style: typography.actionLabel.copyWith(color: colors.onPrimary),
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 }
