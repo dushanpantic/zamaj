@@ -2,6 +2,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:uuid/uuid.dart';
 import 'package:zamaj/modules/domain/domain.dart';
 import 'package:zamaj/modules/program_management/models/program_editor_draft.dart';
+import 'package:zamaj/modules/program_management/models/workout_day_summary.dart';
 import 'package:zamaj/modules/program_management/services/aggregate_saver.dart';
 
 import 'program_editor_event.dart';
@@ -21,6 +22,9 @@ class ProgramEditorBloc extends Bloc<ProgramEditorEvent, ProgramEditorState> {
     on<ProgramEditorWorkoutDayDeleteRequested>(_onWorkoutDayDeleteRequested);
     on<ProgramEditorWorkoutDayDeleteConfirmed>(_onWorkoutDayDeleteConfirmed);
     on<ProgramEditorWorkoutDayDeleteCancelled>(_onWorkoutDayDeleteCancelled);
+    on<ProgramEditorWorkoutDayDeleteOptimistic>(_onWorkoutDayDeleteOptimistic);
+    on<ProgramEditorWorkoutDayDeleteUndone>(_onWorkoutDayDeleteUndone);
+    on<ProgramEditorWorkoutDayDeleteFinalized>(_onWorkoutDayDeleteFinalized);
     on<ProgramEditorWorkoutDaysReordered>(_onWorkoutDaysReordered);
   }
 
@@ -29,6 +33,12 @@ class ProgramEditorBloc extends Bloc<ProgramEditorEvent, ProgramEditorState> {
   final _uuid = const Uuid();
 
   List<WorkoutDay> _baselineWorkoutDays = [];
+
+  Map<String, WorkoutDaySummary> _summariesFor(List<WorkoutDay> days) {
+    return {
+      for (final day in days) day.id: WorkoutDaySummary.fromWorkoutDay(day),
+    };
+  }
 
   Future<void> _onOpened(
     ProgramEditorOpened event,
@@ -94,6 +104,7 @@ class ProgramEditorBloc extends Bloc<ProgramEditorEvent, ProgramEditorState> {
             name: draft.name,
             isCreateMode: false,
           ),
+          daySummaries: _summariesFor(workoutDays),
         ),
       );
     } on DomainError catch (e) {
@@ -227,6 +238,88 @@ class ProgramEditorBloc extends Bloc<ProgramEditorEvent, ProgramEditorState> {
     emit(current.copyWith(deletionCandidateDraftId: () => null));
   }
 
+  Future<void> _onWorkoutDayDeleteOptimistic(
+    ProgramEditorWorkoutDayDeleteOptimistic event,
+    Emitter<ProgramEditorState> emit,
+  ) async {
+    final current = state;
+    if (current is! ProgramEditorEditing) return;
+
+    final existingPending = current.pendingDeletion;
+
+    // If another deletion is already pending, finalise it first so a single
+    // optimistic slot is never overloaded.
+    var working = current;
+    if (existingPending != null) {
+      final after = await _finalisePendingDeletion(working, emit);
+      if (after == null) return;
+      working = after;
+    }
+
+    final days = working.draft.workoutDays;
+    final index = days.indexWhere((d) => d.draftId == event.draftId);
+    if (index < 0) return;
+    final day = days[index];
+
+    final updatedDays = [...days]..removeAt(index);
+    final updatedDraft = working.draft.copyWith(workoutDays: updatedDays);
+
+    emit(
+      working.copyWith(
+        draft: updatedDraft,
+        pendingDeletion: () => PendingDeletion(
+          draftId: day.draftId,
+          restoreIndex: index,
+          day: day,
+          summary: working.summaryFor(day),
+        ),
+        deletionCandidateDraftId: () => null,
+        lastSaveError: () => null,
+      ),
+    );
+  }
+
+  void _onWorkoutDayDeleteUndone(
+    ProgramEditorWorkoutDayDeleteUndone event,
+    Emitter<ProgramEditorState> emit,
+  ) {
+    final current = state;
+    if (current is! ProgramEditorEditing) return;
+    final pending = current.pendingDeletion;
+    if (pending == null) return;
+
+    final restored = [...current.draft.workoutDays];
+    final insertAt = pending.restoreIndex.clamp(0, restored.length);
+    restored.insert(insertAt, pending.day);
+
+    emit(
+      current.copyWith(
+        draft: current.draft.copyWith(workoutDays: restored),
+        pendingDeletion: () => null,
+      ),
+    );
+  }
+
+  Future<void> _onWorkoutDayDeleteFinalized(
+    ProgramEditorWorkoutDayDeleteFinalized event,
+    Emitter<ProgramEditorState> emit,
+  ) async {
+    final current = state;
+    if (current is! ProgramEditorEditing) return;
+    if (current.pendingDeletion == null) return;
+    await _finalisePendingDeletion(current, emit);
+  }
+
+  Future<ProgramEditorEditing?> _finalisePendingDeletion(
+    ProgramEditorEditing current,
+    Emitter<ProgramEditorState> emit,
+  ) async {
+    emit(current.copyWith(pendingDeletion: () => null));
+    await _persist(emit);
+    final latest = state;
+    return latest is ProgramEditorEditing ? latest : null;
+  }
+
   Future<void> _onWorkoutDaysReordered(
     ProgramEditorWorkoutDaysReordered event,
     Emitter<ProgramEditorState> emit,
@@ -305,6 +398,7 @@ class ProgramEditorBloc extends Bloc<ProgramEditorEvent, ProgramEditorState> {
           name: reloadedDraft.name,
           isCreateMode: false,
         ),
+        daySummaries: _summariesFor(workoutDays),
       ),
     );
   }
@@ -412,6 +506,7 @@ class ProgramEditorBloc extends Bloc<ProgramEditorEvent, ProgramEditorState> {
           name: reloadedDraft.name,
           isCreateMode: false,
         ),
+        daySummaries: _summariesFor(reloadedDays),
       ),
     );
   }

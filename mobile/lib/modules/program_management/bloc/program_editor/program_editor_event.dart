@@ -77,3 +77,26 @@ final class ProgramEditorWorkoutDaysReordered extends ProgramEditorEvent {
   @override
   List<Object?> get props => [orderedDraftIds];
 }
+
+final class ProgramEditorWorkoutDayDeleteOptimistic extends ProgramEditorEvent {
+  const ProgramEditorWorkoutDayDeleteOptimistic({required this.draftId});
+
+  final String draftId;
+
+  @override
+  List<Object?> get props => [draftId];
+}
+
+final class ProgramEditorWorkoutDayDeleteUndone extends ProgramEditorEvent {
+  const ProgramEditorWorkoutDayDeleteUndone();
+
+  @override
+  List<Object?> get props => [];
+}
+
+final class ProgramEditorWorkoutDayDeleteFinalized extends ProgramEditorEvent {
+  const ProgramEditorWorkoutDayDeleteFinalized();
+
+  @override
+  List<Object?> get props => [];
+}

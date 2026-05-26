@@ -1,6 +1,7 @@
 import 'package:equatable/equatable.dart';
 import 'package:zamaj/modules/domain/domain.dart';
 import 'package:zamaj/modules/program_management/models/program_editor_draft.dart';
+import 'package:zamaj/modules/program_management/models/workout_day_summary.dart';
 
 final class ProgramDraftValidation extends Equatable {
   const ProgramDraftValidation({required this.isNameValid});
@@ -21,6 +22,23 @@ final class ProgramDraftValidation extends Equatable {
 
   @override
   List<Object?> get props => [isNameValid];
+}
+
+class PendingDeletion extends Equatable {
+  const PendingDeletion({
+    required this.draftId,
+    required this.restoreIndex,
+    required this.day,
+    required this.summary,
+  });
+
+  final String draftId;
+  final int restoreIndex;
+  final WorkoutDayDraft day;
+  final WorkoutDaySummary summary;
+
+  @override
+  List<Object?> get props => [draftId, restoreIndex, day, summary];
 }
 
 sealed class ProgramEditorState extends Equatable {
@@ -58,6 +76,8 @@ final class ProgramEditorEditing extends ProgramEditorState {
     this.isSaving = false,
     this.deletionCandidateDraftId,
     this.lastSaveError,
+    this.daySummaries = const {},
+    this.pendingDeletion,
   });
 
   final ProgramDraft draft;
@@ -67,6 +87,22 @@ final class ProgramEditorEditing extends ProgramEditorState {
   final ProgramDraftValidation validation;
   final DomainError? lastSaveError;
 
+  /// Per-day exercise counts keyed by `persistedId`. Days without a
+  /// `persistedId` (newly-added, not yet saved) won't appear here and
+  /// should fall back to [WorkoutDaySummary.empty].
+  final Map<String, WorkoutDaySummary> daySummaries;
+
+  /// Set when the user triggers an optimistic delete that hasn't yet been
+  /// finalised. The UI filters this day from the visible list and shows a
+  /// snackbar; the deletion is only persisted when finalised.
+  final PendingDeletion? pendingDeletion;
+
+  WorkoutDaySummary summaryFor(WorkoutDayDraft day) {
+    final id = day.persistedId;
+    if (id == null) return WorkoutDaySummary.empty;
+    return daySummaries[id] ?? WorkoutDaySummary.empty;
+  }
+
   ProgramEditorEditing copyWith({
     ProgramDraft? draft,
     bool? isCreateMode,
@@ -74,6 +110,8 @@ final class ProgramEditorEditing extends ProgramEditorState {
     ProgramDraftValidation? validation,
     String? Function()? deletionCandidateDraftId,
     DomainError? Function()? lastSaveError,
+    Map<String, WorkoutDaySummary>? daySummaries,
+    PendingDeletion? Function()? pendingDeletion,
   }) {
     return ProgramEditorEditing(
       draft: draft ?? this.draft,
@@ -86,6 +124,10 @@ final class ProgramEditorEditing extends ProgramEditorState {
       lastSaveError: lastSaveError != null
           ? lastSaveError()
           : this.lastSaveError,
+      daySummaries: daySummaries ?? this.daySummaries,
+      pendingDeletion: pendingDeletion != null
+          ? pendingDeletion()
+          : this.pendingDeletion,
     );
   }
 
@@ -97,5 +139,7 @@ final class ProgramEditorEditing extends ProgramEditorState {
     deletionCandidateDraftId,
     validation,
     lastSaveError,
+    daySummaries,
+    pendingDeletion,
   ];
 }
