@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/scheduler.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:zamaj/core/app_spacing.dart';
 import 'package:zamaj/core/app_theme.dart';
@@ -15,6 +16,7 @@ import 'package:zamaj/modules/workout_overview/bloc/bloc.dart';
 import 'package:zamaj/modules/workout_overview/models/drop_intent.dart';
 import 'package:zamaj/modules/workout_overview/models/exercise_view_model.dart';
 import 'package:zamaj/modules/workout_overview/models/superset_group_view_model.dart';
+import 'package:zamaj/modules/workout_overview/services/drag_auto_scroll.dart';
 import 'package:zamaj/modules/workout_overview/widgets/exercise_card.dart';
 import 'package:zamaj/modules/workout_overview/widgets/group_with_picker_dialog.dart';
 import 'package:zamaj/modules/workout_overview/widgets/notes_section.dart';
@@ -291,11 +293,49 @@ class _LoadedBody extends StatefulWidget {
   State<_LoadedBody> createState() => _LoadedBodyState();
 }
 
-class _LoadedBodyState extends State<_LoadedBody> {
+class _LoadedBodyState extends State<_LoadedBody>
+    with SingleTickerProviderStateMixin {
   /// Per-process gate: the coach-mark fires once per cold start, then never
   /// again until the app is killed. Persisting "once-ever" is deferred to
   /// the planned cross-screen coach-mark refactor.
   static bool _coachMarkShownThisSession = false;
+
+  final ScrollController _scrollController = ScrollController();
+  final GlobalKey _scrollViewKey = GlobalKey();
+  late final _DragAutoScroller _autoScroller;
+
+  @override
+  void initState() {
+    super.initState();
+    _autoScroller = _DragAutoScroller(
+      tickerProvider: this,
+      scrollController: _scrollController,
+      viewportTopProvider: _viewportTop,
+      viewportBottomProvider: _viewportBottom,
+      edgeZone: 96,
+      maxSpeed: 1000,
+    );
+  }
+
+  @override
+  void dispose() {
+    _autoScroller.dispose();
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  double _viewportTop() {
+    final box = _scrollViewKey.currentContext?.findRenderObject() as RenderBox?;
+    if (box == null || !box.attached) return 0;
+    return box.localToGlobal(Offset.zero).dy;
+  }
+
+  double _viewportBottom() {
+    final box = _scrollViewKey.currentContext?.findRenderObject() as RenderBox?;
+    if (box == null || !box.attached) return double.infinity;
+    final origin = box.localToGlobal(Offset.zero);
+    return origin.dy + box.size.height;
+  }
 
   @override
   void didChangeDependencies() {
@@ -351,6 +391,8 @@ class _LoadedBodyState extends State<_LoadedBody> {
     return Stack(
       children: [
         CustomScrollView(
+          key: _scrollViewKey,
+          controller: _scrollController,
           slivers: [
             if (transient != null)
               SliverToBoxAdapter(
@@ -396,6 +438,7 @@ class _LoadedBodyState extends State<_LoadedBody> {
                       onGroupInto: widget.onGroupInto,
                       onOpenVideo: widget.onOpenVideo,
                       canMutate: canMutate,
+                      autoScroller: _autoScroller,
                     ),
                   );
                 },
@@ -463,6 +506,7 @@ class _GroupBuilder extends StatelessWidget {
     required this.onGroupInto,
     required this.onOpenVideo,
     required this.canMutate,
+    required this.autoScroller,
   });
 
   final SupersetGroupViewModel group;
@@ -474,6 +518,7 @@ class _GroupBuilder extends StatelessWidget {
   final void Function(ExerciseViewModel, List<ExerciseViewModel>) onGroupInto;
   final void Function(String url) onOpenVideo;
   final bool canMutate;
+  final _DragAutoScroller autoScroller;
 
   /// Other unfinished, non-grouped exercises in the session — the set of
   /// valid partners for a "Group into superset…" pairing started from
@@ -512,6 +557,7 @@ class _GroupBuilder extends StatelessWidget {
       exercise: exercise,
       isInSuperset: false,
       canMutate: canMutate,
+      autoScroller: autoScroller,
       child: ExerciseCard(
         viewModel: exercise,
         isExpanded: state.expandedExerciseIds.contains(
@@ -614,12 +660,14 @@ class _DraggableExercise extends StatelessWidget {
     required this.exercise,
     required this.isInSuperset,
     required this.canMutate,
+    required this.autoScroller,
     required this.child,
   });
 
   final ExerciseViewModel exercise;
   final bool isInSuperset;
   final bool canMutate;
+  final _DragAutoScroller autoScroller;
   final Widget child;
 
   @override
@@ -652,6 +700,7 @@ class _DraggableExercise extends StatelessWidget {
           canDrag: canDrag,
           payload: ExerciseDragPayload(exercise.sessionExercise.id),
           exerciseName: _exerciseDisplayName(exercise),
+          autoScroller: autoScroller,
           child: AnimatedScale(
             duration: const Duration(milliseconds: 80),
             scale: highlight ? 0.98 : 1,
@@ -723,12 +772,14 @@ class _MaybeDraggable extends StatelessWidget {
     required this.canDrag,
     required this.payload,
     required this.exerciseName,
+    required this.autoScroller,
     required this.child,
   });
 
   final bool canDrag;
   final ExerciseDragPayload payload;
   final String exerciseName;
+  final _DragAutoScroller autoScroller;
   final Widget child;
 
   @override
@@ -739,7 +790,14 @@ class _MaybeDraggable extends StatelessWidget {
     return LongPressDraggable<ExerciseDragPayload>(
       data: payload,
       delay: const Duration(milliseconds: 250),
-      onDragStarted: Haptics.grab,
+      onDragStarted: () {
+        Haptics.grab();
+        autoScroller.begin();
+      },
+      onDragUpdate: (details) =>
+          autoScroller.updatePointer(details.globalPosition.dy),
+      onDragEnd: (_) => autoScroller.end(),
+      onDraggableCanceled: (_, _) => autoScroller.end(),
       feedback: _DragFeedbackPill(exerciseName: exerciseName, width: pillWidth),
       childWhenDragging: Opacity(opacity: 0.3, child: child),
       child: child,
@@ -1170,5 +1228,80 @@ class _SessionElapsedLabelState extends State<_SessionElapsedLabel> {
     final ss = s.toString().padLeft(2, '0');
     if (h > 0) return '$h:$mm:$ss';
     return '$mm:$ss';
+  }
+}
+
+/// Drives edge auto-scroll on the workout-overview list while a drag is in
+/// flight. The list is a [CustomScrollView] with no built-in auto-scroll, so
+/// we tick from a [Ticker] and jump the [ScrollController] each frame based
+/// on the pointer's global Y position relative to the visible viewport.
+class _DragAutoScroller {
+  _DragAutoScroller({
+    required TickerProvider tickerProvider,
+    required this.scrollController,
+    required this.viewportTopProvider,
+    required this.viewportBottomProvider,
+    this.edgeZone = 96.0,
+    this.maxSpeed = 1000.0,
+  }) {
+    _ticker = tickerProvider.createTicker(_onTick);
+  }
+
+  final ScrollController scrollController;
+  final double Function() viewportTopProvider;
+  final double Function() viewportBottomProvider;
+  final double edgeZone;
+  final double maxSpeed;
+
+  late final Ticker _ticker;
+  Duration? _lastElapsed;
+  double _pointerY = 0;
+  bool _active = false;
+
+  void begin() {
+    _active = true;
+    _lastElapsed = null;
+    if (!_ticker.isActive) _ticker.start();
+  }
+
+  void updatePointer(double globalY) {
+    if (!_active) return;
+    _pointerY = globalY;
+  }
+
+  void end() {
+    _active = false;
+    _lastElapsed = null;
+    if (_ticker.isActive) _ticker.stop();
+  }
+
+  void dispose() {
+    _ticker.dispose();
+  }
+
+  void _onTick(Duration elapsed) {
+    if (!_active) return;
+    final last = _lastElapsed;
+    _lastElapsed = elapsed;
+    if (last == null) return;
+    final dt = (elapsed - last).inMicroseconds / Duration.microsecondsPerSecond;
+    if (dt <= 0) return;
+    final velocity = computeScrollDelta(
+      pointerY: _pointerY,
+      viewportTop: viewportTopProvider(),
+      viewportBottom: viewportBottomProvider(),
+      edgeZone: edgeZone,
+      maxSpeed: maxSpeed,
+    );
+    if (velocity == 0) return;
+    if (!scrollController.hasClients) return;
+    final position = scrollController.position;
+    final target = (position.pixels + velocity * dt).clamp(
+      position.minScrollExtent,
+      position.maxScrollExtent,
+    );
+    if (target != position.pixels) {
+      position.jumpTo(target);
+    }
   }
 }

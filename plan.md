@@ -76,9 +76,9 @@ The workout *overview* screen (in-session, sweaty hands) has none of these affor
 - When `candidate.isNotEmpty` on the card's `DragTarget`, overlay a centered pill on the card reading *"Group as superset"* with the `Icons.link` icon, primary background, `actionLabel` text. Animated fade-in (120 ms). Tinted background wash on the card (primary @ 8 % alpha).
 - Removes ambiguity vs. a reorder-gap hover.
 
-### P1 — Fix one-handed reorder (auto-scroll)
+### P1 — Fix one-handed reorder (auto-scroll) ✅ done
 
-**P1.1 Wire up edge auto-scrolling.**
+**P1.1 Wire up edge auto-scrolling.** ✅ done
 
 - File: [workout_overview_screen.dart](mobile/lib/modules/workout_overview/screens/workout_overview_screen.dart).
 - Convert `_WorkoutOverviewScreenState` to own a `ScrollController`. Pass it to the `CustomScrollView`.
@@ -88,11 +88,11 @@ The workout *overview* screen (in-session, sweaty hands) has none of these affor
 - Edge zone: 96 dp from top (below the AppBar) and 96 dp from the bottom of the visible viewport (above the `_BottomActionBar`). Compute live with `MediaQuery.padding` + bar heights so the zones sit *inside* the visible scroll area.
 - Speed: linear ramp 200 → 1000 dp/s as pointer travels from edge of zone to edge of viewport. Cap by `EdgeDraggingAutoScroller`'s default.
 
-**P1.2 Make superset cards a single hit target for the auto-scroller logic.**
+**P1.2 Make superset cards a single hit target for the auto-scroller logic.** ✅ done
 
 - Today every card body is itself a `DragTarget` (for superset drops). That's fine. Just confirm the `Listener` (if used) wraps the *whole* scroll area, not individual cards — auto-scroll must fire even while the pointer is on top of a non-target widget.
 
-**P1.3 Tests.**
+**P1.3 Tests.** ✅ done
 
 - Per [CLAUDE.md](CLAUDE.md), tests are domain + persistence only. Auto-scroll is widget-layer logic and is not directly testable in this project's test rules.
 - However, the helper class `_DragAutoScroller` (or whatever we extract) should expose a pure function `computeScrollDelta({double pointerY, double viewportTop, double viewportBottom, double edgeZone, double maxSpeed})` returning a signed dp/frame value. Move *that* to `lib/modules/workout_overview/services/drag_auto_scroll.dart` and add unit tests under `test/modules/workout_overview/services/`. Property-test: pointer inside the safe band returns 0; pointer at exact edge returns ±maxSpeed; ramp is monotonic.
