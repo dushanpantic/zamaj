@@ -467,7 +467,14 @@ class _LoadedBodyState extends State<_LoadedBody>
     final state = widget.state;
     final bloc = context.read<WorkoutOverviewBloc>();
     final transient = state.lastTransientError;
-    final canMutate = !state.isEnded && !state.mutationInFlight;
+    // canMutate here means "session is still live". It deliberately ignores
+    // mutationInFlight: gating UI visibility on the in-flight flag made the
+    // Replace icon, kebab, and reorder gaps appear/disappear during the
+    // brief window between a tap and the engine's response, shifting layout
+    // back-and-forth on every LOG SET. Race prevention against concurrent
+    // mutations is already handled in [WorkoutOverviewBloc._runMutation],
+    // which returns early when a mutation is already in flight.
+    final canMutate = !state.isEnded;
 
     return Stack(
       children: [
@@ -730,7 +737,12 @@ class _GroupBuilder extends StatelessWidget {
     final exerciseId = exercise.sessionExercise.id;
     final isCurrent = currentSessionExerciseIds.contains(exerciseId);
     final isUnfinished = exercise.sessionExercise.state is UnfinishedState;
-    final canDrag = canMutate && isUnfinished;
+    // Handle visibility intentionally ignores mutationInFlight: gating it on
+    // canMutate (which flips false during the in-flight window) made the
+    // header shift left/right on every LOG SET as the 48 dp handle slot
+    // collapsed and reappeared. Drops started mid-flight resolve safely —
+    // the DragTarget and bloc both reject when canMutate is false.
+    final canDrag = !state.isEnded && isUnfinished;
     return _DraggableExercise(
       exercise: exercise,
       canMutate: canMutate,
@@ -800,7 +812,9 @@ class _GroupBuilder extends StatelessWidget {
     }
 
     Widget? memberDragHandle(ExerciseViewModel member) {
-      if (!canMutate) return null;
+      // Same reasoning as _buildSingle: keep the handle slot stable across
+      // the in-flight window so the member header doesn't shift on LOG SET.
+      if (state.isEnded) return null;
       if (member.sessionExercise.state is! UnfinishedState) return null;
       return _DragHandle(
         exercise: member,

@@ -217,8 +217,13 @@ class _SetRowState extends State<SetRow> {
     final colors = Theme.of(context).appColors;
     const typography = AppTypography.standard;
     final mode = widget.mode;
+    // Loggable editor visibility is intentionally not gated on canMutate:
+    // canMutate flips false for the brief window a mutation is in flight,
+    // and hiding/restoring the editor in that window made the card jitter
+    // on every LOG SET. The bloc's _runMutation already dedupes concurrent
+    // submits, so leaving the button tappable during the window is safe.
     final showEditor = switch (mode) {
-      SetRowMode.loggable => widget.canMutate,
+      SetRowMode.loggable => true,
       SetRowMode.completed ||
       SetRowMode.trailing => widget.canMutate && _editingExisting,
       SetRowMode.future => false,
