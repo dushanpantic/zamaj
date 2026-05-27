@@ -97,6 +97,7 @@ class WorkoutOverviewBloc
           groups: ExerciseViewModelAssembler.assemble(next),
           expandedExerciseIds: _expansionForOpenTargets(
             current.expandedExerciseIds,
+            current.sessionState,
             next,
           ),
         ),
@@ -347,6 +348,7 @@ class WorkoutOverviewBloc
             groups: ExerciseViewModelAssembler.assemble(next),
             expandedExerciseIds: _expansionForOpenTargets(
               latest.expandedExerciseIds,
+              latest.sessionState,
               next,
             ),
             mutationInFlight: false,
@@ -393,15 +395,19 @@ class WorkoutOverviewBloc
 
   /// On each refresh: keep the user's manual choice. Cards the user opened
   /// stay open as long as the exercise still has room to log; cards that
-  /// hit a terminal state with all sets logged drop out. Loggable status is
-  /// no longer force-expanded — recognition cues come from the "current"
-  /// marker in the UI, not from popping the editor open.
+  /// hit a terminal state with all sets logged drop out.
+  ///
+  /// Plus: when the "current" exercise (the first open target) advances —
+  /// because all sets on the prior current were logged, or it was skipped /
+  /// marked done — auto-expand the new current so the user can keep logging
+  /// without an extra tap.
   Set<String> _expansionForOpenTargets(
     Set<String> current,
-    SessionState sessionState,
+    SessionState previous,
+    SessionState next,
   ) {
-    return <String>{
-      for (final ex in sessionState.session.sessionExercises)
+    final retained = <String>{
+      for (final ex in next.session.sessionExercises)
         if (current.contains(ex.id) &&
             switch (ex.state) {
               UnfinishedState() => true,
@@ -411,6 +417,16 @@ class WorkoutOverviewBloc
             })
           ex.id,
     };
+    final prevFirst = previous.openTargets.isEmpty
+        ? null
+        : previous.openTargets.first.sessionExerciseId;
+    final nextFirst = next.openTargets.isEmpty
+        ? null
+        : next.openTargets.first.sessionExerciseId;
+    if (nextFirst != null && nextFirst != prevFirst) {
+      retained.add(nextFirst);
+    }
+    return retained;
   }
 
   String? _sessionIdOrNull() => switch (state) {

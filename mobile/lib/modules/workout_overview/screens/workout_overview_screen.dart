@@ -555,13 +555,12 @@ class _LoadedBodyState extends State<_LoadedBody>
             ),
           ],
         ),
-        if (state.mutationInFlight)
-          const Positioned(
-            top: 0,
-            left: 0,
-            right: 0,
-            child: LinearProgressIndicator(minHeight: 2),
-          ),
+        Positioned(
+          top: 0,
+          left: 0,
+          right: 0,
+          child: _DelayedMutationIndicator(inFlight: state.mutationInFlight),
+        ),
       ],
     );
   }
@@ -577,6 +576,68 @@ class _LoadedBodyState extends State<_LoadedBody>
       }
     }
     return count;
+  }
+}
+
+/// Top-of-screen mutation indicator that only appears once a mutation has
+/// been in flight for [_showAfter]. Fast operations (a single set log
+/// against the local SQLite write) typically resolve well under that
+/// threshold; showing the bar immediately produced a brief orange flash
+/// on every LOG SET. Slow operations still surface the indicator so the
+/// user knows something is happening.
+class _DelayedMutationIndicator extends StatefulWidget {
+  const _DelayedMutationIndicator({required this.inFlight});
+
+  final bool inFlight;
+
+  static const Duration _showAfter = Duration(milliseconds: 500);
+
+  @override
+  State<_DelayedMutationIndicator> createState() =>
+      _DelayedMutationIndicatorState();
+}
+
+class _DelayedMutationIndicatorState extends State<_DelayedMutationIndicator> {
+  Timer? _timer;
+  bool _visible = false;
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.inFlight) _scheduleShow();
+  }
+
+  @override
+  void didUpdateWidget(covariant _DelayedMutationIndicator old) {
+    super.didUpdateWidget(old);
+    if (widget.inFlight == old.inFlight) return;
+    if (widget.inFlight) {
+      _scheduleShow();
+    } else {
+      _timer?.cancel();
+      _timer = null;
+      if (_visible) setState(() => _visible = false);
+    }
+  }
+
+  void _scheduleShow() {
+    _timer?.cancel();
+    _timer = Timer(_DelayedMutationIndicator._showAfter, () {
+      if (!mounted) return;
+      setState(() => _visible = true);
+    });
+  }
+
+  @override
+  void dispose() {
+    _timer?.cancel();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (!_visible) return const SizedBox.shrink();
+    return const LinearProgressIndicator(minHeight: 2);
   }
 }
 
@@ -668,11 +729,11 @@ class _GroupBuilder extends StatelessWidget {
         : const <SupersetGroup>[];
     final exerciseId = exercise.sessionExercise.id;
     final isCurrent = currentSessionExerciseIds.contains(exerciseId);
+    final isUnfinished = exercise.sessionExercise.state is UnfinishedState;
+    final canDrag = canMutate && isUnfinished;
     return _DraggableExercise(
       exercise: exercise,
-      isInSuperset: false,
       canMutate: canMutate,
-      autoScroller: autoScroller,
       dragSession: dragSession,
       child: ExerciseCard(
         viewModel: exercise,
@@ -707,7 +768,14 @@ class _GroupBuilder extends StatelessWidget {
         onGroupIntoPressed: (candidates.isEmpty && eligibleGroups.isEmpty)
             ? null
             : () => onGroupInto(exercise, candidates, eligibleGroups),
-        showDragHandle: true,
+        dragHandle: canDrag
+            ? _DragHandle(
+                exercise: exercise,
+                exerciseName: _exerciseDisplayName(exercise),
+                autoScroller: autoScroller,
+                dragSession: dragSession,
+              )
+            : null,
       ),
     );
   }
@@ -731,14 +799,14 @@ class _GroupBuilder extends StatelessWidget {
       }
     }
 
-    Widget memberWrap(ExerciseViewModel member, Widget card) {
-      if (!canMutate) return card;
-      if (member.sessionExercise.state is! UnfinishedState) return card;
-      return _SupersetMemberDraggable(
+    Widget? memberDragHandle(ExerciseViewModel member) {
+      if (!canMutate) return null;
+      if (member.sessionExercise.state is! UnfinishedState) return null;
+      return _DragHandle(
         exercise: member,
+        exerciseName: _exerciseDisplayName(member),
         autoScroller: autoScroller,
         dragSession: dragSession,
-        child: card,
       );
     }
 
@@ -833,7 +901,7 @@ class _GroupBuilder extends StatelessWidget {
       onReplacePressed: (id) =>
           onReplace(exercises.firstWhere((e) => e.sessionExercise.id == id)),
       onOpenVideo: onOpenVideo,
-      memberBuilder: memberWrap,
+      memberDragHandleBuilder: memberDragHandle,
       gapBuilder: gapWrap,
     );
   }
@@ -850,23 +918,21 @@ String _exerciseDisplayName(ExerciseViewModel viewModel) {
   };
 }
 
-/// Wraps an exercise card with both a Draggable (handle on the card)
-/// and a DragTarget (the whole card body accepts drops to start a
-/// superset). The reorder gaps between cards are separate widgets.
+/// Wraps an exercise card with a DragTarget so the whole card body accepts
+/// drops to start a superset. The drag *source* (the LongPressDraggable) is
+/// scoped to the dedicated handle inside [ExerciseCard] — see [_DragHandle]
+/// — so the long-press gesture can't compete with taps on LOG SET / kebab /
+/// header-tap-to-expand elsewhere on the card.
 class _DraggableExercise extends StatefulWidget {
   const _DraggableExercise({
     required this.exercise,
-    required this.isInSuperset,
     required this.canMutate,
-    required this.autoScroller,
     required this.dragSession,
     required this.child,
   });
 
   final ExerciseViewModel exercise;
-  final bool isInSuperset;
   final bool canMutate;
-  final _DragAutoScroller autoScroller;
   final _DragSession dragSession;
   final Widget child;
 
@@ -901,7 +967,6 @@ class _DraggableExerciseState extends State<_DraggableExercise> {
   Widget build(BuildContext context) {
     final isUnfinished =
         widget.exercise.sessionExercise.state is UnfinishedState;
-    final canDrag = widget.canMutate && isUnfinished && !widget.isInSuperset;
 
     return DragTarget<ExerciseDragPayload>(
       onWillAcceptWithDetails: (details) {
@@ -941,35 +1006,24 @@ class _DraggableExerciseState extends State<_DraggableExercise> {
             _setRegistered(highlight);
           });
         }
-        final card = _MaybeDraggable(
-          canDrag: canDrag,
-          payload: ExerciseDragPayload(
-            sessionExerciseId: widget.exercise.sessionExercise.id,
-            supersetTag: widget.exercise.sessionExercise.supersetTag,
-          ),
-          exerciseName: _exerciseDisplayName(widget.exercise),
-          autoScroller: widget.autoScroller,
-          dragSession: widget.dragSession,
-          child: AnimatedScale(
-            duration: const Duration(milliseconds: 80),
-            scale: highlight ? 0.98 : 1,
-            child: Stack(
-              children: [
-                widget.child,
-                Positioned.fill(
-                  child: IgnorePointer(
-                    child: AnimatedOpacity(
-                      duration: const Duration(milliseconds: 120),
-                      opacity: highlight ? 1 : 0,
-                      child: _SupersetDropOverlay(),
-                    ),
+        return AnimatedScale(
+          duration: const Duration(milliseconds: 80),
+          scale: highlight ? 0.98 : 1,
+          child: Stack(
+            children: [
+              widget.child,
+              Positioned.fill(
+                child: IgnorePointer(
+                  child: AnimatedOpacity(
+                    duration: const Duration(milliseconds: 120),
+                    opacity: highlight ? 1 : 0,
+                    child: _SupersetDropOverlay(),
                   ),
                 ),
-              ],
-            ),
+              ),
+            ],
           ),
         );
-        return card;
       },
     );
   }
@@ -1016,30 +1070,45 @@ class _SupersetDropOverlay extends StatelessWidget {
   }
 }
 
-class _MaybeDraggable extends StatelessWidget {
-  const _MaybeDraggable({
-    required this.canDrag,
-    required this.payload,
+/// The drag *source* for an exercise card. Lives inside the leading 48 dp
+/// slot of the card header so the long-press gesture is scoped to a visible,
+/// dedicated affordance and never competes with taps on LOG SET, the kebab,
+/// or header-tap-to-expand. Builds the same payload shape and drives the
+/// same auto-scroller / drag-session machinery as the previous whole-card
+/// draggable, so drop targets behave identically.
+class _DragHandle extends StatelessWidget {
+  const _DragHandle({
+    required this.exercise,
     required this.exerciseName,
     required this.autoScroller,
     required this.dragSession,
-    required this.child,
   });
 
-  final bool canDrag;
-  final ExerciseDragPayload payload;
+  final ExerciseViewModel exercise;
   final String exerciseName;
   final _DragAutoScroller autoScroller;
   final _DragSession dragSession;
-  final Widget child;
 
   @override
   Widget build(BuildContext context) {
-    if (!canDrag) return child;
+    final colors = Theme.of(context).appColors;
     final screenWidth = MediaQuery.of(context).size.width;
     final pillWidth = (screenWidth * 0.7).clamp(220.0, 360.0);
+    final icon = SizedBox(
+      width: AppSpacing.touchMin,
+      height: AppSpacing.touchMin,
+      child: Icon(
+        Icons.drag_indicator,
+        color: colors.onSurfaceMuted,
+        size: 20,
+        semanticLabel: 'Drag handle',
+      ),
+    );
     return LongPressDraggable<ExerciseDragPayload>(
-      data: payload,
+      data: ExerciseDragPayload(
+        sessionExerciseId: exercise.sessionExercise.id,
+        supersetTag: exercise.sessionExercise.supersetTag,
+      ),
       delay: const Duration(milliseconds: 250),
       onDragStarted: () {
         Haptics.grab();
@@ -1061,8 +1130,8 @@ class _MaybeDraggable extends StatelessWidget {
         width: pillWidth,
         dragSession: dragSession,
       ),
-      childWhenDragging: Opacity(opacity: 0.3, child: child),
-      child: child,
+      childWhenDragging: Opacity(opacity: 0.3, child: icon),
+      child: icon,
     );
   }
 }
@@ -1289,60 +1358,6 @@ class _ReorderGapState extends State<_ReorderGap> {
           },
         );
       },
-    );
-  }
-}
-
-/// Wraps an unfinished superset member with a [LongPressDraggable] so it can
-/// be dragged onto a [_SupersetReorderGap] inside the same group to reorder.
-/// The payload carries the source `supersetTag`; only intra-superset gaps
-/// with the matching tag will accept it (the main-list reorder gaps and the
-/// onto-card targets both refuse non-null tags).
-class _SupersetMemberDraggable extends StatelessWidget {
-  const _SupersetMemberDraggable({
-    required this.exercise,
-    required this.autoScroller,
-    required this.dragSession,
-    required this.child,
-  });
-
-  final ExerciseViewModel exercise;
-  final _DragAutoScroller autoScroller;
-  final _DragSession dragSession;
-  final Widget child;
-
-  @override
-  Widget build(BuildContext context) {
-    final screenWidth = MediaQuery.of(context).size.width;
-    final pillWidth = (screenWidth * 0.7).clamp(220.0, 360.0);
-    return LongPressDraggable<ExerciseDragPayload>(
-      data: ExerciseDragPayload(
-        sessionExerciseId: exercise.sessionExercise.id,
-        supersetTag: exercise.sessionExercise.supersetTag,
-      ),
-      delay: const Duration(milliseconds: 250),
-      onDragStarted: () {
-        Haptics.grab();
-        autoScroller.begin();
-        dragSession.begin();
-      },
-      onDragUpdate: (details) =>
-          autoScroller.updatePointer(details.globalPosition.dy),
-      onDragEnd: (_) {
-        autoScroller.end();
-        dragSession.end();
-      },
-      onDraggableCanceled: (_, _) {
-        autoScroller.end();
-        dragSession.end();
-      },
-      feedback: _DragFeedbackPill(
-        exerciseName: _exerciseDisplayName(exercise),
-        width: pillWidth,
-        dragSession: dragSession,
-      ),
-      childWhenDragging: Opacity(opacity: 0.3, child: child),
-      child: child,
     );
   }
 }

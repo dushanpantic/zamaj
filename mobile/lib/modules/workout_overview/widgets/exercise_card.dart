@@ -47,7 +47,7 @@ class ExerciseCard extends StatelessWidget {
     this.onGroupIntoPressed,
     this.isCurrent = false,
     this.isLastTouched = false,
-    this.showDragHandle = false,
+    this.dragHandle,
     this.isDropTarget = false,
   });
 
@@ -77,7 +77,12 @@ class ExerciseCard extends StatelessWidget {
   /// action. The loggable row inside receives a subtle accent so the eye
   /// returns to where the user left off after a rest.
   final bool isLastTouched;
-  final bool showDragHandle;
+
+  /// Optional widget rendered in the leading 48dp slot of the card header.
+  /// The screen passes a [LongPressDraggable]-wrapped icon here so the
+  /// drag-to-reorder gesture is scoped to the handle only and doesn't fight
+  /// taps on LOG SET / kebab / etc. elsewhere on the card.
+  final Widget? dragHandle;
   final bool isDropTarget;
 
   @override
@@ -109,7 +114,7 @@ class ExerciseCard extends StatelessWidget {
             isExpanded: isExpanded,
             canMutate: canMutate,
             canMarkDone: state is UnfinishedState && hasExecutedSet,
-            showDragHandle: showDragHandle && state is UnfinishedState,
+            dragHandle: state is UnfinishedState ? dragHandle : null,
             isCurrent: isCurrent,
             onTap: onToggleExpansion,
             onSkip: onSkipPressed,
@@ -143,7 +148,7 @@ class _Header extends StatelessWidget {
     required this.isExpanded,
     required this.canMutate,
     required this.canMarkDone,
-    required this.showDragHandle,
+    required this.dragHandle,
     required this.isCurrent,
     required this.onTap,
     required this.onSkip,
@@ -159,7 +164,7 @@ class _Header extends StatelessWidget {
   final bool isExpanded;
   final bool canMutate;
   final bool canMarkDone;
-  final bool showDragHandle;
+  final Widget? dragHandle;
   final bool isCurrent;
   final VoidCallback onTap;
   final VoidCallback onSkip;
@@ -204,21 +209,8 @@ class _Header extends StatelessWidget {
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              if (showDragHandle)
-                // P3.1: pad the visible handle into a 48 dp square hit target
-                // so users who reach for the handle land on it cleanly. The
-                // whole card already accepts long-press; this just sizes the
-                // affordance up for the instinctive grab.
-                SizedBox(
-                  width: AppSpacing.touchMin,
-                  height: AppSpacing.touchMin,
-                  child: Icon(
-                    Icons.drag_indicator,
-                    color: colors.onSurfaceMuted,
-                    size: 20,
-                    semanticLabel: 'Drag handle',
-                  ),
-                )
+              if (dragHandle != null)
+                dragHandle!
               else
                 const SizedBox(width: AppSpacing.lg),
               Expanded(

@@ -27,9 +27,8 @@ class SupersetCard extends StatelessWidget {
     required this.onOpenVideo,
     this.currentSessionExerciseIds = const <String>{},
     this.lastTouchedSessionExerciseId,
-    this.showDragHandle = false,
     this.isDropTarget = false,
-    this.memberBuilder,
+    this.memberDragHandleBuilder,
     this.gapBuilder,
   });
 
@@ -56,15 +55,14 @@ class SupersetCard extends StatelessWidget {
   /// the set from `openTargets.first` and the assembled groups.
   final Set<String> currentSessionExerciseIds;
   final String? lastTouchedSessionExerciseId;
-  final bool showDragHandle;
   final bool isDropTarget;
 
-  /// Optional wrapper applied to each member's [ExerciseCard]. The workout-
-  /// overview screen passes one that wraps unfinished members in a
-  /// [LongPressDraggable] so they can be dragged onto the [betweenMembersBuilder]
-  /// gaps to reorder within the group.
-  final Widget Function(ExerciseViewModel member, Widget memberCard)?
-  memberBuilder;
+  /// Optional per-member drag-handle builder. When non-null and the returned
+  /// widget is non-null, the handle is rendered in the member card's leading
+  /// 48 dp slot. The workout-overview screen returns a [LongPressDraggable]-
+  /// wrapped icon so the drag-to-reorder gesture lives on the handle only
+  /// and doesn't fight taps elsewhere on the card.
+  final Widget? Function(ExerciseViewModel member)? memberDragHandleBuilder;
 
   /// Optional builder for the gap widgets surrounding each member.
   /// `position` ranges over `0..exercises.length` inclusive:
@@ -109,15 +107,6 @@ class SupersetCard extends StatelessWidget {
             ),
             child: Row(
               children: [
-                if (showDragHandle && anyUnfinished)
-                  Padding(
-                    padding: const EdgeInsets.only(right: AppSpacing.xs),
-                    child: Icon(
-                      Icons.drag_indicator,
-                      color: colors.onSurfaceMuted,
-                      size: 20,
-                    ),
-                  ),
                 Icon(Icons.link, color: colors.primary, size: 16),
                 const SizedBox(width: AppSpacing.xs),
                 Text(
@@ -149,7 +138,7 @@ class SupersetCard extends StatelessWidget {
               Builder(
                 builder: (context) {
                   final memberId = exercises[i].sessionExercise.id;
-                  final card = ExerciseCard(
+                  return ExerciseCard(
                     viewModel: exercises[i],
                     isExpanded: expandedExerciseIds.contains(memberId),
                     canMutate: canMutate,
@@ -163,9 +152,8 @@ class SupersetCard extends StatelessWidget {
                     onMarkDonePressed: () => onMarkDonePressed(memberId),
                     onReplacePressed: () => onReplacePressed(memberId),
                     onOpenVideo: onOpenVideo,
-                    showDragHandle: memberBuilder != null,
+                    dragHandle: memberDragHandleBuilder?.call(exercises[i]),
                   );
-                  return memberBuilder?.call(exercises[i], card) ?? card;
                 },
               ),
           ],
