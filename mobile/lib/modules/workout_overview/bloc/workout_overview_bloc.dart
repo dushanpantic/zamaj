@@ -350,6 +350,7 @@ class WorkoutOverviewBloc
               latest.expandedExerciseIds,
               latest.sessionState,
               next,
+              loggedSessionExerciseId: touchedSessionExerciseId,
             ),
             mutationInFlight: false,
             lastTouchedSessionExerciseId: touchedSessionExerciseId != null
@@ -401,11 +402,17 @@ class WorkoutOverviewBloc
   /// because all sets on the prior current were logged, or it was skipped /
   /// marked done — auto-expand the new current so the user can keep logging
   /// without an extra tap.
+  ///
+  /// And: when [loggedSessionExerciseId] names an exercise in a superset
+  /// group with another loggable member, auto-expand the next rotation
+  /// member so the user keeps moving through the round-robin without an
+  /// extra tap (mirrors focus mode's active-panel rotation).
   Set<String> _expansionForOpenTargets(
     Set<String> current,
     SessionState previous,
-    SessionState next,
-  ) {
+    SessionState next, {
+    String? loggedSessionExerciseId,
+  }) {
     final retained = <String>{
       for (final ex in next.session.sessionExercises)
         if (current.contains(ex.id) &&
@@ -426,7 +433,72 @@ class WorkoutOverviewBloc
     if (nextFirst != null && nextFirst != prevFirst) {
       retained.add(nextFirst);
     }
+    if (loggedSessionExerciseId != null) {
+      final rotated = _nextSupersetMemberAfterLogging(
+        next,
+        loggedSessionExerciseId,
+      );
+      if (rotated != null) {
+        retained.add(rotated);
+      }
+    }
     return retained;
+  }
+
+  /// Picks the next loggable member of [loggedSessionExerciseId]'s superset
+  /// group, matching focus mode's rotation rule:
+  ///   1. Among loggable members, the minimum executed-sets count wins.
+  ///   2. Ties broken by position order, starting after the just-logged
+  ///      exercise and wrapping around.
+  /// Returns null when the exercise has no superset tag, the group has
+  /// fewer than two members, or no loggable members remain.
+  String? _nextSupersetMemberAfterLogging(
+    SessionState state,
+    String loggedSessionExerciseId,
+  ) {
+    final logged = state.session.sessionExercises
+        .where((e) => e.id == loggedSessionExerciseId)
+        .firstOrNull;
+    if (logged == null) return null;
+    final tag = logged.supersetTag;
+    if (tag == null) return null;
+
+    final groupMembers =
+        state.session.sessionExercises
+            .where((e) => e.supersetTag == tag)
+            .toList()
+          ..sort((a, b) => a.position.compareTo(b.position));
+    if (groupMembers.length < 2) return null;
+
+    final loggableIds = <String>{
+      for (final t in state.openTargets) t.sessionExerciseId,
+    };
+    final loggable = groupMembers
+        .where((e) => loggableIds.contains(e.id))
+        .toList(growable: false);
+    if (loggable.isEmpty) return null;
+    if (loggable.length == 1) return loggable.single.id;
+
+    final minCount = loggable
+        .map((e) => e.executedSets.length)
+        .reduce((a, b) => a < b ? a : b);
+    final pool = loggable
+        .where((e) => e.executedSets.length == minCount)
+        .toList(growable: false);
+    if (pool.length == 1) return pool.single.id;
+
+    final loggedPosition = groupMembers.indexWhere(
+      (e) => e.id == loggedSessionExerciseId,
+    );
+    final poolIds = pool.map((e) => e.id).toSet();
+    if (loggedPosition != -1) {
+      for (var step = 1; step <= groupMembers.length; step++) {
+        final candidate =
+            groupMembers[(loggedPosition + step) % groupMembers.length];
+        if (poolIds.contains(candidate.id)) return candidate.id;
+      }
+    }
+    return pool.first.id;
   }
 
   String? _sessionIdOrNull() => switch (state) {

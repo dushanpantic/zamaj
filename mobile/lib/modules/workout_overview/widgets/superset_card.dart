@@ -29,6 +29,7 @@ class SupersetCard extends StatelessWidget {
     this.lastTouchedSessionExerciseId,
     this.isDropTarget = false,
     this.memberDragHandleBuilder,
+    this.memberKeyBuilder,
     this.gapBuilder,
   });
 
@@ -63,6 +64,12 @@ class SupersetCard extends StatelessWidget {
   /// wrapped icon so the drag-to-reorder gesture lives on the handle only
   /// and doesn't fight taps elsewhere on the card.
   final Widget? Function(ExerciseViewModel member)? memberDragHandleBuilder;
+
+  /// Optional per-member [GlobalKey] builder. The screen attaches a stable
+  /// key per session-exercise id so it can call [Scrollable.ensureVisible]
+  /// on a specific member card (e.g. when auto-advancing rotation inside a
+  /// superset after a logged set).
+  final GlobalKey Function(String memberId)? memberKeyBuilder;
 
   /// Optional builder for the gap widgets surrounding each member.
   /// `position` ranges over `0..exercises.length` inclusive:
@@ -138,7 +145,7 @@ class SupersetCard extends StatelessWidget {
               Builder(
                 builder: (context) {
                   final memberId = exercises[i].sessionExercise.id;
-                  return ExerciseCard(
+                  final card = ExerciseCard(
                     viewModel: exercises[i],
                     isExpanded: expandedExerciseIds.contains(memberId),
                     canMutate: canMutate,
@@ -154,6 +161,10 @@ class SupersetCard extends StatelessWidget {
                     onOpenVideo: onOpenVideo,
                     dragHandle: memberDragHandleBuilder?.call(exercises[i]),
                   );
+                  final key = memberKeyBuilder?.call(memberId);
+                  return key == null
+                      ? card
+                      : KeyedSubtree(key: key, child: card);
                 },
               ),
           ],

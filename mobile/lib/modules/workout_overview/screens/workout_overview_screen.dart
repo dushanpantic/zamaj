@@ -384,6 +384,16 @@ class _LoadedBodyState extends State<_LoadedBody>
   late final _DragAutoScroller _autoScroller;
   final _DragSession _dragSession = _DragSession();
 
+  /// Stable per-card [GlobalKey]s, keyed by session-exercise id. Used so the
+  /// screen can scroll a specific card (the next superset member, after a
+  /// logged set) into view via [Scrollable.ensureVisible].
+  final Map<String, GlobalKey> _exerciseKeys = {};
+
+  GlobalKey _keyFor(String sessionExerciseId) => _exerciseKeys.putIfAbsent(
+    sessionExerciseId,
+    () => GlobalKey(debugLabel: 'exercise-card-$sessionExerciseId'),
+  );
+
   @override
   void initState() {
     super.initState();
@@ -476,7 +486,10 @@ class _LoadedBodyState extends State<_LoadedBody>
     // which returns early when a mutation is already in flight.
     final canMutate = !state.isEnded;
 
-    return Stack(
+    return BlocListener<WorkoutOverviewBloc, WorkoutOverviewState>(
+      listenWhen: _isSetJustLogged,
+      listener: _onSetJustLogged,
+      child: Stack(
       children: [
         CustomScrollView(
           key: _scrollViewKey,
@@ -531,6 +544,7 @@ class _LoadedBodyState extends State<_LoadedBody>
                       canMutate: canMutate,
                       autoScroller: _autoScroller,
                       dragSession: _dragSession,
+                      keyFor: _keyFor,
                     ),
                   );
                 },
@@ -569,7 +583,83 @@ class _LoadedBodyState extends State<_LoadedBody>
           child: _DelayedMutationIndicator(inFlight: state.mutationInFlight),
         ),
       ],
+      ),
     );
+  }
+
+  /// Fires only when a set was just logged: the bloc stamps
+  /// [WorkoutOverviewLoaded.lastTouchedSessionExerciseId] on every set-log,
+  /// but that value persists across unrelated state emits. The reliable
+  /// signal is "executed-set count for the touched exercise went up".
+  static bool _isSetJustLogged(
+    WorkoutOverviewState previous,
+    WorkoutOverviewState current,
+  ) {
+    if (previous is! WorkoutOverviewLoaded ||
+        current is! WorkoutOverviewLoaded) {
+      return false;
+    }
+    final touched = current.lastTouchedSessionExerciseId;
+    if (touched == null) return false;
+    return _executedCount(previous.sessionState, touched) <
+        _executedCount(current.sessionState, touched);
+  }
+
+  static int _executedCount(SessionState sessionState, String id) {
+    for (final ex in sessionState.session.sessionExercises) {
+      if (ex.id == id) return ex.executedSets.length;
+    }
+    return 0;
+  }
+
+  /// After a logged set, if the touched exercise belongs to a superset with
+  /// another expanded loggable member, scroll that partner card into view —
+  /// the bloc already auto-expanded it via the rotation rule, but on a small
+  /// screen it might be off-screen below the just-logged card.
+  void _onSetJustLogged(BuildContext context, WorkoutOverviewState state) {
+    if (state is! WorkoutOverviewLoaded) return;
+    final touched = state.lastTouchedSessionExerciseId;
+    if (touched == null) return;
+    final partnerId = _pickScrollPartner(state, touched);
+    if (partnerId == null) return;
+    final key = _exerciseKeys[partnerId];
+    if (key == null) return;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      final ctx = key.currentContext;
+      if (ctx == null) return;
+      Scrollable.ensureVisible(
+        ctx,
+        alignment: 0.3,
+        duration: const Duration(milliseconds: 280),
+        curve: Curves.easeOut,
+      );
+    });
+  }
+
+  /// Picks the next-rotation partner card to bring into view: the first
+  /// expanded, loggable member of [touched]'s superset group in position
+  /// order after [touched], wrapping around. Returns null when [touched]
+  /// isn't in a superset or no other expanded loggable member exists.
+  String? _pickScrollPartner(WorkoutOverviewLoaded state, String touched) {
+    for (final group in state.groups) {
+      if (group is! SupersetGroup) continue;
+      final members = group.exercises;
+      final touchedIndex = members.indexWhere(
+        (e) => e.sessionExercise.id == touched,
+      );
+      if (touchedIndex == -1) continue;
+      for (var step = 1; step <= members.length; step++) {
+        final candidate = members[(touchedIndex + step) % members.length];
+        final id = candidate.sessionExercise.id;
+        if (id == touched) continue;
+        if (!candidate.isLoggable) continue;
+        if (!state.expandedExerciseIds.contains(id)) continue;
+        return id;
+      }
+      return null;
+    }
+    return null;
   }
 
   /// Translates a gap-between-groups index into the "unfinished count at or
@@ -662,6 +752,7 @@ class _GroupBuilder extends StatelessWidget {
     required this.canMutate,
     required this.autoScroller,
     required this.dragSession,
+    required this.keyFor,
   });
 
   final SupersetGroupViewModel group;
@@ -681,6 +772,11 @@ class _GroupBuilder extends StatelessWidget {
   final bool canMutate;
   final _DragAutoScroller autoScroller;
   final _DragSession dragSession;
+
+  /// Returns a stable [GlobalKey] for the card representing
+  /// [sessionExerciseId]. Used by the screen to scroll a specific card into
+  /// view after a logged set inside a superset.
+  final GlobalKey Function(String sessionExerciseId) keyFor;
 
   /// Other unfinished, non-grouped exercises in the session — the set of
   /// valid partners for a *new* superset paired with [source]. Used only
@@ -743,11 +839,13 @@ class _GroupBuilder extends StatelessWidget {
     // collapsed and reappeared. Drops started mid-flight resolve safely —
     // the DragTarget and bloc both reject when canMutate is false.
     final canDrag = !state.isEnded && isUnfinished;
-    return _DraggableExercise(
-      exercise: exercise,
-      canMutate: canMutate,
-      dragSession: dragSession,
-      child: ExerciseCard(
+    return KeyedSubtree(
+      key: keyFor(exerciseId),
+      child: _DraggableExercise(
+        exercise: exercise,
+        canMutate: canMutate,
+        dragSession: dragSession,
+        child: ExerciseCard(
         viewModel: exercise,
         isExpanded: state.expandedExerciseIds.contains(exerciseId),
         canMutate: canMutate,
@@ -788,6 +886,7 @@ class _GroupBuilder extends StatelessWidget {
                 dragSession: dragSession,
               )
             : null,
+        ),
       ),
     );
   }
@@ -916,6 +1015,7 @@ class _GroupBuilder extends StatelessWidget {
           onReplace(exercises.firstWhere((e) => e.sessionExercise.id == id)),
       onOpenVideo: onOpenVideo,
       memberDragHandleBuilder: memberDragHandle,
+      memberKeyBuilder: keyFor,
       gapBuilder: gapWrap,
     );
   }
