@@ -25,6 +25,7 @@ class SupersetCard extends StatelessWidget {
     required this.onMarkDonePressed,
     required this.onReplacePressed,
     required this.onOpenVideo,
+    this.currentSessionExerciseIds = const <String>{},
     this.lastTouchedSessionExerciseId,
     this.showDragHandle = false,
     this.isDropTarget = false,
@@ -49,6 +50,11 @@ class SupersetCard extends StatelessWidget {
   final void Function(String sessionExerciseId) onMarkDonePressed;
   final void Function(String sessionExerciseId) onReplacePressed;
   final void Function(String videoUrl) onOpenVideo;
+
+  /// Members that should render the CURRENT chip + accent border. Includes
+  /// every unfinished member of the active superset; the screen computes
+  /// the set from `openTargets.first` and the assembled groups.
+  final Set<String> currentSessionExerciseIds;
   final String? lastTouchedSessionExerciseId;
   final bool showDragHandle;
   final bool isDropTarget;
@@ -142,29 +148,20 @@ class SupersetCard extends StatelessWidget {
             if (i < exercises.length)
               Builder(
                 builder: (context) {
+                  final memberId = exercises[i].sessionExercise.id;
                   final card = ExerciseCard(
                     viewModel: exercises[i],
-                    isExpanded: expandedExerciseIds.contains(
-                      exercises[i].sessionExercise.id,
-                    ),
+                    isExpanded: expandedExerciseIds.contains(memberId),
                     canMutate: canMutate,
-                    isLastTouched:
-                        lastTouchedSessionExerciseId ==
-                        exercises[i].sessionExercise.id,
-                    onToggleExpansion: () =>
-                        onToggleExpansion(exercises[i].sessionExercise.id),
-                    onLogSet: (values, plannedId) => onLogSet(
-                      exercises[i].sessionExercise.id,
-                      values,
-                      plannedId,
-                    ),
+                    isCurrent: currentSessionExerciseIds.contains(memberId),
+                    isLastTouched: lastTouchedSessionExerciseId == memberId,
+                    onToggleExpansion: () => onToggleExpansion(memberId),
+                    onLogSet: (values, plannedId) =>
+                        onLogSet(memberId, values, plannedId),
                     onEditSet: onEditSet,
-                    onSkipPressed: () =>
-                        onSkipPressed(exercises[i].sessionExercise.id),
-                    onMarkDonePressed: () =>
-                        onMarkDonePressed(exercises[i].sessionExercise.id),
-                    onReplacePressed: () =>
-                        onReplacePressed(exercises[i].sessionExercise.id),
+                    onSkipPressed: () => onSkipPressed(memberId),
+                    onMarkDonePressed: () => onMarkDonePressed(memberId),
+                    onReplacePressed: () => onReplacePressed(memberId),
                     onOpenVideo: onOpenVideo,
                     showDragHandle: memberBuilder != null,
                   );

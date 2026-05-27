@@ -45,6 +45,7 @@ class ExerciseCard extends StatelessWidget {
     required this.onReplacePressed,
     required this.onOpenVideo,
     this.onGroupIntoPressed,
+    this.isCurrent = false,
     this.isLastTouched = false,
     this.showDragHandle = false,
     this.isDropTarget = false,
@@ -67,6 +68,11 @@ class ExerciseCard extends StatelessWidget {
   /// already-grouped supersets and whenever no eligible partner exists.
   final VoidCallback? onGroupIntoPressed;
 
+  /// True when this card represents the "current" exercise — the one Focus
+  /// mode and the bottom Focus button will open. Drives the accent border
+  /// and the CURRENT chip in the header.
+  final bool isCurrent;
+
   /// True when this exercise was the target of the most recent log/edit
   /// action. The loggable row inside receives a subtle accent so the eye
   /// returns to where the user left off after a rest.
@@ -82,15 +88,18 @@ class ExerciseCard extends StatelessWidget {
     final state = sessionExercise.state;
     final hasExecutedSet = sessionExercise.executedSets.isNotEmpty;
 
+    // Drop-target highlight wins over current — they share the primary
+    // border but a drop-target accent should never be hidden by it.
+    final borderColor = isDropTarget || isCurrent
+        ? colors.primary
+        : colors.outline;
+    final borderWidth = isDropTarget || isCurrent ? 2.0 : 1.0;
     return AnimatedContainer(
       duration: const Duration(milliseconds: 120),
       decoration: BoxDecoration(
         color: colors.surface,
         borderRadius: BorderRadius.circular(AppRadius.md),
-        border: Border.all(
-          color: isDropTarget ? colors.primary : colors.outline,
-          width: isDropTarget ? 2 : 1,
-        ),
+        border: Border.all(color: borderColor, width: borderWidth),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -101,6 +110,7 @@ class ExerciseCard extends StatelessWidget {
             canMutate: canMutate,
             canMarkDone: state is UnfinishedState && hasExecutedSet,
             showDragHandle: showDragHandle && state is UnfinishedState,
+            isCurrent: isCurrent,
             onTap: onToggleExpansion,
             onSkip: onSkipPressed,
             onMarkDone: onMarkDonePressed,
@@ -134,6 +144,7 @@ class _Header extends StatelessWidget {
     required this.canMutate,
     required this.canMarkDone,
     required this.showDragHandle,
+    required this.isCurrent,
     required this.onTap,
     required this.onSkip,
     required this.onMarkDone,
@@ -149,6 +160,7 @@ class _Header extends StatelessWidget {
   final bool canMutate;
   final bool canMarkDone;
   final bool showDragHandle;
+  final bool isCurrent;
   final VoidCallback onTap;
   final VoidCallback onSkip;
   final VoidCallback onMarkDone;
@@ -231,7 +243,11 @@ class _Header extends StatelessWidget {
                           _WarmupBadge(colors: colors),
                         ],
                         const SizedBox(width: AppSpacing.sm),
-                        _StateBadge(state: state, colors: colors),
+                        _StateBadge(
+                          state: state,
+                          isCurrent: isCurrent,
+                          colors: colors,
+                        ),
                       ],
                     ),
                     const SizedBox(height: AppSpacing.xs),
@@ -346,15 +362,23 @@ class _WarmupBadge extends StatelessWidget {
 }
 
 class _StateBadge extends StatelessWidget {
-  const _StateBadge({required this.state, required this.colors});
+  const _StateBadge({
+    required this.state,
+    required this.isCurrent,
+    required this.colors,
+  });
 
   final ExerciseState state;
+  final bool isCurrent;
   final AppColors colors;
 
   @override
   Widget build(BuildContext context) {
+    // Unfinished gets the CURRENT chip when it's the active exercise,
+    // nothing otherwise. Terminal states keep their existing label.
     final (label, color) = switch (state) {
-      UnfinishedState() => (null, colors.onSurfaceMuted),
+      UnfinishedState() =>
+        isCurrent ? ('CURRENT', colors.primary) : (null, colors.onSurfaceMuted),
       CompletedState() => ('Done', colors.exerciseCompleted),
       SkippedState() => ('Skipped', colors.exerciseSkipped),
       ReplacedState() => ('Replaced', colors.exerciseReplaced),
@@ -408,6 +432,9 @@ class _Actions extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final canGroupInto = canMutate && isUnfinished && onGroupInto != null;
+    final showReplace = canMutate && isUnfinished;
+    // Replace is no longer in the kebab — the icon button above owns it.
+    // The kebab still owns Group into / Mark done / Skip / Open video.
     final hasMenu =
         (canMutate && isUnfinished) ||
         canGroupInto ||
@@ -415,6 +442,21 @@ class _Actions extends StatelessWidget {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
+        if (showReplace)
+          SizedBox(
+            width: AppSpacing.touchMin,
+            height: AppSpacing.touchMin,
+            child: IconButton(
+              tooltip: 'Replace',
+              onPressed: onReplace,
+              padding: EdgeInsets.zero,
+              icon: Icon(
+                Icons.swap_horiz,
+                color: colors.onSurfaceMuted,
+                size: 20,
+              ),
+            ),
+          ),
         Icon(
           isExpanded ? Icons.expand_less : Icons.expand_more,
           color: colors.onSurfaceMuted,
@@ -433,8 +475,6 @@ class _Actions extends StatelessWidget {
                   onSkip();
                 case _MenuAction.markDone:
                   onMarkDone();
-                case _MenuAction.replace:
-                  onReplace();
                 case _MenuAction.openVideo:
                   final url = videoUrl;
                   if (url != null && url.isNotEmpty) onOpenVideo(url);
@@ -447,16 +487,6 @@ class _Actions extends StatelessWidget {
                   child: ListTile(
                     leading: Icon(Icons.link),
                     title: Text('Group into superset…'),
-                    contentPadding: EdgeInsets.zero,
-                    dense: true,
-                  ),
-                ),
-              if (canMutate && isUnfinished)
-                const PopupMenuItem(
-                  value: _MenuAction.replace,
-                  child: ListTile(
-                    leading: Icon(Icons.swap_horiz),
-                    title: Text('Replace'),
                     contentPadding: EdgeInsets.zero,
                     dense: true,
                   ),
@@ -500,7 +530,7 @@ class _Actions extends StatelessWidget {
   }
 }
 
-enum _MenuAction { groupInto, skip, markDone, replace, openVideo }
+enum _MenuAction { groupInto, skip, markDone, openVideo }
 
 class _ExpandedBody extends StatelessWidget {
   const _ExpandedBody({

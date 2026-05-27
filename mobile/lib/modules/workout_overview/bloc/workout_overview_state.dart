@@ -64,10 +64,10 @@ final class WorkoutOverviewLoaded extends WorkoutOverviewState {
 
   /// Pure UI state: which exercise cards are currently expanded.
   ///
-  /// Auto-managed by the bloc: every loggable exercise (one present in
-  /// [SessionState.openTargets]) is auto-expanded on every refresh so the
-  /// user can always see and tap the next-set editor; the user can still
-  /// expand or collapse other cards manually.
+  /// Bloc seeds this with the "current" exercise on first load so logging is
+  /// one tap away, then leaves it alone — the user's manual choice is
+  /// preserved across refreshes. Cards drop out only when their exercise
+  /// hits a terminal state with all sets logged.
   final Set<String> expandedExerciseIds;
 
   /// True while a mutation request is awaiting the engine. Used by the UI

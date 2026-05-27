@@ -380,24 +380,27 @@ class WorkoutOverviewBloc
     );
   }
 
-  /// Initial expansion: every currently-loggable exercise is auto-expanded
-  /// so the user sees the next-set editor for each in-progress exercise
-  /// (including all members of a superset) the moment the screen opens.
+  /// Initial expansion: auto-expand only the "current" exercise — the first
+  /// member of the first open log target — so the user can log immediately
+  /// without confronting a wall of editors. Everything else stays collapsed;
+  /// the user can open any card on demand via its chevron / header tap.
   Set<String> _initialExpansionFor(SessionState sessionState) {
-    return <String>{
-      for (final t in sessionState.openTargets) t.sessionExerciseId,
-    };
+    final first = sessionState.openTargets.isEmpty
+        ? null
+        : sessionState.openTargets.first.sessionExerciseId;
+    return first == null ? <String>{} : <String>{first};
   }
 
-  /// On each refresh: keep manually-expanded cards open as long as their
-  /// exercise still exists, drop those that hit a terminal state with all
-  /// sets done, and force-expand every loggable exercise so the user can
-  /// always tap a loggable row without an extra expand step.
+  /// On each refresh: keep the user's manual choice. Cards the user opened
+  /// stay open as long as the exercise still has room to log; cards that
+  /// hit a terminal state with all sets logged drop out. Loggable status is
+  /// no longer force-expanded — recognition cues come from the "current"
+  /// marker in the UI, not from popping the editor open.
   Set<String> _expansionForOpenTargets(
     Set<String> current,
     SessionState sessionState,
   ) {
-    final kept = <String>{
+    return <String>{
       for (final ex in sessionState.session.sessionExercises)
         if (current.contains(ex.id) &&
             switch (ex.state) {
@@ -408,10 +411,6 @@ class WorkoutOverviewBloc
             })
           ex.id,
     };
-    for (final t in sessionState.openTargets) {
-      kept.add(t.sessionExerciseId);
-    }
-    return kept;
   }
 
   String? _sessionIdOrNull() => switch (state) {

@@ -199,6 +199,9 @@ class _WorkoutOverviewScreenState extends State<WorkoutOverviewScreen> {
 
     return BlocBuilder<WorkoutOverviewBloc, WorkoutOverviewState>(
       builder: (context, state) {
+        final focus = state is WorkoutOverviewLoaded
+            ? _resolveCurrent(state)
+            : null;
         return Scaffold(
           backgroundColor: colors.background,
           appBar: AppBar(
@@ -218,10 +221,11 @@ class _WorkoutOverviewScreenState extends State<WorkoutOverviewScreen> {
                   ]
                 : null,
           ),
-          body: _body(context, state),
+          body: _body(context, state, focus),
           bottomNavigationBar: state is WorkoutOverviewLoaded
               ? _BottomActionBar(
                   state: state,
+                  currentExerciseName: focus?.currentExerciseName,
                   onAddNote: _handleAddNote,
                   onAddExtraWork: _handleAddExtraWork,
                   onFocusMode: () => _handleOpenFocusMode(state),
@@ -231,6 +235,48 @@ class _WorkoutOverviewScreenState extends State<WorkoutOverviewScreen> {
       },
     );
   }
+
+  /// Resolves "what's current" for a loaded session: the set of session
+  /// exercise IDs that should get the CURRENT chip + accent (every
+  /// unfinished member of the active superset, or the lone single), and
+  /// the display name of the first open target for the bottom Focus
+  /// button label.
+  _CurrentFocus _resolveCurrent(WorkoutOverviewLoaded state) {
+    final openTargets = state.sessionState.openTargets;
+    if (openTargets.isEmpty) {
+      return const _CurrentFocus(
+        currentIds: <String>{},
+        currentExerciseName: null,
+      );
+    }
+    final anchorId = openTargets.first.sessionExerciseId;
+    for (final g in state.groups) {
+      ExerciseViewModel? anchor;
+      for (final ex in g.allExercises) {
+        if (ex.sessionExercise.id == anchorId) {
+          anchor = ex;
+          break;
+        }
+      }
+      if (anchor == null) continue;
+      final ids = <String>{
+        for (final ex in g.allExercises)
+          if (ex.sessionExercise.state is UnfinishedState)
+            ex.sessionExercise.id,
+      }..add(anchorId);
+      return _CurrentFocus(
+        currentIds: ids,
+        currentExerciseName: _displayName(anchor),
+      );
+    }
+    return _CurrentFocus(currentIds: {anchorId}, currentExerciseName: null);
+  }
+
+  static String _displayName(ExerciseViewModel vm) =>
+      switch (vm.sessionExercise.state) {
+        ReplacedState(:final substitute) => substitute.name,
+        _ => vm.plannedExerciseName,
+      };
 
   String _titleFor(WorkoutOverviewState state) {
     return switch (state) {
@@ -242,7 +288,11 @@ class _WorkoutOverviewScreenState extends State<WorkoutOverviewScreen> {
     };
   }
 
-  Widget _body(BuildContext context, WorkoutOverviewState state) {
+  Widget _body(
+    BuildContext context,
+    WorkoutOverviewState state,
+    _CurrentFocus? focus,
+  ) {
     return switch (state) {
       WorkoutOverviewInitial() ||
       WorkoutOverviewLoading() => const WorkoutOverviewLoadingView(),
@@ -255,6 +305,7 @@ class _WorkoutOverviewScreenState extends State<WorkoutOverviewScreen> {
       ),
       WorkoutOverviewLoaded() => _LoadedBody(
         state: state,
+        currentSessionExerciseIds: focus?.currentIds ?? const <String>{},
         onReplace: _handleReplace,
         onSkip: _handleSkip,
         onMarkDone: _handleMarkDone,
@@ -268,9 +319,29 @@ class _WorkoutOverviewScreenState extends State<WorkoutOverviewScreen> {
   }
 }
 
+/// Bundle of "what's current" the screen-level builder resolves once and
+/// passes to both the loaded body (for per-card chip + accent) and the
+/// bottom Focus button (for its `Focus: <name>` label).
+class _CurrentFocus {
+  const _CurrentFocus({
+    required this.currentIds,
+    required this.currentExerciseName,
+  });
+
+  /// IDs of every exercise that should render as "current". For singles,
+  /// just the lone open target; for supersets, every unfinished member of
+  /// the active group (since Focus mode pairs them).
+  final Set<String> currentIds;
+
+  /// Display name of the first open target for the bottom Focus button
+  /// label. Null when there's no open target.
+  final String? currentExerciseName;
+}
+
 class _LoadedBody extends StatefulWidget {
   const _LoadedBody({
     required this.state,
+    required this.currentSessionExerciseIds,
     required this.onReplace,
     required this.onSkip,
     required this.onMarkDone,
@@ -282,6 +353,7 @@ class _LoadedBody extends StatefulWidget {
   });
 
   final WorkoutOverviewLoaded state;
+  final Set<String> currentSessionExerciseIds;
   final void Function(ExerciseViewModel) onReplace;
   final void Function(ExerciseViewModel) onSkip;
   final void Function(ExerciseViewModel) onMarkDone;
@@ -441,6 +513,8 @@ class _LoadedBodyState extends State<_LoadedBody>
                     child: _GroupBuilder(
                       group: state.groups[groupIndex],
                       state: state,
+                      currentSessionExerciseIds:
+                          widget.currentSessionExerciseIds,
                       onReplace: widget.onReplace,
                       onSkip: widget.onSkip,
                       onMarkDone: widget.onMarkDone,
@@ -510,6 +584,7 @@ class _GroupBuilder extends StatelessWidget {
   const _GroupBuilder({
     required this.group,
     required this.state,
+    required this.currentSessionExerciseIds,
     required this.onReplace,
     required this.onSkip,
     required this.onMarkDone,
@@ -523,6 +598,7 @@ class _GroupBuilder extends StatelessWidget {
 
   final SupersetGroupViewModel group;
   final WorkoutOverviewLoaded state;
+  final Set<String> currentSessionExerciseIds;
   final void Function(ExerciseViewModel) onReplace;
   final void Function(ExerciseViewModel) onSkip;
   final void Function(ExerciseViewModel) onMarkDone;
@@ -590,6 +666,8 @@ class _GroupBuilder extends StatelessWidget {
     final eligibleGroups = canMutate
         ? _eligibleSupersetGroupsFor(exercise)
         : const <SupersetGroup>[];
+    final exerciseId = exercise.sessionExercise.id;
+    final isCurrent = currentSessionExerciseIds.contains(exerciseId);
     return _DraggableExercise(
       exercise: exercise,
       isInSuperset: false,
@@ -598,14 +676,12 @@ class _GroupBuilder extends StatelessWidget {
       dragSession: dragSession,
       child: ExerciseCard(
         viewModel: exercise,
-        isExpanded: state.expandedExerciseIds.contains(
-          exercise.sessionExercise.id,
-        ),
+        isExpanded: state.expandedExerciseIds.contains(exerciseId),
         canMutate: canMutate,
-        isLastTouched:
-            state.lastTouchedSessionExerciseId == exercise.sessionExercise.id,
+        isCurrent: isCurrent,
+        isLastTouched: state.lastTouchedSessionExerciseId == exerciseId,
         onToggleExpansion: () => context.read<WorkoutOverviewBloc>().add(
-          WorkoutOverviewExpansionToggled(exercise.sessionExercise.id),
+          WorkoutOverviewExpansionToggled(exerciseId),
         ),
         onLogSet: (values, plannedSetId) {
           Haptics.tap();
@@ -727,6 +803,7 @@ class _GroupBuilder extends StatelessWidget {
       exercises: exercises,
       expandedExerciseIds: state.expandedExerciseIds,
       canMutate: canMutate,
+      currentSessionExerciseIds: currentSessionExerciseIds,
       lastTouchedSessionExerciseId: state.lastTouchedSessionExerciseId,
       onUngroupPressed: () => onUngroup(tag),
       onToggleExpansion: (id) => context.read<WorkoutOverviewBloc>().add(
@@ -1490,12 +1567,18 @@ class _SessionEndedBanner extends StatelessWidget {
 class _BottomActionBar extends StatelessWidget {
   const _BottomActionBar({
     required this.state,
+    required this.currentExerciseName,
     required this.onAddNote,
     required this.onAddExtraWork,
     required this.onFocusMode,
   });
 
   final WorkoutOverviewLoaded state;
+
+  /// Display name of the exercise the Focus button will open, or null when
+  /// there's no open target. Shown as `Focus: <name>` so the user can
+  /// confirm the target before tapping.
+  final String? currentExerciseName;
   final VoidCallback onAddNote;
   final VoidCallback onAddExtraWork;
   final VoidCallback onFocusMode;
@@ -1505,6 +1588,9 @@ class _BottomActionBar extends StatelessWidget {
     final colors = Theme.of(context).appColors;
     final hasOpenTarget = state.sessionState.openTargets.isNotEmpty;
     final canMutate = !state.isEnded && !state.mutationInFlight;
+    final label = currentExerciseName == null
+        ? 'Focus'
+        : 'Focus: $currentExerciseName';
 
     return SafeArea(
       top: false,
@@ -1537,7 +1623,11 @@ class _BottomActionBar extends StatelessWidget {
               child: FilledButton.icon(
                 onPressed: hasOpenTarget && !state.isEnded ? onFocusMode : null,
                 icon: const Icon(Icons.center_focus_strong, size: 18),
-                label: const Text('Focus'),
+                label: Text(
+                  label,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
               ),
             ),
           ],

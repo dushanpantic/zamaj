@@ -365,7 +365,7 @@ class _Header extends StatelessWidget {
       };
     }
     return switch (mode) {
-      SetRowMode.loggable => 'Tap to log',
+      SetRowMode.loggable => '—',
       SetRowMode.future => '—',
       SetRowMode.completed => '—',
       SetRowMode.trailing => '—',
@@ -392,8 +392,11 @@ class _StatusIcon extends StatelessWidget {
         color: colors.exerciseCompleted,
         size: 18,
       ),
+      // `adjust` is a centred dot inside a ring — clearly an indicator, not
+      // a button. Distinguishes the active loggable row without lying about
+      // tap behaviour the way `radio_button_unchecked` did.
       SetRowMode.loggable => Icon(
-        Icons.radio_button_unchecked,
+        Icons.adjust,
         color: colors.primary,
         size: 18,
       ),
