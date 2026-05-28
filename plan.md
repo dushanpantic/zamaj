@@ -104,7 +104,7 @@ the class name (repo convention, e.g. `_ExerciseCard` → `exercise_card.dart`).
 | 1 | workout_overview/screens/workout_overview_screen.dart | 2014 | 26 | **Tier 1 — split** |
 | 2 | program_management/screens/workout_day_editor_screen.dart | 1431 | 20 | **Tier 1 — split** |
 | 3 | focus_mode/screens/focus_mode_screen.dart | 1345 | 22 | **Tier 1 — split** |
-| 4 | program_management/screens/program_editor_screen.dart | 835 | 6 | **Tier 2 — split** |
+| 4 | program_management/screens/program_editor_screen.dart | 835 | 6 | **Tier 2 — split** ✅ DONE (now 323) |
 | 5 | program_management/screens/exercise_editor_screen.dart | 774 | 7 | **Tier 2 — split** ✅ DONE (now 193) |
 | 6 | exercise_library/screens/exercise_library_editor_screen.dart | 473 | 6 | Tier 3 — optional |
 | 7 | exercise_library/screens/exercise_library_list_screen.dart | 420 | 6 | Tier 3 — leave |
@@ -311,7 +311,15 @@ Smallest-blast-radius first; one screen per PR/commit so each is reviewable.
    `widgets/exercise_library_link_section.dart`, `widgets/exercise_editor_form.dart`,
    and `widgets/exercise_editor_scaffolds.dart` (Loading/NotFound/Editor scaffolds).
    Pure move; `dart analyze` clean, offline-imports guard OK. Awaiting user visual pass.
-2. **program_editor_screen.dart** (Tier 2) — converts `_build*` methods + sheet.
+2. ✅ **program_editor_screen.dart** (Tier 2) — converts `_build*` methods + sheet.
+   **DONE** (835 → 323): extracted `widgets/program_stats_header.dart` (`ProgramStatsHeader`),
+   `widgets/program_editor_app_bar.dart` (`ProgramEditorAppBar`, a `PreferredSizeWidget`;
+   dropped the unused `name`/`isCreateMode` params), `widgets/add_workout_day_sheet.dart`
+   (`AddWorkoutDaySheet` + private `_AddWorkoutDayMode`/`_SheetOption` kept in-file), and
+   `widgets/program_editor_day_list.dart` (`ProgramEditorDayList` — empty state + reorderable
+   list; reads the bloc directly, takes editing/expand state + callbacks via constructor).
+   `_buildScaffold` state switch stays in the screen. Pure move; `dart analyze` clean,
+   offline-imports guard OK. Awaiting user visual pass.
 3. **focus_mode_screen.dart** (Tier 1) — many small panel widgets, mostly
    stateless, low coupling.
 4. **workout_day_editor_screen.dart** (Tier 1) — do the `findAncestorStateOfType`
