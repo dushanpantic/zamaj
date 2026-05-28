@@ -366,7 +366,6 @@ class WorkoutOverviewBloc
               latest.expandedExerciseIds,
               latest.sessionState,
               next,
-              loggedSessionExerciseId: touchedSessionExerciseId,
             ),
             mutationInFlight: false,
             lastTouchedSessionExerciseId: touchedSessionExerciseId != null
@@ -411,122 +410,74 @@ class WorkoutOverviewBloc
     );
   }
 
-  /// Initial expansion: auto-expand only the "current" exercise — the first
-  /// member of the first open log target — so the user can log immediately
-  /// without confronting a wall of editors. Everything else stays collapsed;
-  /// the user can open any card on demand via its chevron / header tap.
-  Set<String> _initialExpansionFor(SessionState sessionState) {
-    final first = sessionState.openTargets.isEmpty
-        ? null
-        : sessionState.openTargets.first.sessionExerciseId;
-    return first == null ? <String>{} : <String>{first};
-  }
+  /// Initial expansion: open the active group so logging is one tap away. For
+  /// a standalone first exercise that's just the lone open target; for a
+  /// superset it's every loggable member, so the whole round opens at once.
+  /// Everything else stays collapsed.
+  Set<String> _initialExpansionFor(SessionState sessionState) =>
+      _activeGroupLoggableIds(sessionState);
 
-  /// On each refresh: keep the user's manual choice. Cards the user opened
-  /// stay open as long as the exercise still has room to log; cards that
-  /// hit a terminal state with all sets logged drop out.
+  /// On each refresh: keep the user's manual choice, but drive the active
+  /// group's expansion automatically.
   ///
-  /// Plus: when the "current" exercise (the first open target) advances —
-  /// because all sets on the prior current were logged, or it was skipped /
-  /// marked done — auto-expand the new current so the user can keep logging
-  /// without an extra tap.
-  ///
-  /// And: when [loggedSessionExerciseId] names an exercise in a superset
-  /// group with another loggable member, auto-expand the next rotation
-  /// member so the user keeps moving through the round-robin without an
-  /// extra tap (mirrors focus mode's active-panel rotation).
+  /// - Cards the user opened stay open while their exercise is still loggable
+  ///   (has a remaining planned set). A card whose planned sets are all logged,
+  ///   or that hit a terminal state, drops out and collapses — so superset
+  ///   members fold away one by one as the user finishes them.
+  /// - When the active group (the group owning the first open target) changes —
+  ///   because the prior one was finished, skipped, or marked done — every
+  ///   loggable member of the new group auto-expands. For a superset that opens
+  ///   the whole round; once all its members are finished the next group opens.
   Set<String> _expansionForOpenTargets(
     Set<String> current,
     SessionState previous,
-    SessionState next, {
-    String? loggedSessionExerciseId,
-  }) {
-    final retained = <String>{
-      for (final ex in next.session.sessionExercises)
-        if (current.contains(ex.id) &&
-            switch (ex.state) {
-              UnfinishedState() => true,
-              ReplacedState(:final substitute) =>
-                ex.executedSets.length < substitute.setCount,
-              CompletedState() || SkippedState() => false,
-            })
-          ex.id,
+    SessionState next,
+  ) {
+    final loggableIds = <String>{
+      for (final t in next.openTargets) t.sessionExerciseId,
     };
-    final prevFirst = previous.openTargets.isEmpty
-        ? null
-        : previous.openTargets.first.sessionExerciseId;
-    final nextFirst = next.openTargets.isEmpty
-        ? null
-        : next.openTargets.first.sessionExerciseId;
-    if (nextFirst != null && nextFirst != prevFirst) {
-      retained.add(nextFirst);
-    }
-    if (loggedSessionExerciseId != null) {
-      final rotated = _nextSupersetMemberAfterLogging(
-        next,
-        loggedSessionExerciseId,
-      );
-      if (rotated != null) {
-        retained.add(rotated);
-      }
+    final retained = <String>{
+      for (final id in current)
+        if (loggableIds.contains(id)) id,
+    };
+    if (_activeGroupKey(next) != _activeGroupKey(previous)) {
+      retained.addAll(_activeGroupLoggableIds(next));
     }
     return retained;
   }
 
-  /// Picks the next loggable member of [loggedSessionExerciseId]'s superset
-  /// group, matching focus mode's rotation rule:
-  ///   1. Among loggable members, the minimum executed-sets count wins.
-  ///   2. Ties broken by position order, starting after the just-logged
-  ///      exercise and wrapping around.
-  /// Returns null when the exercise has no superset tag, the group has
-  /// fewer than two members, or no loggable members remain.
-  String? _nextSupersetMemberAfterLogging(
-    SessionState state,
-    String loggedSessionExerciseId,
-  ) {
-    final logged = state.session.sessionExercises
-        .where((e) => e.id == loggedSessionExerciseId)
+  /// Identity of the "active group" — the group owning the first open target.
+  /// A superset is keyed by its shared tag, a standalone exercise by its own
+  /// id, so the key changes only when logging advances past the whole group,
+  /// not when the first open target rotates between superset members. Null
+  /// when nothing is loggable.
+  String? _activeGroupKey(SessionState state) {
+    if (state.openTargets.isEmpty) return null;
+    final anchorId = state.openTargets.first.sessionExerciseId;
+    final anchor = state.session.sessionExercises
+        .where((e) => e.id == anchorId)
         .firstOrNull;
-    if (logged == null) return null;
-    final tag = logged.supersetTag;
-    if (tag == null) return null;
+    return anchor?.supersetTag ?? anchorId;
+  }
 
-    final groupMembers =
-        state.session.sessionExercises
-            .where((e) => e.supersetTag == tag)
-            .toList()
-          ..sort((a, b) => a.position.compareTo(b.position));
-    if (groupMembers.length < 2) return null;
-
+  /// Loggable members of the active group. For a standalone exercise that's the
+  /// lone open target; for a superset it's every member that still has a
+  /// remaining planned set, so the whole round expands together.
+  Set<String> _activeGroupLoggableIds(SessionState state) {
+    if (state.openTargets.isEmpty) return <String>{};
     final loggableIds = <String>{
       for (final t in state.openTargets) t.sessionExerciseId,
     };
-    final loggable = groupMembers
-        .where((e) => loggableIds.contains(e.id))
-        .toList(growable: false);
-    if (loggable.isEmpty) return null;
-    if (loggable.length == 1) return loggable.single.id;
-
-    final minCount = loggable
-        .map((e) => e.executedSets.length)
-        .reduce((a, b) => a < b ? a : b);
-    final pool = loggable
-        .where((e) => e.executedSets.length == minCount)
-        .toList(growable: false);
-    if (pool.length == 1) return pool.single.id;
-
-    final loggedPosition = groupMembers.indexWhere(
-      (e) => e.id == loggedSessionExerciseId,
-    );
-    final poolIds = pool.map((e) => e.id).toSet();
-    if (loggedPosition != -1) {
-      for (var step = 1; step <= groupMembers.length; step++) {
-        final candidate =
-            groupMembers[(loggedPosition + step) % groupMembers.length];
-        if (poolIds.contains(candidate.id)) return candidate.id;
-      }
-    }
-    return pool.first.id;
+    final anchorId = state.openTargets.first.sessionExerciseId;
+    final anchor = state.session.sessionExercises
+        .where((e) => e.id == anchorId)
+        .firstOrNull;
+    final tag = anchor?.supersetTag;
+    if (tag == null) return <String>{anchorId};
+    return <String>{
+      for (final e in state.session.sessionExercises)
+        if (e.supersetTag == tag && loggableIds.contains(e.id)) e.id,
+    };
   }
 
   String? _sessionIdOrNull() => switch (state) {
