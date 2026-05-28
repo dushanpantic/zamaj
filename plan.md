@@ -102,7 +102,7 @@ the class name (repo convention, e.g. `_ExerciseCard` → `exercise_card.dart`).
 | # | Screen | Lines | Inline classes | Verdict |
 |---|---|---:|---:|---|
 | 1 | workout_overview/screens/workout_overview_screen.dart | 2014 | 26 | **Tier 1 — split** |
-| 2 | program_management/screens/workout_day_editor_screen.dart | 1431 | 20 | **Tier 1 — split** |
+| 2 | program_management/screens/workout_day_editor_screen.dart | 1431 | 20 | **Tier 1 — split** ✅ DONE (now 296) |
 | 3 | focus_mode/screens/focus_mode_screen.dart | 1345 | 22 | **Tier 1 — split** ✅ DONE (now 105) |
 | 4 | program_management/screens/program_editor_screen.dart | 835 | 6 | **Tier 2 — split** ✅ DONE (now 323) |
 | 5 | program_management/screens/exercise_editor_screen.dart | 774 | 7 | **Tier 2 — split** ✅ DONE (now 193) |
@@ -338,8 +338,23 @@ Smallest-blast-radius first; one screen per PR/commit so each is reviewable.
    (`FocusReadyBody`). Screen keeps `FocusModeScreen` + state (bloc listeners,
    `_appBarFor`, `_body` switch). Pure move; `dart analyze` clean, format clean,
    offline-imports guard OK. Awaiting user visual pass.
-4. **workout_day_editor_screen.dart** (Tier 1) — do the `findAncestorStateOfType`
-   fix first, then extract the tile/superset DnD.
+4. ✅ **workout_day_editor_screen.dart** (Tier 1) — do the `findAncestorStateOfType`
+   fix first, then extract the tile/superset DnD. **DONE** (1431 → 296): replaced
+   the `findAncestorStateOfType<_WorkoutDayEditorScreenState>` lookups by threading
+   an `onNavigateToExercise` callback screen → `_EditingBody` → `WorkoutDayExerciseList`
+   → tiles. Extracted to `widgets/`: `editor_drag_payload.dart` (`ExerciseDragPayload`
+   + `GroupMenuAction`, both promoted to public so the row + superset card share them),
+   `editor_exercise_tile_content.dart` (`EditorExerciseTileContent` + `EditorWarmupBadge`
+   public; `_SupersetPositionBadge`/`_RestChip` kept private in-file),
+   `add_exercise_dialog.dart` (public `startAddExercise` fn + private `_AddExerciseDialog`),
+   `editor_flat_exercise_row.dart` (`EditorFlatExerciseRow`), `editor_superset_card.dart`
+   (`EditorSupersetCard`), `workout_day_exercise_list.dart` (`WorkoutDayExerciseList`;
+   reads the bloc from context, takes the nav callback via constructor),
+   `workout_day_name_field.dart` (`WorkoutDayNameField`), `workout_day_save_chip.dart`
+   (`WorkoutDaySaveChip`), `workout_day_save_error_banner.dart` (`WorkoutDaySaveErrorBanner`).
+   Screen keeps `WorkoutDayEditorScreen` + state, `_EditingBody`, `_LoadingView`,
+   `_NotFoundView`. Pure move; `dart analyze` clean (whole `lib/`), format clean,
+   offline-imports guard OK. Awaiting user visual pass.
 5. **workout_overview_screen.dart** (Tier 1) — largest; extract the DnD cluster
    last when the recipe is well-practiced.
 6. (Optional) Cross-cutting shared state-views (§7.1).
