@@ -77,9 +77,13 @@ class _SetRowState extends State<SetRow> {
   late final TextEditingController _reps;
   late final TextEditingController _duration;
 
-  /// Tap-to-edit affordance for `completed` and `trailing` rows. Loggable
-  /// rows ignore this flag — their editor is always visible.
+  /// Tap-to-edit affordance for `completed` and `trailing` rows.
   bool _editingExisting = false;
+
+  /// Opt-in ± editor for a `loggable` row. Default closed: the row shows the
+  /// suggested value behind the tappable log circle, and the user only opens
+  /// the editor when logging a value that differs from the suggestion.
+  bool _editorOpen = false;
 
   @override
   void initState() {
@@ -94,14 +98,14 @@ class _SetRowState extends State<SetRow> {
   void didUpdateWidget(covariant SetRow oldWidget) {
     super.didUpdateWidget(oldWidget);
     // Refresh the editor from the latest view model on every update, except
-    // when the user is mid-edit on this row (executed set unchanged and the
-    // editor is still open).
-    final stillEditing =
+    // when the user is mid-edit on this row (executed set unchanged and an
+    // editor is still open) — reseeding then would clobber their typing.
+    final sameExecuted =
         widget.viewModel.executedSet?.id == oldWidget.viewModel.executedSet?.id;
-    if (stillEditing && _editingExisting) return;
-    if (widget.viewModel.executedSet?.id !=
-        oldWidget.viewModel.executedSet?.id) {
+    if (sameExecuted && (_editingExisting || _editorOpen)) return;
+    if (!sameExecuted) {
       _editingExisting = false;
+      _editorOpen = false;
     }
     _seedFromViewModel();
   }
@@ -173,6 +177,23 @@ class _SetRowState extends State<SetRow> {
     }
   }
 
+  /// The value a one-tap log on a loggable row would record: the suggested
+  /// actual (last logged set on this exercise) falling back to the planned
+  /// target. Null only when there is neither — then the circle opens the
+  /// editor instead of logging nothing.
+  ActualSetValues? _quickLogValues() =>
+      widget.viewModel.suggestedActualValues ??
+      _plannedAsActual(widget.viewModel.plannedValues);
+
+  void _quickLog() {
+    final values = _quickLogValues();
+    if (values == null) {
+      setState(() => _editorOpen = true);
+      return;
+    }
+    widget.onLogSet(values, widget.viewModel.plannedSetIdInSnapshot);
+  }
+
   ActualSetValues? _readValues() {
     return switch (widget.measurementType) {
       RepBasedMeasurement() => _readRepBased(),
@@ -217,22 +238,30 @@ class _SetRowState extends State<SetRow> {
     final colors = Theme.of(context).appColors;
     const typography = AppTypography.standard;
     final mode = widget.mode;
-    // Loggable editor visibility is intentionally not gated on canMutate:
-    // canMutate flips false for the brief window a mutation is in flight,
-    // and hiding/restoring the editor in that window made the card jitter
-    // on every LOG SET. The bloc's _runMutation already dedupes concurrent
-    // submits, so leaving the button tappable during the window is safe.
     final showEditor = switch (mode) {
-      SetRowMode.loggable => true,
+      SetRowMode.loggable => _editorOpen,
       SetRowMode.completed ||
       SetRowMode.trailing => widget.canMutate && _editingExisting,
       SetRowMode.future => false,
     };
     final canTapHeader =
         widget.canMutate &&
-        (mode == SetRowMode.completed || mode == SetRowMode.trailing);
+        (mode == SetRowMode.loggable ||
+            mode == SetRowMode.completed ||
+            mode == SetRowMode.trailing);
     final isHighlighted =
         mode == SetRowMode.loggable && widget.highlightLoggable;
+    final suggested = mode == SetRowMode.loggable ? _quickLogValues() : null;
+
+    void toggleEditor() {
+      setState(() {
+        if (mode == SetRowMode.loggable) {
+          _editorOpen = !_editorOpen;
+        } else {
+          _editingExisting = !_editingExisting;
+        }
+      });
+    }
 
     final content = Padding(
       padding: const EdgeInsets.symmetric(
@@ -248,6 +277,10 @@ class _SetRowState extends State<SetRow> {
             measurementType: widget.measurementType,
             typography: typography,
             colors: colors,
+            editorOpen: _editorOpen,
+            suggestedActual: suggested,
+            onQuickLog: widget.canMutate ? _quickLog : null,
+            onToggleEditor: toggleEditor,
           ),
           if (showEditor) ...[
             const SizedBox(height: AppSpacing.sm),
@@ -283,9 +316,7 @@ class _SetRowState extends State<SetRow> {
     return Material(
       color: Colors.transparent,
       child: InkWell(
-        onTap: canTapHeader
-            ? () => setState(() => _editingExisting = !_editingExisting)
-            : null,
+        onTap: canTapHeader ? toggleEditor : null,
         borderRadius: BorderRadius.circular(AppRadius.sm),
         child: decorated,
       ),
@@ -300,6 +331,10 @@ class _Header extends StatelessWidget {
     required this.measurementType,
     required this.typography,
     required this.colors,
+    required this.editorOpen,
+    required this.suggestedActual,
+    required this.onQuickLog,
+    required this.onToggleEditor,
   });
 
   final SetRowViewModel viewModel;
@@ -307,6 +342,22 @@ class _Header extends StatelessWidget {
   final MeasurementType measurementType;
   final AppTypography typography;
   final AppColors colors;
+
+  /// Whether the loggable row's ± editor is currently open. When true the
+  /// trailing slot shows a collapse chevron instead of the log circle, so
+  /// there is a single commit control (the editor's LOG SET button).
+  final bool editorOpen;
+
+  /// Value a one-tap log would record; rendered dimmed beside the log circle
+  /// so the user sees what tapping will log. Loggable rows only.
+  final ActualSetValues? suggestedActual;
+
+  /// Quick-log the suggested value. Null disables the circle (session not
+  /// live).
+  final VoidCallback? onQuickLog;
+
+  /// Toggles the opt-in ± editor open/closed.
+  final VoidCallback onToggleEditor;
 
   @override
   Widget build(BuildContext context) {
@@ -329,8 +380,38 @@ class _Header extends StatelessWidget {
           ),
         ),
         const SizedBox(width: AppSpacing.md),
+        _buildTrailing(),
+      ],
+    );
+  }
+
+  Widget _buildTrailing() {
+    if (mode == SetRowMode.loggable) {
+      if (editorOpen) {
+        return _CollapseButton(onPressed: onToggleEditor, colors: colors);
+      }
+      return Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          if (suggestedActual != null)
+            Padding(
+              padding: const EdgeInsets.only(right: AppSpacing.sm),
+              child: Text(
+                '→ ${_formatActual(suggestedActual!)}',
+                style: typography.numericSm.copyWith(
+                  color: colors.onSurfaceMuted,
+                ),
+              ),
+            ),
+          _LoggableCircleButton(onTap: onQuickLog, colors: colors),
+        ],
+      );
+    }
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
         Text(
-          _actualLabel(viewModel.executedSet, mode),
+          _actualLabel(viewModel.executedSet),
           style: typography.numericSm.copyWith(
             color: viewModel.executedSet != null
                 ? colors.actual
@@ -357,25 +438,18 @@ class _Header extends StatelessWidget {
     };
   }
 
-  String _actualLabel(ExecutedSet? executed, SetRowMode mode) {
-    if (executed != null) {
-      return switch (executed.actualValues) {
-        ActualRepBased(:final weightKg, :final reps) =>
-          '${WeightFormatter.formatKg(weightKg)} × $reps',
-        ActualTimeBased(:final durationSeconds, :final weightKg) =>
-          weightKg == null
-              ? '${durationSeconds}s'
-              : '${WeightFormatter.formatKg(weightKg)} × ${durationSeconds}s',
-        ActualBodyweight(:final reps) => '× $reps',
-      };
-    }
-    return switch (mode) {
-      SetRowMode.loggable => '—',
-      SetRowMode.future => '—',
-      SetRowMode.completed => '—',
-      SetRowMode.trailing => '—',
-    };
-  }
+  String _actualLabel(ExecutedSet? executed) =>
+      executed == null ? '—' : _formatActual(executed.actualValues);
+
+  static String _formatActual(ActualSetValues values) => switch (values) {
+    ActualRepBased(:final weightKg, :final reps) =>
+      '${WeightFormatter.formatKg(weightKg)} × $reps',
+    ActualTimeBased(:final durationSeconds, :final weightKg) =>
+      weightKg == null
+          ? '${durationSeconds}s'
+          : '${WeightFormatter.formatKg(weightKg)} × ${durationSeconds}s',
+    ActualBodyweight(:final reps) => '× $reps',
+  };
 }
 
 class _StatusIcon extends StatelessWidget {
@@ -397,20 +471,81 @@ class _StatusIcon extends StatelessWidget {
         color: colors.exerciseCompleted,
         size: 18,
       ),
-      // `adjust` is a centred dot inside a ring — clearly an indicator, not
-      // a button. Distinguishes the active loggable row without lying about
-      // tap behaviour the way `radio_button_unchecked` did.
-      SetRowMode.loggable => Icon(
-        Icons.adjust,
-        color: colors.primary,
-        size: 18,
-      ),
+      // Loggable rows render the tappable `_LoggableCircleButton` instead of
+      // a status icon, so this branch is never hit for them.
+      SetRowMode.loggable => const SizedBox.shrink(),
       SetRowMode.future => Icon(
         Icons.circle_outlined,
         color: colors.onSurfaceMuted,
         size: 18,
       ),
     };
+  }
+}
+
+/// The single commit affordance for a collapsed loggable row: a primary
+/// circle that logs the suggested value in one tap. Sized to the in-session
+/// primary-action floor (≥56 dp) for sweaty-hands use. Hidden while the row's
+/// ± editor is open (the editor's LOG SET button commits there).
+class _LoggableCircleButton extends StatelessWidget {
+  const _LoggableCircleButton({required this.onTap, required this.colors});
+
+  static const double _size = 56;
+
+  final VoidCallback? onTap;
+  final AppColors colors;
+
+  @override
+  Widget build(BuildContext context) {
+    return Tooltip(
+      message: 'Log set',
+      child: Material(
+        color: Colors.transparent,
+        shape: const CircleBorder(),
+        child: InkWell(
+          onTap: onTap,
+          customBorder: const CircleBorder(),
+          child: Container(
+            width: _size,
+            height: _size,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: colors.primary.withValues(alpha: 0.10),
+              border: Border.all(color: colors.primary, width: 2),
+            ),
+            child: Icon(
+              Icons.check,
+              color: colors.primary,
+              size: 26,
+              semanticLabel: 'Log set',
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Chevron shown in a loggable row's trailing slot while its ± editor is open,
+/// so the user can collapse back to the one-tap log circle.
+class _CollapseButton extends StatelessWidget {
+  const _CollapseButton({required this.onPressed, required this.colors});
+
+  final VoidCallback onPressed;
+  final AppColors colors;
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      width: AppSpacing.touchMin,
+      height: AppSpacing.touchMin,
+      child: IconButton(
+        tooltip: 'Collapse',
+        onPressed: onPressed,
+        padding: EdgeInsets.zero,
+        icon: Icon(Icons.expand_less, color: colors.onSurfaceMuted, size: 24),
+      ),
+    );
   }
 }
 

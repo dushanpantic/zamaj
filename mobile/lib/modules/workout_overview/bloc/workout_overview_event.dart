@@ -59,6 +59,17 @@ final class WorkoutOverviewSetLogged extends WorkoutOverviewEvent {
   ];
 }
 
+/// Undoes the most recent set-log by deleting the executed set it created.
+/// Dispatched from the "Set logged · UNDO" snackbar.
+final class WorkoutOverviewSetLogUndone extends WorkoutOverviewEvent {
+  const WorkoutOverviewSetLogUndone(this.executedSetId);
+
+  final String executedSetId;
+
+  @override
+  List<Object?> get props => [executedSetId];
+}
+
 final class WorkoutOverviewSetEdited extends WorkoutOverviewEvent {
   const WorkoutOverviewSetEdited({
     required this.executedSetId,

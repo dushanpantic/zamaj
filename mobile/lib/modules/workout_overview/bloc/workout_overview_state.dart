@@ -52,6 +52,7 @@ final class WorkoutOverviewLoaded extends WorkoutOverviewState {
     this.mutationInFlight = false,
     this.lastTransientError,
     this.lastTouchedSessionExerciseId,
+    this.lastLoggedExecutedSetId,
   });
 
   /// Authoritative snapshot of the session from the engine. Every other
@@ -83,6 +84,12 @@ final class WorkoutOverviewLoaded extends WorkoutOverviewState {
   /// returns to it after a rest.
   final String? lastTouchedSessionExerciseId;
 
+  /// The id of the executed set created by the most recent set-log mutation,
+  /// or null after any other mutation. The screen listens for transitions of
+  /// this field to surface an "Set logged · UNDO" snackbar; UNDO deletes this
+  /// exact set.
+  final String? lastLoggedExecutedSetId;
+
   bool get isEnded => sessionState.session.endedAt != null;
 
   WorkoutOverviewLoaded copyWith({
@@ -92,6 +99,7 @@ final class WorkoutOverviewLoaded extends WorkoutOverviewState {
     bool? mutationInFlight,
     DomainError? Function()? lastTransientError,
     String? Function()? lastTouchedSessionExerciseId,
+    String? Function()? lastLoggedExecutedSetId,
   }) {
     return WorkoutOverviewLoaded(
       sessionState: sessionState ?? this.sessionState,
@@ -104,6 +112,9 @@ final class WorkoutOverviewLoaded extends WorkoutOverviewState {
       lastTouchedSessionExerciseId: lastTouchedSessionExerciseId != null
           ? lastTouchedSessionExerciseId()
           : this.lastTouchedSessionExerciseId,
+      lastLoggedExecutedSetId: lastLoggedExecutedSetId != null
+          ? lastLoggedExecutedSetId()
+          : this.lastLoggedExecutedSetId,
     );
   }
 
@@ -115,5 +126,6 @@ final class WorkoutOverviewLoaded extends WorkoutOverviewState {
     mutationInFlight,
     lastTransientError,
     lastTouchedSessionExerciseId,
+    lastLoggedExecutedSetId,
   ];
 }

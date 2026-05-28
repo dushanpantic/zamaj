@@ -36,7 +36,7 @@ Durable identity for each movement so the same "BB Bench Press" on PUSH day and 
 - **Workout-day picker** — [workout_day_picker_screen.dart](mobile/lib/modules/workout_day_picker/screens/workout_day_picker_screen.dart). Choose which day of the program to do today; resume an in-progress session if one exists.
 
 ### In-session (sweaty-hands)
-- **Workout overview** — [workout_overview_screen.dart](mobile/lib/modules/workout_overview/screens/workout_overview_screen.dart). The full session: every exercise card expandable for inline set logging, drag-to-reorder between cards, drag-onto-card to form a superset, ungroup, replace / skip / mark-done per exercise, session notes, extra work, end session.
+- **Workout overview** — [workout_overview_screen.dart](mobile/lib/modules/workout_overview/screens/workout_overview_screen.dart). The full session: every exercise card expands to its set list, where the active set logs in one tap on its circle (recording the suggested value, with an UNDO snackbar) or opens an inline ± editor to log a value that differs from plan; drag-to-reorder between cards, drag-onto-card to form a superset, ungroup, replace / skip / mark-done per exercise, session notes, extra work, end session.
 - **Focus mode** — [focus_mode_screen.dart](mobile/lib/modules/focus_mode/screens/focus_mode_screen.dart). One exercise (or one superset group) at a time. Large LOG SET button, rest timer with overtime indicator, undo last set, partner cards for superset members. Optimised for between-set use.
 
 ### After a session — [export/](mobile/lib/modules/export/)
