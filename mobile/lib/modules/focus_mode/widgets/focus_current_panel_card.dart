@@ -1,0 +1,67 @@
+import 'package:flutter/material.dart';
+import 'package:zamaj/core/app_spacing.dart';
+import 'package:zamaj/core/app_theme.dart';
+import 'package:zamaj/modules/focus_mode/bloc/bloc.dart';
+import 'package:zamaj/modules/focus_mode/models/focus_mode_view_model.dart';
+import 'package:zamaj/modules/focus_mode/widgets/focus_current_values_panel.dart';
+import 'package:zamaj/modules/focus_mode/widgets/focus_panel_actions_menu.dart';
+import 'package:zamaj/modules/focus_mode/widgets/focus_panel_header.dart';
+import 'package:zamaj/modules/focus_mode/widgets/focus_planned_and_last.dart';
+import 'package:zamaj/modules/focus_mode/widgets/focus_set_progress.dart';
+
+/// Full editor for the currently active panel — pips, planned/last,
+/// numeric hero + bump rows, 3-dot menu. The LOG SET button lives in the
+/// pinned bottom bar, not inside the card.
+class FocusCurrentPanelCard extends StatelessWidget {
+  const FocusCurrentPanelCard({
+    super.key,
+    required this.state,
+    required this.panel,
+    required this.canMutate,
+  });
+
+  final FocusModeReady state;
+  final FocusModeViewModel panel;
+  final bool canMutate;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = Theme.of(context).appColors;
+    final accent = colors.loggableHint;
+    return Container(
+      key: ValueKey('current-panel-${panel.sessionExerciseId}'),
+      padding: const EdgeInsets.all(AppSpacing.md),
+      decoration: BoxDecoration(
+        color: colors.surface.withValues(alpha: 0.5),
+        borderRadius: BorderRadius.circular(AppRadius.lg),
+        border: Border.all(color: accent.withValues(alpha: 0.7), width: 1.5),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(child: FocusPanelHeader(panel: panel)),
+              FocusPanelActionsMenu(state: state, panel: panel),
+            ],
+          ),
+          const SizedBox(height: AppSpacing.sm),
+          FocusSetProgress(
+            completed: panel.completedSetsCount,
+            total: panel.totalPlannedSets,
+            currentIndex: panel.currentSetIndex,
+          ),
+          const SizedBox(height: AppSpacing.md),
+          FocusPlannedAndLast(panel: panel),
+          const SizedBox(height: AppSpacing.md),
+          FocusCurrentValuesPanel(
+            state: state,
+            panel: panel,
+            canMutate: canMutate,
+          ),
+        ],
+      ),
+    );
+  }
+}

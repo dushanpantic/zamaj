@@ -103,7 +103,7 @@ the class name (repo convention, e.g. `_ExerciseCard` → `exercise_card.dart`).
 |---|---|---:|---:|---|
 | 1 | workout_overview/screens/workout_overview_screen.dart | 2014 | 26 | **Tier 1 — split** |
 | 2 | program_management/screens/workout_day_editor_screen.dart | 1431 | 20 | **Tier 1 — split** |
-| 3 | focus_mode/screens/focus_mode_screen.dart | 1345 | 22 | **Tier 1 — split** |
+| 3 | focus_mode/screens/focus_mode_screen.dart | 1345 | 22 | **Tier 1 — split** ✅ DONE (now 105) |
 | 4 | program_management/screens/program_editor_screen.dart | 835 | 6 | **Tier 2 — split** ✅ DONE (now 323) |
 | 5 | program_management/screens/exercise_editor_screen.dart | 774 | 7 | **Tier 2 — split** ✅ DONE (now 193) |
 | 6 | exercise_library/screens/exercise_library_editor_screen.dart | 473 | 6 | Tier 3 — optional |
@@ -320,8 +320,24 @@ Smallest-blast-radius first; one screen per PR/commit so each is reviewable.
    list; reads the bloc directly, takes editing/expand state + callbacks via constructor).
    `_buildScaffold` state switch stays in the screen. Pure move; `dart analyze` clean,
    offline-imports guard OK. Awaiting user visual pass.
-3. **focus_mode_screen.dart** (Tier 1) — many small panel widgets, mostly
-   stateless, low coupling.
+3. ✅ **focus_mode_screen.dart** (Tier 1) — many small panel widgets, mostly
+   stateless, low coupling. **DONE** (1345 → 105): extracted to `widgets/` —
+   `focus_marquee_text.dart` (`FocusMarqueeText`), `focus_up_next_strip.dart`
+   (`FocusUpNextStrip`; replaced the dead `focus_up_next.dart`/`FocusUpNext`,
+   which had no callers), `focus_panel_slot.dart` (`FocusPanelSlot` + public
+   `FocusPanelRole` enum + `focusPanelRoleFor`), `focus_current_panel_card.dart`,
+   `focus_previous_panel_card.dart`, `focus_upcoming_panel_card.dart`,
+   `focus_panel_header.dart` (`FocusPanelHeader` + in-file `_WarmupPill`),
+   `focus_planned_and_last.dart` (`FocusPlannedAndLast` + public
+   `focusFormatPlanned`/`focusFormatLast`), `focus_current_values_panel.dart`,
+   `focus_pinned_bottom_bar.dart` (`FocusPinnedBottomBar` + in-file
+   `_UndoLastSetButton`), `focus_panel_actions_menu.dart` (`FocusPanelActionsMenu`
+   + in-file `_PanelMenuAction`), `focus_switch_exercise_button.dart`,
+   `focus_mode_state_views.dart` (`FocusLoadingView`/`FocusNotFoundView`/
+   `FocusErrorView`/`FocusTransientErrorBanner`), and `focus_ready_body.dart`
+   (`FocusReadyBody`). Screen keeps `FocusModeScreen` + state (bloc listeners,
+   `_appBarFor`, `_body` switch). Pure move; `dart analyze` clean, format clean,
+   offline-imports guard OK. Awaiting user visual pass.
 4. **workout_day_editor_screen.dart** (Tier 1) — do the `findAncestorStateOfType`
    fix first, then extract the tile/superset DnD.
 5. **workout_overview_screen.dart** (Tier 1) — largest; extract the DnD cluster
