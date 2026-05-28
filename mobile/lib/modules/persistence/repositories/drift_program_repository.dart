@@ -555,6 +555,8 @@ class DriftProgramRepository implements ProgramRepository {
                 ),
                 notes: Value(ex.metadata.notes),
                 videoUrl: Value(ex.metadata.videoUrl),
+                plannedRestSeconds: Value(ex.plannedRestSeconds),
+                libraryExerciseId: Value(ex.libraryExerciseId),
                 createdAtMs: utcToMs(now),
                 updatedAtMs: utcToMs(now),
                 schemaVersion: SchemaVersions.domain,

@@ -79,6 +79,48 @@ void main() {
       },
     );
 
+    test('createExerciseGroup persists a libraryExerciseId set at '
+        'creation time', () async {
+      final rng = Random(4);
+      final entry = await libraryRepo.create(
+        name: 'BB Bench Press',
+        measurementType: const MeasurementType.repBased(),
+      );
+
+      final program = await programRepo.createProgram(name: 'P');
+      final day = await programRepo.createWorkoutDay(
+        programId: program.id,
+        name: 'D',
+      );
+      final group = await programRepo.createExerciseGroup(
+        workoutDayId: day.id,
+        kind: const ExerciseGroupKind.single(),
+        exercises: [
+          domain.Exercise(
+            id: anyUuidV4(rng),
+            exerciseGroupId: '',
+            position: 0,
+            name: 'Bench Press',
+            measurementType: const MeasurementType.repBased(),
+            metadata: ExerciseMetadata.empty,
+            plannedRestSeconds: 90,
+            libraryExerciseId: entry.id,
+            sets: const [],
+            createdAt: DateTime.utc(2026),
+            updatedAt: DateTime.utc(2026),
+            schemaVersion: 1,
+          ),
+        ],
+      );
+
+      final reloaded = await programRepo.getExercise(
+        group.exercises.first.id,
+      );
+      expect(reloaded, isNotNull);
+      expect(reloaded!.libraryExerciseId, equals(entry.id));
+      expect(reloaded.plannedRestSeconds, equals(90));
+    });
+
     test('unlink (set libraryExerciseId back to null) round-trips', () async {
       final rng = Random(2);
       final entry = await libraryRepo.create(
