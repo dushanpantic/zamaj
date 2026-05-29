@@ -3,7 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:zamaj/core/app_theme.dart';
 import 'package:zamaj/modules/focus_mode/bloc/bloc.dart';
 import 'package:zamaj/modules/focus_mode/models/focus_mode_view_model.dart';
-import 'package:zamaj/modules/program_management/services/external_link_launcher.dart';
+import 'package:zamaj/modules/focus_mode/widgets/focus_video_button.dart';
 import 'package:zamaj/modules/program_management/widgets/confirmation_dialog.dart';
 import 'package:zamaj/modules/workout_overview/widgets/replace_exercise_dialog.dart';
 
@@ -12,16 +12,21 @@ class FocusPanelActionsMenu extends StatelessWidget {
     super.key,
     required this.state,
     required this.panel,
+    this.showVideoItem = true,
   });
 
   final FocusModeReady state;
   final FocusModeViewModel panel;
 
+  /// Whether the overflow lists "Open video". Suppressed on the active card,
+  /// which surfaces a dedicated [FocusVideoButton] in its header instead.
+  final bool showVideoItem;
+
   @override
   Widget build(BuildContext context) {
     final colors = Theme.of(context).appColors;
     final videoUrl = panel.displayMetadata?.videoUrl;
-    final hasVideo = videoUrl != null && videoUrl.isNotEmpty;
+    final hasVideo = showVideoItem && videoUrl != null && videoUrl.isNotEmpty;
     final canMarkDone =
         panel.completedSetsCount > 0 && panel.isLoggable && !panel.isReplaced;
     return PopupMenuButton<_PanelMenuAction>(
@@ -35,7 +40,7 @@ class FocusPanelActionsMenu extends StatelessWidget {
           case _PanelMenuAction.markDone:
             _handleMarkDone(context);
           case _PanelMenuAction.openVideo:
-            if (hasVideo) _handleOpenVideo(context, videoUrl);
+            if (hasVideo) openExerciseVideo(context, videoUrl);
         }
       },
       itemBuilder: (context) => [
@@ -137,19 +142,6 @@ class FocusPanelActionsMenu extends StatelessWidget {
     );
     if (confirmed != true) return;
     bloc.add(FocusModeExerciseMarkedDone(panel.sessionExerciseId));
-  }
-
-  Future<void> _handleOpenVideo(BuildContext context, String url) async {
-    final launcher = context.read<ExternalLinkLauncher>();
-    final uri = Uri.tryParse(url);
-    if (uri == null) return;
-    final result = await launcher.launch(uri);
-    if (!context.mounted) return;
-    if (result is ExternalLinkFailure) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Could not open video: ${result.reason}')),
-      );
-    }
   }
 }
 
