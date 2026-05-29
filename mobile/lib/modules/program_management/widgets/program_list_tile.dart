@@ -12,6 +12,7 @@ class ProgramListTile extends StatelessWidget {
     required this.onTap,
     required this.onEdit,
     required this.onDeleteRequested,
+    this.isInProgress = false,
     this.isDeleting = false,
   });
 
@@ -19,6 +20,10 @@ class ProgramListTile extends StatelessWidget {
   final VoidCallback onTap;
   final VoidCallback onEdit;
   final VoidCallback onDeleteRequested;
+
+  /// Whether the in-flight session belongs to this program. Drives the accent
+  /// bar, the `IN PROGRESS` chip, and the tinted leading anchor.
+  final bool isInProgress;
   final bool isDeleting;
 
   @override
@@ -26,22 +31,31 @@ class ProgramListTile extends StatelessWidget {
     final colors = Theme.of(context).appColors;
     const typography = AppTypography.standard;
 
-    final tile = InkWell(
-      onTap: isDeleting ? null : onTap,
-      borderRadius: BorderRadius.circular(AppRadius.md),
-      child: Container(
-        padding: const EdgeInsets.symmetric(
-          horizontal: AppSpacing.lg,
-          vertical: AppSpacing.md,
-        ),
-        decoration: BoxDecoration(
-          color: colors.surface,
-          borderRadius: BorderRadius.circular(AppRadius.md),
-          border: Border.all(color: colors.outline),
-        ),
-        child: Row(
-          children: [
-            Expanded(
+    final isEmpty = program.workoutDayIds.isEmpty;
+    final dayCount = program.workoutDayIds.length;
+    final dayCountLabel = dayCount == 1 ? '1 day' : '$dayCount days';
+    final relativeDate = _formatDate(program.updatedAt);
+
+    final captionStyle = typography.caption.copyWith(
+      color: colors.onSurfaceMuted,
+    );
+
+    final body = Container(
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.lg,
+        vertical: AppSpacing.md,
+      ),
+      decoration: BoxDecoration(
+        color: colors.surface,
+        borderRadius: BorderRadius.circular(AppRadius.md),
+        border: Border.all(color: colors.outline),
+      ),
+      child: Row(
+        children: [
+          Expanded(
+            child: Semantics(
+              label: _semanticsLabel(dayCountLabel, relativeDate, isEmpty),
+              excludeSemantics: true,
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -54,58 +68,95 @@ class ProgramListTile extends StatelessWidget {
                     overflow: TextOverflow.ellipsis,
                   ),
                   const SizedBox(height: AppSpacing.xs),
-                  Text(
-                    _formatDate(program.updatedAt),
-                    style: typography.caption.copyWith(
-                      color: colors.onSurfaceMuted,
-                    ),
+                  _metadata(
+                    captionStyle: captionStyle,
+                    primary: colors.primary,
+                    isEmpty: isEmpty,
+                    dayCountLabel: dayCountLabel,
+                    relativeDate: relativeDate,
                   ),
                 ],
               ),
             ),
-            if (isDeleting)
-              SizedBox(
-                width: AppSpacing.xl,
-                height: AppSpacing.xl,
-                child: CircularProgressIndicator(
-                  strokeWidth: 2,
-                  color: colors.primary,
+          ),
+          const SizedBox(width: AppSpacing.md),
+          if (isDeleting)
+            SizedBox(
+              width: AppSpacing.xl,
+              height: AppSpacing.xl,
+              child: CircularProgressIndicator(
+                strokeWidth: 2,
+                color: colors.primary,
+              ),
+            )
+          else
+            PopupMenuButton<_TileAction>(
+              tooltip: 'More actions',
+              icon: Icon(Icons.more_vert, color: colors.onSurfaceMuted),
+              onSelected: (action) {
+                switch (action) {
+                  case _TileAction.edit:
+                    onEdit();
+                  case _TileAction.delete:
+                    onDeleteRequested();
+                }
+              },
+              itemBuilder: (context) => [
+                const PopupMenuItem(
+                  value: _TileAction.edit,
+                  child: ListTile(
+                    leading: Icon(Icons.edit_outlined),
+                    title: Text('Edit'),
+                  ),
                 ),
-              )
-            else
-              PopupMenuButton<_TileAction>(
-                tooltip: 'More actions',
-                icon: Icon(Icons.more_vert, color: colors.onSurfaceMuted),
-                onSelected: (action) {
-                  switch (action) {
-                    case _TileAction.edit:
-                      onEdit();
-                    case _TileAction.delete:
-                      onDeleteRequested();
-                  }
-                },
-                itemBuilder: (context) => [
-                  const PopupMenuItem(
-                    value: _TileAction.edit,
-                    child: ListTile(
-                      leading: Icon(Icons.edit_outlined),
-                      title: Text('Edit'),
+                PopupMenuItem(
+                  value: _TileAction.delete,
+                  child: ListTile(
+                    leading: Icon(Icons.delete_outline, color: colors.error),
+                    title: Text(
+                      'Delete',
+                      style: TextStyle(color: colors.error),
                     ),
                   ),
-                  PopupMenuItem(
-                    value: _TileAction.delete,
-                    child: ListTile(
-                      leading: Icon(Icons.delete_outline, color: colors.error),
-                      title: Text(
-                        'Delete',
-                        style: TextStyle(color: colors.error),
+                ),
+              ],
+            ),
+        ],
+      ),
+    );
+
+    final content = isInProgress
+        ? Stack(
+            children: [
+              body,
+              Positioned(
+                left: 0,
+                top: 0,
+                bottom: 0,
+                child: IgnorePointer(
+                  child: Container(
+                    width: AppSpacing.xs,
+                    decoration: BoxDecoration(
+                      color: colors.primary,
+                      borderRadius: const BorderRadius.only(
+                        topLeft: Radius.circular(AppRadius.md),
+                        bottomLeft: Radius.circular(AppRadius.md),
                       ),
                     ),
                   ),
-                ],
+                ),
               ),
-          ],
-        ),
+            ],
+          )
+        : body;
+
+    final tile = Material(
+      color: Colors.transparent,
+      borderRadius: BorderRadius.circular(AppRadius.md),
+      child: InkWell(
+        onTap: isDeleting ? null : onTap,
+        borderRadius: BorderRadius.circular(AppRadius.md),
+        child: content,
       ),
     );
 
@@ -129,6 +180,53 @@ class ProgramListTile extends StatelessWidget {
       ),
       child: tile,
     );
+  }
+
+  /// Metadata line: `"{days} · Edited {date}"`, or `"No days yet · Tap to set
+  /// up"` for a draft. When the program owns the active session, a quiet
+  /// `primary`-coloured `"In progress"` leads the line (the accent bar carries
+  /// the louder signal).
+  Widget _metadata({
+    required TextStyle captionStyle,
+    required Color primary,
+    required bool isEmpty,
+    required String dayCountLabel,
+    required String relativeDate,
+  }) {
+    if (isEmpty) {
+      return Text('No days yet · Tap to set up', style: captionStyle);
+    }
+    final rest = '$dayCountLabel · Edited $relativeDate';
+    if (!isInProgress) {
+      return Text(rest, style: captionStyle);
+    }
+    return Text.rich(
+      TextSpan(
+        style: captionStyle,
+        children: [
+          TextSpan(
+            text: 'In progress',
+            style: captionStyle.copyWith(
+              color: primary,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+          TextSpan(text: ' · $rest'),
+        ],
+      ),
+    );
+  }
+
+  String _semanticsLabel(
+    String dayCountLabel,
+    String relativeDate,
+    bool isEmpty,
+  ) {
+    if (isEmpty) {
+      return '${program.name}, draft, no days yet, tap to set up';
+    }
+    final state = isInProgress ? 'in progress, ' : '';
+    return '${program.name}, $state$dayCountLabel, edited $relativeDate';
   }
 
   String _formatDate(DateTime date) =>

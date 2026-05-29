@@ -24,10 +24,18 @@ class ProgramListScreen extends StatefulWidget {
 }
 
 class _ProgramListScreenState extends State<ProgramListScreen> {
+  /// Captured once so the [StreamBuilder] below keeps a single subscription
+  /// across bloc rebuilds (`watchActiveSession` mints a fresh controller per
+  /// call). Independent of the [SessionInFlightBanner]'s own subscription.
+  late final Stream<Session?> _activeSessionStream;
+
   @override
   void initState() {
     super.initState();
     context.read<ProgramListBloc>().add(const ProgramListRequested());
+    _activeSessionStream = context
+        .read<SessionRepository>()
+        .watchActiveSession();
   }
 
   Future<void> _navigateToEditor({String? programId}) async {
@@ -137,26 +145,40 @@ class _ProgramListScreenState extends State<ProgramListScreen> {
                                   onCreateEmpty: () => _navigateToEditor(),
                                   onImport: _navigateToImport,
                                 )
-                              : _ProgramList(
-                                  programs: programs,
-                                  deletionCandidateId: deletionCandidateId,
-                                  onTap: (program) {
-                                    if (program.workoutDayIds.isEmpty) {
-                                      _navigateToEditor(programId: program.id);
-                                    } else {
-                                      Navigator.of(context).pushNamed(
-                                        WorkoutDayPickerRoutes.picker,
-                                        arguments: WorkoutDayPickerArgs(
-                                          programId: program.id,
-                                          programName: program.name,
-                                        ),
-                                      );
-                                    }
+                              : StreamBuilder<Session?>(
+                                  stream: _activeSessionStream,
+                                  builder: (context, snapshot) {
+                                    final activeProgramId = snapshot
+                                        .data
+                                        ?.snapshot
+                                        .workoutDay
+                                        .programId;
+                                    return _ProgramList(
+                                      programs: programs,
+                                      deletionCandidateId: deletionCandidateId,
+                                      activeProgramId: activeProgramId,
+                                      onTap: (program) {
+                                        if (program.workoutDayIds.isEmpty) {
+                                          _navigateToEditor(
+                                            programId: program.id,
+                                          );
+                                        } else {
+                                          Navigator.of(context).pushNamed(
+                                            WorkoutDayPickerRoutes.picker,
+                                            arguments: WorkoutDayPickerArgs(
+                                              programId: program.id,
+                                              programName: program.name,
+                                            ),
+                                          );
+                                        }
+                                      },
+                                      onEdit: (program) => _navigateToEditor(
+                                        programId: program.id,
+                                      ),
+                                      onDeleteRequested: (program) =>
+                                          _onDeleteRequested(program.id),
+                                    );
                                   },
-                                  onEdit: (program) =>
-                                      _navigateToEditor(programId: program.id),
-                                  onDeleteRequested: (program) =>
-                                      _onDeleteRequested(program.id),
                                 ),
                         ),
                       ],
@@ -176,9 +198,69 @@ class _LoadingView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    return ListView.separated(
+      padding: EdgeInsets.only(
+        left: AppSpacing.lg,
+        right: AppSpacing.lg,
+        top: AppSpacing.lg,
+        bottom: AppSpacing.xxxl + MediaQuery.viewPaddingOf(context).bottom,
+      ),
+      physics: const NeverScrollableScrollPhysics(),
+      itemCount: 4,
+      separatorBuilder: (_, _) => const SizedBox(height: AppSpacing.sm),
+      itemBuilder: (_, _) => const _ProgramTileSkeleton(),
+    );
+  }
+}
+
+/// Non-interactive placeholder mirroring [ProgramListTile]'s anatomy (title +
+/// metadata rows) for the loading state, using the `_SkeletonBar` idiom from
+/// `day_tile.dart`.
+class _ProgramTileSkeleton extends StatelessWidget {
+  const _ProgramTileSkeleton();
+
+  @override
+  Widget build(BuildContext context) {
     final colors = Theme.of(context).appColors;
 
-    return Center(child: CircularProgressIndicator(color: colors.primary));
+    return Container(
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.lg,
+        vertical: AppSpacing.md,
+      ),
+      decoration: BoxDecoration(
+        color: colors.surface,
+        borderRadius: BorderRadius.circular(AppRadius.md),
+        border: Border.all(color: colors.outline),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _SkeletonBar(width: 160, color: colors.surfaceVariant),
+          const SizedBox(height: AppSpacing.xs),
+          _SkeletonBar(width: 110, color: colors.surfaceVariant),
+        ],
+      ),
+    );
+  }
+}
+
+class _SkeletonBar extends StatelessWidget {
+  const _SkeletonBar({required this.width, required this.color});
+
+  final double width;
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: width,
+      height: AppSpacing.md,
+      decoration: BoxDecoration(
+        color: color,
+        borderRadius: BorderRadius.circular(AppRadius.sm),
+      ),
+    );
   }
 }
 
@@ -288,6 +370,7 @@ class _ProgramList extends StatelessWidget {
   const _ProgramList({
     required this.programs,
     required this.deletionCandidateId,
+    required this.activeProgramId,
     required this.onTap,
     required this.onEdit,
     required this.onDeleteRequested,
@@ -295,6 +378,7 @@ class _ProgramList extends StatelessWidget {
 
   final List<Program> programs;
   final String? deletionCandidateId;
+  final String? activeProgramId;
   final void Function(Program program) onTap;
   final void Function(Program program) onEdit;
   final void Function(Program program) onDeleteRequested;
@@ -321,6 +405,7 @@ class _ProgramList extends StatelessWidget {
             onTap: () => onTap(program),
             onEdit: () => onEdit(program),
             onDeleteRequested: () => onDeleteRequested(program),
+            isInProgress: program.id == activeProgramId,
             isDeleting: program.id == deletionCandidateId,
           );
         },
