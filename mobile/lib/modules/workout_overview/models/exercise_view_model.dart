@@ -32,3 +32,12 @@ abstract class ExerciseViewModel with _$ExerciseViewModel {
     @Default(ExerciseGroupRole.main) ExerciseGroupRole plannedGroupRole,
   }) = _ExerciseViewModel;
 }
+
+extension ExerciseViewModelDisplayNameX on ExerciseViewModel {
+  /// The name to show for this exercise: a replaced exercise shows its
+  /// substitute's name, everything else shows the planned name.
+  String get displayName => switch (sessionExercise.state) {
+    ReplacedState(:final substitute) => substitute.name,
+    _ => plannedExerciseName,
+  };
+}

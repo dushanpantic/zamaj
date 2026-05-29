@@ -101,7 +101,7 @@ the class name (repo convention, e.g. `_ExerciseCard` → `exercise_card.dart`).
 
 | # | Screen | Lines | Inline classes | Verdict |
 |---|---|---:|---:|---|
-| 1 | workout_overview/screens/workout_overview_screen.dart | 2014 | 26 | **Tier 1 — split** |
+| 1 | workout_overview/screens/workout_overview_screen.dart | 2014 | 26 | **Tier 1 — split** ✅ DONE (now 362) |
 | 2 | program_management/screens/workout_day_editor_screen.dart | 1431 | 20 | **Tier 1 — split** ✅ DONE (now 296) |
 | 3 | focus_mode/screens/focus_mode_screen.dart | 1345 | 22 | **Tier 1 — split** ✅ DONE (now 105) |
 | 4 | program_management/screens/program_editor_screen.dart | 835 | 6 | **Tier 2 — split** ✅ DONE (now 323) |
@@ -355,8 +355,35 @@ Smallest-blast-radius first; one screen per PR/commit so each is reviewable.
    Screen keeps `WorkoutDayEditorScreen` + state, `_EditingBody`, `_LoadingView`,
    `_NotFoundView`. Pure move; `dart analyze` clean (whole `lib/`), format clean,
    offline-imports guard OK. Awaiting user visual pass.
-5. **workout_overview_screen.dart** (Tier 1) — largest; extract the DnD cluster
-   last when the recipe is well-practiced.
+5. ✅ **workout_overview_screen.dart** (Tier 1) — largest; extract the DnD cluster
+   last when the recipe is well-practiced. **DONE** (2014 → 362). DnD logic
+   promoted to public and moved to `services/`: `drag_session.dart` (`DragSession`,
+   the ChangeNotifier) and `drag_auto_scroller.dart` (`DragAutoScroller`, the
+   Ticker-driven scroller; uses the existing `services/drag_auto_scroll.dart`
+   `computeScrollDelta` helper). Rather than the proposed new `drag/` folder, the
+   DnD *widgets* went to `widgets/` to match the repo's one-public-widget-per-file
+   convention: `drag_handle.dart` (`DragHandle` + in-file `_DragFeedbackPill`),
+   `draggable_exercise.dart` (`DraggableExercise` + in-file `_SupersetDropOverlay`),
+   `reorder_gap.dart` (`ReorderGap`), `superset_reorder_gap.dart`
+   (`SupersetReorderGap`). Leaf widgets to `widgets/`:
+   `workout_overview_app_bar_title.dart` (`WorkoutOverviewAppBarTitle`, keeps its
+   `_exerciseCounts` static), `session_elapsed_label.dart` (`SessionElapsedLabel`),
+   `workout_overview_bottom_bar.dart` (`WorkoutOverviewBottomBar` + in-file
+   `_SecondaryActionButton`), `transient_error_banner.dart` (`TransientErrorBanner`),
+   `session_ended_banner.dart` (`SessionEndedBanner`),
+   `delayed_mutation_indicator.dart` (`DelayedMutationIndicator`). Body + group
+   dispatch to `widgets/`: `workout_overview_loaded_body.dart`
+   (`WorkoutOverviewLoadedBody` — owns scroll controller, auto-scroller, drag
+   session, coach-mark) and `workout_group_builder.dart` (`WorkoutGroupBuilder` —
+   single/superset dispatch + group-candidate logic). The shared
+   `_exerciseDisplayName`/`_displayName` helpers were replaced by a public
+   `displayName` extension getter on `ExerciseViewModel`
+   (`models/exercise_view_model.dart`), used by both the screen and the group
+   builder. Note: `WorkoutOverviewNotFoundView` was already in `widgets/`
+   (the §5.1 "currently inline" note was stale). Screen keeps `WorkoutOverviewScreen`
+   + state (BLoC consumer, `_handle*` event handlers, snackbars, `_resolveCurrent`,
+   `_CurrentFocus`, `_titleFor`, `_body` switch). Pure move; `dart analyze` clean
+   (whole `lib/`), format clean, offline-imports guard OK. Awaiting user visual pass.
 6. (Optional) Cross-cutting shared state-views (§7.1).
 
 Each step: pure move → `tool/ci.sh` clean → hand to user for a visual pass
