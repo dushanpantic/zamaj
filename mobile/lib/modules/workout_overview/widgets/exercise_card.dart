@@ -69,8 +69,8 @@ class ExerciseCard extends StatelessWidget {
   final VoidCallback? onGroupIntoPressed;
 
   /// True when this card represents the "current" exercise — the one Focus
-  /// mode and the bottom Focus button will open. Drives the accent border
-  /// and the CURRENT chip in the header.
+  /// mode and the bottom Focus button will open. Drives the accent border,
+  /// which is the sole "current" signal on the card.
   final bool isCurrent;
 
   /// True when this exercise was the target of the most recent log/edit
@@ -115,7 +115,6 @@ class ExerciseCard extends StatelessWidget {
             canMutate: canMutate,
             canMarkDone: state is UnfinishedState && hasExecutedSet,
             dragHandle: state is UnfinishedState ? dragHandle : null,
-            isCurrent: isCurrent,
             onTap: onToggleExpansion,
             onSkip: onSkipPressed,
             onMarkDone: onMarkDonePressed,
@@ -149,7 +148,6 @@ class _Header extends StatelessWidget {
     required this.canMutate,
     required this.canMarkDone,
     required this.dragHandle,
-    required this.isCurrent,
     required this.onTap,
     required this.onSkip,
     required this.onMarkDone,
@@ -165,7 +163,6 @@ class _Header extends StatelessWidget {
   final bool canMutate;
   final bool canMarkDone;
   final Widget? dragHandle;
-  final bool isCurrent;
   final VoidCallback onTap;
   final VoidCallback onSkip;
   final VoidCallback onMarkDone;
@@ -232,14 +229,10 @@ class _Header extends StatelessWidget {
                         if (viewModel.plannedGroupRole ==
                             ExerciseGroupRole.warmup) ...[
                           const SizedBox(width: AppSpacing.sm),
-                          _WarmupBadge(colors: colors),
+                          _WarmupMarker(colors: colors),
                         ],
                         const SizedBox(width: AppSpacing.sm),
-                        _StateBadge(
-                          state: state,
-                          isCurrent: isCurrent,
-                          colors: colors,
-                        ),
+                        _StateBadge(state: state, colors: colors),
                       ],
                     ),
                     const SizedBox(height: AppSpacing.xs),
@@ -328,50 +321,56 @@ class _RestIndicator extends StatelessWidget {
   }
 }
 
-class _WarmupBadge extends StatelessWidget {
-  const _WarmupBadge({required this.colors});
+/// Compact icon-only warmup marker. A flame in the warmup accent reads at a
+/// glance and costs ~20dp of width instead of the ~70dp the old "WARMUP" pill
+/// took — leaving that width for the exercise title on the same line.
+class _WarmupMarker extends StatelessWidget {
+  const _WarmupMarker({required this.colors});
 
   final AppColors colors;
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(
-        horizontal: AppSpacing.sm,
-        vertical: 2,
-      ),
-      decoration: BoxDecoration(
-        color: colors.warmup.withValues(alpha: 0.15),
-        borderRadius: BorderRadius.circular(AppRadius.pill),
-        border: Border.all(color: colors.warmup.withValues(alpha: 0.5)),
-      ),
-      child: Text(
-        'WARMUP',
-        style: AppTypography.standard.caption.copyWith(color: colors.warmup),
+    return Tooltip(
+      message: 'Warmup',
+      child: Icon(
+        Icons.local_fire_department,
+        size: 18,
+        color: colors.warmup,
       ),
     );
   }
 }
 
 class _StateBadge extends StatelessWidget {
-  const _StateBadge({
-    required this.state,
-    required this.isCurrent,
-    required this.colors,
-  });
+  const _StateBadge({required this.state, required this.colors});
 
   final ExerciseState state;
-  final bool isCurrent;
   final AppColors colors;
 
   @override
   Widget build(BuildContext context) {
-    // Unfinished gets the CURRENT chip when it's the active exercise,
-    // nothing otherwise. Terminal states keep their existing label.
+    // The active exercise carries no badge here — the card's 2dp primary
+    // border is the "current" signal on its own.
+    // Completed: a filled check — the most universal status glyph, and by the
+    // end of a session most cards are done, so quiet checks read cleaner than a
+    // wall of text pills. (The kebab's "Mark done" action uses the *outline*
+    // check, giving a filled/outline = achieved/actionable pairing.)
+    if (state is CompletedState) {
+      return Tooltip(
+        message: 'Done',
+        child: Icon(
+          Icons.check_circle,
+          size: 18,
+          color: colors.exerciseCompleted,
+        ),
+      );
+    }
+    // Skipped/Replaced stay as words: exception states, rarer, and with no
+    // universally-read glyph — worth spelling out so they catch the eye.
     final (label, color) = switch (state) {
-      UnfinishedState() =>
-        isCurrent ? ('CURRENT', colors.primary) : (null, colors.onSurfaceMuted),
-      CompletedState() => ('Done', colors.exerciseCompleted),
+      UnfinishedState() => (null, colors.onSurfaceMuted),
+      CompletedState() => (null, colors.exerciseCompleted), // handled above
       SkippedState() => ('Skipped', colors.exerciseSkipped),
       ReplacedState() => ('Replaced', colors.exerciseReplaced),
     };
