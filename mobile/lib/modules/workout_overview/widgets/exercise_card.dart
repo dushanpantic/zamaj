@@ -333,11 +333,7 @@ class _WarmupMarker extends StatelessWidget {
   Widget build(BuildContext context) {
     return Tooltip(
       message: 'Warmup',
-      child: Icon(
-        Icons.local_fire_department,
-        size: 18,
-        color: colors.warmup,
-      ),
+      child: Icon(Icons.local_fire_department, size: 18, color: colors.warmup),
     );
   }
 }

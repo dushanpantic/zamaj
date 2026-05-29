@@ -113,9 +113,7 @@ void main() {
         ],
       );
 
-      final reloaded = await programRepo.getExercise(
-        group.exercises.first.id,
-      );
+      final reloaded = await programRepo.getExercise(group.exercises.first.id);
       expect(reloaded, isNotNull);
       expect(reloaded!.libraryExerciseId, equals(entry.id));
       expect(reloaded.plannedRestSeconds, equals(90));
