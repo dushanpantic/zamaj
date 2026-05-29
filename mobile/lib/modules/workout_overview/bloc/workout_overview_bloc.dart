@@ -18,7 +18,6 @@ class WorkoutOverviewBloc
     on<WorkoutOverviewErrorDismissed>(_onErrorDismissed);
     on<WorkoutOverviewExpansionToggled>(_onExpansionToggled);
     on<WorkoutOverviewSetLogged>(_onSetLogged);
-    on<WorkoutOverviewSetLogUndone>(_onSetLogUndone);
     on<WorkoutOverviewSetEdited>(_onSetEdited);
     on<WorkoutOverviewExerciseSkipped>(_onExerciseSkipped);
     on<WorkoutOverviewExerciseMarkedDone>(_onExerciseMarkedDone);
@@ -166,15 +165,6 @@ class WorkoutOverviewBloc
       plannedSetIdInSnapshot: event.plannedSetIdInSnapshot,
     ),
     touchedSessionExerciseId: event.sessionExerciseId,
-    captureLoggedSet: true,
-  );
-
-  Future<void> _onSetLogUndone(
-    WorkoutOverviewSetLogUndone event,
-    Emitter<WorkoutOverviewState> emit,
-  ) => _runMutation(
-    emit,
-    () => _engine.deleteExecutedSet(executedSetId: event.executedSetId),
   );
 
   Future<void> _onSetEdited(
@@ -342,7 +332,6 @@ class WorkoutOverviewBloc
     Emitter<WorkoutOverviewState> emit,
     Future<SessionState> Function() action, {
     String? touchedSessionExerciseId,
-    bool captureLoggedSet = false,
   }) async {
     final current = state;
     if (current is! WorkoutOverviewLoaded) return;
@@ -353,11 +342,6 @@ class WorkoutOverviewBloc
       final next = await action();
       final latest = state;
       if (latest is WorkoutOverviewLoaded) {
-        // Capture the just-logged set so the screen can offer UNDO; clear it
-        // (→ null) on every other mutation so a stale UNDO can't reappear.
-        final loggedSetId = captureLoggedSet && touchedSessionExerciseId != null
-            ? _latestExecutedSetId(next, touchedSessionExerciseId)
-            : null;
         emit(
           latest.copyWith(
             sessionState: next,
@@ -371,7 +355,6 @@ class WorkoutOverviewBloc
             lastTouchedSessionExerciseId: touchedSessionExerciseId != null
                 ? () => touchedSessionExerciseId
                 : null,
-            lastLoggedExecutedSetId: () => loggedSetId,
           ),
         );
       }
@@ -383,17 +366,6 @@ class WorkoutOverviewBloc
         );
       }
     }
-  }
-
-  /// Id of the most recently executed set on [sessionExerciseId] in [next] —
-  /// i.e. the set a `completeSet` just created. `executedSets` is kept in
-  /// chronological position order, so the last entry is the newest.
-  String? _latestExecutedSetId(SessionState next, String sessionExerciseId) {
-    final exercise = next.session.sessionExercises
-        .where((e) => e.id == sessionExerciseId)
-        .firstOrNull;
-    if (exercise == null || exercise.executedSets.isEmpty) return null;
-    return exercise.executedSets.last.id;
   }
 
   WorkoutOverviewLoaded _assemble(

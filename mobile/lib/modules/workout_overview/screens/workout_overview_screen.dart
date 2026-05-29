@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:zamaj/core/app_theme.dart';
-import 'package:zamaj/core/app_typography.dart';
 import 'package:zamaj/modules/domain/domain.dart';
 import 'package:zamaj/modules/focus_mode/models/focus_mode_args.dart';
 import 'package:zamaj/modules/program_management/services/external_link_launcher.dart';
@@ -186,47 +185,11 @@ class _WorkoutOverviewScreenState extends State<WorkoutOverviewScreen> {
     );
   }
 
-  void _showSetLoggedSnackBar(BuildContext context, String executedSetId) {
-    final colors = Theme.of(context).appColors;
-    final messenger = ScaffoldMessenger.of(context);
-    messenger.hideCurrentSnackBar();
-    messenger.showSnackBar(
-      SnackBar(
-        duration: const Duration(seconds: 4),
-        backgroundColor: colors.surface,
-        content: Text(
-          'Set logged',
-          style: AppTypography.standard.bodySmall.copyWith(
-            color: colors.onSurface,
-          ),
-        ),
-        action: SnackBarAction(
-          label: 'UNDO',
-          textColor: colors.primary,
-          onPressed: () => context.read<WorkoutOverviewBloc>().add(
-            WorkoutOverviewSetLogUndone(executedSetId),
-          ),
-        ),
-      ),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     final colors = Theme.of(context).appColors;
 
-    return BlocConsumer<WorkoutOverviewBloc, WorkoutOverviewState>(
-      listenWhen: (prev, curr) =>
-          curr is WorkoutOverviewLoaded &&
-          curr.lastLoggedExecutedSetId != null &&
-          (prev is! WorkoutOverviewLoaded ||
-              prev.lastLoggedExecutedSetId != curr.lastLoggedExecutedSetId),
-      listener: (context, state) {
-        if (state is! WorkoutOverviewLoaded) return;
-        final id = state.lastLoggedExecutedSetId;
-        if (id == null) return;
-        _showSetLoggedSnackBar(context, id);
-      },
+    return BlocBuilder<WorkoutOverviewBloc, WorkoutOverviewState>(
       builder: (context, state) {
         final focus = state is WorkoutOverviewLoaded
             ? _resolveCurrent(state)
