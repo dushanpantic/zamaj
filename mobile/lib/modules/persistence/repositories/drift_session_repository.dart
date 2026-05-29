@@ -835,11 +835,85 @@ class DriftSessionRepository implements SessionRepository {
     return _db.transaction(() async {
       final tag = _uuid.v4();
 
+      final allExercises =
+          await (_db.select(_db.sessionExercises)
+                ..where((t) => t.sessionId.equals(sessionId))
+                ..orderBy([(t) => OrderingTerm.asc(t.position)]))
+              .get();
+      final exerciseById = {for (final e in allExercises) e.id: e};
+
       for (final id in sessionExerciseIds) {
-        final exerciseRow = await _requireSessionExerciseRow(id);
+        final row = exerciseById[id];
+        if (row == null) {
+          throw NotFoundError(entityType: 'SessionExercise', id: id);
+        }
+        if (row.stateDiscriminator != 'unfinished') {
+          throw OrderingError(
+            sessionExerciseId: id,
+            currentState: row.stateDiscriminator,
+            message:
+                'Cannot add exercise $id to superset: state is '
+                '${row.stateDiscriminator}',
+          );
+        }
+      }
+
+      // Pull the chosen members into one contiguous block, anchored at the
+      // earliest chosen member's slot and ordered as provided; every other
+      // exercise keeps its relative order. The assembler renders a superset
+      // only from a contiguous run of same-tag rows, so without this a group
+      // whose members weren't already adjacent (e.g. dropped onto a
+      // non-neighbouring card, or split by an intervening locked exercise)
+      // would render as orphaned singles — undraggable, with no ungroup
+      // affordance. Positions are permuted across the full ordering via the
+      // same two-phase write reorderUnfinished uses, since SQLite has no
+      // deferred UNIQUE constraints.
+      final chosen = sessionExerciseIds.toSet();
+      final orderedIds = allExercises.map((e) => e.id).toList();
+      final anchorIndex = orderedIds.indexWhere(chosen.contains);
+      final remaining = orderedIds.where((id) => !chosen.contains(id)).toList();
+      final newOrder = <String>[
+        ...remaining.take(anchorIndex),
+        ...sessionExerciseIds,
+        ...remaining.skip(anchorIndex),
+      ];
+
+      final slots = allExercises.map((e) => e.position).toList()..sort();
+      final movers = <({String id, int newPosition, SessionExercise row})>[];
+      for (var i = 0; i < newOrder.length; i++) {
+        final row = exerciseById[newOrder[i]]!;
+        final newPosition = slots[i];
+        if (newPosition == row.position) continue;
+        movers.add((id: newOrder[i], newPosition: newPosition, row: row));
+      }
+
+      for (final mover in movers) {
+        await (_db.update(
+          _db.sessionExercises,
+        )..where((t) => t.id.equals(mover.id))).write(
+          SessionExercisesCompanion(position: Value(-1 - mover.row.position)),
+        );
+      }
+      for (final mover in movers) {
         final updatedAt = _timestamps.nextUpdatedAt(
-          previousUpdatedAt: msToUtc(exerciseRow.updatedAtMs),
-          createdAt: msToUtc(exerciseRow.createdAtMs),
+          previousUpdatedAt: msToUtc(mover.row.updatedAtMs),
+          createdAt: msToUtc(mover.row.createdAtMs),
+        );
+        await (_db.update(
+          _db.sessionExercises,
+        )..where((t) => t.id.equals(mover.id))).write(
+          SessionExercisesCompanion(
+            position: Value(mover.newPosition),
+            updatedAtMs: Value(utcToMs(updatedAt)),
+          ),
+        );
+      }
+
+      for (final id in sessionExerciseIds) {
+        final row = exerciseById[id]!;
+        final updatedAt = _timestamps.nextUpdatedAt(
+          previousUpdatedAt: msToUtc(row.updatedAtMs),
+          createdAt: msToUtc(row.createdAtMs),
         );
         await (_db.update(
           _db.sessionExercises,

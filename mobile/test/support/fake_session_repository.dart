@@ -446,29 +446,39 @@ class FakeSessionRepository implements SessionRepository {
     final now = clock.now().toUtc();
     final tag = _uuid.v4();
 
-    final supersetIdSet = sessionExerciseIds.toSet();
-    final nonSuperset =
-        session.sessionExercises
-            .where((e) => !supersetIdSet.contains(e.id))
-            .toList()
-          ..sort((a, b) => a.position.compareTo(b.position));
+    // Pull the chosen members into one contiguous block anchored at the
+    // earliest chosen member's slot, ordered as provided; every other
+    // exercise keeps its relative order. Mirrors
+    // DriftSessionRepository.createSuperset so the fake and production agree
+    // on the post-create ordering — the assembler groups a superset only from
+    // a contiguous run of same-tag rows.
+    final chosen = sessionExerciseIds.toSet();
+    final orderedIds =
+        ([...session.sessionExercises]
+              ..sort((a, b) => a.position.compareTo(b.position)))
+            .map((e) => e.id)
+            .toList();
+    final anchorIndex = orderedIds.indexWhere(chosen.contains);
+    final remaining = orderedIds.where((id) => !chosen.contains(id)).toList();
+    final newOrder = <String>[
+      ...remaining.take(anchorIndex),
+      ...sessionExerciseIds,
+      ...remaining.skip(anchorIndex),
+    ];
 
-    var position = 0;
+    final byId = {for (final e in session.sessionExercises) e.id: e};
     final result = <SessionExercise>[];
-
-    for (final e in nonSuperset) {
-      result.add(e.copyWith(position: position++));
-    }
-
-    for (final id in sessionExerciseIds) {
-      final exercise = session.sessionExercises.firstWhere((e) => e.id == id);
-      result.add(
-        exercise.copyWith(
-          supersetTag: tag,
-          position: position++,
-          updatedAt: now,
-        ),
-      );
+    for (var i = 0; i < newOrder.length; i++) {
+      final exercise = byId[newOrder[i]]!;
+      if (chosen.contains(exercise.id)) {
+        result.add(
+          exercise.copyWith(supersetTag: tag, position: i, updatedAt: now),
+        );
+      } else if (exercise.position != i) {
+        result.add(exercise.copyWith(position: i, updatedAt: now));
+      } else {
+        result.add(exercise);
+      }
     }
 
     final updated = session.copyWith(sessionExercises: result, updatedAt: now);

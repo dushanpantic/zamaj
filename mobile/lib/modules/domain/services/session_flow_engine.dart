@@ -394,6 +394,11 @@ class SessionFlowEngine {
   }
 
   /// Groups unfinished exercises into a superset.
+  ///
+  /// The repository re-positions the members into one contiguous block so the
+  /// assembler's contiguous-run detection treats them as a single group;
+  /// members that weren't already adjacent (or were split by a locked
+  /// exercise) would otherwise render as orphaned singles.
   Future<SessionState> createSuperset({
     required String sessionId,
     required List<String> sessionExerciseIds,
