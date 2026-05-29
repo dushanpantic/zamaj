@@ -12,6 +12,7 @@ import 'package:zamaj/modules/workout_overview/widgets/drag_handle.dart';
 import 'package:zamaj/modules/workout_overview/widgets/draggable_exercise.dart';
 import 'package:zamaj/modules/workout_overview/widgets/exercise_card.dart';
 import 'package:zamaj/modules/workout_overview/widgets/superset_card.dart';
+import 'package:zamaj/modules/workout_overview/widgets/superset_drop_target.dart';
 import 'package:zamaj/modules/workout_overview/widgets/superset_reorder_gap.dart';
 
 /// Dispatches a single overview row to either a standalone [ExerciseCard]
@@ -250,7 +251,15 @@ class WorkoutGroupBuilder extends StatelessWidget {
       );
     }
 
-    return SupersetCard(
+    // Append-via-drag: an outside (ungrouped) exercise dropped anywhere on
+    // the group joins it as a 3rd+ member. Gated on every member still being
+    // unfinished — the engine refuses a group mixing terminal and live
+    // members, same as the menu-driven "Group into superset" path. The anchor
+    // is any unfinished member; the resolver only reads its tag.
+    final allUnfinished = exercises.every(
+      (e) => e.sessionExercise.state is UnfinishedState,
+    );
+    final card = SupersetCard(
       tag: tag,
       exercises: exercises,
       expandedExerciseIds: state.expandedExerciseIds,
@@ -287,6 +296,13 @@ class WorkoutGroupBuilder extends StatelessWidget {
       onOpenVideo: onOpenVideo,
       memberDragHandleBuilder: memberDragHandle,
       gapBuilder: gapWrap,
+    );
+
+    return SupersetDropTarget(
+      anchorSessionExerciseId: exercises.first.sessionExercise.id,
+      canAccept: canMutate && allUnfinished,
+      dragSession: dragSession,
+      child: card,
     );
   }
 }
