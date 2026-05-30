@@ -2,7 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:zamaj/core/app_icon.dart';
+import 'package:zamaj/building_blocks/building_blocks.dart';
 import 'package:zamaj/core/app_spacing.dart';
 import 'package:zamaj/core/app_theme.dart';
 import 'package:zamaj/modules/domain/domain.dart';
@@ -149,7 +149,14 @@ class _WorkoutDayPickerScreenState extends State<WorkoutDayPickerScreen> {
     return switch (state) {
       WorkoutDayPickerInitial() ||
       WorkoutDayPickerLoading() => const WorkoutDayPickerLoadingView(),
-      WorkoutDayPickerProgramNotFound() => const _NotFoundView(),
+      WorkoutDayPickerProgramNotFound() => AppStateView(
+        icon: Icons.search_off,
+        title: 'Program not found',
+        primaryAction: AppStateAction(
+          label: 'Back',
+          onPressed: () => Navigator.of(context).maybePop(),
+        ),
+      ),
       WorkoutDayPickerScreenFailure(:final error) => WorkoutDayPickerErrorView(
         error: error,
         onRetry: _onScreenRetry,
@@ -254,43 +261,6 @@ class _TransientErrorBanner extends StatelessWidget {
       leading: Icon(Icons.error_outline, color: colors.error),
       content: Text('${presented.title}: ${presented.body}'),
       actions: [TextButton(onPressed: onDismiss, child: const Text('OK'))],
-    );
-  }
-}
-
-class _NotFoundView extends StatelessWidget {
-  const _NotFoundView();
-
-  @override
-  Widget build(BuildContext context) {
-    final colors = Theme.of(context).appColors;
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(AppSpacing.xl),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            AppIcon(
-              Icons.search_off,
-              color: colors.onSurfaceMuted,
-              size: AppIconSize.emptyState,
-            ),
-            const SizedBox(height: AppSpacing.lg),
-            Text(
-              'Program not found',
-              style: Theme.of(
-                context,
-              ).textTheme.titleMedium?.copyWith(color: colors.onSurface),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: AppSpacing.xl),
-            FilledButton(
-              onPressed: () => Navigator.of(context).maybePop(),
-              child: const Text('Back'),
-            ),
-          ],
-        ),
-      ),
     );
   }
 }

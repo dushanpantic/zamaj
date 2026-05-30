@@ -321,7 +321,7 @@ These were the one-way doors. Everything downstream is authored against them.
 | # | Slice (one prompt each) | Builds | Closes | Live surface? | Risk |
 |---|-------------------------|--------|--------|---------------|------|
 | 1 ✅ | Foundation: Ember + icons | `AppIconSize`, `AppIcon` | F16, F8 | no | low |
-| 2 | State views + loading | `AppStateView`, `AppSkeleton` | F1, F2, F7 | no | low |
+| 2 ✅ | State views + loading | `AppStateView`, `AppSkeleton` | F1, F2, F7 | no | low |
 | 3 | Status + section vocab | `StatusBadge`, `SectionHeader` (+overline, +stroke) | F6¹, F10, F11 | no | low |
 | 4 | Dialogs + Material theming | `AppConfirmDialog`, theme entries (+4th surface) | F5, F12, F14, F17 | no | low |
 | 5 | **Live session surface** | `PrimaryActionButton`, shared stepper policy | F3, F4, F15, F6² | **yes** | **high** |
@@ -358,7 +358,20 @@ land a component without its callers.
 - **Verify:** `tool/ci.sh`; visual diff is yours (Ember is a value swap, so the
   shift should be subtle). No live-surface logic touched.
 
-### Prompt 2 — State views + loading skeletons *(biggest bang)*
+### Prompt 2 — State views + loading skeletons *(biggest bang)*  ✅ DONE
+> **Status: complete.** `AppStateView` (+ `AppStateAction`, `AppStateTone`)
+> and `AppSkeletonBar` / `AppSkeletonTile` / `AppListSkeleton` authored in the
+> new [building_blocks/](mobile/lib/building_blocks/) barrel. The heading role
+> is locked to one style (`title`, 20 px) and the hero glyph to one size,
+> closing F7. All 15 bespoke `_EmptyView`/`_FailureView`/`_NotFoundView` were
+> migrated (the two editor not-found views keep only their `Scaffold` wrapper
+> and delegate the body to `AppStateView`); **both** `_SkeletonBar` copies were
+> deleted. Content-load spinners became `AppListSkeleton` on program_list,
+> workout_day_picker, recent_sessions, exercise_library (+ link_suggestion),
+> and program_editor; the plan-preview SAVE overlay and inline button/save
+> spinners stay spinners (Phase 0.3). Per the risk guardrail, `workout_overview/`
+> and `focus_mode/` were **not** touched. `tool/ci.sh` green (offline-imports
+> OK, analyze clean, 633 tests pass).
 - **Build:** `AppStateView` (empty / error / not-found: icon, title, body,
   primary + optional secondary action); `AppSkeleton` / `AppSkeletonBar` + list/tile
   skeleton helpers, in `lib/building_blocks/`.

@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:zamaj/building_blocks/building_blocks.dart';
 import 'package:zamaj/core/app_spacing.dart';
 import 'package:zamaj/core/app_theme.dart';
-import 'package:zamaj/core/app_typography.dart';
 import 'package:zamaj/modules/program_management/bloc/program_editor/program_editor_bloc.dart';
 import 'package:zamaj/modules/program_management/bloc/program_editor/program_editor_event.dart';
 import 'package:zamaj/modules/program_management/bloc/program_editor/program_editor_state.dart';
@@ -220,37 +220,18 @@ class _ProgramEditorScreenState extends State<ProgramEditorScreen> {
     final colors = Theme.of(context).appColors;
 
     return switch (state) {
-      ProgramEditorInitial() => const Scaffold(
-        body: Center(child: CircularProgressIndicator()),
-      ),
-      ProgramEditorLoading() => const Scaffold(
-        body: Center(child: CircularProgressIndicator()),
-      ),
+      ProgramEditorInitial() ||
+      ProgramEditorLoading() => const Scaffold(body: AppListSkeleton()),
       ProgramEditorNotFound(:final programId) => Scaffold(
         appBar: AppBar(),
-        body: Center(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(
-                'Program not found',
-                style: AppTypography.standard.titleSmall.copyWith(
-                  color: colors.onSurface,
-                ),
-              ),
-              const SizedBox(height: AppSpacing.sm),
-              Text(
-                programId,
-                style: AppTypography.standard.caption.copyWith(
-                  color: colors.onSurfaceMuted,
-                ),
-              ),
-              const SizedBox(height: AppSpacing.xl),
-              TextButton(
-                onPressed: () => Navigator.of(context).pop(),
-                child: const Text('Go back'),
-              ),
-            ],
+        body: AppStateView(
+          icon: Icons.error_outline,
+          tone: AppStateTone.error,
+          title: 'Program not found',
+          message: programId,
+          primaryAction: AppStateAction(
+            label: 'Go back',
+            onPressed: () => Navigator.of(context).pop(),
           ),
         ),
       ),

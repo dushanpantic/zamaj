@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:zamaj/core/app_icon.dart';
+import 'package:zamaj/building_blocks/building_blocks.dart';
 import 'package:zamaj/core/app_spacing.dart';
 import 'package:zamaj/core/app_theme.dart';
 import 'package:zamaj/core/app_typography.dart';
@@ -54,13 +54,35 @@ class RecentSessionsScreen extends StatelessWidget {
 
   Widget _body(BuildContext context, RecentSessionsState state) {
     return switch (state) {
-      RecentSessionsInitial() || RecentSessionsLoading() => const Center(
-        child: CircularProgressIndicator(),
+      RecentSessionsInitial() ||
+      RecentSessionsLoading() => const AppListSkeleton(),
+      RecentSessionsProgramNotFound() => AppStateView(
+        icon: Icons.search_off,
+        title: 'Program not found',
+        primaryAction: AppStateAction(
+          label: 'Back',
+          onPressed: () => Navigator.of(context).maybePop(),
+        ),
       ),
-      RecentSessionsProgramNotFound() => const _NotFoundView(),
-      RecentSessionsFailure(:final error) => _FailureView(error: error),
+      RecentSessionsFailure(:final error) => _failureView(context, error),
       RecentSessionsLoaded() => _LoadedBody(state: state),
     };
+  }
+
+  Widget _failureView(BuildContext context, DomainError error) {
+    final presented = DomainErrorPresenter.present(error);
+    return AppStateView(
+      icon: Icons.error_outline,
+      tone: AppStateTone.error,
+      title: presented.title,
+      message: presented.body,
+      primaryAction: AppStateAction(
+        label: 'Retry',
+        onPressed: () => context.read<RecentSessionsBloc>().add(
+          const RecentSessionsRetried(),
+        ),
+      ),
+    );
   }
 
   static void _showWeekExport(
@@ -90,7 +112,11 @@ class _LoadedBody extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     if (state.items.isEmpty) {
-      return const _EmptyView();
+      return const AppStateView(
+        icon: Icons.history,
+        title: 'No completed sessions yet',
+        message: 'Finish a workout from the day picker to see it here.',
+      );
     }
 
     final thisWeek = state.items.where((i) => i.isInThisWeek).toList();
@@ -214,133 +240,6 @@ class _SectionHeader extends StatelessWidget {
       style: AppTypography.standard.label.copyWith(
         color: colors.onSurfaceMuted,
         letterSpacing: 0.6,
-      ),
-    );
-  }
-}
-
-class _EmptyView extends StatelessWidget {
-  const _EmptyView();
-
-  @override
-  Widget build(BuildContext context) {
-    final colors = Theme.of(context).appColors;
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(AppSpacing.xl),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            AppIcon(
-              Icons.history,
-              color: colors.onSurfaceMuted,
-              size: AppIconSize.emptyState,
-            ),
-            const SizedBox(height: AppSpacing.lg),
-            Text(
-              'No completed sessions yet',
-              style: AppTypography.standard.titleSmall.copyWith(
-                color: colors.onSurface,
-              ),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: AppSpacing.sm),
-            Text(
-              'Finish a workout from the day picker to see it here.',
-              style: AppTypography.standard.bodySmall.copyWith(
-                color: colors.onSurfaceMuted,
-              ),
-              textAlign: TextAlign.center,
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _NotFoundView extends StatelessWidget {
-  const _NotFoundView();
-
-  @override
-  Widget build(BuildContext context) {
-    final colors = Theme.of(context).appColors;
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(AppSpacing.xl),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            AppIcon(
-              Icons.search_off,
-              color: colors.onSurfaceMuted,
-              size: AppIconSize.emptyState,
-            ),
-            const SizedBox(height: AppSpacing.lg),
-            Text(
-              'Program not found',
-              style: AppTypography.standard.titleSmall.copyWith(
-                color: colors.onSurface,
-              ),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: AppSpacing.xl),
-            FilledButton(
-              onPressed: () => Navigator.of(context).maybePop(),
-              child: const Text('Back'),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _FailureView extends StatelessWidget {
-  const _FailureView({required this.error});
-
-  final DomainError error;
-
-  @override
-  Widget build(BuildContext context) {
-    final colors = Theme.of(context).appColors;
-    final presented = DomainErrorPresenter.present(error);
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(AppSpacing.xl),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            AppIcon(
-              Icons.error_outline,
-              color: colors.error,
-              size: AppIconSize.errorState,
-            ),
-            const SizedBox(height: AppSpacing.lg),
-            Text(
-              presented.title,
-              style: AppTypography.standard.titleSmall.copyWith(
-                color: colors.onSurface,
-              ),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: AppSpacing.sm),
-            Text(
-              presented.body,
-              style: AppTypography.standard.bodySmall.copyWith(
-                color: colors.onSurfaceMuted,
-              ),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: AppSpacing.xl),
-            FilledButton(
-              onPressed: () => context.read<RecentSessionsBloc>().add(
-                const RecentSessionsRetried(),
-              ),
-              child: const Text('Retry'),
-            ),
-          ],
-        ),
       ),
     );
   }

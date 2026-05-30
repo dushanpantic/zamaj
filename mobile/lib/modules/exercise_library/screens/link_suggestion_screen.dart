@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:zamaj/building_blocks/building_blocks.dart';
 import 'package:zamaj/core/app_icon.dart';
 import 'package:zamaj/core/app_spacing.dart';
 import 'package:zamaj/core/app_theme.dart';
@@ -35,11 +36,18 @@ class _LinkSuggestionScreenState extends State<LinkSuggestionScreen> {
         builder: (context, state) {
           return switch (state) {
             LinkSuggestionInitial() ||
-            LinkSuggestionLoading() => const _LoadingView(),
-            LinkSuggestionFailure(:final error) => _FailureView(
-              error: error,
-              onRetry: () => context.read<LinkSuggestionBloc>().add(
-                const LinkSuggestionRetryRequested(),
+            LinkSuggestionLoading() => const AppListSkeleton(),
+            LinkSuggestionFailure(:final error) => AppStateView(
+              icon: Icons.error_outline,
+              tone: AppStateTone.error,
+              title: 'Could not scan programs',
+              message: error.message,
+              primaryAction: AppStateAction(
+                label: 'Retry',
+                icon: Icons.refresh,
+                onPressed: () => context.read<LinkSuggestionBloc>().add(
+                  const LinkSuggestionRetryRequested(),
+                ),
               ),
             ),
             LinkSuggestionLoaded(
@@ -59,63 +67,6 @@ class _LinkSuggestionScreenState extends State<LinkSuggestionScreen> {
   }
 }
 
-class _LoadingView extends StatelessWidget {
-  const _LoadingView();
-
-  @override
-  Widget build(BuildContext context) {
-    final colors = Theme.of(context).appColors;
-    return Center(child: CircularProgressIndicator(color: colors.primary));
-  }
-}
-
-class _FailureView extends StatelessWidget {
-  const _FailureView({required this.error, required this.onRetry});
-
-  final DomainError error;
-  final VoidCallback onRetry;
-
-  @override
-  Widget build(BuildContext context) {
-    final colors = Theme.of(context).appColors;
-    const typography = AppTypography.standard;
-
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(AppSpacing.xl),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            AppIcon(
-              Icons.error_outline,
-              color: colors.error,
-              size: AppIconSize.errorState,
-            ),
-            const SizedBox(height: AppSpacing.lg),
-            Text(
-              'Could not scan programs',
-              style: typography.titleSmall.copyWith(color: colors.onSurface),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: AppSpacing.sm),
-            Text(
-              error.message,
-              style: typography.body.copyWith(color: colors.onSurfaceMuted),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: AppSpacing.xl),
-            FilledButton.icon(
-              onPressed: onRetry,
-              icon: const Icon(Icons.refresh),
-              label: const Text('Retry'),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
 class _LoadedView extends StatelessWidget {
   const _LoadedView({
     required this.clusters,
@@ -129,7 +80,20 @@ class _LoadedView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    if (clusters.isEmpty) return const _EmptyView();
+    if (clusters.isEmpty) {
+      return AppStateView(
+        icon: Icons.check_circle_outline,
+        tone: AppStateTone.success,
+        title: 'Nothing to suggest',
+        message:
+            'Every exercise across your programs is either already linked '
+            'or unique. Come back after adding more workouts.',
+        primaryAction: AppStateAction(
+          label: 'Done',
+          onPressed: () => Navigator.of(context).pop(),
+        ),
+      );
+    }
 
     return Column(
       children: [
@@ -164,50 +128,6 @@ class _LoadedView extends StatelessWidget {
           ),
         ),
       ],
-    );
-  }
-}
-
-class _EmptyView extends StatelessWidget {
-  const _EmptyView();
-
-  @override
-  Widget build(BuildContext context) {
-    final colors = Theme.of(context).appColors;
-    const typography = AppTypography.standard;
-
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(AppSpacing.xl),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            AppIcon(
-              Icons.check_circle_outline,
-              color: colors.success,
-              size: AppIconSize.emptyState,
-            ),
-            const SizedBox(height: AppSpacing.lg),
-            Text(
-              'Nothing to suggest',
-              style: typography.title.copyWith(color: colors.onSurface),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: AppSpacing.sm),
-            Text(
-              'Every exercise across your programs is either already linked or '
-              'unique. Come back after adding more workouts.',
-              style: typography.body.copyWith(color: colors.onSurfaceMuted),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: AppSpacing.xl),
-            FilledButton(
-              onPressed: () => Navigator.of(context).pop(),
-              child: const Text('Done'),
-            ),
-          ],
-        ),
-      ),
     );
   }
 }

@@ -2,7 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:zamaj/core/app_icon.dart';
+import 'package:zamaj/building_blocks/building_blocks.dart';
 import 'package:zamaj/core/app_spacing.dart';
 import 'package:zamaj/core/app_theme.dart';
 import 'package:zamaj/core/app_typography.dart';
@@ -124,11 +124,18 @@ class _ExerciseLibraryListScreenState extends State<ExerciseLibraryListScreen> {
         builder: (context, state) {
           return switch (state) {
             ExerciseLibraryListInitial() ||
-            ExerciseLibraryListLoading() => const _LoadingView(),
-            ExerciseLibraryListFailure(:final error) => _FailureView(
-              error: error,
-              onRetry: () => context.read<ExerciseLibraryListBloc>().add(
-                const ExerciseLibraryListRetryRequested(),
+            ExerciseLibraryListLoading() => const AppListSkeleton(),
+            ExerciseLibraryListFailure(:final error) => AppStateView(
+              icon: Icons.error_outline,
+              tone: AppStateTone.error,
+              title: 'Could not load library',
+              message: error.message,
+              primaryAction: AppStateAction(
+                label: 'Retry',
+                icon: Icons.refresh,
+                onPressed: () => context.read<ExerciseLibraryListBloc>().add(
+                  const ExerciseLibraryListRetryRequested(),
+                ),
               ),
             ),
             ExerciseLibraryListLoaded(
@@ -166,63 +173,6 @@ class _ExerciseLibraryListScreenState extends State<ExerciseLibraryListScreen> {
               ),
           };
         },
-      ),
-    );
-  }
-}
-
-class _LoadingView extends StatelessWidget {
-  const _LoadingView();
-
-  @override
-  Widget build(BuildContext context) {
-    final colors = Theme.of(context).appColors;
-    return Center(child: CircularProgressIndicator(color: colors.primary));
-  }
-}
-
-class _FailureView extends StatelessWidget {
-  const _FailureView({required this.error, required this.onRetry});
-
-  final DomainError error;
-  final VoidCallback onRetry;
-
-  @override
-  Widget build(BuildContext context) {
-    final colors = Theme.of(context).appColors;
-    const typography = AppTypography.standard;
-
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(AppSpacing.xl),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            AppIcon(
-              Icons.error_outline,
-              color: colors.error,
-              size: AppIconSize.errorState,
-            ),
-            const SizedBox(height: AppSpacing.lg),
-            Text(
-              'Could not load library',
-              style: typography.titleSmall.copyWith(color: colors.onSurface),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: AppSpacing.sm),
-            Text(
-              error.message,
-              style: typography.body.copyWith(color: colors.onSurfaceMuted),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: AppSpacing.xl),
-            FilledButton.icon(
-              onPressed: onRetry,
-              icon: const Icon(Icons.refresh),
-              label: const Text('Retry'),
-            ),
-          ],
-        ),
       ),
     );
   }
@@ -318,10 +268,31 @@ class _LoadedView extends StatelessWidget {
         if (lastError != null) DomainErrorBanner(error: lastError!),
         Expanded(
           child: entries.isEmpty
-              ? _EmptyView(
-                  isFiltered: isFilterActive,
-                  onCreate: onCreateEntry,
-                  onOpenSuggestions: onOpenSuggestions,
+              ? AppStateView(
+                  icon: isFilterActive
+                      ? Icons.search_off
+                      : Icons.library_books_outlined,
+                  title: isFilterActive
+                      ? 'No entries match'
+                      : 'Your library is empty',
+                  message: isFilterActive
+                      ? 'Try a different search or toggle archived entries.'
+                      : 'Each entry is a single movement (e.g. BB Bench '
+                            'Press) that can be reused across programs.',
+                  primaryAction: isFilterActive
+                      ? null
+                      : AppStateAction(
+                          label: 'Create entry',
+                          icon: Icons.add,
+                          onPressed: onCreateEntry,
+                        ),
+                  secondaryAction: isFilterActive
+                      ? null
+                      : AppStateAction(
+                          label: 'Suggest from your programs',
+                          icon: Icons.auto_fix_high_outlined,
+                          onPressed: onOpenSuggestions,
+                        ),
                 )
               : RefreshIndicator(
                   onRefresh: onRefresh,
@@ -351,75 +322,6 @@ class _LoadedView extends StatelessWidget {
                 ),
         ),
       ],
-    );
-  }
-}
-
-class _EmptyView extends StatelessWidget {
-  const _EmptyView({
-    required this.isFiltered,
-    required this.onCreate,
-    required this.onOpenSuggestions,
-  });
-
-  final bool isFiltered;
-  final VoidCallback onCreate;
-  final VoidCallback onOpenSuggestions;
-
-  @override
-  Widget build(BuildContext context) {
-    final colors = Theme.of(context).appColors;
-    const typography = AppTypography.standard;
-
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(AppSpacing.xl),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            AppIcon(
-              isFiltered ? Icons.search_off : Icons.library_books_outlined,
-              color: colors.onSurfaceMuted,
-              size: AppIconSize.emptyState,
-            ),
-            const SizedBox(height: AppSpacing.lg),
-            Text(
-              isFiltered ? 'No entries match' : 'Your library is empty',
-              style: typography.title.copyWith(color: colors.onSurface),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: AppSpacing.sm),
-            Text(
-              isFiltered
-                  ? 'Try a different search or toggle archived entries.'
-                  : 'Each entry is a single movement (e.g. BB Bench Press) '
-                        'that can be reused across programs.',
-              style: typography.body.copyWith(color: colors.onSurfaceMuted),
-              textAlign: TextAlign.center,
-            ),
-            if (!isFiltered) ...[
-              const SizedBox(height: AppSpacing.xxl),
-              SizedBox(
-                width: double.infinity,
-                child: FilledButton.icon(
-                  onPressed: onCreate,
-                  icon: const Icon(Icons.add),
-                  label: const Text('Create entry'),
-                ),
-              ),
-              const SizedBox(height: AppSpacing.md),
-              SizedBox(
-                width: double.infinity,
-                child: OutlinedButton.icon(
-                  onPressed: onOpenSuggestions,
-                  icon: const Icon(Icons.auto_fix_high_outlined),
-                  label: const Text('Suggest from your programs'),
-                ),
-              ),
-            ],
-          ],
-        ),
-      ),
     );
   }
 }

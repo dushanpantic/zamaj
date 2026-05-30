@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:zamaj/core/app_icon.dart';
-import 'package:zamaj/core/app_spacing.dart';
+import 'package:zamaj/building_blocks/building_blocks.dart';
 import 'package:zamaj/core/app_theme.dart';
 import 'package:zamaj/core/app_typography.dart';
 import 'package:zamaj/modules/domain/domain.dart';
@@ -94,9 +93,7 @@ class _WorkoutDayEditorScreenState extends State<WorkoutDayEditorScreen> {
         return switch (state) {
           WorkoutDayEditorInitial() => const _LoadingView(),
           WorkoutDayEditorLoading() => const _LoadingView(),
-          WorkoutDayEditorNotFound(:final workoutDayId) => _NotFoundView(
-            workoutDayId: workoutDayId,
-          ),
+          WorkoutDayEditorNotFound() => const _NotFoundView(),
           WorkoutDayEditorExerciseCreated(:final draft, :final validation) =>
             _EditingBody(
               nameController: _nameController,
@@ -140,45 +137,20 @@ class _LoadingView extends StatelessWidget {
 }
 
 class _NotFoundView extends StatelessWidget {
-  const _NotFoundView({required this.workoutDayId});
-
-  final String workoutDayId;
+  const _NotFoundView();
 
   @override
   Widget build(BuildContext context) {
     final colors = Theme.of(context).appColors;
     return Scaffold(
       backgroundColor: colors.background,
-      body: Center(
-        child: Padding(
-          padding: const EdgeInsets.all(AppSpacing.xl),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              AppIcon(
-                Icons.error_outline,
-                color: colors.error,
-                size: AppIconSize.errorState,
-              ),
-              const SizedBox(height: AppSpacing.lg),
-              Text(
-                'Workout day not found.',
-                style: AppTypography.standard.titleSmall.copyWith(
-                  color: colors.onBackground,
-                ),
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: AppSpacing.xl),
-              FilledButton(
-                onPressed: () => Navigator.of(context).pop(),
-                style: FilledButton.styleFrom(
-                  backgroundColor: colors.primary,
-                  foregroundColor: colors.onPrimary,
-                ),
-                child: const Text('Go back'),
-              ),
-            ],
-          ),
+      body: AppStateView(
+        icon: Icons.error_outline,
+        tone: AppStateTone.error,
+        title: 'Workout day not found.',
+        primaryAction: AppStateAction(
+          label: 'Go back',
+          onPressed: () => Navigator.of(context).pop(),
         ),
       ),
     );

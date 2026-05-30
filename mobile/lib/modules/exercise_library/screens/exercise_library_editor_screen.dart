@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:zamaj/core/app_icon.dart';
+import 'package:zamaj/building_blocks/building_blocks.dart';
 import 'package:zamaj/core/app_spacing.dart';
 import 'package:zamaj/core/app_theme.dart';
 import 'package:zamaj/core/app_typography.dart';
@@ -135,8 +135,7 @@ class _ExerciseLibraryEditorScreenState
         final scaffold = switch (state) {
           ExerciseLibraryEditorInitial() ||
           ExerciseLibraryEditorLoading() => const _LoadingScaffold(),
-          ExerciseLibraryEditorNotFound(:final libraryExerciseId) =>
-            _NotFoundScaffold(libraryExerciseId: libraryExerciseId),
+          ExerciseLibraryEditorNotFound() => const _NotFoundScaffold(),
           ExerciseLibraryEditorSaving(:final draft) => _EditorScaffold(
             nameController: _nameController,
             videoUrlController: _videoUrlController,
@@ -201,42 +200,18 @@ class _LoadingScaffold extends StatelessWidget {
 }
 
 class _NotFoundScaffold extends StatelessWidget {
-  const _NotFoundScaffold({required this.libraryExerciseId});
-
-  final String libraryExerciseId;
+  const _NotFoundScaffold();
 
   @override
   Widget build(BuildContext context) {
-    final colors = Theme.of(context).appColors;
-    const typography = AppTypography.standard;
-
     return Scaffold(
-      body: Center(
-        child: Padding(
-          padding: const EdgeInsets.all(AppSpacing.xl),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              AppIcon(
-                Icons.error_outline,
-                color: colors.error,
-                size: AppIconSize.errorState,
-              ),
-              const SizedBox(height: AppSpacing.lg),
-              Text(
-                'Library entry not found.',
-                style: typography.titleSmall.copyWith(
-                  color: colors.onBackground,
-                ),
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: AppSpacing.xl),
-              FilledButton(
-                onPressed: () => Navigator.of(context).pop(),
-                child: const Text('Go back'),
-              ),
-            ],
-          ),
+      body: AppStateView(
+        icon: Icons.error_outline,
+        tone: AppStateTone.error,
+        title: 'Library entry not found.',
+        primaryAction: AppStateAction(
+          label: 'Go back',
+          onPressed: () => Navigator.of(context).pop(),
         ),
       ),
     );

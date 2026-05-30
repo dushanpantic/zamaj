@@ -1,12 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:zamaj/core/app_theme.dart';
+import 'package:zamaj/building_blocks/building_blocks.dart';
 
 class WorkoutDayPickerLoadingView extends StatelessWidget {
   const WorkoutDayPickerLoadingView({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    final colors = Theme.of(context).appColors;
-    return Center(child: CircularProgressIndicator(color: colors.primary));
-  }
+  Widget build(BuildContext context) => const AppListSkeleton();
 }

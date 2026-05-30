@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:zamaj/building_blocks/building_blocks.dart';
 import 'package:zamaj/core/app_icon.dart';
 import 'package:zamaj/core/app_spacing.dart';
 import 'package:zamaj/core/app_theme.dart';
@@ -257,33 +258,13 @@ class _LoadedTrailing extends StatelessWidget {
 class _Skeleton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    final colors = Theme.of(context).appColors;
-    return Column(
+    return const Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _SkeletonBar(width: 160, color: colors.surfaceVariant),
-        const SizedBox(height: AppSpacing.xs),
-        _SkeletonBar(width: 120, color: colors.surfaceVariant),
+        AppSkeletonBar(width: 160),
+        SizedBox(height: AppSpacing.xs),
+        AppSkeletonBar(width: 120),
       ],
-    );
-  }
-}
-
-class _SkeletonBar extends StatelessWidget {
-  const _SkeletonBar({required this.width, required this.color});
-
-  final double width;
-  final Color color;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: width,
-      height: AppSpacing.md,
-      decoration: BoxDecoration(
-        color: color,
-        borderRadius: BorderRadius.circular(AppRadius.sm),
-      ),
     );
   }
 }

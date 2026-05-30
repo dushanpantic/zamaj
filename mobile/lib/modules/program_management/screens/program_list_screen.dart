@@ -1,9 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:zamaj/core/app_icon.dart';
+import 'package:zamaj/building_blocks/building_blocks.dart';
 import 'package:zamaj/core/app_spacing.dart';
 import 'package:zamaj/core/app_theme.dart';
-import 'package:zamaj/core/app_typography.dart';
 import 'package:zamaj/modules/domain/domain.dart';
 import 'package:zamaj/modules/exercise_library/navigation/exercise_library_routes.dart';
 import 'package:zamaj/modules/program_management/bloc/program_list/program_list_bloc.dart';
@@ -124,11 +123,18 @@ class _ProgramListScreenState extends State<ProgramListScreen> {
               builder: (context, state) {
                 return switch (state) {
                   ProgramListInitial() ||
-                  ProgramListLoading() => const _LoadingView(),
-                  ProgramListFailure(:final error) => _FailureView(
-                    error: error,
-                    onRetry: () => context.read<ProgramListBloc>().add(
-                      const ProgramListRetryRequested(),
+                  ProgramListLoading() => const AppListSkeleton(itemCount: 4),
+                  ProgramListFailure() => AppStateView(
+                    icon: Icons.error_outline,
+                    tone: AppStateTone.error,
+                    title: 'Could not load programs',
+                    message: 'Check your storage and try again.',
+                    primaryAction: AppStateAction(
+                      label: 'Retry',
+                      icon: Icons.refresh,
+                      onPressed: () => context.read<ProgramListBloc>().add(
+                        const ProgramListRetryRequested(),
+                      ),
                     ),
                   ),
                   ProgramListLoaded(
@@ -142,9 +148,22 @@ class _ProgramListScreenState extends State<ProgramListScreen> {
                           DomainErrorBanner(error: lastDeleteError),
                         Expanded(
                           child: programs.isEmpty
-                              ? _EmptyView(
-                                  onCreateEmpty: () => _navigateToEditor(),
-                                  onImport: _navigateToImport,
+                              ? AppStateView(
+                                  icon: Icons.fitness_center_outlined,
+                                  title: 'No programs yet',
+                                  message:
+                                      'Create a program from scratch or '
+                                      'import one from text.',
+                                  primaryAction: AppStateAction(
+                                    label: 'Create empty program',
+                                    icon: Icons.add,
+                                    onPressed: () => _navigateToEditor(),
+                                  ),
+                                  secondaryAction: AppStateAction(
+                                    label: 'Import from text',
+                                    icon: Icons.content_paste_outlined,
+                                    onPressed: _navigateToImport,
+                                  ),
                                 )
                               : StreamBuilder<Session?>(
                                   stream: _activeSessionStream,
@@ -189,183 +208,6 @@ class _ProgramListScreenState extends State<ProgramListScreen> {
             ),
           ),
         ],
-      ),
-    );
-  }
-}
-
-class _LoadingView extends StatelessWidget {
-  const _LoadingView();
-
-  @override
-  Widget build(BuildContext context) {
-    return ListView.separated(
-      padding: EdgeInsets.only(
-        left: AppSpacing.lg,
-        right: AppSpacing.lg,
-        top: AppSpacing.lg,
-        bottom: AppSpacing.xxxl + MediaQuery.viewPaddingOf(context).bottom,
-      ),
-      physics: const NeverScrollableScrollPhysics(),
-      itemCount: 4,
-      separatorBuilder: (_, _) => const SizedBox(height: AppSpacing.sm),
-      itemBuilder: (_, _) => const _ProgramTileSkeleton(),
-    );
-  }
-}
-
-/// Non-interactive placeholder mirroring [ProgramListTile]'s anatomy (title +
-/// metadata rows) for the loading state, using the `_SkeletonBar` idiom from
-/// `day_tile.dart`.
-class _ProgramTileSkeleton extends StatelessWidget {
-  const _ProgramTileSkeleton();
-
-  @override
-  Widget build(BuildContext context) {
-    final colors = Theme.of(context).appColors;
-
-    return Container(
-      padding: const EdgeInsets.symmetric(
-        horizontal: AppSpacing.lg,
-        vertical: AppSpacing.md,
-      ),
-      decoration: BoxDecoration(
-        color: colors.surface,
-        borderRadius: BorderRadius.circular(AppRadius.md),
-        border: Border.all(color: colors.outline),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          _SkeletonBar(width: 160, color: colors.surfaceVariant),
-          const SizedBox(height: AppSpacing.xs),
-          _SkeletonBar(width: 110, color: colors.surfaceVariant),
-        ],
-      ),
-    );
-  }
-}
-
-class _SkeletonBar extends StatelessWidget {
-  const _SkeletonBar({required this.width, required this.color});
-
-  final double width;
-  final Color color;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: width,
-      height: AppSpacing.md,
-      decoration: BoxDecoration(
-        color: color,
-        borderRadius: BorderRadius.circular(AppRadius.sm),
-      ),
-    );
-  }
-}
-
-class _FailureView extends StatelessWidget {
-  const _FailureView({required this.error, required this.onRetry});
-
-  final Object error;
-  final VoidCallback onRetry;
-
-  @override
-  Widget build(BuildContext context) {
-    final colors = Theme.of(context).appColors;
-    const typography = AppTypography.standard;
-
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(AppSpacing.xl),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            AppIcon(
-              Icons.error_outline,
-              color: colors.error,
-              size: AppIconSize.errorState,
-            ),
-            const SizedBox(height: AppSpacing.lg),
-            Text(
-              'Could not load programs',
-              style: typography.titleSmall.copyWith(color: colors.onSurface),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: AppSpacing.sm),
-            Text(
-              'Check your storage and try again.',
-              style: typography.body.copyWith(color: colors.onSurfaceMuted),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: AppSpacing.xl),
-            FilledButton.icon(
-              onPressed: onRetry,
-              icon: const Icon(Icons.refresh),
-              label: const Text('Retry'),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _EmptyView extends StatelessWidget {
-  const _EmptyView({required this.onCreateEmpty, required this.onImport});
-
-  final VoidCallback onCreateEmpty;
-  final VoidCallback onImport;
-
-  @override
-  Widget build(BuildContext context) {
-    final colors = Theme.of(context).appColors;
-    const typography = AppTypography.standard;
-
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(AppSpacing.xl),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            AppIcon(
-              Icons.fitness_center_outlined,
-              color: colors.onSurfaceMuted,
-              size: AppIconSize.emptyState,
-            ),
-            const SizedBox(height: AppSpacing.lg),
-            Text(
-              'No programs yet',
-              style: typography.title.copyWith(color: colors.onSurface),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: AppSpacing.sm),
-            Text(
-              'Create a program from scratch or import one from text.',
-              style: typography.body.copyWith(color: colors.onSurfaceMuted),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: AppSpacing.xxl),
-            SizedBox(
-              width: double.infinity,
-              child: FilledButton.icon(
-                onPressed: onCreateEmpty,
-                icon: const Icon(Icons.add),
-                label: const Text('Create empty program'),
-              ),
-            ),
-            const SizedBox(height: AppSpacing.md),
-            SizedBox(
-              width: double.infinity,
-              child: OutlinedButton.icon(
-                onPressed: onImport,
-                icon: const Icon(Icons.content_paste_outlined),
-                label: const Text('Import from text'),
-              ),
-            ),
-          ],
-        ),
       ),
     );
   }
