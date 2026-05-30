@@ -66,9 +66,8 @@ class _ProgramListScreenState extends State<ProgramListScreen> {
 
     final confirmed = await AppConfirmDialog.show(
       context: context,
-      title: 'Delete program',
-      body:
-          'This program and all its workout days will be permanently deleted.',
+      title: 'Delete program?',
+      body: 'Deletes the program and all its workout days. Can\'t be undone.',
       confirmLabel: 'Delete',
       isDestructive: true,
     );

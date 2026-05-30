@@ -82,7 +82,7 @@ class _ExerciseEditorScreenState extends State<ExerciseEditorScreen> {
     final confirmed = await AppConfirmDialog.show(
       context: context,
       title: 'Discard changes?',
-      body: 'Your edits to this exercise will be lost.',
+      body: 'Your edits will be lost.',
       confirmLabel: 'Discard',
       cancelLabel: 'Keep editing',
       isDestructive: true,

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:zamaj/core/app_motion.dart';
 import 'package:zamaj/core/app_spacing.dart';
 import 'package:zamaj/core/app_theme.dart';
 import 'package:zamaj/core/app_typography.dart';
@@ -116,8 +117,8 @@ class _ReorderGapState extends State<ReorderGap> {
                 ? colors.primary.withValues(alpha: 0.55)
                 : colors.outline.withValues(alpha: 0.4);
             return AnimatedContainer(
-              duration: const Duration(milliseconds: 120),
-              curve: Curves.easeOut,
+              duration: AppDuration.base,
+              curve: AppCurve.standard,
               height: height,
               alignment: Alignment.center,
               child: Row(
@@ -125,8 +126,8 @@ class _ReorderGapState extends State<ReorderGap> {
                 children: [
                   Expanded(
                     child: AnimatedContainer(
-                      duration: const Duration(milliseconds: 120),
-                      curve: Curves.easeOut,
+                      duration: AppDuration.base,
+                      curve: AppCurve.standard,
                       height: barHeight,
                       margin: EdgeInsets.symmetric(horizontal: barMargin),
                       decoration: BoxDecoration(
@@ -151,8 +152,8 @@ class _ReorderGapState extends State<ReorderGap> {
                     const SizedBox(width: AppSpacing.sm),
                     Expanded(
                       child: AnimatedContainer(
-                        duration: const Duration(milliseconds: 120),
-                        curve: Curves.easeOut,
+                        duration: AppDuration.base,
+                        curve: AppCurve.standard,
                         height: barHeight,
                         margin: EdgeInsets.symmetric(horizontal: barMargin),
                         decoration: BoxDecoration(

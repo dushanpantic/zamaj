@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:zamaj/core/app_motion.dart';
 import 'package:zamaj/modules/focus_mode/bloc/bloc.dart';
 import 'package:zamaj/modules/focus_mode/models/focus_mode_group_view_model.dart';
 import 'package:zamaj/modules/focus_mode/models/focus_mode_view_model.dart';
@@ -49,8 +50,8 @@ class FocusPanelSlot extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return AnimatedSize(
-      duration: const Duration(milliseconds: 220),
-      curve: Curves.easeOutCubic,
+      duration: AppDuration.slow,
+      curve: AppCurve.emphasized,
       alignment: Alignment.topCenter,
       child: switch (role) {
         FocusPanelRole.previous => FocusPreviousPanelCard(

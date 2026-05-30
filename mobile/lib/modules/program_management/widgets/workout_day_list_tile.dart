@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:zamaj/core/app_icon.dart';
+import 'package:zamaj/core/app_motion.dart';
 import 'package:zamaj/core/app_spacing.dart';
 import 'package:zamaj/core/app_theme.dart';
 import 'package:zamaj/core/app_typography.dart';
@@ -254,7 +255,7 @@ class _ExpandToggle extends StatelessWidget {
     return IconButton(
       icon: AnimatedRotation(
         turns: isExpanded ? 0.25 : 0,
-        duration: const Duration(milliseconds: 150),
+        duration: AppDuration.base,
         child: Icon(Icons.chevron_right, color: colors.onSurfaceMuted),
       ),
       onPressed: onPressed,

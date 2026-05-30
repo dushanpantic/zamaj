@@ -77,8 +77,8 @@ class _WorkoutOverviewScreenState extends State<WorkoutOverviewScreen> {
       context: context,
       title: 'Skip exercise?',
       body:
-          'Skipping "${viewModel.plannedExerciseName}" marks it as not done '
-          'and moves on. This affects this session only.',
+          'Marks "${viewModel.plannedExerciseName}" not done and moves on. '
+          'This session only.',
       confirmLabel: 'Skip',
       isDestructive: true,
     );
@@ -93,8 +93,8 @@ class _WorkoutOverviewScreenState extends State<WorkoutOverviewScreen> {
       context: context,
       title: 'Mark done?',
       body:
-          'Locks "${viewModel.plannedExerciseName}" as done with the sets '
-          'you have already logged. You can still edit those sets.',
+          'Locks "${viewModel.plannedExerciseName}" with the sets you\'ve '
+          'logged so far. You can still edit them.',
       confirmLabel: 'Mark done',
       isDestructive: false,
     );
@@ -162,8 +162,8 @@ class _WorkoutOverviewScreenState extends State<WorkoutOverviewScreen> {
       context: context,
       title: 'End session?',
       body:
-          'Ending the session locks all values. You can still edit completed '
-          'sets afterward, but no new sets can be logged.',
+          'Locks all values. You can still edit completed sets, but can\'t '
+          'log new ones.',
       confirmLabel: 'End',
       isDestructive: true,
     );

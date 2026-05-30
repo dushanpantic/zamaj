@@ -75,7 +75,7 @@ class _ExerciseLibraryEditorScreenState
     final confirmed = await AppConfirmDialog.show(
       context: context,
       title: 'Discard changes?',
-      body: 'Your edits to this library entry will be lost.',
+      body: 'Your edits will be lost.',
       confirmLabel: 'Discard',
       cancelLabel: 'Keep editing',
       isDestructive: true,
@@ -95,10 +95,10 @@ class _ExerciseLibraryEditorScreenState
   Future<void> _confirmArchive(BuildContext context) async {
     final confirmed = await AppConfirmDialog.show(
       context: context,
-      title: 'Archive entry',
+      title: 'Archive entry?',
       body:
-          'Archive this entry? It stays linked to past data but stops appearing '
-          'in the picker. You can restore it later.',
+          'Hides this entry from the picker. Kept in your history — '
+          'restore it anytime.',
       confirmLabel: 'Archive',
     );
     if (!context.mounted) return;

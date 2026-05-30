@@ -205,8 +205,8 @@ class _LoadedBody extends StatelessWidget {
       context: context,
       title: 'Delete session?',
       body:
-          'This permanently removes "${item.workoutDayName}" and all '
-          'logged sets. This cannot be undone.',
+          'Removes "${item.workoutDayName}" and all its logged sets. '
+          'Can\'t be undone.',
       confirmLabel: 'Delete',
       isDestructive: true,
     );

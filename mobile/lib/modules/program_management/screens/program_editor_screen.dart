@@ -152,8 +152,8 @@ class _ProgramEditorScreenState extends State<ProgramEditorScreen> {
     final cost = WorkoutDaySummaryFormatter.deletionCost(summary);
     final confirmed = await AppConfirmDialog.show(
       context: context,
-      title: 'Delete Workout Day',
-      body: 'Delete "$dayName"? This removes $cost.',
+      title: 'Delete workout day?',
+      body: 'Deletes "$dayName" and its $cost.',
       confirmLabel: 'Delete',
       cancelLabel: 'Cancel',
       isDestructive: true,

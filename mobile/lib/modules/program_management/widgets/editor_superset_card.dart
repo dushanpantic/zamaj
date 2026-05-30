@@ -230,9 +230,9 @@ class EditorSupersetCard extends StatelessWidget {
                           confirmDismiss: (_) async {
                             final confirmed = await AppConfirmDialog.show(
                               context: context,
-                              title: 'Delete Exercise',
+                              title: 'Delete exercise?',
                               body:
-                                  'Delete "${exercise.name.isEmpty ? 'Unnamed exercise' : exercise.name}"? This cannot be undone.',
+                                  'Removes "${exercise.name.isEmpty ? 'Unnamed exercise' : exercise.name}". Can\'t be undone.',
                               confirmLabel: 'Delete',
                               isDestructive: true,
                             );

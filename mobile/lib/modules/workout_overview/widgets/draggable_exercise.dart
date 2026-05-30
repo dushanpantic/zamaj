@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:zamaj/core/app_motion.dart';
 import 'package:zamaj/core/app_spacing.dart';
 import 'package:zamaj/core/app_theme.dart';
 import 'package:zamaj/core/app_typography.dart';
@@ -101,7 +102,7 @@ class _DraggableExerciseState extends State<DraggableExercise> {
           });
         }
         return AnimatedScale(
-          duration: const Duration(milliseconds: 80),
+          duration: AppDuration.fast,
           scale: highlight ? 0.98 : 1,
           child: Stack(
             children: [
@@ -109,7 +110,7 @@ class _DraggableExerciseState extends State<DraggableExercise> {
               Positioned.fill(
                 child: IgnorePointer(
                   child: AnimatedOpacity(
-                    duration: const Duration(milliseconds: 120),
+                    duration: AppDuration.base,
                     opacity: highlight ? 1 : 0,
                     child: _SupersetDropOverlay(),
                   ),

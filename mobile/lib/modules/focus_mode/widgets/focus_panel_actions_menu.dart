@@ -120,8 +120,8 @@ class FocusPanelActionsMenu extends StatelessWidget {
       context: context,
       title: 'Skip exercise?',
       body:
-          'Skipping "${panel.displayExerciseName}" marks it as not done and '
-          'moves on. This affects this session only.',
+          'Marks "${panel.displayExerciseName}" not done and moves on. '
+          'This session only.',
       confirmLabel: 'Skip',
       isDestructive: true,
     );
@@ -133,11 +133,10 @@ class FocusPanelActionsMenu extends StatelessWidget {
     final bloc = context.read<FocusModeBloc>();
     final confirmed = await AppConfirmDialog.show(
       context: context,
-      title: 'Mark exercise done?',
+      title: 'Mark done?',
       body:
-          'Locks "${panel.displayExerciseName}" as completed with the '
-          'sets you have so far (${panel.completedSetsCount} of '
-          '${panel.totalPlannedSets}).',
+          'Locks "${panel.displayExerciseName}" with the sets so far '
+          '(${panel.completedSetsCount} of ${panel.totalPlannedSets}).',
       confirmLabel: 'Mark done',
     );
     if (confirmed != true) return;

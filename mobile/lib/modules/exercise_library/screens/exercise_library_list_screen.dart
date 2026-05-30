@@ -78,10 +78,10 @@ class _ExerciseLibraryListScreenState extends State<ExerciseLibraryListScreen> {
   Future<void> _onArchiveRequested(LibraryExercise entry) async {
     final confirmed = await AppConfirmDialog.show(
       context: context,
-      title: 'Archive entry',
+      title: 'Archive entry?',
       body:
-          'Archive "${entry.name}"? It will stay linked to past data but stop '
-          'appearing in the picker. You can restore it later.',
+          'Hides "${entry.name}" from the picker. Kept in your history — '
+          'restore it anytime.',
       confirmLabel: 'Archive',
     );
     if (confirmed != true || !mounted) return;

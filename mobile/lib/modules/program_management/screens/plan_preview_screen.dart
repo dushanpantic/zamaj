@@ -60,7 +60,7 @@ class _PlanPreviewScreenState extends State<PlanPreviewScreen> {
     final confirmed = await AppConfirmDialog.show(
       context: context,
       title: 'Discard preview?',
-      body: 'The imported plan will not be saved.',
+      body: 'The imported plan won\'t be saved.',
       confirmLabel: 'Discard',
       cancelLabel: 'Keep preview',
       isDestructive: true,

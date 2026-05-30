@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:zamaj/core/app_motion.dart';
 import 'package:zamaj/core/app_spacing.dart';
 import 'package:zamaj/core/app_theme.dart';
 import 'package:zamaj/core/app_typography.dart';
@@ -100,7 +101,7 @@ class _DragFeedbackPill extends StatelessWidget {
       builder: (context, _) {
         final dimmed = dragSession.isOutsideStable;
         return AnimatedOpacity(
-          duration: const Duration(milliseconds: 150),
+          duration: AppDuration.base,
           opacity: dimmed ? 0.6 : 1.0,
           child: Material(
             elevation: 8,

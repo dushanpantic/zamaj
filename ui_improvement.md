@@ -11,8 +11,9 @@ rather than repeating it. It does **not** change [product-context.md](product-co
 (no screen is added, removed, or renamed here — this is polish, not product
 scope).
 
-> **Status:** Phase 0 decisions are **closed** (see Part 4 → Phase 0). The
-> remaining phases are sequenced and ready to implement.
+> **Status:** Phase 0 decisions are **closed** (see Part 4 → Phase 0), and all
+> **six** implementation slices (Prompts 1–6) are **complete** — the findings
+> in Part 3 are closed.
 
 > **Verdict up front:** the bones are genuinely good. There's a real token
 > system ([app_spacing.dart](mobile/lib/core/app_spacing.dart),
@@ -325,7 +326,7 @@ These were the one-way doors. Everything downstream is authored against them.
 | 3 ✅ | Status + section vocab | `StatusBadge`, `SectionHeader` (+overline, +stroke) | F6¹, F10, F11 | no | low |
 | 4 ✅ | Dialogs + Material theming | `AppConfirmDialog`, theme entries (+4th surface) | F5, F12, F14, F17 | no | low |
 | 5 ✅ | **Live session surface** | `PrimaryActionButton`, shared stepper policy | F3, F4, F15, F6² | **yes** | **high** |
-| 6 | Microcopy + motion + verify | (+`AppDuration`/`Curve`) | F13, F9 | touch-up | low |
+| 6 ✅ | Microcopy + motion + verify | (+`AppDuration`/`Curve`) | F13, F9 | touch-up | low |
 
 ¹ day-tile in-progress pill. ² exercise-card state badges (deferred to the live
 pass so the session screen is edited only once). Slices 1→4 never touch
@@ -500,7 +501,37 @@ land a component without its callers.
 - **Verify:** `tool/ci.sh` (domain+persistence only — no widget tests per
   CLAUDE.md), then **a real session is your sign-off**, per colors.md §6.
 
-### Prompt 6 — Microcopy, motion & verification
+### Prompt 6 — Microcopy, motion & verification  ✅ DONE
+> **Status: complete.** The `[lazy]` **motion tokens** were authored in the new
+> [app_motion.dart](mobile/lib/core/app_motion.dart): `AppDuration`
+> (`fast` 80 / `base` 120 / `slow` 220 ms) and `AppCurve` (`standard` =
+> `easeOut`, `emphasized` = `easeOutCubic`). The scattered 80/120/150/220 ms
+> animation literals across the eight animated widgets (`reorder_gap`,
+> `superset_reorder_gap`, `draggable_exercise`, `superset_drop_target`,
+> `exercise_card`, `drag_handle`, `workout_day_list_tile`, `focus_panel_slot`)
+> were migrated onto the three tiers — the two 150 ms cases round to `base` —
+> and the two curve literals onto the two `AppCurve` entries (F9). Interaction
+> timers (debounce / long-press / ticker / SnackBar) are deliberately left as
+> literals — they're timing, not motion. **Microcopy (F13):** every confirm
+> dialog was trimmed out of "assistant voice" (the `verb + reassurance + scope`
+> cadence) and its title normalized to sentence-case + `?` (`Delete Workout
+> Day` → `Delete workout day?`, `Mark exercise done?` → `Mark done?`, `Archive
+> entry` → `Archive entry?`, …) across program_management, exercise_library,
+> export, and the live `workout_overview`/`focus_mode` surfaces — keeping a
+> brief consequence note on destructive actions per Phase 0.7 (`Can't be
+> undone.`, `Kept in your history — restore it anytime.`). One assistant-y
+> empty-state line ("Come back after adding more workouts.") was dropped; the
+> `…` glyph was already used consistently (no literal `...`) and both
+> `'Loading…'` titles already matched — `…` is the settled form.
+> **Accessibility (Phase 0.5):** verified against **Ember dark** — in-session
+> numerics (`actual` on `surface`) clear **15.45:1**, far past AAA 7:1; LOG SET
+> (`onPrimary` on `primary`) is **6.69:1** and the rest-timer numeric
+> **6.31:1**, both passing AA + AAA-large (the orange is the closed Phase-0
+> Ember value and was not re-tuned). Tap-target floors stay tokenized
+> (`AppInSessionSize` / `AppSpacing.touchMin`) and no state is shown by colour
+> alone (`StatusBadge` always pairs a glyph/word with the hue). The light table
+> compiles and is token-correct (spot-check only). `tool/ci.sh` green
+> (offline-imports OK, analyze clean, 633 tests pass).
 - **Microcopy (F13, Phase 0.7):** concise and verb-led, but keep a brief
   consequence note on destructive actions. Example: *"Archive "X"? Hidden from
   the picker, kept in your history."* Normalize `'Loading…'`/titles; settle

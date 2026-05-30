@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:zamaj/building_blocks/building_blocks.dart';
 import 'package:zamaj/core/app_colors.dart';
+import 'package:zamaj/core/app_motion.dart';
 import 'package:zamaj/core/app_spacing.dart';
 import 'package:zamaj/core/app_theme.dart';
 import 'package:zamaj/core/app_typography.dart';
@@ -101,7 +102,7 @@ class ExerciseCard extends StatelessWidget {
         : colors.outline;
     final borderWidth = isDropTarget || isCurrent ? 2.0 : 1.0;
     return AnimatedContainer(
-      duration: const Duration(milliseconds: 120),
+      duration: AppDuration.base,
       decoration: BoxDecoration(
         color: colors.surface,
         borderRadius: BorderRadius.circular(AppRadius.md),

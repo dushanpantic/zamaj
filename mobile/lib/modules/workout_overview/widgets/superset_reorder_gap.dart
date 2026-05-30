@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:zamaj/core/app_motion.dart';
 import 'package:zamaj/core/app_spacing.dart';
 import 'package:zamaj/core/app_theme.dart';
 import 'package:zamaj/core/haptics.dart';
@@ -105,13 +106,13 @@ class _SupersetReorderGapState extends State<SupersetReorderGap> {
                 ? colors.primary
                 : colors.primary.withValues(alpha: 0.55);
             return AnimatedContainer(
-              duration: const Duration(milliseconds: 120),
-              curve: Curves.easeOut,
+              duration: AppDuration.base,
+              curve: AppCurve.standard,
               height: height,
               alignment: Alignment.center,
               child: AnimatedContainer(
-                duration: const Duration(milliseconds: 120),
-                curve: Curves.easeOut,
+                duration: AppDuration.base,
+                curve: AppCurve.standard,
                 height: barHeight,
                 margin: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
                 decoration: BoxDecoration(

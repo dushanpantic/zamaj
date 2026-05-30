@@ -86,8 +86,7 @@ class _LoadedView extends StatelessWidget {
         tone: AppStateTone.success,
         title: 'Nothing to suggest',
         message:
-            'Every exercise across your programs is either already linked '
-            'or unique. Come back after adding more workouts.',
+            'Every exercise across your programs is already linked or unique.',
         primaryAction: AppStateAction(
           label: 'Done',
           onPressed: () => Navigator.of(context).pop(),
