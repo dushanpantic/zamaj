@@ -24,6 +24,7 @@ class AppTypography {
     required this.numericHero,
     required this.actionLabel,
     required this.badge,
+    required this.overline,
   });
 
   final TextStyle display;
@@ -43,6 +44,12 @@ class AppTypography {
   final TextStyle numericHero;
   final TextStyle actionLabel;
   final TextStyle badge;
+
+  /// Section eyebrow / group label: small, semibold, tracked. Rendered
+  /// uppercase by [SectionHeader]. The single home for eyebrow tracking —
+  /// replaces the hand-set 0.5 / 0.6 / 1.2 letter-spacing that drifted across
+  /// section headers.
+  final TextStyle overline;
 
   static const _tabular = <FontFeature>[FontFeature.tabularFigures()];
 
@@ -115,5 +122,11 @@ class AppTypography {
       letterSpacing: 0.5,
     ),
     badge: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, height: 1.2),
+    overline: TextStyle(
+      fontSize: 12,
+      fontWeight: FontWeight.w600,
+      height: 1.2,
+      letterSpacing: 0.8,
+    ),
   );
 }

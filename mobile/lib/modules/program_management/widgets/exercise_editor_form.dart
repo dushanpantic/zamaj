@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:zamaj/building_blocks/building_blocks.dart';
 import 'package:zamaj/core/app_icon.dart';
 import 'package:zamaj/core/app_spacing.dart';
 import 'package:zamaj/core/app_theme.dart';
@@ -72,12 +73,7 @@ class ExerciseEditorForm extends StatelessWidget {
                       bloc.add(ExerciseNameChanged(name: value)),
                 ),
                 const SizedBox(height: AppSpacing.lg),
-                Text(
-                  'Measurement type',
-                  style: typography.caption.copyWith(
-                    color: colors.onSurfaceMuted,
-                  ),
-                ),
+                const SectionHeader('Measurement type'),
                 const SizedBox(height: AppSpacing.sm),
                 MeasurementTypeSelector(
                   selected: draft.measurementType,
@@ -85,12 +81,7 @@ class ExerciseEditorForm extends StatelessWidget {
                       bloc.add(ExerciseMeasurementTypeChanged(next: type)),
                 ),
                 const SizedBox(height: AppSpacing.lg),
-                Text(
-                  'Planned sets',
-                  style: typography.caption.copyWith(
-                    color: colors.onSurfaceMuted,
-                  ),
-                ),
+                const SectionHeader('Planned sets'),
                 const SizedBox(height: AppSpacing.sm),
                 ReorderableListView(
                   shrinkWrap: true,

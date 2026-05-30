@@ -1,8 +1,10 @@
 /// Barrel for cross-cutting presentational building blocks (shared molecules
-/// configured per screen rather than re-authored): unified state views and
-/// loading skeletons. Import as
+/// configured per screen rather than re-authored): unified state views,
+/// loading skeletons, status badges, and section headers. Import as
 /// `package:zamaj/building_blocks/building_blocks.dart`.
 library;
 
 export 'package:zamaj/building_blocks/app_skeleton.dart';
 export 'package:zamaj/building_blocks/app_state_view.dart';
+export 'package:zamaj/building_blocks/section_header.dart';
+export 'package:zamaj/building_blocks/status_badge.dart';

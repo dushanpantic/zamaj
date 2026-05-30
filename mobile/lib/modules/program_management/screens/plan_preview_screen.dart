@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:zamaj/building_blocks/building_blocks.dart';
 import 'package:zamaj/core/app_icon.dart';
 import 'package:zamaj/core/app_spacing.dart';
 import 'package:zamaj/core/app_theme.dart';
@@ -207,27 +208,10 @@ class _WorkoutDaySection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colors = Theme.of(context).appColors;
-    const typography = AppTypography.standard;
-
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Container(
-          padding: const EdgeInsets.symmetric(
-            horizontal: AppSpacing.md,
-            vertical: AppSpacing.sm,
-          ),
-          decoration: BoxDecoration(
-            color: colors.surfaceVariant,
-            borderRadius: BorderRadius.circular(AppRadius.md),
-            border: Border.all(color: colors.outline),
-          ),
-          child: Text(
-            day.name,
-            style: typography.titleSmall.copyWith(color: colors.onSurface),
-          ),
-        ),
+        SectionHeader(day.name),
         const SizedBox(height: AppSpacing.md),
         for (final group in day.groups) ...[
           _ExerciseGroupSection(

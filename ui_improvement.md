@@ -322,7 +322,7 @@ These were the one-way doors. Everything downstream is authored against them.
 |---|-------------------------|--------|--------|---------------|------|
 | 1 ✅ | Foundation: Ember + icons | `AppIconSize`, `AppIcon` | F16, F8 | no | low |
 | 2 ✅ | State views + loading | `AppStateView`, `AppSkeleton` | F1, F2, F7 | no | low |
-| 3 | Status + section vocab | `StatusBadge`, `SectionHeader` (+overline, +stroke) | F6¹, F10, F11 | no | low |
+| 3 ✅ | Status + section vocab | `StatusBadge`, `SectionHeader` (+overline, +stroke) | F6¹, F10, F11 | no | low |
 | 4 | Dialogs + Material theming | `AppConfirmDialog`, theme entries (+4th surface) | F5, F12, F14, F17 | no | low |
 | 5 | **Live session surface** | `PrimaryActionButton`, shared stepper policy | F3, F4, F15, F6² | **yes** | **high** |
 | 6 | Microcopy + motion + verify | (+`AppDuration`/`Curve`) | F13, F9 | touch-up | low |
@@ -383,17 +383,40 @@ land a component without its callers.
 - **Closes:** F1 (duplicated state views), F2 (loading), F7 (heading drift).
 - **Verify:** `tool/ci.sh`; no live surface.
 
-### Prompt 3 — Status + section vocabulary
+### Prompt 3 — Status + section vocabulary  ✅ DONE
+> **Status: complete.** The `[lazy]` **overline** text style (one tracking
+> value — 12 px / w600 / `letterSpacing` 0.8) was authored in
+> [app_typography.dart](mobile/lib/core/app_typography.dart), and `AppSpacing.xxs`
+> (2 — the compact-pill inset) + `[lazy]` **`AppStroke`** (`hairline`/`emphasis`)
+> in [app_spacing.dart](mobile/lib/core/app_spacing.dart). `StatusBadge` (icon
+> branch for done/warmup; pill branch for in-progress + Skipped/Replaced) and
+> `SectionHeader` (one uppercase overline eyebrow, optional leading icon +
+> trailing action) were authored in the
+> [building_blocks/](mobile/lib/building_blocks/) barrel. Migrated the
+> **non-live** consumers: day-tile "IN PROGRESS" → `StatusBadge.pill` (the
+> bespoke `_InProgressChip` deleted); recent_sessions "This week"/"Earlier"
+> (killing the hand-set 0.6 tracking and the private `_SectionHeader`),
+> plan-preview day titles (dropping the boxed `titleSmall`), and the
+> exercise-editor "Measurement type"/"Planned sets" form-group labels →
+> `SectionHeader`. Per the risk guardrail (slices 1–4 never touch
+> `workout_overview/`/`focus_mode/`), the **live-surface** section headers
+> (notes / extra-work) and the exercise-card `StatusBadge` states are batched
+> into **Prompt 5** so the session screen is edited once; the rest-timer SKIP
+> `1.2` and `actionLabel` `0.5` tracking are settled there too. `tool/ci.sh`
+> green (offline-imports OK, analyze clean, 633 tests pass).
 - **Build:** `StatusBadge` (Phase 0.2: icon branch for done/warmup; pill branch
   for in-progress + Skipped/Replaced); `SectionHeader`. Author the `[lazy]`
   **overline** text style (one tracking value, kill 0.5/0.6/1.2) and `[lazy]`
   **`AppStroke`** (hairline/emphasis).
 - **Migrate (non-live):** day-tile "IN PROGRESS" → `StatusBadge` pill;
-  "This week"/"Earlier", Notes, Extra-work, plan-preview day titles, form-group
-  labels → `SectionHeader`.
-- **Closes:** F6 (day-tile half), F10 (tracking), F11 (section headers).
-- **Note:** exercise-card state badges are intentionally **deferred to Prompt 5**
-  so the live session screen is edited only once.
+  "This week"/"Earlier", plan-preview day titles, form-group labels →
+  `SectionHeader`. *(Notes / Extra-work live under `workout_overview/`, so their
+  `SectionHeader` migration moves to Prompt 5 with the rest of the live surface.)*
+- **Closes:** F6 (day-tile half), F10 (tracking — non-live half; the live
+  `1.2`/`0.5` close in Prompt 5), F11 (section headers).
+- **Note:** exercise-card state badges (and the notes / extra-work section
+  headers) are intentionally **deferred to Prompt 5** so the live session screen
+  is edited only once.
 
 ### Prompt 4 — Dialogs + Material theming
 - **Build:** make `AppConfirmDialog` the single confirm path; add `chipTheme`,
@@ -414,9 +437,11 @@ land a component without its callers.
   increment source (`IncrementRules`) and the size/type tokens, **keeping the two
   presentations** (Phase 0.4); lift the rest-timer **SKIP** target and the inline
   ± editor to the in-session size floor (F15); apply `StatusBadge` to
-  exercise-card states.
+  exercise-card states; migrate the notes / extra-work section headers to
+  `SectionHeader` and settle the rest-timer SKIP `1.2` / `actionLabel` `0.5`
+  tracking (the live half of F10/F11 carried over from Prompt 3).
 - **Closes:** F3 (stepper policy), F4 (`LOG SET` chrome), F15 (in-session floor),
-  F6 (card half).
+  F6 (card half), F10/F11 (live remainder).
 - **Verify:** `tool/ci.sh` (domain+persistence only — no widget tests per
   CLAUDE.md), then **a real session is your sign-off**, per colors.md §6.
 

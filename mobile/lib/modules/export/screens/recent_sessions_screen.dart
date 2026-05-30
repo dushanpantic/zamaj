@@ -3,7 +3,6 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:zamaj/building_blocks/building_blocks.dart';
 import 'package:zamaj/core/app_spacing.dart';
 import 'package:zamaj/core/app_theme.dart';
-import 'package:zamaj/core/app_typography.dart';
 import 'package:zamaj/core/date_formatter.dart';
 import 'package:zamaj/modules/domain/domain.dart';
 import 'package:zamaj/modules/export/bloc/bloc.dart';
@@ -135,14 +134,14 @@ class _LoadedBody extends StatelessWidget {
         ),
         children: [
           if (thisWeek.isNotEmpty) ...[
-            const _SectionHeader('This week'),
+            const SectionHeader('This week'),
             const SizedBox(height: AppSpacing.sm),
             ..._tilesFor(context, thisWeek, state),
           ],
           if (thisWeek.isNotEmpty && earlier.isNotEmpty)
             const SizedBox(height: AppSpacing.xl),
           if (earlier.isNotEmpty) ...[
-            const _SectionHeader('Earlier'),
+            const SectionHeader('Earlier'),
             const SizedBox(height: AppSpacing.sm),
             ..._tilesFor(context, earlier, state),
           ],
@@ -222,24 +221,6 @@ class _LoadedBody extends StatelessWidget {
             child: const Text('Delete'),
           ),
         ],
-      ),
-    );
-  }
-}
-
-class _SectionHeader extends StatelessWidget {
-  const _SectionHeader(this.label);
-
-  final String label;
-
-  @override
-  Widget build(BuildContext context) {
-    final colors = Theme.of(context).appColors;
-    return Text(
-      label,
-      style: AppTypography.standard.label.copyWith(
-        color: colors.onSurfaceMuted,
-        letterSpacing: 0.6,
       ),
     );
   }

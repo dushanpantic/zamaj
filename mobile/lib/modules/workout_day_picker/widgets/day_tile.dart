@@ -79,7 +79,10 @@ class DayTile extends StatelessWidget {
                     ),
                     if (hasActiveSession) ...[
                       const SizedBox(width: AppSpacing.sm),
-                      _InProgressChip(),
+                      StatusBadge.pill(
+                        label: 'IN PROGRESS',
+                        color: colors.primary,
+                      ),
                     ],
                   ],
                 ),
@@ -192,28 +195,6 @@ class DayTile extends StatelessWidget {
         ),
       ),
     };
-  }
-}
-
-class _InProgressChip extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    final colors = Theme.of(context).appColors;
-    return Container(
-      padding: const EdgeInsets.symmetric(
-        horizontal: AppSpacing.sm,
-        vertical: 2,
-      ),
-      decoration: BoxDecoration(
-        color: colors.primary.withValues(alpha: 0.15),
-        borderRadius: BorderRadius.circular(AppRadius.pill),
-        border: Border.all(color: colors.primary.withValues(alpha: 0.5)),
-      ),
-      child: Text(
-        'IN PROGRESS',
-        style: AppTypography.standard.badge.copyWith(color: colors.primary),
-      ),
-    );
   }
 }
 
