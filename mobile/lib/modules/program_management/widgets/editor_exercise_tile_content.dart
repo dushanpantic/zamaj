@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:zamaj/core/app_colors.dart';
 import 'package:zamaj/core/app_icon.dart';
+import 'package:zamaj/core/app_opacity.dart';
 import 'package:zamaj/core/app_spacing.dart';
 import 'package:zamaj/core/app_typography.dart';
 import 'package:zamaj/core/rest_formatter.dart';
@@ -106,9 +107,11 @@ class EditorWarmupBadge extends StatelessWidget {
         vertical: 2,
       ),
       decoration: BoxDecoration(
-        color: colors.warmup.withValues(alpha: 0.15),
+        color: colors.warmup.withValues(alpha: AppOpacity.tintFill),
         borderRadius: BorderRadius.circular(AppRadius.pill),
-        border: Border.all(color: colors.warmup.withValues(alpha: 0.5)),
+        border: Border.all(
+          color: colors.warmup.withValues(alpha: AppOpacity.borderTint),
+        ),
       ),
       child: Text(
         'WARMUP',

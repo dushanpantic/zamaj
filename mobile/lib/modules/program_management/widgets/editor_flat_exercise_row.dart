@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:zamaj/building_blocks/building_blocks.dart';
+import 'package:zamaj/core/app_elevation.dart';
 import 'package:zamaj/core/app_icon.dart';
+import 'package:zamaj/core/app_opacity.dart';
 import 'package:zamaj/core/app_spacing.dart';
 import 'package:zamaj/core/app_theme.dart';
 import 'package:zamaj/modules/domain/domain.dart';
@@ -142,7 +144,7 @@ class EditorFlatExerciseRow extends StatelessWidget {
         return LongPressDraggable<ExerciseDragPayload>(
           data: payload,
           feedback: Material(
-            elevation: 4,
+            elevation: AppElevation.drag,
             borderRadius: BorderRadius.circular(AppRadius.sm),
             child: SizedBox(
               width: MediaQuery.of(context).size.width - AppSpacing.lg * 2,
@@ -184,11 +186,14 @@ class EditorFlatExerciseRow extends StatelessWidget {
             child: Container(
               decoration: BoxDecoration(
                 color: isDropTarget
-                    ? colors.primary.withValues(alpha: 0.10)
+                    ? colors.primary.withValues(alpha: AppOpacity.tintFill)
                     : null,
                 borderRadius: BorderRadius.circular(AppRadius.sm),
                 border: isDropTarget
-                    ? Border.all(color: colors.primary, width: 2)
+                    ? Border.all(
+                        color: colors.primary,
+                        width: AppStroke.emphasis,
+                      )
                     : null,
               ),
               child: Material(

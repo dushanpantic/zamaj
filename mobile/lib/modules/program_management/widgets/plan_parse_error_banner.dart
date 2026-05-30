@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:zamaj/core/app_icon.dart';
+import 'package:zamaj/core/app_opacity.dart';
 import 'package:zamaj/core/app_spacing.dart';
 import 'package:zamaj/core/app_theme.dart';
 import 'package:zamaj/core/app_typography.dart';
@@ -18,9 +19,11 @@ class PlanParseErrorBanner extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(AppSpacing.md),
       decoration: BoxDecoration(
-        color: colors.error.withValues(alpha: 0.12),
+        color: colors.error.withValues(alpha: AppOpacity.tintFill),
         borderRadius: BorderRadius.circular(AppRadius.md),
-        border: Border.all(color: colors.error.withValues(alpha: 0.4)),
+        border: Border.all(
+          color: colors.error.withValues(alpha: AppOpacity.borderTint),
+        ),
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,

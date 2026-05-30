@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:zamaj/core/app_colors.dart';
+import 'package:zamaj/core/app_opacity.dart';
 import 'package:zamaj/core/app_spacing.dart';
 import 'package:zamaj/core/app_theme.dart';
 import 'package:zamaj/core/app_typography.dart';
@@ -77,14 +78,18 @@ class _TypeChip extends StatelessWidget {
     const typography = AppTypography.standard;
 
     final backgroundColor = isSelected
-        ? (enabled ? colors.primary : colors.primary.withValues(alpha: 0.5))
+        ? (enabled
+              ? colors.primary
+              : colors.primary.withValues(alpha: AppOpacity.muted))
         : colors.surfaceVariant;
 
     final textColor = isSelected
-        ? (enabled ? colors.onPrimary : colors.onPrimary.withValues(alpha: 0.5))
+        ? (enabled
+              ? colors.onPrimary
+              : colors.onPrimary.withValues(alpha: AppOpacity.muted))
         : (enabled
               ? colors.onSurfaceMuted
-              : colors.onSurfaceMuted.withValues(alpha: 0.5));
+              : colors.onSurfaceMuted.withValues(alpha: AppOpacity.muted));
 
     return GestureDetector(
       onTap: onTap,

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:zamaj/core/app_icon.dart';
+import 'package:zamaj/core/app_opacity.dart';
 import 'package:zamaj/core/app_spacing.dart';
 import 'package:zamaj/core/app_theme.dart';
 import 'package:zamaj/core/app_typography.dart';
@@ -24,7 +25,7 @@ class WorkoutDaySaveErrorBanner extends StatelessWidget {
         horizontal: AppSpacing.lg,
         vertical: AppSpacing.sm,
       ),
-      color: colors.error.withValues(alpha: 0.12),
+      color: colors.error.withValues(alpha: AppOpacity.tintFill),
       child: Row(
         children: [
           AppIcon(

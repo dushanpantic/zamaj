@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:zamaj/core/app_icon.dart';
+import 'package:zamaj/core/app_opacity.dart';
 import 'package:zamaj/core/app_spacing.dart';
 import 'package:zamaj/core/app_typography.dart';
 
@@ -66,10 +67,10 @@ class StatusBadge extends StatelessWidget {
         vertical: AppSpacing.xxs,
       ),
       decoration: BoxDecoration(
-        color: _color.withValues(alpha: 0.15),
+        color: _color.withValues(alpha: AppOpacity.tintFill),
         borderRadius: BorderRadius.circular(AppRadius.pill),
         border: Border.all(
-          color: _color.withValues(alpha: 0.5),
+          color: _color.withValues(alpha: AppOpacity.borderTint),
           width: AppStroke.hairline,
         ),
       ),

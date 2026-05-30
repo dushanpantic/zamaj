@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:zamaj/core/app_icon.dart';
+import 'package:zamaj/core/app_opacity.dart';
 import 'package:zamaj/core/app_spacing.dart';
 import 'package:zamaj/core/app_theme.dart';
 import 'package:zamaj/core/app_typography.dart';
@@ -19,7 +20,7 @@ class LibraryLinkChip extends StatelessWidget {
     final colors = Theme.of(context).appColors;
     final isLinked = linkedName != null;
     final bg = isLinked
-        ? colors.primary.withValues(alpha: 0.12)
+        ? colors.primary.withValues(alpha: AppOpacity.tintFill)
         : colors.surfaceVariant;
     final fg = isLinked ? colors.primary : colors.onSurfaceMuted;
     final iconData = isLinked ? Icons.link : Icons.link_off;

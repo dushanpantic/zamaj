@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:zamaj/building_blocks/building_blocks.dart';
+import 'package:zamaj/core/app_elevation.dart';
 import 'package:zamaj/core/app_icon.dart';
+import 'package:zamaj/core/app_opacity.dart';
 import 'package:zamaj/core/app_spacing.dart';
 import 'package:zamaj/core/app_theme.dart';
 import 'package:zamaj/core/app_typography.dart';
@@ -190,7 +192,7 @@ class EditorSupersetCard extends StatelessWidget {
                     return LongPressDraggable<ExerciseDragPayload>(
                       data: payload,
                       feedback: Material(
-                        elevation: 4,
+                        elevation: AppElevation.drag,
                         borderRadius: BorderRadius.circular(AppRadius.sm),
                         child: SizedBox(
                           width:
@@ -217,11 +219,16 @@ class EditorSupersetCard extends StatelessWidget {
                         margin: const EdgeInsets.only(bottom: AppSpacing.xs),
                         decoration: BoxDecoration(
                           color: isDropTarget
-                              ? colors.primary.withValues(alpha: 0.10)
+                              ? colors.primary.withValues(
+                                  alpha: AppOpacity.tintFill,
+                                )
                               : null,
                           borderRadius: BorderRadius.circular(AppRadius.sm),
                           border: isDropTarget
-                              ? Border.all(color: colors.primary, width: 2)
+                              ? Border.all(
+                                  color: colors.primary,
+                                  width: AppStroke.emphasis,
+                                )
                               : null,
                         ),
                         child: Dismissible(

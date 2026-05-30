@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:zamaj/building_blocks/building_blocks.dart';
 import 'package:zamaj/core/app_icon.dart';
+import 'package:zamaj/core/app_opacity.dart';
 import 'package:zamaj/core/app_spacing.dart';
 import 'package:zamaj/core/app_theme.dart';
 import 'package:zamaj/core/app_typography.dart';
@@ -137,7 +138,7 @@ class _PlanPreviewScreenState extends State<PlanPreviewScreen> {
             style: typography.label.copyWith(
               color: enabled
                   ? colors.onSurfaceMuted
-                  : colors.onSurfaceMuted.withValues(alpha: 0.4),
+                  : colors.onSurfaceMuted.withValues(alpha: AppOpacity.muted),
             ),
           ),
         ),
@@ -363,9 +364,11 @@ class _WarningBadge extends StatelessWidget {
         vertical: AppSpacing.xs,
       ),
       decoration: BoxDecoration(
-        color: colors.warning.withValues(alpha: 0.12),
+        color: colors.warning.withValues(alpha: AppOpacity.tintFill),
         borderRadius: BorderRadius.circular(AppRadius.sm),
-        border: Border.all(color: colors.warning.withValues(alpha: 0.4)),
+        border: Border.all(
+          color: colors.warning.withValues(alpha: AppOpacity.borderTint),
+        ),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,

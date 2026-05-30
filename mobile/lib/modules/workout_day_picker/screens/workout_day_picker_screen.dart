@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:zamaj/building_blocks/building_blocks.dart';
+import 'package:zamaj/core/app_opacity.dart';
 import 'package:zamaj/core/app_spacing.dart';
 import 'package:zamaj/core/app_theme.dart';
 import 'package:zamaj/modules/domain/domain.dart';
@@ -256,7 +257,7 @@ class _TransientErrorBanner extends StatelessWidget {
     final colors = Theme.of(context).appColors;
     final presented = DomainErrorPresenter.present(error);
     return MaterialBanner(
-      backgroundColor: colors.error.withValues(alpha: 0.12),
+      backgroundColor: colors.error.withValues(alpha: AppOpacity.tintFill),
       leading: Icon(Icons.error_outline, color: colors.error),
       content: Text('${presented.title}: ${presented.body}'),
       actions: [TextButton(onPressed: onDismiss, child: const Text('OK'))],

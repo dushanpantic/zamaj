@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:zamaj/core/app_colors.dart';
 import 'package:zamaj/core/app_icon.dart';
+import 'package:zamaj/core/app_opacity.dart';
 import 'package:zamaj/core/app_spacing.dart';
 import 'package:zamaj/core/app_typography.dart';
 
@@ -84,7 +85,10 @@ abstract final class AppTheme {
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(AppRadius.md),
-          borderSide: BorderSide(color: colors.primary, width: 2),
+          borderSide: BorderSide(
+            color: colors.primary,
+            width: AppStroke.emphasis,
+          ),
         ),
         errorBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(AppRadius.md),
@@ -178,7 +182,7 @@ abstract final class AppTheme {
       ),
       chipTheme: ChipThemeData(
         backgroundColor: colors.surfaceVariant,
-        selectedColor: colors.primary.withValues(alpha: 0.18),
+        selectedColor: colors.primary.withValues(alpha: AppOpacity.tintFill),
         disabledColor: colors.surfaceVariant,
         checkmarkColor: colors.primary,
         labelStyle: typography.label.copyWith(color: colors.onSurface),

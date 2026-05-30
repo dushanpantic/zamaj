@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:zamaj/core/app_icon.dart';
 import 'package:zamaj/core/app_motion.dart';
+import 'package:zamaj/core/app_opacity.dart';
 import 'package:zamaj/core/app_spacing.dart';
 import 'package:zamaj/core/app_theme.dart';
 import 'package:zamaj/core/app_typography.dart';
@@ -398,9 +399,11 @@ class _EmptyBadge extends StatelessWidget {
         vertical: 2,
       ),
       decoration: BoxDecoration(
-        color: colors.error.withValues(alpha: 0.12),
+        color: colors.error.withValues(alpha: AppOpacity.tintFill),
         borderRadius: BorderRadius.circular(AppRadius.pill),
-        border: Border.all(color: colors.error.withValues(alpha: 0.5)),
+        border: Border.all(
+          color: colors.error.withValues(alpha: AppOpacity.borderTint),
+        ),
       ),
       child: Text(
         'EMPTY',

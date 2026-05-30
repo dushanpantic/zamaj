@@ -133,7 +133,7 @@ class ExerciseEditorScaffold extends StatelessWidget {
           ),
           if (isSaving)
             ColoredBox(
-              color: colors.background.withValues(alpha: 0.6),
+              color: colors.scrim,
               child: Center(
                 child: CircularProgressIndicator(color: colors.primary),
               ),
