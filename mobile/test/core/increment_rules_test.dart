@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:zamaj/modules/focus_mode/services/increment_rules.dart';
+import 'package:zamaj/core/increment_rules.dart';
 
 void main() {
   group('IncrementRules.weightSteps', () {

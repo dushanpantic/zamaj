@@ -4,8 +4,8 @@ import 'package:zamaj/core/app_colors.dart';
 import 'package:zamaj/core/app_spacing.dart';
 import 'package:zamaj/core/app_theme.dart';
 import 'package:zamaj/core/app_typography.dart';
+import 'package:zamaj/core/increment_rules.dart';
 import 'package:zamaj/core/weight_formatter.dart';
-import 'package:zamaj/modules/focus_mode/services/increment_rules.dart';
 
 /// Big editable panel for the current rep-based set: weight + reps with
 /// bump buttons.
@@ -161,7 +161,7 @@ class _FocusRepBasedPanelState extends State<FocusRepBasedPanel> {
             const SizedBox(width: AppSpacing.lg),
             Expanded(
               child: _BumpRow(
-                steps: const [-1, 1],
+                steps: IncrementRules.repStepsDouble,
                 enabled: widget.enabled,
                 onTap: (delta) => widget.onRepsBump(delta.round()),
                 formatter: (v) => v.toInt().toString(),
@@ -263,7 +263,7 @@ class _BumpRow extends StatelessWidget {
           if (i > 0) const SizedBox(width: AppSpacing.sm),
           Expanded(
             child: SizedBox(
-              height: AppSpacing.touchMin,
+              height: AppInSessionSize.stepButton,
               child: OutlinedButton(
                 onPressed: enabled ? () => onTap(steps[i]) : null,
                 style: OutlinedButton.styleFrom(
@@ -271,6 +271,7 @@ class _BumpRow extends StatelessWidget {
                   padding: const EdgeInsets.symmetric(
                     horizontal: AppSpacing.xs,
                   ),
+                  textStyle: AppTypography.standard.actionLabel,
                 ),
                 child: FittedBox(
                   fit: BoxFit.scaleDown,

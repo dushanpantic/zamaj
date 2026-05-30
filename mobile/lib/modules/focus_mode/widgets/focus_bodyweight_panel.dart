@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:zamaj/core/app_spacing.dart';
 import 'package:zamaj/core/app_theme.dart';
 import 'package:zamaj/core/app_typography.dart';
+import 'package:zamaj/core/increment_rules.dart';
 
 /// Big editable panel for the current bodyweight set: reps only, with
 /// bump buttons. Mirrors [FocusRepBasedPanel] but drops the weight column.
@@ -80,7 +81,7 @@ class _FocusBodyweightPanelState extends State<FocusBodyweightPanel> {
         ),
         const SizedBox(height: AppSpacing.md),
         _BumpRow(
-          steps: const [-1, 1],
+          steps: IncrementRules.repSteps,
           enabled: widget.enabled,
           onTap: widget.onRepsBump,
         ),
@@ -167,7 +168,7 @@ class _BumpRow extends StatelessWidget {
           if (i > 0) const SizedBox(width: AppSpacing.sm),
           Expanded(
             child: SizedBox(
-              height: AppSpacing.touchMin,
+              height: AppInSessionSize.stepButton,
               child: OutlinedButton(
                 onPressed: enabled ? () => onTap(steps[i]) : null,
                 style: OutlinedButton.styleFrom(
@@ -175,6 +176,7 @@ class _BumpRow extends StatelessWidget {
                   padding: const EdgeInsets.symmetric(
                     horizontal: AppSpacing.xs,
                   ),
+                  textStyle: AppTypography.standard.actionLabel,
                 ),
                 child: FittedBox(
                   fit: BoxFit.scaleDown,

@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:zamaj/building_blocks/building_blocks.dart';
+import 'package:zamaj/core/app_icon.dart';
 import 'package:zamaj/core/app_spacing.dart';
 import 'package:zamaj/core/app_theme.dart';
 import 'package:zamaj/core/app_typography.dart';
@@ -94,28 +96,22 @@ class _Section extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Row(
-            children: [
-              Icon(icon, size: 18, color: colors.onSurfaceMuted),
-              const SizedBox(width: AppSpacing.xs),
-              Text(
-                title,
-                style: typography.label.copyWith(color: colors.onSurfaceMuted),
-              ),
-              const Spacer(),
-              if (canAdd)
-                TextButton.icon(
-                  onPressed: onAddPressed,
-                  icon: const Icon(Icons.add, size: 16),
-                  label: Text(addLabel),
-                  style: TextButton.styleFrom(
-                    minimumSize: const Size(0, 32),
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: AppSpacing.sm,
+          SectionHeader(
+            title,
+            icon: icon,
+            trailing: canAdd
+                ? TextButton.icon(
+                    onPressed: onAddPressed,
+                    icon: const AppIcon(Icons.add, size: AppIconSize.sm),
+                    label: Text(addLabel),
+                    style: TextButton.styleFrom(
+                      minimumSize: const Size(0, 32),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: AppSpacing.sm,
+                      ),
                     ),
-                  ),
-                ),
-            ],
+                  )
+                : null,
           ),
           if (items.isEmpty)
             Padding(

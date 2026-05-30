@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:zamaj/building_blocks/building_blocks.dart';
 import 'package:zamaj/core/app_colors.dart';
 import 'package:zamaj/core/app_spacing.dart';
 import 'package:zamaj/core/app_theme.dart';
 import 'package:zamaj/core/app_typography.dart';
+import 'package:zamaj/core/increment_rules.dart';
 import 'package:zamaj/core/rep_target_formatter.dart';
 import 'package:zamaj/core/weight_formatter.dart';
 import 'package:zamaj/modules/domain/domain.dart';
@@ -599,15 +601,10 @@ class _Editor extends StatelessWidget {
             ),
           },
           const SizedBox(height: AppSpacing.md),
-          SizedBox(
-            height: 56,
-            child: FilledButton(
-              onPressed: canSubmit ? onSubmit : null,
-              style: FilledButton.styleFrom(
-                textStyle: AppTypography.standard.actionLabel,
-              ),
-              child: Text(isEditingExisting ? 'SAVE' : 'LOG SET'),
-            ),
+          PrimaryActionButton(
+            label: isEditingExisting ? 'SAVE' : 'LOG SET',
+            onPressed: onSubmit,
+            enabled: canSubmit,
           ),
         ],
       ),
@@ -635,7 +632,7 @@ class _RepBasedFields extends StatelessWidget {
           controller: weight,
           label: 'kg',
           allowDecimal: true,
-          steps: const [-2.5, 2.5],
+          stepsFor: IncrementRules.weightSteps,
           onChanged: onChanged,
         ),
         const SizedBox(height: AppSpacing.sm),
@@ -643,7 +640,7 @@ class _RepBasedFields extends StatelessWidget {
           controller: reps,
           label: 'reps',
           allowDecimal: false,
-          steps: const [-1, 1],
+          stepsFor: _repStepsFor,
           onChanged: onChanged,
         ),
       ],
@@ -663,7 +660,7 @@ class _BodyweightFields extends StatelessWidget {
       controller: reps,
       label: 'reps',
       allowDecimal: false,
-      steps: const [-1, 1],
+      stepsFor: _repStepsFor,
       onChanged: onChanged,
     );
   }
@@ -689,7 +686,7 @@ class _TimeBasedFields extends StatelessWidget {
           controller: duration,
           label: 'seconds',
           allowDecimal: false,
-          steps: const [-5, 5],
+          stepsFor: _durationStepsFor,
           onChanged: onChanged,
         ),
         const SizedBox(height: AppSpacing.sm),
@@ -697,7 +694,7 @@ class _TimeBasedFields extends StatelessWidget {
           controller: weight,
           label: 'kg (optional)',
           allowDecimal: true,
-          steps: const [-2.5, 2.5],
+          stepsFor: IncrementRules.weightSteps,
           onChanged: onChanged,
         ),
       ],
@@ -705,23 +702,33 @@ class _TimeBasedFields extends StatelessWidget {
   }
 }
 
+/// Reps always nudge ±1 and durations ±5 regardless of the current value, so
+/// these adapt [IncrementRules]' constants to the `stepsFor` signature (weight
+/// uses [IncrementRules.weightSteps] directly, which *is* value-dependent).
+List<double> _repStepsFor(double _) => IncrementRules.repStepsDouble;
+List<double> _durationStepsFor(double _) => IncrementRules.durationStepsDouble;
+
 /// Numeric input rendered as a counter — step buttons flank a centered,
 /// borderless field showing the value with a caption beneath. Tapping the
-/// value opens the keyboard for manual entry. [steps] is interpreted as
-/// `[negativeStep, positiveStep]` (e.g. `[-2.5, 2.5]`).
+/// value opens the keyboard for manual entry.
+///
+/// [stepsFor] yields the `[negativeStep, positiveStep]` pair for the current
+/// value, sourced from [IncrementRules] so this compact card stepper and the
+/// big focus panel share one step policy (e.g. weight nudges ±1 below 10 kg,
+/// ±2.5 above — recomputed as the value crosses the threshold).
 class _NumericField extends StatefulWidget {
   const _NumericField({
     required this.controller,
     required this.label,
     required this.allowDecimal,
-    required this.steps,
+    required this.stepsFor,
     required this.onChanged,
   });
 
   final TextEditingController controller;
   final String label;
   final bool allowDecimal;
-  final List<double> steps;
+  final List<double> Function(double current) stepsFor;
   final VoidCallback onChanged;
 
   @override
@@ -753,8 +760,11 @@ class _NumericFieldState extends State<_NumericField> {
   Widget build(BuildContext context) {
     final colors = Theme.of(context).appColors;
     const typography = AppTypography.standard;
-    final negative = widget.steps.first;
-    final positive = widget.steps.last;
+    final steps = widget.stepsFor(
+      double.tryParse(widget.controller.text.trim()) ?? 0,
+    );
+    final negative = steps.first;
+    final positive = steps.last;
 
     return Row(
       crossAxisAlignment: CrossAxisAlignment.center,
@@ -832,8 +842,8 @@ class _NumericFieldState extends State<_NumericField> {
 class _StepButton extends StatelessWidget {
   const _StepButton({required this.label, required this.onPressed});
 
-  static const double _width = 64;
-  static const double _height = 64;
+  static const double _width = AppInSessionSize.stepButton;
+  static const double _height = AppInSessionSize.stepButton;
 
   final String label;
   final VoidCallback onPressed;

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:zamaj/building_blocks/building_blocks.dart';
 import 'package:zamaj/core/app_colors.dart';
 import 'package:zamaj/core/app_spacing.dart';
 import 'package:zamaj/core/app_theme.dart';
@@ -229,7 +230,11 @@ class _Header extends StatelessWidget {
                         if (viewModel.plannedGroupRole ==
                             ExerciseGroupRole.warmup) ...[
                           const SizedBox(width: AppSpacing.sm),
-                          _WarmupMarker(colors: colors),
+                          StatusBadge.icon(
+                            icon: Icons.local_fire_department,
+                            color: colors.warmup,
+                            label: 'Warmup',
+                          ),
                         ],
                         const SizedBox(width: AppSpacing.sm),
                         _StateBadge(state: state, colors: colors),
@@ -321,23 +326,6 @@ class _RestIndicator extends StatelessWidget {
   }
 }
 
-/// Compact icon-only warmup marker. A flame in the warmup accent reads at a
-/// glance and costs ~20dp of width instead of the ~70dp the old "WARMUP" pill
-/// took — leaving that width for the exercise title on the same line.
-class _WarmupMarker extends StatelessWidget {
-  const _WarmupMarker({required this.colors});
-
-  final AppColors colors;
-
-  @override
-  Widget build(BuildContext context) {
-    return Tooltip(
-      message: 'Warmup',
-      child: Icon(Icons.local_fire_department, size: 18, color: colors.warmup),
-    );
-  }
-}
-
 class _StateBadge extends StatelessWidget {
   const _StateBadge({required this.state, required this.colors});
 
@@ -346,46 +334,26 @@ class _StateBadge extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // The active exercise carries no badge here — the card's 2dp primary
-    // border is the "current" signal on its own.
-    // Completed: a filled check — the most universal status glyph, and by the
-    // end of a session most cards are done, so quiet checks read cleaner than a
-    // wall of text pills. (The kebab's "Mark done" action uses the *outline*
-    // check, giving a filled/outline = achieved/actionable pairing.)
-    if (state is CompletedState) {
-      return Tooltip(
-        message: 'Done',
-        child: Icon(
-          Icons.check_circle,
-          size: 18,
-          color: colors.exerciseCompleted,
-        ),
-      );
-    }
-    // Skipped/Replaced stay as words: exception states, rarer, and with no
-    // universally-read glyph — worth spelling out so they catch the eye.
-    final (label, color) = switch (state) {
-      UnfinishedState() => (null, colors.onSurfaceMuted),
-      CompletedState() => (null, colors.exerciseCompleted), // handled above
-      SkippedState() => ('Skipped', colors.exerciseSkipped),
-      ReplacedState() => ('Replaced', colors.exerciseReplaced),
+    // The active exercise carries no badge — the card's 2dp primary border is
+    // the "current" signal on its own. Done reads as a quiet glyph; the rarer
+    // exception states (Skipped / Replaced) keep a labelled pill. Both go
+    // through the shared [StatusBadge] (Phase 0.2 vocabulary).
+    return switch (state) {
+      CompletedState() => StatusBadge.icon(
+        icon: Icons.check_circle,
+        color: colors.exerciseCompleted,
+        label: 'Done',
+      ),
+      SkippedState() => StatusBadge.pill(
+        label: 'Skipped',
+        color: colors.exerciseSkipped,
+      ),
+      ReplacedState() => StatusBadge.pill(
+        label: 'Replaced',
+        color: colors.exerciseReplaced,
+      ),
+      UnfinishedState() => const SizedBox.shrink(),
     };
-    if (label == null) return const SizedBox.shrink();
-    return Container(
-      padding: const EdgeInsets.symmetric(
-        horizontal: AppSpacing.sm,
-        vertical: 2,
-      ),
-      decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.15),
-        borderRadius: BorderRadius.circular(AppRadius.pill),
-        border: Border.all(color: color.withValues(alpha: 0.5)),
-      ),
-      child: Text(
-        label,
-        style: AppTypography.standard.caption.copyWith(color: color),
-      ),
-    );
   }
 }
 

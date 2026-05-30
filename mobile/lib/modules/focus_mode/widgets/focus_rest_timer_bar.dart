@@ -57,8 +57,8 @@ class FocusRestTimerBar extends StatelessWidget {
                 borderRadius: BorderRadius.circular(AppRadius.sm),
                 child: ConstrainedBox(
                   constraints: const BoxConstraints(
-                    minHeight: AppSpacing.touchMin,
-                    minWidth: AppSpacing.touchMin,
+                    minHeight: AppInSessionSize.controlMin,
+                    minWidth: AppInSessionSize.controlMin,
                   ),
                   child: Padding(
                     padding: const EdgeInsets.symmetric(
@@ -67,9 +67,8 @@ class FocusRestTimerBar extends StatelessWidget {
                     child: Center(
                       child: Text(
                         'SKIP',
-                        style: typography.caption.copyWith(
+                        style: typography.actionLabel.copyWith(
                           color: colors.onSurfaceMuted,
-                          letterSpacing: 1.2,
                         ),
                       ),
                     ),

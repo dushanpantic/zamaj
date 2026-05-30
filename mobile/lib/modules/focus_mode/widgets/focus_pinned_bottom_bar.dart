@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:zamaj/building_blocks/building_blocks.dart';
 import 'package:zamaj/core/app_spacing.dart';
 import 'package:zamaj/core/app_theme.dart';
 import 'package:zamaj/modules/focus_mode/bloc/bloc.dart';
 import 'package:zamaj/modules/focus_mode/models/focus_mode_view_model.dart';
 import 'package:zamaj/modules/focus_mode/models/undoable_set.dart';
-import 'package:zamaj/modules/focus_mode/widgets/focus_complete_button.dart';
 import 'package:zamaj/modules/focus_mode/widgets/focus_rest_timer_bar.dart';
 
 /// Pinned bottom region. Contains the LOG SET button (when an active
@@ -61,7 +61,7 @@ class FocusPinnedBottomBar extends StatelessWidget {
             if (activePanel != null) const SizedBox(height: AppSpacing.sm),
           ],
           if (activePanel != null)
-            FocusCompleteButton(
+            PrimaryActionButton(
               onPressed: () => bloc.add(
                 FocusModeSetCompleted(activePanel!.sessionExerciseId),
               ),

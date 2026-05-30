@@ -3,20 +3,27 @@ import 'package:zamaj/core/app_spacing.dart';
 import 'package:zamaj/core/app_theme.dart';
 import 'package:zamaj/core/app_typography.dart';
 
-/// Tall primary action button. Hosts the complete-set label, optionally
-/// suffixed with a set-progress hint ("Set 3 of 4"). Bottom-of-screen, big
-/// touch target — design doc calls for one-handed use.
-class FocusCompleteButton extends StatelessWidget {
-  const FocusCompleteButton({
+/// The one full-width primary action for the live-session surface — the same
+/// chrome whether it reads `LOG SET` (focus / set-row), `SAVE` (editing an
+/// existing set), or any other in-session commit.
+///
+/// Collapses the divergence (F4) where the focus `LOG SET` was 64 dp / radius
+/// `lg` with a sub-label and the inline editor's button was 56 dp / radius `md`
+/// with none: one height ([AppInSessionSize.primaryAction]), one radius
+/// ([AppRadius.lg]), one label style ([AppTypography.actionLabel]), and an
+/// optional [subLabel] (e.g. "Set 3 of 4"). [enabled] `false` greys it out and
+/// blocks the tap.
+class PrimaryActionButton extends StatelessWidget {
+  const PrimaryActionButton({
     super.key,
-    required this.onPressed,
     required this.label,
+    required this.onPressed,
     this.subLabel,
     this.enabled = true,
   });
 
-  final VoidCallback onPressed;
   final String label;
+  final VoidCallback onPressed;
   final String? subLabel;
   final bool enabled;
 
@@ -26,7 +33,7 @@ class FocusCompleteButton extends StatelessWidget {
     const typography = AppTypography.standard;
     return SizedBox(
       width: double.infinity,
-      height: 64,
+      height: AppInSessionSize.primaryAction,
       child: FilledButton(
         onPressed: enabled ? onPressed : null,
         style: FilledButton.styleFrom(
@@ -41,7 +48,7 @@ class FocusCompleteButton extends StatelessWidget {
           children: [
             Text(label, style: typography.actionLabel),
             if (subLabel != null) ...[
-              const SizedBox(height: 2),
+              const SizedBox(height: AppSpacing.xxs),
               Text(
                 subLabel!,
                 style: typography.caption.copyWith(

@@ -7,5 +7,6 @@ library;
 export 'package:zamaj/building_blocks/app_confirm_dialog.dart';
 export 'package:zamaj/building_blocks/app_skeleton.dart';
 export 'package:zamaj/building_blocks/app_state_view.dart';
+export 'package:zamaj/building_blocks/primary_action_button.dart';
 export 'package:zamaj/building_blocks/section_header.dart';
 export 'package:zamaj/building_blocks/status_badge.dart';

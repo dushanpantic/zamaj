@@ -169,7 +169,7 @@ class _FocusTimeBasedPanelState extends State<FocusTimeBasedPanel> {
           children: [
             Expanded(
               child: SizedBox(
-                height: AppSpacing.touchMin,
+                height: AppInSessionSize.stepButton,
                 child: OutlinedButton(
                   onPressed: widget.enabled && !isRunning
                       ? () => widget.onDurationBump(-5)
@@ -179,6 +179,7 @@ class _FocusTimeBasedPanelState extends State<FocusTimeBasedPanel> {
                     padding: const EdgeInsets.symmetric(
                       horizontal: AppSpacing.xs,
                     ),
+                    textStyle: AppTypography.standard.actionLabel,
                   ),
                   child: const FittedBox(
                     fit: BoxFit.scaleDown,
@@ -219,7 +220,7 @@ class _FocusTimeBasedPanelState extends State<FocusTimeBasedPanel> {
             const SizedBox(width: AppSpacing.sm),
             Expanded(
               child: SizedBox(
-                height: AppSpacing.touchMin,
+                height: AppInSessionSize.stepButton,
                 child: OutlinedButton(
                   onPressed: widget.enabled && !isRunning
                       ? () => widget.onDurationBump(5)
@@ -228,6 +229,7 @@ class _FocusTimeBasedPanelState extends State<FocusTimeBasedPanel> {
                     padding: const EdgeInsets.symmetric(
                       horizontal: AppSpacing.xs,
                     ),
+                    textStyle: AppTypography.standard.actionLabel,
                   ),
                   child: const FittedBox(
                     fit: BoxFit.scaleDown,
@@ -270,7 +272,7 @@ class _FocusTimeBasedPanelState extends State<FocusTimeBasedPanel> {
             children: [
               Expanded(
                 child: SizedBox(
-                  height: AppSpacing.touchMin,
+                  height: AppInSessionSize.stepButton,
                   child: OutlinedButton(
                     onPressed: widget.enabled
                         ? () => widget.onWeightBump(-2.5)
@@ -280,6 +282,7 @@ class _FocusTimeBasedPanelState extends State<FocusTimeBasedPanel> {
                       padding: const EdgeInsets.symmetric(
                         horizontal: AppSpacing.xs,
                       ),
+                      textStyle: AppTypography.standard.actionLabel,
                     ),
                     child: const FittedBox(
                       fit: BoxFit.scaleDown,
@@ -330,7 +333,7 @@ class _FocusTimeBasedPanelState extends State<FocusTimeBasedPanel> {
               const SizedBox(width: AppSpacing.sm),
               Expanded(
                 child: SizedBox(
-                  height: AppSpacing.touchMin,
+                  height: AppInSessionSize.stepButton,
                   child: OutlinedButton(
                     onPressed: widget.enabled
                         ? () => widget.onWeightBump(2.5)
@@ -339,6 +342,7 @@ class _FocusTimeBasedPanelState extends State<FocusTimeBasedPanel> {
                       padding: const EdgeInsets.symmetric(
                         horizontal: AppSpacing.xs,
                       ),
+                      textStyle: AppTypography.standard.actionLabel,
                     ),
                     child: const FittedBox(
                       fit: BoxFit.scaleDown,

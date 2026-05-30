@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:zamaj/building_blocks/building_blocks.dart';
 import 'package:zamaj/core/app_theme.dart';
 import 'package:zamaj/modules/focus_mode/bloc/bloc.dart';
 import 'package:zamaj/modules/focus_mode/models/focus_mode_view_model.dart';
 import 'package:zamaj/modules/focus_mode/widgets/focus_video_button.dart';
-import 'package:zamaj/modules/program_management/widgets/confirmation_dialog.dart';
 import 'package:zamaj/modules/workout_overview/widgets/replace_exercise_dialog.dart';
 
 class FocusPanelActionsMenu extends StatelessWidget {
@@ -116,7 +116,7 @@ class FocusPanelActionsMenu extends StatelessWidget {
 
   Future<void> _handleSkip(BuildContext context) async {
     final bloc = context.read<FocusModeBloc>();
-    final confirmed = await ConfirmationDialog.show(
+    final confirmed = await AppConfirmDialog.show(
       context: context,
       title: 'Skip exercise?',
       body:
@@ -131,7 +131,7 @@ class FocusPanelActionsMenu extends StatelessWidget {
 
   Future<void> _handleMarkDone(BuildContext context) async {
     final bloc = context.read<FocusModeBloc>();
-    final confirmed = await ConfirmationDialog.show(
+    final confirmed = await AppConfirmDialog.show(
       context: context,
       title: 'Mark exercise done?',
       body:

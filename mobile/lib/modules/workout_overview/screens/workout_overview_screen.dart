@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:zamaj/building_blocks/building_blocks.dart';
 import 'package:zamaj/core/app_theme.dart';
 import 'package:zamaj/modules/domain/domain.dart';
 import 'package:zamaj/modules/focus_mode/models/focus_mode_args.dart';
 import 'package:zamaj/modules/program_management/services/external_link_launcher.dart';
-import 'package:zamaj/modules/program_management/widgets/confirmation_dialog.dart';
 import 'package:zamaj/modules/workout_overview/bloc/bloc.dart';
 import 'package:zamaj/modules/workout_overview/models/drop_intent.dart';
 import 'package:zamaj/modules/workout_overview/models/exercise_view_model.dart';
@@ -73,7 +73,7 @@ class _WorkoutOverviewScreenState extends State<WorkoutOverviewScreen> {
   }
 
   Future<void> _handleSkip(ExerciseViewModel viewModel) async {
-    final confirmed = await ConfirmationDialog.show(
+    final confirmed = await AppConfirmDialog.show(
       context: context,
       title: 'Skip exercise?',
       body:
@@ -89,7 +89,7 @@ class _WorkoutOverviewScreenState extends State<WorkoutOverviewScreen> {
   }
 
   Future<void> _handleMarkDone(ExerciseViewModel viewModel) async {
-    final confirmed = await ConfirmationDialog.show(
+    final confirmed = await AppConfirmDialog.show(
       context: context,
       title: 'Mark done?',
       body:
@@ -158,7 +158,7 @@ class _WorkoutOverviewScreenState extends State<WorkoutOverviewScreen> {
   }
 
   Future<void> _handleEndSession() async {
-    final confirmed = await ConfirmationDialog.show(
+    final confirmed = await AppConfirmDialog.show(
       context: context,
       title: 'End session?',
       body:

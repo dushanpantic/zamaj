@@ -34,3 +34,22 @@ abstract final class AppStroke {
   static const double hairline = 1;
   static const double emphasis = 2;
 }
+
+/// In-session (sweaty-hands) control sizes for the live-session surface
+/// (`workout_overview/`, `focus_mode/`).
+///
+/// These encode the CLAUDE.md sweaty-hands rule as tokens, so a new in-session
+/// control inherits the right floor instead of re-deriving `64` / `56` by hand.
+/// Everywhere *else* the normal [AppSpacing.touchMin] (48 dp) floor applies —
+/// reach for these only under the two live modules.
+abstract final class AppInSessionSize {
+  /// Step / counter (± bump) button edge / height — 64 dp.
+  static const double stepButton = 64;
+
+  /// Primary in-session action height (LOG SET / SAVE) — 64 dp.
+  static const double primaryAction = 64;
+
+  /// Floor for secondary in-session controls that aren't a stepper or the
+  /// primary action (e.g. the rest-timer SKIP) — 56 dp.
+  static const double controlMin = 56;
+}

@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:zamaj/core/increment_rules.dart';
 import 'package:zamaj/modules/domain/domain.dart';
 import 'package:zamaj/modules/focus_mode/bloc/focus_mode_event.dart';
 import 'package:zamaj/modules/focus_mode/bloc/focus_mode_state.dart';
@@ -10,7 +11,6 @@ import 'package:zamaj/modules/focus_mode/models/rest_timer_view_model.dart';
 import 'package:zamaj/modules/focus_mode/models/stopwatch_view_model.dart';
 import 'package:zamaj/modules/focus_mode/models/undoable_set.dart';
 import 'package:zamaj/modules/focus_mode/services/focus_mode_assembler.dart';
-import 'package:zamaj/modules/focus_mode/services/increment_rules.dart';
 
 /// Owns the execution screen's runtime state.
 ///

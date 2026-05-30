@@ -324,7 +324,7 @@ These were the one-way doors. Everything downstream is authored against them.
 | 2 ✅ | State views + loading | `AppStateView`, `AppSkeleton` | F1, F2, F7 | no | low |
 | 3 ✅ | Status + section vocab | `StatusBadge`, `SectionHeader` (+overline, +stroke) | F6¹, F10, F11 | no | low |
 | 4 ✅ | Dialogs + Material theming | `AppConfirmDialog`, theme entries (+4th surface) | F5, F12, F14, F17 | no | low |
-| 5 | **Live session surface** | `PrimaryActionButton`, shared stepper policy | F3, F4, F15, F6² | **yes** | **high** |
+| 5 ✅ | **Live session surface** | `PrimaryActionButton`, shared stepper policy | F3, F4, F15, F6² | **yes** | **high** |
 | 6 | Microcopy + motion + verify | (+`AppDuration`/`Curve`) | F13, F9 | touch-up | low |
 
 ¹ day-tile in-progress pill. ² exercise-card state badges (deferred to the live
@@ -451,7 +451,37 @@ land a component without its callers.
 - **Closes:** F5 (confirm dialogs), F12 (stock Material), F14 (elevation),
   F17 (FAB theming).
 
-### Prompt 5 — Live session surface *(careful, last)*
+### Prompt 5 — Live session surface *(careful, last)*  ✅ DONE
+> **Status: complete.** `PrimaryActionButton` was authored in
+> [building_blocks/](mobile/lib/building_blocks/) (one height
+> `AppInSessionSize.primaryAction` / radius `lg` / `actionLabel` + optional
+> sub-label); the bespoke `FocusCompleteButton` was deleted and **both** the
+> focus `LOG SET` (pinned bottom bar) and the set-row inline `LOG SET`/`SAVE`
+> now route through it (F4). `IncrementRules` moved to
+> [core/increment_rules.dart](mobile/lib/core/increment_rules.dart) (its test
+> with it, to `test/core/`) and gained double-typed `repStepsDouble` /
+> `durationStepsDouble`; the set-row `_NumericField` now takes a
+> value-dependent `stepsFor` sourced from `IncrementRules` (so weight nudges
+> ±1 ≤ 10 kg / ±2.5 above, matching focus — closing the F3 step-policy
+> divergence), and the focus rep / bodyweight / time panels route their bumps
+> through `IncrementRules` too. New `AppInSessionSize` tokens (`stepButton 64`,
+> `primaryAction 64`, `controlMin 56`) were authored in
+> [app_spacing.dart](mobile/lib/core/app_spacing.dart); every focus bump button
+> was lifted to 64 dp + `actionLabel` and the set-row `_StepButton` tokenized.
+> The rest-timer **SKIP** was lifted to `controlMin` (56) and restyled to
+> `actionLabel` — dropping the hand-set `1.2` tracking for the centralized
+> `0.5` (F15 + the live half of F10). Exercise-card states + the warmup marker
+> now go through `StatusBadge` (icon for Done / Warmup, pill for Skipped /
+> Replaced — F6 card half), and the notes / extra-work headers through
+> `SectionHeader` (F11 live half). The five live `ConfirmationDialog` callers
+> (3 in `workout_overview_screen`, 2 in `focus_panel_actions_menu`) were
+> migrated to `AppConfirmDialog` and the transitional `ConfirmationDialog` shim
+> deleted. Scope note: F8 (icon-size soup) was already closed in Prompt 1 and
+> is **not** in this slice's Closes list, so the remaining live-surface
+> `Icon(size:)` literals outside the widgets touched here are left for a
+> focused follow-up rather than swept wholesale. `tool/ci.sh` green
+> (offline-imports OK, analyze clean, 633 tests pass); a real session is the
+> user's visual sign-off, per colors.md §6.
 > Re-read the CLAUDE.md **sweaty-hands** section before starting. Isolated PR.
 - **Apply:** `PrimaryActionButton` for both `LOG SET` (focus) and `LOG SET`/`SAVE`
   (set-row inline editor) — one height/radius/label, optional sub-label; route
