@@ -201,27 +201,14 @@ class _LoadedBody extends StatelessWidget {
   }
 
   Future<bool?> _confirmDelete(BuildContext context, SessionHistoryItem item) {
-    final colors = Theme.of(context).appColors;
-    return showDialog<bool>(
+    return AppConfirmDialog.show(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Delete session?'),
-        content: Text(
+      title: 'Delete session?',
+      body:
           'This permanently removes "${item.workoutDayName}" and all '
           'logged sets. This cannot be undone.',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(false),
-            child: const Text('Cancel'),
-          ),
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(true),
-            style: TextButton.styleFrom(foregroundColor: colors.error),
-            child: const Text('Delete'),
-          ),
-        ],
-      ),
+      confirmLabel: 'Delete',
+      isDestructive: true,
     );
   }
 }

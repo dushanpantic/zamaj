@@ -31,7 +31,7 @@ class ExerciseLibraryLinkSection extends StatelessWidget {
     final colors = Theme.of(context).appColors;
     final action = await showModalBottomSheet<_LibraryAction>(
       context: context,
-      backgroundColor: colors.surface,
+      backgroundColor: colors.surfaceElevated,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(AppRadius.lg)),
       ),
@@ -72,7 +72,7 @@ class ExerciseLibraryLinkSection extends StatelessWidget {
     final colors = Theme.of(context).appColors;
     final action = await showModalBottomSheet<_LibraryAction>(
       context: context,
-      backgroundColor: colors.surface,
+      backgroundColor: colors.surfaceElevated,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(AppRadius.lg)),
       ),
@@ -167,7 +167,7 @@ class ExerciseLibraryLinkSection extends StatelessWidget {
     return showDialog<bool>(
       context: context,
       builder: (_) => AlertDialog(
-        backgroundColor: colors.surface,
+        backgroundColor: colors.surfaceElevated,
         title: const Text('Library entry already exists'),
         content: Text(
           'A library entry "${existing.name}" already exists. Link to that '
@@ -212,7 +212,7 @@ class ExerciseLibraryLinkSection extends StatelessWidget {
     return showDialog<bool>(
       context: context,
       builder: (_) => AlertDialog(
-        backgroundColor: colors.surface,
+        backgroundColor: colors.surfaceElevated,
         title: const Text('Update this row to match library?'),
         content: const Text(
           'Replace this row\'s name and video URL with the library entry\'s '

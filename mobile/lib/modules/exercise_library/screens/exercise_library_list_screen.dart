@@ -11,7 +11,6 @@ import 'package:zamaj/modules/exercise_library/bloc/exercise_library_list/bloc.d
 import 'package:zamaj/modules/exercise_library/models/exercise_library_args.dart';
 import 'package:zamaj/modules/exercise_library/navigation/exercise_library_routes.dart';
 import 'package:zamaj/modules/exercise_library/widgets/library_entry_tile.dart';
-import 'package:zamaj/modules/program_management/widgets/confirmation_dialog.dart';
 import 'package:zamaj/modules/program_management/widgets/domain_error_banner.dart';
 
 class ExerciseLibraryListScreen extends StatefulWidget {
@@ -77,7 +76,7 @@ class _ExerciseLibraryListScreenState extends State<ExerciseLibraryListScreen> {
   }
 
   Future<void> _onArchiveRequested(LibraryExercise entry) async {
-    final confirmed = await ConfirmationDialog.show(
+    final confirmed = await AppConfirmDialog.show(
       context: context,
       title: 'Archive entry',
       body:
@@ -115,8 +114,6 @@ class _ExerciseLibraryListScreenState extends State<ExerciseLibraryListScreen> {
       ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () => _navigateToEditor(),
-        backgroundColor: colors.primary,
-        foregroundColor: colors.onPrimary,
         icon: const Icon(Icons.add),
         label: const Text('New entry'),
       ),

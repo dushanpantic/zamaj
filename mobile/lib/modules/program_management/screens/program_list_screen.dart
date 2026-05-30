@@ -9,7 +9,6 @@ import 'package:zamaj/modules/program_management/bloc/program_list/program_list_
 import 'package:zamaj/modules/program_management/bloc/program_list/program_list_event.dart';
 import 'package:zamaj/modules/program_management/bloc/program_list/program_list_state.dart';
 import 'package:zamaj/modules/program_management/navigation/program_management_routes.dart';
-import 'package:zamaj/modules/program_management/widgets/confirmation_dialog.dart';
 import 'package:zamaj/modules/program_management/widgets/domain_error_banner.dart';
 import 'package:zamaj/modules/program_management/widgets/program_list_tile.dart';
 import 'package:zamaj/modules/workout_day_picker/models/workout_day_picker_args.dart';
@@ -65,7 +64,7 @@ class _ProgramListScreenState extends State<ProgramListScreen> {
       ProgramListDeleteRequested(programId: programId),
     );
 
-    final confirmed = await ConfirmationDialog.show(
+    final confirmed = await AppConfirmDialog.show(
       context: context,
       title: 'Delete program',
       body:
@@ -110,8 +109,6 @@ class _ProgramListScreenState extends State<ProgramListScreen> {
       ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () => _navigateToEditor(),
-        backgroundColor: colors.primary,
-        foregroundColor: colors.onPrimary,
         icon: const Icon(Icons.add),
         label: const Text('New program'),
       ),

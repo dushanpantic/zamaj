@@ -41,7 +41,7 @@ class ExportPreviewSheet extends StatefulWidget {
       isScrollControlled: true,
       useSafeArea: true,
       showDragHandle: true,
-      backgroundColor: Theme.of(context).appColors.surface,
+      backgroundColor: Theme.of(context).appColors.surfaceElevated,
       builder: (_) => RepositoryProvider<ShareService>.value(
         value: context.read<ShareService>(),
         child: ExportPreviewSheet(

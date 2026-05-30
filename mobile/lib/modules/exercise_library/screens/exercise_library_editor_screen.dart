@@ -7,7 +7,6 @@ import 'package:zamaj/core/app_typography.dart';
 import 'package:zamaj/modules/domain/domain.dart';
 import 'package:zamaj/modules/exercise_library/bloc/exercise_library_editor/bloc.dart';
 import 'package:zamaj/modules/exercise_library/models/exercise_library_args.dart';
-import 'package:zamaj/modules/program_management/widgets/confirmation_dialog.dart';
 import 'package:zamaj/modules/program_management/widgets/domain_error_banner.dart';
 import 'package:zamaj/modules/program_management/widgets/measurement_type_selector.dart';
 
@@ -73,7 +72,7 @@ class _ExerciseLibraryEditorScreenState
   }
 
   Future<bool> _confirmDiscard(BuildContext context) async {
-    final confirmed = await ConfirmationDialog.show(
+    final confirmed = await AppConfirmDialog.show(
       context: context,
       title: 'Discard changes?',
       body: 'Your edits to this library entry will be lost.',
@@ -94,7 +93,7 @@ class _ExerciseLibraryEditorScreenState
   }
 
   Future<void> _confirmArchive(BuildContext context) async {
-    final confirmed = await ConfirmationDialog.show(
+    final confirmed = await AppConfirmDialog.show(
       context: context,
       title: 'Archive entry',
       body:

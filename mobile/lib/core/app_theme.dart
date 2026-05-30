@@ -149,6 +149,81 @@ abstract final class AppTheme {
           borderRadius: BorderRadius.circular(AppRadius.md),
         ),
       ),
+      // Modal layers sit on the 4th tonal step (`surfaceElevated`) so they read
+      // as floating *above* the cards on the page; depth comes from the lighter
+      // surface + outline, not a shadow (dark-first house style).
+      dialogTheme: DialogThemeData(
+        backgroundColor: colors.surfaceElevated,
+        surfaceTintColor: Colors.transparent,
+        elevation: 0,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(AppRadius.lg),
+          side: BorderSide(color: colors.outline),
+        ),
+        titleTextStyle: typography.titleSmall.copyWith(color: colors.onSurface),
+        contentTextStyle: typography.body.copyWith(color: colors.onSurface),
+      ),
+      bottomSheetTheme: BottomSheetThemeData(
+        backgroundColor: colors.surfaceElevated,
+        modalBackgroundColor: colors.surfaceElevated,
+        surfaceTintColor: Colors.transparent,
+        elevation: 0,
+        modalElevation: 0,
+        dragHandleColor: colors.outline,
+        shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(
+            top: Radius.circular(AppRadius.lg),
+          ),
+        ),
+      ),
+      chipTheme: ChipThemeData(
+        backgroundColor: colors.surfaceVariant,
+        selectedColor: colors.primary.withValues(alpha: 0.18),
+        disabledColor: colors.surfaceVariant,
+        checkmarkColor: colors.primary,
+        labelStyle: typography.label.copyWith(color: colors.onSurface),
+        secondaryLabelStyle: typography.label.copyWith(color: colors.onSurface),
+        side: BorderSide(color: colors.outline),
+        shape: const StadiumBorder(),
+        padding: const EdgeInsets.symmetric(
+          horizontal: AppSpacing.sm,
+          vertical: AppSpacing.xs,
+        ),
+      ),
+      popupMenuTheme: PopupMenuThemeData(
+        color: colors.surfaceElevated,
+        surfaceTintColor: Colors.transparent,
+        elevation: 3,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(AppRadius.md),
+          side: BorderSide(color: colors.outline),
+        ),
+        textStyle: typography.body.copyWith(color: colors.onSurface),
+        labelTextStyle: WidgetStatePropertyAll(
+          typography.body.copyWith(color: colors.onSurface),
+        ),
+      ),
+      floatingActionButtonTheme: FloatingActionButtonThemeData(
+        backgroundColor: colors.primary,
+        foregroundColor: colors.onPrimary,
+        elevation: 2,
+        focusElevation: 2,
+        hoverElevation: 2,
+        highlightElevation: 2,
+        extendedTextStyle: typography.label.copyWith(color: colors.onPrimary),
+      ),
+      bannerTheme: MaterialBannerThemeData(
+        backgroundColor: colors.surfaceVariant,
+        surfaceTintColor: Colors.transparent,
+        contentTextStyle: typography.body.copyWith(color: colors.onSurface),
+        elevation: 0,
+        padding: const EdgeInsets.symmetric(
+          horizontal: AppSpacing.lg,
+          vertical: AppSpacing.md,
+        ),
+        leadingPadding: const EdgeInsets.only(right: AppSpacing.md),
+        dividerColor: colors.outline,
+      ),
       extensions: <ThemeExtension<dynamic>>[AppColorsExtension(colors)],
     );
   }

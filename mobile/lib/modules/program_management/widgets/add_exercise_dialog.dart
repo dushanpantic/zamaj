@@ -52,7 +52,7 @@ class _AddExerciseDialogState extends State<_AddExerciseDialog> {
   Widget build(BuildContext context) {
     final colors = Theme.of(context).appColors;
     return AlertDialog(
-      backgroundColor: colors.surface,
+      backgroundColor: colors.surfaceElevated,
       title: Text('Add exercise', style: TextStyle(color: colors.onSurface)),
       content: TextField(
         controller: _nameController,

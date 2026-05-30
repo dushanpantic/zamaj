@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:zamaj/building_blocks/building_blocks.dart';
 import 'package:zamaj/core/app_icon.dart';
 import 'package:zamaj/core/app_spacing.dart';
 import 'package:zamaj/core/app_theme.dart';
@@ -8,7 +9,6 @@ import 'package:zamaj/modules/program_management/bloc/workout_day_editor/workout
 import 'package:zamaj/modules/program_management/bloc/workout_day_editor/workout_day_editor_event.dart';
 import 'package:zamaj/modules/program_management/bloc/workout_day_editor/workout_day_editor_state.dart';
 import 'package:zamaj/modules/program_management/models/program_editor_draft.dart';
-import 'package:zamaj/modules/program_management/widgets/confirmation_dialog.dart';
 import 'package:zamaj/modules/program_management/widgets/editor_drag_payload.dart';
 import 'package:zamaj/modules/program_management/widgets/editor_exercise_tile_content.dart';
 
@@ -228,7 +228,7 @@ class EditorSupersetCard extends StatelessWidget {
                           key: ValueKey('dismiss_superset_${exercise.draftId}'),
                           direction: DismissDirection.endToStart,
                           confirmDismiss: (_) async {
-                            final confirmed = await ConfirmationDialog.show(
+                            final confirmed = await AppConfirmDialog.show(
                               context: context,
                               title: 'Delete Exercise',
                               body:

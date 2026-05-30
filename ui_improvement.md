@@ -323,7 +323,7 @@ These were the one-way doors. Everything downstream is authored against them.
 | 1 ✅ | Foundation: Ember + icons | `AppIconSize`, `AppIcon` | F16, F8 | no | low |
 | 2 ✅ | State views + loading | `AppStateView`, `AppSkeleton` | F1, F2, F7 | no | low |
 | 3 ✅ | Status + section vocab | `StatusBadge`, `SectionHeader` (+overline, +stroke) | F6¹, F10, F11 | no | low |
-| 4 | Dialogs + Material theming | `AppConfirmDialog`, theme entries (+4th surface) | F5, F12, F14, F17 | no | low |
+| 4 ✅ | Dialogs + Material theming | `AppConfirmDialog`, theme entries (+4th surface) | F5, F12, F14, F17 | no | low |
 | 5 | **Live session surface** | `PrimaryActionButton`, shared stepper policy | F3, F4, F15, F6² | **yes** | **high** |
 | 6 | Microcopy + motion + verify | (+`AppDuration`/`Curve`) | F13, F9 | touch-up | low |
 
@@ -418,7 +418,29 @@ land a component without its callers.
   headers) are intentionally **deferred to Prompt 5** so the live session screen
   is edited only once.
 
-### Prompt 4 — Dialogs + Material theming
+### Prompt 4 — Dialogs + Material theming  ✅ DONE
+> **Status: complete.** The `[lazy]` **4th elevation surface** (`surfaceElevated`)
+> was authored in [app_colors.dart](mobile/lib/core/app_colors.dart) (both
+> palettes) and six Material theme entries — `dialogTheme`, `bottomSheetTheme`,
+> `chipTheme`, `popupMenuTheme`, `floatingActionButtonTheme`, `bannerTheme` —
+> added to [app_theme.dart](mobile/lib/core/app_theme.dart), so modal layers now
+> sit on `surfaceElevated` (depth via lighter surface + outline, not shadow).
+> `AppConfirmDialog` was authored in the
+> [building_blocks/](mobile/lib/building_blocks/) barrel as the single confirm
+> path (it leans on `dialogTheme` for chrome); the old `ConfirmationDialog` is
+> now a thin shim delegating to it. Migrated: the recent_sessions inline
+> `AlertDialog` → `AppConfirmDialog`; all **non-live** `ConfirmationDialog`
+> callers (9 sites / 8 files) → `AppConfirmDialog`; the three per-FAB
+> `backgroundColor`/`foregroundColor` overrides dropped (program_list,
+> exercise_library, program_editor — now themed); the `MaterialBanner` bare
+> `TextStyle` dropped (inherits `bannerTheme`); `ChoiceChip`/`PopupMenu` inherit
+> the new themes; and the non-live dialogs/sheets swapped `surface`→
+> `surfaceElevated` to realize F14. Per the risk guardrail (slices 1–4 never edit
+> `workout_overview/`/`focus_mode/`), the two **live-surface** `ConfirmationDialog`
+> callers (workout_overview screen, focus panel actions menu) stay on the shim
+> and migrate to `AppConfirmDialog` in **Prompt 5**, when the shim is removed;
+> their dialogs pick up the unified dialog chrome via theme only. `tool/ci.sh`
+> green (offline-imports OK, analyze clean, 633 tests pass).
 - **Build:** make `AppConfirmDialog` the single confirm path; add `chipTheme`,
   `popupMenuTheme`, `dialogTheme`, `floatingActionButtonTheme`, `bannerTheme` to
   [app_theme.dart](mobile/lib/core/app_theme.dart); author the `[lazy]` **4th
@@ -439,7 +461,10 @@ land a component without its callers.
   ± editor to the in-session size floor (F15); apply `StatusBadge` to
   exercise-card states; migrate the notes / extra-work section headers to
   `SectionHeader` and settle the rest-timer SKIP `1.2` / `actionLabel` `0.5`
-  tracking (the live half of F10/F11 carried over from Prompt 3).
+  tracking (the live half of F10/F11 carried over from Prompt 3); migrate the two
+  remaining live `ConfirmationDialog` callers (workout_overview screen, focus
+  panel actions menu) to `AppConfirmDialog` and delete the transitional
+  `ConfirmationDialog` shim left by Prompt 4.
 - **Closes:** F3 (stepper policy), F4 (`LOG SET` chrome), F15 (in-session floor),
   F6 (card half), F10/F11 (live remainder).
 - **Verify:** `tool/ci.sh` (domain+persistence only — no widget tests per

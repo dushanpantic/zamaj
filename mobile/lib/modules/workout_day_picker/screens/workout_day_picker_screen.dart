@@ -257,7 +257,6 @@ class _TransientErrorBanner extends StatelessWidget {
     final presented = DomainErrorPresenter.present(error);
     return MaterialBanner(
       backgroundColor: colors.error.withValues(alpha: 0.12),
-      contentTextStyle: TextStyle(color: colors.onSurface),
       leading: Icon(Icons.error_outline, color: colors.error),
       content: Text('${presented.title}: ${presented.body}'),
       actions: [TextButton(onPressed: onDismiss, child: const Text('OK'))],

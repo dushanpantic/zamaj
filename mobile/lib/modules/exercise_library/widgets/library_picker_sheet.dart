@@ -58,7 +58,7 @@ class LibraryPickerSheet extends StatefulWidget {
     return showModalBottomSheet<LibraryPickerResult>(
       context: context,
       isScrollControlled: true,
-      backgroundColor: Theme.of(context).appColors.surface,
+      backgroundColor: Theme.of(context).appColors.surfaceElevated,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(AppRadius.lg)),
       ),

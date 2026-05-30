@@ -9,7 +9,6 @@ import 'package:zamaj/modules/program_management/bloc/program_editor/program_edi
 import 'package:zamaj/modules/program_management/models/workout_day_summary.dart';
 import 'package:zamaj/modules/program_management/navigation/program_management_routes.dart';
 import 'package:zamaj/modules/program_management/widgets/add_workout_day_sheet.dart';
-import 'package:zamaj/modules/program_management/widgets/confirmation_dialog.dart';
 import 'package:zamaj/modules/program_management/widgets/domain_error_banner.dart';
 import 'package:zamaj/modules/program_management/widgets/program_editor_app_bar.dart';
 import 'package:zamaj/modules/program_management/widgets/program_editor_day_list.dart';
@@ -75,7 +74,7 @@ class _ProgramEditorScreenState extends State<ProgramEditorScreen> {
 
     await showModalBottomSheet<void>(
       context: context,
-      backgroundColor: colors.surface,
+      backgroundColor: colors.surfaceElevated,
       isScrollControlled: true,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(AppRadius.lg)),
@@ -151,7 +150,7 @@ class _ProgramEditorScreenState extends State<ProgramEditorScreen> {
     required WorkoutDaySummary summary,
   }) async {
     final cost = WorkoutDaySummaryFormatter.deletionCost(summary);
-    final confirmed = await ConfirmationDialog.show(
+    final confirmed = await AppConfirmDialog.show(
       context: context,
       title: 'Delete Workout Day',
       body: 'Delete "$dayName"? This removes $cost.',
@@ -217,8 +216,6 @@ class _ProgramEditorScreenState extends State<ProgramEditorScreen> {
   }
 
   Widget _buildScaffold(BuildContext context, ProgramEditorState state) {
-    final colors = Theme.of(context).appColors;
-
     return switch (state) {
       ProgramEditorInitial() ||
       ProgramEditorLoading() => const Scaffold(body: AppListSkeleton()),
@@ -255,8 +252,6 @@ class _ProgramEditorScreenState extends State<ProgramEditorScreen> {
               isSaving: isSaving,
             ),
             floatingActionButton: FloatingActionButton(
-              backgroundColor: colors.primary,
-              foregroundColor: colors.onPrimary,
               onPressed: () => _showAddWorkoutDaySheet(state),
               tooltip: 'Add workout day',
               child: const Icon(Icons.add),

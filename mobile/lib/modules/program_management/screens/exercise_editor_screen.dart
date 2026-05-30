@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:zamaj/building_blocks/building_blocks.dart';
 import 'package:zamaj/modules/program_management/bloc/exercise_editor/exercise_editor_bloc.dart';
 import 'package:zamaj/modules/program_management/bloc/exercise_editor/exercise_editor_event.dart';
 import 'package:zamaj/modules/program_management/bloc/exercise_editor/exercise_editor_state.dart';
 import 'package:zamaj/modules/program_management/models/program_editor_draft.dart';
 import 'package:zamaj/modules/program_management/navigation/program_management_routes.dart';
-import 'package:zamaj/modules/program_management/widgets/confirmation_dialog.dart';
 import 'package:zamaj/modules/program_management/widgets/exercise_editor_scaffolds.dart';
 
 class ExerciseEditorScreen extends StatefulWidget {
@@ -79,7 +79,7 @@ class _ExerciseEditorScreenState extends State<ExerciseEditorScreen> {
   }
 
   Future<bool> _confirmDiscard(BuildContext context) async {
-    final confirmed = await ConfirmationDialog.show(
+    final confirmed = await AppConfirmDialog.show(
       context: context,
       title: 'Discard changes?',
       body: 'Your edits to this exercise will be lost.',

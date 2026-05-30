@@ -9,6 +9,7 @@ class AppColors {
     required this.background,
     required this.surface,
     required this.surfaceVariant,
+    required this.surfaceElevated,
     required this.outline,
     required this.onBackground,
     required this.onSurface,
@@ -34,6 +35,12 @@ class AppColors {
   final Color background;
   final Color surface;
   final Color surfaceVariant;
+
+  /// Fourth tonal step, lighter than [surface]/[surfaceVariant], for the
+  /// top-most modal layers (dialogs and bottom sheets) so they read as sitting
+  /// *above* the cards on the page instead of level with them.
+  final Color surfaceElevated;
+
   final Color outline;
 
   final Color onBackground;
@@ -81,6 +88,7 @@ class AppColors {
     background: Color(0xFF100E0C),
     surface: Color(0xFF1B1815),
     surfaceVariant: Color(0xFF272320),
+    surfaceElevated: Color(0xFF332E2A),
     outline: Color(0xFF3D3833),
     onBackground: Color(0xFFECEAE6),
     onSurface: Color(0xFFECEAE6),
@@ -109,6 +117,7 @@ class AppColors {
     background: Color(0xFFFBF8F4),
     surface: Color(0xFFFFFFFF),
     surfaceVariant: Color(0xFFF4F1EC),
+    surfaceElevated: Color(0xFFFFFFFF),
     outline: Color(0xFFDDD7CE),
     onBackground: Color(0xFF1C1A17),
     onSurface: Color(0xFF1C1A17),

@@ -12,7 +12,6 @@ import 'package:zamaj/modules/program_management/bloc/plan_preview/plan_preview_
 import 'package:zamaj/modules/program_management/models/program_editor_draft.dart';
 import 'package:zamaj/modules/program_management/navigation/program_management_routes.dart';
 import 'package:zamaj/modules/program_management/services/text_plan/plan_parse_warning.dart';
-import 'package:zamaj/modules/program_management/widgets/confirmation_dialog.dart';
 import 'package:zamaj/modules/program_management/widgets/domain_error_banner.dart';
 
 class PlanPreviewScreen extends StatefulWidget {
@@ -58,7 +57,7 @@ class _PlanPreviewScreenState extends State<PlanPreviewScreen> {
 
   Future<void> _handlePop(BuildContext context, bool didPop) async {
     if (didPop) return;
-    final confirmed = await ConfirmationDialog.show(
+    final confirmed = await AppConfirmDialog.show(
       context: context,
       title: 'Discard preview?',
       body: 'The imported plan will not be saved.',

@@ -1,24 +1,15 @@
 import 'package:flutter/material.dart';
-import 'package:zamaj/core/app_spacing.dart';
-import 'package:zamaj/core/app_theme.dart';
-import 'package:zamaj/core/app_typography.dart';
+import 'package:zamaj/building_blocks/building_blocks.dart';
 
-class ConfirmationDialog extends StatelessWidget {
-  const ConfirmationDialog({
-    super.key,
-    required this.title,
-    required this.body,
-    required this.confirmLabel,
-    required this.cancelLabel,
-    this.isDestructive = false,
-  });
-
-  final String title;
-  final String body;
-  final String confirmLabel;
-  final String cancelLabel;
-  final bool isDestructive;
-
+/// Transitional shim that forwards to [AppConfirmDialog], the single confirm
+/// path (see `lib/building_blocks/app_confirm_dialog.dart`).
+///
+/// Kept only so the live-session callers (`workout_overview/`, `focus_mode/`)
+/// keep compiling without editing those files in this slice — they migrate to
+/// [AppConfirmDialog] in Prompt 5, when this shim is removed. (Intentionally
+/// not `@Deprecated`: that would emit same-package usage infos at those two
+/// call sites, which `flutter analyze` treats as fatal.)
+abstract final class ConfirmationDialog {
   static Future<bool?> show({
     required BuildContext context,
     required String title,
@@ -27,55 +18,13 @@ class ConfirmationDialog extends StatelessWidget {
     String cancelLabel = 'Cancel',
     bool isDestructive = false,
   }) {
-    return showDialog<bool>(
+    return AppConfirmDialog.show(
       context: context,
-      builder: (_) => ConfirmationDialog(
-        title: title,
-        body: body,
-        confirmLabel: confirmLabel,
-        cancelLabel: cancelLabel,
-        isDestructive: isDestructive,
-      ),
-    );
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final colors = Theme.of(context).appColors;
-    const typography = AppTypography.standard;
-
-    return AlertDialog(
-      backgroundColor: colors.surface,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(AppRadius.lg),
-        side: BorderSide(color: colors.outline),
-      ),
-      title: Text(
-        title,
-        style: typography.titleSmall.copyWith(color: colors.onSurface),
-      ),
-      content: Text(
-        body,
-        style: typography.body.copyWith(color: colors.onSurface),
-      ),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.of(context).pop(false),
-          child: Text(
-            cancelLabel,
-            style: typography.label.copyWith(color: colors.onSurfaceMuted),
-          ),
-        ),
-        TextButton(
-          onPressed: () => Navigator.of(context).pop(true),
-          child: Text(
-            confirmLabel,
-            style: typography.label.copyWith(
-              color: isDestructive ? colors.error : colors.primary,
-            ),
-          ),
-        ),
-      ],
+      title: title,
+      body: body,
+      confirmLabel: confirmLabel,
+      cancelLabel: cancelLabel,
+      isDestructive: isDestructive,
     );
   }
 }
