@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:zamaj/core/app_icon.dart';
 import 'package:zamaj/core/app_spacing.dart';
 import 'package:zamaj/core/app_theme.dart';
 import 'package:zamaj/core/app_typography.dart';
@@ -47,7 +48,11 @@ class ProgramEditorAppBar extends StatelessWidget
               horizontal: AppSpacing.lg,
             ),
             suffixIcon: showEditAffordance
-                ? Icon(Icons.edit, size: 14, color: colors.onSurfaceMuted)
+                ? AppIcon(
+                    Icons.edit,
+                    size: AppIconSize.sm,
+                    color: colors.onSurfaceMuted,
+                  )
                 : null,
             suffixIconConstraints: const BoxConstraints(
               minWidth: 24,

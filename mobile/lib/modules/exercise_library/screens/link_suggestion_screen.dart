@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:zamaj/core/app_icon.dart';
 import 'package:zamaj/core/app_spacing.dart';
 import 'package:zamaj/core/app_theme.dart';
 import 'package:zamaj/core/app_typography.dart';
@@ -85,7 +86,11 @@ class _FailureView extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(Icons.error_outline, color: colors.error, size: 48),
+            AppIcon(
+              Icons.error_outline,
+              color: colors.error,
+              size: AppIconSize.errorState,
+            ),
             const SizedBox(height: AppSpacing.lg),
             Text(
               'Could not scan programs',
@@ -177,7 +182,11 @@ class _EmptyView extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(Icons.check_circle_outline, color: colors.success, size: 64),
+            AppIcon(
+              Icons.check_circle_outline,
+              color: colors.success,
+              size: AppIconSize.emptyState,
+            ),
             const SizedBox(height: AppSpacing.lg),
             Text(
               'Nothing to suggest',
@@ -258,9 +267,9 @@ class _ClusterCard extends StatelessWidget {
               padding: const EdgeInsets.only(bottom: AppSpacing.xs),
               child: Row(
                 children: [
-                  Icon(
+                  AppIcon(
                     Icons.fitness_center_outlined,
-                    size: 14,
+                    size: AppIconSize.sm,
                     color: colors.onSurfaceMuted,
                   ),
                   const SizedBox(width: AppSpacing.xs),

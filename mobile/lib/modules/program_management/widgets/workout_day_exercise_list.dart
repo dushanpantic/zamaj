@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:zamaj/core/app_icon.dart';
 import 'package:zamaj/core/app_spacing.dart';
 import 'package:zamaj/core/app_theme.dart';
 import 'package:zamaj/core/app_typography.dart';
@@ -35,10 +36,10 @@ class WorkoutDayExerciseList extends StatelessWidget {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(
+              AppIcon(
                 Icons.fitness_center_outlined,
                 color: colors.onSurfaceMuted,
-                size: 48,
+                size: AppIconSize.emptyState,
               ),
               const SizedBox(height: AppSpacing.lg),
               Text(

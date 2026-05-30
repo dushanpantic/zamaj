@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:zamaj/core/app_icon.dart';
 import 'package:zamaj/core/app_spacing.dart';
 import 'package:zamaj/core/app_theme.dart';
 import 'package:zamaj/core/app_typography.dart';
@@ -230,7 +231,11 @@ class _EmptyView extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(Icons.history, color: colors.onSurfaceMuted, size: 64),
+            AppIcon(
+              Icons.history,
+              color: colors.onSurfaceMuted,
+              size: AppIconSize.emptyState,
+            ),
             const SizedBox(height: AppSpacing.lg),
             Text(
               'No completed sessions yet',
@@ -266,7 +271,11 @@ class _NotFoundView extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(Icons.search_off, color: colors.onSurfaceMuted, size: 64),
+            AppIcon(
+              Icons.search_off,
+              color: colors.onSurfaceMuted,
+              size: AppIconSize.emptyState,
+            ),
             const SizedBox(height: AppSpacing.lg),
             Text(
               'Program not found',
@@ -302,7 +311,11 @@ class _FailureView extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(Icons.error_outline, color: colors.error, size: 64),
+            AppIcon(
+              Icons.error_outline,
+              color: colors.error,
+              size: AppIconSize.errorState,
+            ),
             const SizedBox(height: AppSpacing.lg),
             Text(
               presented.title,

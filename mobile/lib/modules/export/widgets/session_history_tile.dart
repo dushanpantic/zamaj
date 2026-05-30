@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:zamaj/core/app_icon.dart';
 import 'package:zamaj/core/app_spacing.dart';
 import 'package:zamaj/core/app_theme.dart';
 import 'package:zamaj/core/app_typography.dart';
@@ -85,9 +86,9 @@ class SessionHistoryTile extends StatelessWidget {
             else
               Padding(
                 padding: const EdgeInsets.only(right: AppSpacing.lg),
-                child: Icon(
+                child: AppIcon(
                   Icons.ios_share,
-                  size: 20,
+                  size: AppIconSize.lg,
                   color: colors.onSurfaceMuted,
                 ),
               ),

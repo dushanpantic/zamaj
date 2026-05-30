@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:zamaj/core/app_icon.dart';
 import 'package:zamaj/core/app_spacing.dart';
 import 'package:zamaj/core/app_theme.dart';
 import 'package:zamaj/core/app_typography.dart';
@@ -37,10 +38,10 @@ class PlannedSetRow extends StatelessWidget {
               index: reorderIndex!,
               child: Padding(
                 padding: const EdgeInsets.only(right: AppSpacing.sm),
-                child: Icon(
+                child: AppIcon(
                   Icons.drag_handle,
                   color: colors.onSurfaceMuted,
-                  size: 20,
+                  size: AppIconSize.lg,
                 ),
               ),
             ),
@@ -70,7 +71,11 @@ class PlannedSetRow extends StatelessWidget {
             },
           ),
           IconButton(
-            icon: Icon(Icons.delete_outline, color: colors.error, size: 20),
+            icon: AppIcon(
+              Icons.delete_outline,
+              color: colors.error,
+              size: AppIconSize.lg,
+            ),
             onPressed: onDelete,
             padding: EdgeInsets.zero,
             constraints: const BoxConstraints(

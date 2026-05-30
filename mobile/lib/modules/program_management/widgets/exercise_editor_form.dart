@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:zamaj/core/app_icon.dart';
 import 'package:zamaj/core/app_spacing.dart';
 import 'package:zamaj/core/app_theme.dart';
 import 'package:zamaj/core/app_typography.dart';
@@ -136,7 +137,7 @@ class ExerciseEditorForm extends StatelessWidget {
                   onPressed: draft.sets.length < 20
                       ? () => bloc.add(const PlannedSetAdded())
                       : null,
-                  icon: const Icon(Icons.add, size: 18),
+                  icon: const AppIcon(Icons.add, size: AppIconSize.md),
                   label: const Text('Add set'),
                 ),
                 const SizedBox(height: AppSpacing.lg),

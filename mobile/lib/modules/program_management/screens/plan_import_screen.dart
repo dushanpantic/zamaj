@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:zamaj/core/app_icon.dart';
 import 'package:zamaj/core/app_spacing.dart';
 import 'package:zamaj/core/app_theme.dart';
 import 'package:zamaj/core/app_typography.dart';
@@ -175,7 +176,7 @@ class _InputToolbar extends StatelessWidget {
         ),
         TextButton.icon(
           onPressed: onPastePressed,
-          icon: const Icon(Icons.content_paste, size: 18),
+          icon: const AppIcon(Icons.content_paste, size: AppIconSize.md),
           label: const Text('Paste'),
           style: TextButton.styleFrom(
             foregroundColor: colors.primary,
@@ -222,9 +223,9 @@ class _ExampleDisclosure extends StatelessWidget {
               ),
               child: Row(
                 children: [
-                  Icon(
+                  AppIcon(
                     Icons.help_outline,
-                    size: 18,
+                    size: AppIconSize.md,
                     color: colors.onSurfaceMuted,
                   ),
                   const SizedBox(width: AppSpacing.sm),
@@ -274,7 +275,7 @@ class _ExampleDisclosure extends StatelessWidget {
                 alignment: Alignment.centerRight,
                 child: TextButton.icon(
                   onPressed: onUseExample,
-                  icon: const Icon(Icons.south, size: 18),
+                  icon: const AppIcon(Icons.south, size: AppIconSize.md),
                   label: const Text('Use this example'),
                   style: TextButton.styleFrom(
                     foregroundColor: colors.primary,

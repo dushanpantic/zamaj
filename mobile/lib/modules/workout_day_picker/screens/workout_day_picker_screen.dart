@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:zamaj/core/app_icon.dart';
 import 'package:zamaj/core/app_spacing.dart';
 import 'package:zamaj/core/app_theme.dart';
 import 'package:zamaj/modules/domain/domain.dart';
@@ -269,7 +270,11 @@ class _NotFoundView extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(Icons.search_off, color: colors.onSurfaceMuted, size: 64),
+            AppIcon(
+              Icons.search_off,
+              color: colors.onSurfaceMuted,
+              size: AppIconSize.emptyState,
+            ),
             const SizedBox(height: AppSpacing.lg),
             Text(
               'Program not found',

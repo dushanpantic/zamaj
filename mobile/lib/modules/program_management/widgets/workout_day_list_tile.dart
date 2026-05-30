@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:zamaj/core/app_icon.dart';
 import 'package:zamaj/core/app_spacing.dart';
 import 'package:zamaj/core/app_theme.dart';
 import 'package:zamaj/core/app_typography.dart';
@@ -334,7 +335,11 @@ class _ExercisePreviewPanel extends StatelessWidget {
               alignment: Alignment.centerRight,
               child: TextButton.icon(
                 onPressed: onEditDay,
-                icon: Icon(Icons.edit, size: 16, color: colors.primary),
+                icon: AppIcon(
+                  Icons.edit,
+                  size: AppIconSize.sm,
+                  color: colors.primary,
+                ),
                 label: Text(
                   'Edit day',
                   style: typography.label.copyWith(color: colors.primary),
@@ -369,9 +374,9 @@ class _DragHandle extends StatelessWidget {
         child: SizedBox(
           width: AppSpacing.xxl,
           height: AppSpacing.touchMin,
-          child: Icon(
+          child: AppIcon(
             Icons.drag_indicator,
-            size: 20,
+            size: AppIconSize.lg,
             color: colors.onSurfaceMuted,
           ),
         ),
@@ -487,7 +492,7 @@ class _MenuRow extends StatelessWidget {
     final effective = disabled ? colors.onSurfaceMuted : color;
     return Row(
       children: [
-        Icon(icon, size: 18, color: effective),
+        AppIcon(icon, size: AppIconSize.md, color: effective),
         const SizedBox(width: AppSpacing.md),
         Text(label, style: typography.label.copyWith(color: effective)),
       ],

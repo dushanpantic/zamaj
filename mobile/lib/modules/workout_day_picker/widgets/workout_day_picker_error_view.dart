@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:zamaj/core/app_icon.dart';
 import 'package:zamaj/core/app_spacing.dart';
 import 'package:zamaj/core/app_theme.dart';
 import 'package:zamaj/core/app_typography.dart';
@@ -27,7 +28,11 @@ class WorkoutDayPickerErrorView extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(Icons.error_outline, color: colors.error, size: 48),
+            AppIcon(
+              Icons.error_outline,
+              color: colors.error,
+              size: AppIconSize.errorState,
+            ),
             const SizedBox(height: AppSpacing.lg),
             Text(
               presented.title,

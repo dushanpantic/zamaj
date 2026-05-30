@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:zamaj/core/app_icon.dart';
 import 'package:zamaj/core/app_spacing.dart';
 import 'package:zamaj/core/app_theme.dart';
 import 'package:zamaj/core/app_typography.dart';
@@ -281,7 +282,11 @@ class _FailureView extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(Icons.error_outline, color: colors.error, size: 48),
+            AppIcon(
+              Icons.error_outline,
+              color: colors.error,
+              size: AppIconSize.errorState,
+            ),
             const SizedBox(height: AppSpacing.lg),
             Text(
               'Could not load programs',
@@ -324,10 +329,10 @@ class _EmptyView extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(
+            AppIcon(
               Icons.fitness_center_outlined,
               color: colors.onSurfaceMuted,
-              size: 64,
+              size: AppIconSize.emptyState,
             ),
             const SizedBox(height: AppSpacing.lg),
             Text(

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:zamaj/core/app_colors.dart';
+import 'package:zamaj/core/app_icon.dart';
 import 'package:zamaj/core/app_spacing.dart';
 import 'package:zamaj/core/app_typography.dart';
 import 'package:zamaj/core/rest_formatter.dart';
@@ -73,10 +74,10 @@ class EditorExerciseTileContent extends StatelessWidget {
               const SizedBox(width: AppSpacing.sm),
               Tooltip(
                 message: 'Incomplete sets',
-                child: Icon(
+                child: AppIcon(
                   Icons.warning_amber_rounded,
                   color: colors.error,
-                  size: 14,
+                  size: AppIconSize.sm,
                   semanticLabel: 'Incomplete sets',
                 ),
               ),
@@ -155,7 +156,11 @@ class _RestChip extends StatelessWidget {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        Icon(Icons.timer_outlined, size: 12, color: colors.onSurfaceMuted),
+        AppIcon(
+          Icons.timer_outlined,
+          size: AppIconSize.xs,
+          color: colors.onSurfaceMuted,
+        ),
         const SizedBox(width: 2),
         Text(
           RestFormatter.format(seconds),

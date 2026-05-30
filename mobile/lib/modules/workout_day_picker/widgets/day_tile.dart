@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:zamaj/core/app_icon.dart';
 import 'package:zamaj/core/app_spacing.dart';
 import 'package:zamaj/core/app_theme.dart';
 import 'package:zamaj/core/app_typography.dart';
@@ -175,7 +176,7 @@ class DayTile extends StatelessWidget {
         height: AppSpacing.touchMin,
         child: TextButton.icon(
           onPressed: () => onRetryPressed(viewModel.workoutDay.id),
-          icon: const Icon(Icons.refresh, size: 18),
+          icon: const AppIcon(Icons.refresh, size: AppIconSize.md),
           label: const Text('Retry'),
         ),
       ),

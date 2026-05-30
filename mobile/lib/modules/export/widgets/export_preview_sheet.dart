@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:zamaj/core/app_icon.dart';
 import 'package:zamaj/core/app_spacing.dart';
 import 'package:zamaj/core/app_theme.dart';
 import 'package:zamaj/core/app_typography.dart';
@@ -160,7 +161,7 @@ class _ExportPreviewSheetState extends State<ExportPreviewSheet> {
                 Expanded(
                   child: OutlinedButton.icon(
                     onPressed: _onCopy,
-                    icon: const Icon(Icons.copy, size: 18),
+                    icon: const AppIcon(Icons.copy, size: AppIconSize.md),
                     label: const Text('Copy'),
                   ),
                 ),
@@ -175,7 +176,7 @@ class _ExportPreviewSheetState extends State<ExportPreviewSheet> {
                             width: 16,
                             child: CircularProgressIndicator(strokeWidth: 2),
                           )
-                        : const Icon(Icons.ios_share, size: 18),
+                        : const AppIcon(Icons.ios_share, size: AppIconSize.md),
                     label: const Text('Share'),
                   ),
                 ),

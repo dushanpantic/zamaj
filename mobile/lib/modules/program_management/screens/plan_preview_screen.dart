@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:zamaj/core/app_icon.dart';
 import 'package:zamaj/core/app_spacing.dart';
 import 'package:zamaj/core/app_theme.dart';
 import 'package:zamaj/core/app_typography.dart';
@@ -386,7 +387,11 @@ class _WarningBadge extends StatelessWidget {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(Icons.warning_amber_rounded, color: colors.warning, size: 14),
+          AppIcon(
+            Icons.warning_amber_rounded,
+            color: colors.warning,
+            size: AppIconSize.sm,
+          ),
           const SizedBox(width: AppSpacing.xs),
           Flexible(
             child: Text(

@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:zamaj/core/app_colors.dart';
+import 'package:zamaj/core/app_icon.dart';
 import 'package:zamaj/core/app_spacing.dart';
 import 'package:zamaj/core/app_theme.dart';
 import 'package:zamaj/core/app_typography.dart';
@@ -227,7 +228,11 @@ class _LibraryPickerSheetState extends State<LibraryPickerSheet> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(Icons.search_off, color: colors.onSurfaceMuted, size: 32),
+            AppIcon(
+              Icons.search_off,
+              color: colors.onSurfaceMuted,
+              size: AppIconSize.emptyState,
+            ),
             const SizedBox(height: AppSpacing.sm),
             Text(
               _query.trim().isEmpty

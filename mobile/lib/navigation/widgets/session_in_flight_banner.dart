@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:zamaj/core/app_icon.dart';
 import 'package:zamaj/core/app_spacing.dart';
 import 'package:zamaj/core/app_theme.dart';
 import 'package:zamaj/core/app_typography.dart';
@@ -63,7 +64,11 @@ class _ActiveBanner extends StatelessWidget {
             children: [
               Container(width: 4, height: _height, color: colors.primary),
               const SizedBox(width: AppSpacing.md),
-              Icon(Icons.fitness_center, color: colors.primary, size: 20),
+              AppIcon(
+                Icons.fitness_center,
+                color: colors.primary,
+                size: AppIconSize.lg,
+              ),
               const SizedBox(width: AppSpacing.md),
               Expanded(
                 child: Column(
@@ -94,7 +99,11 @@ class _ActiveBanner extends StatelessWidget {
                 style: typography.label.copyWith(color: colors.primary),
               ),
               const SizedBox(width: AppSpacing.sm),
-              Icon(Icons.arrow_forward, color: colors.primary, size: 18),
+              AppIcon(
+                Icons.arrow_forward,
+                color: colors.primary,
+                size: AppIconSize.md,
+              ),
               const SizedBox(width: AppSpacing.lg),
             ],
           ),

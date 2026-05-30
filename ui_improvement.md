@@ -320,7 +320,7 @@ These were the one-way doors. Everything downstream is authored against them.
 
 | # | Slice (one prompt each) | Builds | Closes | Live surface? | Risk |
 |---|-------------------------|--------|--------|---------------|------|
-| 1 | Foundation: Ember + icons | `AppIconSize`, `AppIcon` | F16, F8 | no | low |
+| 1 ✅ | Foundation: Ember + icons | `AppIconSize`, `AppIcon` | F16, F8 | no | low |
 | 2 | State views + loading | `AppStateView`, `AppSkeleton` | F1, F2, F7 | no | low |
 | 3 | Status + section vocab | `StatusBadge`, `SectionHeader` (+overline, +stroke) | F6¹, F10, F11 | no | low |
 | 4 | Dialogs + Material theming | `AppConfirmDialog`, theme entries (+4th surface) | F5, F12, F14, F17 | no | low |
@@ -337,7 +337,16 @@ land a component without its callers.
 
 ---
 
-### Prompt 1 — Foundation: Ember palette + icon tokens
+### Prompt 1 — Foundation: Ember palette + icon tokens  ✅ DONE
+> **Status: complete.** Ember Dark/Light swapped in
+> [app_colors.dart](mobile/lib/core/app_colors.dart) (F16 split + warmed
+> neutrals, names unchanged); `AppIconSize` + `AppIcon` authored in
+> [app_icon.dart](mobile/lib/core/app_icon.dart); 52 literal `Icon(size:)`
+> usages across 32 non-live files migrated onto the tokens (the app-bar
+> `iconTheme` default too). Per the risk guardrail, `workout_overview/` and
+> `focus_mode/` were **not** touched — their icon literals migrate in Prompt 5,
+> when the live surface is edited once. `tool/ci.sh` green (analyze clean, 633
+> tests pass).
 - **Build:** `AppIconSize` (e.g. `xs 12`, `sm 16`, `md 18`, `lg 20`, `xl 24`,
   `status 18`, `emptyState/errorState 64`); `AppIcon` wrapper (size from token;
   `semanticLabel` optional, **required for interactive** icons).

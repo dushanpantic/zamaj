@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:zamaj/core/app_icon.dart';
 import 'package:zamaj/core/app_spacing.dart';
 import 'package:zamaj/core/app_theme.dart';
 
@@ -38,9 +39,9 @@ class StartResumeActionButton extends StatelessWidget {
                   color: colors.onPrimary,
                 ),
               )
-            : Icon(
+            : AppIcon(
                 isResume ? Icons.play_arrow : Icons.fitness_center,
-                size: 20,
+                size: AppIconSize.lg,
               ),
         label: Text(label),
         style: FilledButton.styleFrom(

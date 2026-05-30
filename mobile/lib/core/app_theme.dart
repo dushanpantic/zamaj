@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:zamaj/core/app_colors.dart';
+import 'package:zamaj/core/app_icon.dart';
 import 'package:zamaj/core/app_spacing.dart';
 import 'package:zamaj/core/app_typography.dart';
 
@@ -134,7 +135,7 @@ abstract final class AppTheme {
           textStyle: typography.label,
         ),
       ),
-      iconTheme: IconThemeData(color: colors.onSurface, size: 24),
+      iconTheme: IconThemeData(color: colors.onSurface, size: AppIconSize.xl),
       dividerTheme: DividerThemeData(
         color: colors.outline,
         space: 1,

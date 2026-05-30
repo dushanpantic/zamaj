@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:zamaj/core/app_icon.dart';
 import 'package:zamaj/core/app_theme.dart';
 import 'package:zamaj/core/app_typography.dart';
 
@@ -49,7 +50,11 @@ class _WorkoutDayNameFieldState extends State<WorkoutDayNameField> {
         ),
         border: InputBorder.none,
         suffixIcon: showEditAffordance
-            ? Icon(Icons.edit, size: 14, color: colors.onSurfaceMuted)
+            ? AppIcon(
+                Icons.edit,
+                size: AppIconSize.sm,
+                color: colors.onSurfaceMuted,
+              )
             : null,
         suffixIconConstraints: const BoxConstraints(
           minWidth: 24,

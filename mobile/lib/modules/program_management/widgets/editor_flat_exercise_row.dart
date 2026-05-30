@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:zamaj/core/app_icon.dart';
 import 'package:zamaj/core/app_spacing.dart';
 import 'package:zamaj/core/app_theme.dart';
 import 'package:zamaj/modules/domain/domain.dart';
@@ -174,10 +175,10 @@ class EditorFlatExerciseRow extends StatelessWidget {
                 color: colors.error,
                 borderRadius: BorderRadius.circular(AppRadius.sm),
               ),
-              child: Icon(
+              child: AppIcon(
                 Icons.delete_outline,
                 color: colors.onPrimary,
-                size: 20,
+                size: AppIconSize.lg,
               ),
             ),
             child: Container(
@@ -216,10 +217,10 @@ class EditorFlatExerciseRow extends StatelessWidget {
                             padding: const EdgeInsets.only(
                               right: AppSpacing.sm,
                             ),
-                            child: Icon(
+                            child: AppIcon(
                               Icons.drag_handle,
                               color: colors.onSurfaceMuted,
-                              size: 20,
+                              size: AppIconSize.lg,
                             ),
                           ),
                         ),
@@ -233,10 +234,10 @@ class EditorFlatExerciseRow extends StatelessWidget {
                         ),
                         PopupMenuButton<GroupMenuAction>(
                           tooltip: 'Exercise actions',
-                          icon: Icon(
+                          icon: AppIcon(
                             Icons.more_vert,
                             color: colors.onSurfaceMuted,
-                            size: 20,
+                            size: AppIconSize.lg,
                           ),
                           padding: EdgeInsets.zero,
                           onSelected: (action) {
