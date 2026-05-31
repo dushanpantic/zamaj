@@ -44,6 +44,20 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      # Build number = committer timestamp (epoch minutes) of the checked-out
+      # commit, not the wall-clock time of this run. Dispatching the iOS and
+      # Android releases against the same commit therefore yields the same build
+      # number on both stores. Computed here (rather than inside fastlane) so the
+      # logic is visible at the pipeline layer; passed to fastlane below.
+      - name: Compute build number from commit
+        id: build_number
+        run: |
+          set -euo pipefail
+          epoch="$(git show -s --format=%ct HEAD)"
+          value="$(( epoch / 60 ))"
+          echo "value=${value}" >> "$GITHUB_OUTPUT"
+          echo "Build number ${value} (commit $(git show -s --format=%h HEAD), $(git show -s --format=%ci HEAD))"
+
       - name: Set up Flutter
         uses: subosito/flutter-action@v2
         with:
@@ -100,7 +114,7 @@ jobs:
           FASTLANE_HIDE_CHANGELOG: '1'
           LC_ALL: en_US.UTF-8
           LANG: en_US.UTF-8
-        run: bundle exec fastlane ${{ inputs.lane }} release_notes:"${{ inputs.release_notes }}"
+        run: bundle exec fastlane ${{ inputs.lane }} build_number:${{ steps.build_number.outputs.value }} release_notes:"${{ inputs.release_notes }}"
 
       - name: Clean up signing material
         if: always()

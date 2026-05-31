@@ -7,23 +7,23 @@ AAB_PATH = File.join(FLUTTER_ROOT, "build/app/outputs/bundle/release/app-release
 platform :android do
   desc "Upload a new build to the Internal Testing track"
   lane :internal do |options|
-    deploy(track: "internal", release_notes: options[:release_notes])
+    deploy(track: "internal", release_notes: options[:release_notes], build_number: options[:build_number])
   end
 
   desc "Upload a new build to the Closed Testing (alpha) track"
   lane :closed do |options|
-    deploy(track: "alpha", release_notes: options[:release_notes])
+    deploy(track: "alpha", release_notes: options[:release_notes], build_number: options[:build_number])
   end
 
   desc "Upload a new build to the Open Testing (beta) track"
   lane :open do |options|
-    deploy(track: "beta", release_notes: options[:release_notes])
+    deploy(track: "beta", release_notes: options[:release_notes], build_number: options[:build_number])
   end
 
   private_lane :deploy do |options|
     track = options[:track]
     release_notes = options[:release_notes]
-    build_number = (Time.now.to_i / 60).to_s
+    build_number = resolve_build_number(build_number: options[:build_number])
 
     UI.message("Building Android App Bundle (build_number=#{build_number}) for track=#{track}")
 
@@ -57,5 +57,15 @@ platform :android do
     end
 
     upload_to_play_store(**upload_args)
+  end
+
+  # The build number is computed from the commit by the release workflow and
+  # passed in as `build_number:` (see _release_android.yml). It is required —
+  # there is no fallback here, so the value always reflects the commit being
+  # built and matches the iOS pipeline for the same commit.
+  private_lane :resolve_build_number do |options|
+    build_number = options[:build_number].to_s.strip
+    UI.user_error!("build_number is required (computed by the release workflow); pass build_number:<n>") if build_number.empty?
+    build_number
   end
 end

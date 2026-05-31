@@ -20,19 +20,19 @@ platform :ios do
 
   desc "Upload a new build to TestFlight (internal testers only)"
   lane :internal do |options|
-    build_and_upload(external: false, release_notes: options[:release_notes])
+    build_and_upload(external: false, release_notes: options[:release_notes], build_number: options[:build_number])
   end
 
   desc "Upload a new build to TestFlight and distribute to external groups"
   lane :external do |options|
-    build_and_upload(external: true, release_notes: options[:release_notes])
+    build_and_upload(external: true, release_notes: options[:release_notes], build_number: options[:build_number])
   end
 
   private_lane :build_and_upload do |options|
     prepare_signing
     profile_name = installed_profile_name
     write_export_options(profile_name: profile_name)
-    flutter_build_ipa
+    flutter_build_ipa(build_number: options[:build_number])
     upload_ipa(external: options[:external], release_notes: options[:release_notes])
   end
 
@@ -99,8 +99,8 @@ platform :ios do
     PLIST
   end
 
-  private_lane :flutter_build_ipa do
-    build_number = (Time.now.to_i / 60).to_s
+  private_lane :flutter_build_ipa do |options|
+    build_number = resolve_build_number(build_number: options[:build_number])
     UI.message("Building iOS IPA (build_number=#{build_number})")
 
     Dir.chdir(FLUTTER_ROOT) do
@@ -149,6 +149,16 @@ platform :ios do
 
   error do |_lane, _exception|
     cleanup_keychain
+  end
+
+  # The build number is computed from the commit by the release workflow and
+  # passed in as `build_number:` (see _release_ios.yml). It is required — there
+  # is no fallback here, so the value always reflects the commit being built and
+  # matches the Android pipeline for the same commit.
+  private_lane :resolve_build_number do |options|
+    build_number = options[:build_number].to_s.strip
+    UI.user_error!("build_number is required (computed by the release workflow); pass build_number:<n>") if build_number.empty?
+    build_number
   end
 
   private_lane :cleanup_keychain do
