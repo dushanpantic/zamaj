@@ -10,7 +10,7 @@ import 'package:zamaj/modules/program_management/bloc/exercise_editor/exercise_e
 import 'package:zamaj/modules/program_management/bloc/exercise_editor/exercise_editor_event.dart';
 import 'package:zamaj/modules/program_management/bloc/exercise_editor/exercise_editor_state.dart';
 import 'package:zamaj/modules/program_management/models/program_editor_draft.dart';
-import 'package:zamaj/modules/program_management/widgets/domain_error_banner.dart';
+import 'package:zamaj/modules/program_management/services/domain_error_presenter.dart';
 import 'package:zamaj/modules/program_management/widgets/exercise_library_link_section.dart';
 import 'package:zamaj/modules/program_management/widgets/measurement_type_selector.dart';
 import 'package:zamaj/modules/program_management/widgets/planned_set_row.dart';
@@ -40,10 +40,17 @@ class ExerciseEditorForm extends StatelessWidget {
     final colors = Theme.of(context).appColors;
     const typography = AppTypography.standard;
     final bloc = context.read<ExerciseEditorBloc>();
+    final presentedSaveError = lastSaveError == null
+        ? null
+        : DomainErrorPresenter.present(lastSaveError!);
 
     return Column(
       children: [
-        if (lastSaveError != null) DomainErrorBanner(error: lastSaveError!),
+        if (presentedSaveError != null)
+          AppNoticeBanner(
+            title: presentedSaveError.title,
+            body: presentedSaveError.body,
+          ),
         Expanded(
           child: SingleChildScrollView(
             padding: EdgeInsets.fromLTRB(

@@ -302,7 +302,7 @@ Everything downstream is authored against them.
 | # | Slice (one prompt each) | Builds | Closes | Live surface? | Risk |
 |---|-------------------------|--------|--------|---------------|------|
 | 1 ✅ | Token gaps: opacity + stroke + depth policy | `AppOpacity`, adopt `AppStroke`, `AppElevation.drag` | G4¹, G5¹, G6¹ | no | low |
-| 2 | `AppNoticeBanner` + non-live migration | `AppNoticeBanner` | G2¹ | no | low |
+| 2 ✅ | `AppNoticeBanner` + non-live migration | `AppNoticeBanner` | G2¹ | no | low |
 | 3 | Screen-consistency polish (non-live) | title rule, copy, spacing tokens | G8, G9, G10¹, G11¹ | no | low |
 | 4 | **Live-surface finish** (isolated) | — (migration only) | G1, G3, G7, plus live halves of G2/G4/G5/G6/G10/G11 | **yes** | **high** |
 
@@ -343,7 +343,29 @@ Everything downstream is authored against them.
   completeness* — every non-live alpha/stroke literal moves onto a token in this
   same pass, leaving no stragglers to seed a new soup.
 
-### Prompt 2 — `AppNoticeBanner` + non-live migration
+### Prompt 2 — `AppNoticeBanner` + non-live migration ✅ COMPLETE (2026-05-31)
+> **Done.** `AppNoticeBanner`
+> ([app_notice_banner.dart](mobile/lib/building_blocks/app_notice_banner.dart))
+> authored as the compact sibling of `AppStateView` — tone
+> (`error`/`warning`/`info`), tone-default leading glyph, title + optional body,
+> optional dismiss; chrome entirely from tokens (`AppOpacity.tintFill` fill,
+> `AppOpacity.borderTint` + `AppStroke.hairline` outline, `AppRadius.md`), **no
+> drop-shadow** (dark-first depth rule). It stays domain-free: callers map their
+> `DomainError` to strings via `DomainErrorPresenter` and hand in `title`/`body`.
+> Deleted `DomainErrorBanner` (7 call sites: program editor/list, plan preview,
+> exercise editor form, library list/editor, link suggestion) **and** the
+> picker's `_TransientErrorBanner` `MaterialBanner`; all now route through
+> `AppNoticeBanner`. The picker's full-bleed `MaterialBanner` + `OK`-button
+> dismiss folds onto the canonical inset strip + `X` dismiss, so every non-live
+> banner is now one relative. **Deliberately omitted an `action` param:** no
+> non-live caller nor either slice-4 live banner needs one, so — per §1.1/§2.5
+> (land a capability *with* its consumer, never dead-on-arrival) — it waits until
+> a consumer exists. **`info` → `primary`** (the palette has no dedicated info
+> hue); no caller uses it yet, kept for a complete tone vocabulary like
+> `AppStateTone`. The two **live** banners
+> (`workout_overview/transient_error_banner`, `FocusTransientErrorBanner`) are
+> left for slice 4. `tool/ci.sh` green (offline-imports OK, format/analyze clean,
+> 633 tests pass).
 - **Build:** `AppNoticeBanner` in [building_blocks/](mobile/lib/building_blocks/)
   (Phase 0.4) — tone, icon, title, optional body, optional dismiss/action;
   chrome from `AppOpacity` + `AppStroke`.

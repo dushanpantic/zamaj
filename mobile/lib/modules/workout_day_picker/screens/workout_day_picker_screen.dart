@@ -3,10 +3,8 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:zamaj/building_blocks/building_blocks.dart';
-import 'package:zamaj/core/app_opacity.dart';
 import 'package:zamaj/core/app_spacing.dart';
 import 'package:zamaj/core/app_theme.dart';
-import 'package:zamaj/modules/domain/domain.dart';
 import 'package:zamaj/modules/export/models/recent_sessions_args.dart';
 import 'package:zamaj/modules/export/navigation/export_routes.dart';
 import 'package:zamaj/modules/program_management/navigation/program_management_routes.dart';
@@ -202,11 +200,16 @@ class _LoadedBody extends StatelessWidget {
       );
     }
 
+    final presentedError = transientError == null
+        ? null
+        : DomainErrorPresenter.present(transientError);
+
     return Column(
       children: [
-        if (transientError != null)
-          _TransientErrorBanner(
-            error: transientError,
+        if (presentedError != null)
+          AppNoticeBanner(
+            title: presentedError.title,
+            body: presentedError.body,
             onDismiss: onDismissError,
           ),
         Expanded(
@@ -242,25 +245,6 @@ class _LoadedBody extends StatelessWidget {
           ),
         ),
       ],
-    );
-  }
-}
-
-class _TransientErrorBanner extends StatelessWidget {
-  const _TransientErrorBanner({required this.error, required this.onDismiss});
-
-  final DomainError error;
-  final VoidCallback onDismiss;
-
-  @override
-  Widget build(BuildContext context) {
-    final colors = Theme.of(context).appColors;
-    final presented = DomainErrorPresenter.present(error);
-    return MaterialBanner(
-      backgroundColor: colors.error.withValues(alpha: AppOpacity.tintFill),
-      leading: Icon(Icons.error_outline, color: colors.error),
-      content: Text('${presented.title}: ${presented.body}'),
-      actions: [TextButton(onPressed: onDismiss, child: const Text('OK'))],
     );
   }
 }

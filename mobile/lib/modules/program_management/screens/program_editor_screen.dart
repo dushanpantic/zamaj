@@ -8,8 +8,8 @@ import 'package:zamaj/modules/program_management/bloc/program_editor/program_edi
 import 'package:zamaj/modules/program_management/bloc/program_editor/program_editor_state.dart';
 import 'package:zamaj/modules/program_management/models/workout_day_summary.dart';
 import 'package:zamaj/modules/program_management/navigation/program_management_routes.dart';
+import 'package:zamaj/modules/program_management/services/domain_error_presenter.dart';
 import 'package:zamaj/modules/program_management/widgets/add_workout_day_sheet.dart';
-import 'package:zamaj/modules/program_management/widgets/domain_error_banner.dart';
 import 'package:zamaj/modules/program_management/widgets/program_editor_app_bar.dart';
 import 'package:zamaj/modules/program_management/widgets/program_editor_day_list.dart';
 import 'package:zamaj/modules/program_management/widgets/program_stats_header.dart';
@@ -245,6 +245,9 @@ class _ProgramEditorScreenState extends State<ProgramEditorScreen> {
               : draft.workoutDays
                     .where((d) => d.draftId != pendingDeletion.draftId)
                     .toList();
+          final presentedSaveError = lastSaveError == null
+              ? null
+              : DomainErrorPresenter.present(lastSaveError);
           return Scaffold(
             appBar: ProgramEditorAppBar(
               nameController: _nameController,
@@ -258,8 +261,11 @@ class _ProgramEditorScreenState extends State<ProgramEditorScreen> {
             ),
             body: Column(
               children: [
-                if (lastSaveError != null)
-                  DomainErrorBanner(error: lastSaveError),
+                if (presentedSaveError != null)
+                  AppNoticeBanner(
+                    title: presentedSaveError.title,
+                    body: presentedSaveError.body,
+                  ),
                 if (!isCreateMode)
                   ProgramStatsHeader(
                     dayCount: draft.workoutDays.length,

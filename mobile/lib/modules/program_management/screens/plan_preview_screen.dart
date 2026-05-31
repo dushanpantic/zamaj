@@ -12,8 +12,8 @@ import 'package:zamaj/modules/program_management/bloc/plan_preview/plan_preview_
 import 'package:zamaj/modules/program_management/bloc/plan_preview/plan_preview_state.dart';
 import 'package:zamaj/modules/program_management/models/program_editor_draft.dart';
 import 'package:zamaj/modules/program_management/navigation/program_management_routes.dart';
+import 'package:zamaj/modules/program_management/services/domain_error_presenter.dart';
 import 'package:zamaj/modules/program_management/services/text_plan/plan_parse_warning.dart';
-import 'package:zamaj/modules/program_management/widgets/domain_error_banner.dart';
 
 class PlanPreviewScreen extends StatefulWidget {
   const PlanPreviewScreen({super.key, required this.args});
@@ -88,7 +88,10 @@ class _PlanPreviewScreenState extends State<PlanPreviewScreen> {
             body: Column(
               children: [
                 if (lastSaveError != null)
-                  DomainErrorBanner(error: lastSaveError),
+                  AppNoticeBanner(
+                    title: DomainErrorPresenter.present(lastSaveError).title,
+                    body: DomainErrorPresenter.present(lastSaveError).body,
+                  ),
                 Expanded(child: _buildPreviewBody(context, draft, warnings)),
               ],
             ),

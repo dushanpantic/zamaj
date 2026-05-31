@@ -11,7 +11,7 @@ import 'package:zamaj/modules/exercise_library/bloc/exercise_library_list/bloc.d
 import 'package:zamaj/modules/exercise_library/models/exercise_library_args.dart';
 import 'package:zamaj/modules/exercise_library/navigation/exercise_library_routes.dart';
 import 'package:zamaj/modules/exercise_library/widgets/library_entry_tile.dart';
-import 'package:zamaj/modules/program_management/widgets/domain_error_banner.dart';
+import 'package:zamaj/modules/program_management/services/domain_error_presenter.dart';
 
 class ExerciseLibraryListScreen extends StatefulWidget {
   const ExerciseLibraryListScreen({super.key});
@@ -213,6 +213,9 @@ class _LoadedView extends StatelessWidget {
     final colors = Theme.of(context).appColors;
     const typography = AppTypography.standard;
     final isFilterActive = searchQuery.trim().isNotEmpty || includeArchived;
+    final presentedError = lastError == null
+        ? null
+        : DomainErrorPresenter.present(lastError!);
 
     return Column(
       children: [
@@ -262,7 +265,11 @@ class _LoadedView extends StatelessWidget {
             ],
           ),
         ),
-        if (lastError != null) DomainErrorBanner(error: lastError!),
+        if (presentedError != null)
+          AppNoticeBanner(
+            title: presentedError.title,
+            body: presentedError.body,
+          ),
         Expanded(
           child: entries.isEmpty
               ? AppStateView(

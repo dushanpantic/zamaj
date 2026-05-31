@@ -7,7 +7,7 @@ import 'package:zamaj/core/app_typography.dart';
 import 'package:zamaj/modules/domain/domain.dart';
 import 'package:zamaj/modules/exercise_library/bloc/exercise_library_editor/bloc.dart';
 import 'package:zamaj/modules/exercise_library/models/exercise_library_args.dart';
-import 'package:zamaj/modules/program_management/widgets/domain_error_banner.dart';
+import 'package:zamaj/modules/program_management/services/domain_error_presenter.dart';
 import 'package:zamaj/modules/program_management/widgets/measurement_type_selector.dart';
 
 class ExerciseLibraryEditorScreen extends StatefulWidget {
@@ -332,10 +332,17 @@ class _EditorBody extends StatelessWidget {
     final colors = Theme.of(context).appColors;
     const typography = AppTypography.standard;
     final bloc = context.read<ExerciseLibraryEditorBloc>();
+    final presentedError = lastError == null
+        ? null
+        : DomainErrorPresenter.present(lastError!);
 
     return Column(
       children: [
-        if (lastError != null) DomainErrorBanner(error: lastError!),
+        if (presentedError != null)
+          AppNoticeBanner(
+            title: presentedError.title,
+            body: presentedError.body,
+          ),
         Expanded(
           child: SingleChildScrollView(
             padding: EdgeInsets.fromLTRB(
