@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:zamaj/building_blocks/building_blocks.dart';
 import 'package:zamaj/core/app_icon.dart';
 import 'package:zamaj/core/app_spacing.dart';
 import 'package:zamaj/core/app_theme.dart';
@@ -117,14 +118,12 @@ class _TileMenuButton extends StatelessWidget {
         }
       },
       itemBuilder: (_) => [
-        PopupMenuItem(
+        const PopupMenuItem(
           value: _TileMenuAction.delete,
-          child: Row(
-            children: [
-              Icon(Icons.delete_outline, color: colors.error),
-              const SizedBox(width: AppSpacing.md),
-              Text('Delete', style: TextStyle(color: colors.error)),
-            ],
+          child: AppMenuRow(
+            icon: Icons.delete_outline,
+            label: 'Delete',
+            tone: AppMenuRowTone.destructive,
           ),
         ),
       ],

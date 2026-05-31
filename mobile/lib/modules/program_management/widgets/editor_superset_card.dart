@@ -120,26 +120,18 @@ class EditorSupersetCard extends StatelessWidget {
                   itemBuilder: (context) => [
                     PopupMenuItem(
                       value: GroupMenuAction.toggleWarmup,
-                      child: ListTile(
-                        leading: Icon(
-                          isWarmup
-                              ? Icons.fitness_center
-                              : Icons.local_fire_department,
-                        ),
-                        title: Text(
-                          isWarmup ? 'Mark as main' : 'Mark as warmup',
-                        ),
-                        contentPadding: EdgeInsets.zero,
-                        dense: true,
+                      child: AppMenuRow(
+                        icon: isWarmup
+                            ? Icons.fitness_center
+                            : Icons.local_fire_department,
+                        label: isWarmup ? 'Mark as main' : 'Mark as warmup',
                       ),
                     ),
                     const PopupMenuItem(
                       value: GroupMenuAction.ungroup,
-                      child: ListTile(
-                        leading: Icon(Icons.call_split),
-                        title: Text('Ungroup superset'),
-                        contentPadding: EdgeInsets.zero,
-                        dense: true,
+                      child: AppMenuRow(
+                        icon: Icons.call_split,
+                        label: 'Ungroup superset',
                       ),
                     ),
                   ],

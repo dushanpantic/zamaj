@@ -267,36 +267,28 @@ class EditorFlatExerciseRow extends StatelessWidget {
                           itemBuilder: (context) => [
                             PopupMenuItem(
                               value: GroupMenuAction.toggleWarmup,
-                              child: ListTile(
-                                leading: Icon(
-                                  isWarmup
-                                      ? Icons.fitness_center
-                                      : Icons.local_fire_department,
-                                ),
-                                title: Text(
-                                  isWarmup ? 'Mark as main' : 'Mark as warmup',
-                                ),
-                                contentPadding: EdgeInsets.zero,
-                                dense: true,
+                              child: AppMenuRow(
+                                icon: isWarmup
+                                    ? Icons.fitness_center
+                                    : Icons.local_fire_department,
+                                label: isWarmup
+                                    ? 'Mark as main'
+                                    : 'Mark as warmup',
                               ),
                             ),
                             if (otherGroups.isNotEmpty)
                               const PopupMenuItem(
                                 value: GroupMenuAction.group,
-                                child: ListTile(
-                                  leading: Icon(Icons.merge_type),
-                                  title: Text('Group into superset'),
-                                  contentPadding: EdgeInsets.zero,
-                                  dense: true,
+                                child: AppMenuRow(
+                                  icon: Icons.merge_type,
+                                  label: 'Group into superset',
                                 ),
                               ),
                             const PopupMenuItem(
                               value: GroupMenuAction.delete,
-                              child: ListTile(
-                                leading: Icon(Icons.delete_outline),
-                                title: Text('Delete'),
-                                contentPadding: EdgeInsets.zero,
-                                dense: true,
+                              child: AppMenuRow(
+                                icon: Icons.delete_outline,
+                                label: 'Delete',
                               ),
                             ),
                           ],

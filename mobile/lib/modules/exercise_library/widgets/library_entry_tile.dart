@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:zamaj/building_blocks/building_blocks.dart';
 import 'package:zamaj/core/app_spacing.dart';
 import 'package:zamaj/core/app_theme.dart';
 import 'package:zamaj/core/app_typography.dart';
@@ -103,31 +104,26 @@ class LibraryEntryTile extends StatelessWidget {
                   itemBuilder: (context) => [
                     const PopupMenuItem(
                       value: _TileAction.edit,
-                      child: ListTile(
-                        leading: Icon(Icons.edit_outlined),
-                        title: Text('Edit'),
+                      child: AppMenuRow(
+                        icon: Icons.edit_outlined,
+                        label: 'Edit',
                       ),
                     ),
                     if (isArchived)
                       const PopupMenuItem(
                         value: _TileAction.unarchive,
-                        child: ListTile(
-                          leading: Icon(Icons.unarchive_outlined),
-                          title: Text('Restore'),
+                        child: AppMenuRow(
+                          icon: Icons.unarchive_outlined,
+                          label: 'Restore',
                         ),
                       )
                     else
-                      PopupMenuItem(
+                      const PopupMenuItem(
                         value: _TileAction.archive,
-                        child: ListTile(
-                          leading: Icon(
-                            Icons.archive_outlined,
-                            color: colors.warning,
-                          ),
-                          title: Text(
-                            'Archive',
-                            style: TextStyle(color: colors.warning),
-                          ),
+                        child: AppMenuRow(
+                          icon: Icons.archive_outlined,
+                          label: 'Archive',
+                          tone: AppMenuRowTone.warning,
                         ),
                       ),
                   ],

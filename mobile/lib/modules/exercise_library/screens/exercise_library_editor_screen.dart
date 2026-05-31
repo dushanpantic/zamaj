@@ -207,7 +207,7 @@ class _NotFoundScaffold extends StatelessWidget {
       body: AppStateView(
         icon: Icons.error_outline,
         tone: AppStateTone.error,
-        title: 'Library entry not found.',
+        title: 'Library entry not found',
         primaryAction: AppStateAction(
           label: 'Go back',
           onPressed: () => Navigator.of(context).pop(),

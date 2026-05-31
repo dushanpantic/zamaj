@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:zamaj/building_blocks/building_blocks.dart';
 import 'package:zamaj/core/app_icon.dart';
 import 'package:zamaj/core/app_motion.dart';
 import 'package:zamaj/core/app_opacity.dart';
@@ -298,10 +299,12 @@ class _ExercisePreviewPanel extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Padding(
-                    padding: const EdgeInsets.only(top: 6),
+                    // Nudge the bullet down to sit on the first text line while
+                    // the row stays top-aligned for multi-line names.
+                    padding: const EdgeInsets.only(top: AppSpacing.sm),
                     child: Container(
-                      width: 4,
-                      height: 4,
+                      width: AppSpacing.xs,
+                      height: AppSpacing.xs,
                       decoration: BoxDecoration(
                         color: colors.onSurfaceMuted,
                         shape: BoxShape.circle,
@@ -351,7 +354,7 @@ class _ExercisePreviewPanel extends StatelessWidget {
                     horizontal: AppSpacing.md,
                     vertical: AppSpacing.xs,
                   ),
-                  minimumSize: const Size(0, 36),
+                  minimumSize: const Size(0, AppSpacing.compactAction),
                 ),
               ),
             ),
@@ -396,7 +399,7 @@ class _EmptyBadge extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(
         horizontal: AppSpacing.sm,
-        vertical: 2,
+        vertical: AppSpacing.xxs,
       ),
       decoration: BoxDecoration(
         color: colors.error.withValues(alpha: AppOpacity.tintFill),
@@ -427,7 +430,6 @@ class _DayMenu extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colors = Theme.of(context).appColors;
-    const typography = AppTypography.standard;
     return PopupMenuButton<WorkoutDayMenuAction>(
       icon: Icon(Icons.more_vert, color: colors.onSurfaceMuted),
       tooltip: 'Workout day actions',
@@ -441,64 +443,29 @@ class _DayMenu extends StatelessWidget {
         PopupMenuItem(
           value: WorkoutDayMenuAction.rename,
           enabled: isPersisted,
-          child: _MenuRow(
+          child: AppMenuRow(
             icon: Icons.edit,
             label: 'Rename',
-            color: colors.onSurface,
-            disabled: !isPersisted,
-            typography: typography,
+            enabled: isPersisted,
           ),
         ),
         PopupMenuItem(
           value: WorkoutDayMenuAction.duplicate,
           enabled: canDuplicate,
-          child: _MenuRow(
+          child: AppMenuRow(
             icon: Icons.copy,
             label: 'Duplicate',
-            color: colors.onSurface,
-            disabled: !canDuplicate,
-            typography: typography,
+            enabled: canDuplicate,
           ),
         ),
-        PopupMenuItem(
+        const PopupMenuItem(
           value: WorkoutDayMenuAction.delete,
-          child: _MenuRow(
+          child: AppMenuRow(
             icon: Icons.delete_outline,
             label: 'Delete',
-            color: colors.error,
-            disabled: false,
-            typography: typography,
+            tone: AppMenuRowTone.destructive,
           ),
         ),
-      ],
-    );
-  }
-}
-
-class _MenuRow extends StatelessWidget {
-  const _MenuRow({
-    required this.icon,
-    required this.label,
-    required this.color,
-    required this.disabled,
-    required this.typography,
-  });
-
-  final IconData icon;
-  final String label;
-  final Color color;
-  final bool disabled;
-  final AppTypography typography;
-
-  @override
-  Widget build(BuildContext context) {
-    final colors = Theme.of(context).appColors;
-    final effective = disabled ? colors.onSurfaceMuted : color;
-    return Row(
-      children: [
-        AppIcon(icon, size: AppIconSize.md, color: effective),
-        const SizedBox(width: AppSpacing.md),
-        Text(label, style: typography.label.copyWith(color: effective)),
       ],
     );
   }

@@ -135,10 +135,15 @@ class _WorkoutDayPickerScreenState extends State<WorkoutDayPickerScreen> {
   }
 
   String _titleFor(WorkoutDayPickerState state) {
+    // The title is a stable anchor — the program name is this screen's identity,
+    // shown across every state that carries it. It is not a status line: the
+    // 'Program not found' message lives in the body AppStateView only, and
+    // ProgramNotFound has no program name to anchor on, so the bar stays empty
+    // rather than echoing the body (G8 / Phase 0.5).
     return switch (state) {
       WorkoutDayPickerInitial(:final programName) => programName,
       WorkoutDayPickerLoading(:final programName) => programName,
-      WorkoutDayPickerProgramNotFound() => 'Program not found',
+      WorkoutDayPickerProgramNotFound() => '',
       WorkoutDayPickerScreenFailure(:final programName) => programName,
       WorkoutDayPickerLoaded(:final program) => program.name,
     };

@@ -147,7 +147,7 @@ class _NotFoundView extends StatelessWidget {
       body: AppStateView(
         icon: Icons.error_outline,
         tone: AppStateTone.error,
-        title: 'Workout day not found.',
+        title: 'Workout day not found',
         primaryAction: AppStateAction(
           label: 'Go back',
           onPressed: () => Navigator.of(context).pop(),

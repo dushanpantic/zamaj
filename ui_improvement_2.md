@@ -303,7 +303,7 @@ Everything downstream is authored against them.
 |---|-------------------------|--------|--------|---------------|------|
 | 1 ✅ | Token gaps: opacity + stroke + depth policy | `AppOpacity`, adopt `AppStroke`, `AppElevation.drag` | G4¹, G5¹, G6¹ | no | low |
 | 2 ✅ | `AppNoticeBanner` + non-live migration | `AppNoticeBanner` | G2¹ | no | low |
-| 3 | Screen-consistency polish (non-live) | title rule, copy, spacing tokens | G8, G9, G10¹, G11¹ | no | low |
+| 3 ✅ | Screen-consistency polish (non-live) | title rule, copy, spacing tokens | G8, G9, G10¹, G11¹ | no | low |
 | 4 | **Live-surface finish** (isolated) | — (migration only) | G1, G3, G7, plus live halves of G2/G4/G5/G6/G10/G11 | **yes** | **high** |
 
 ¹ non-live half only; the live remainder closes in slice 4.
@@ -377,7 +377,42 @@ Everything downstream is authored against them.
 - **Closes:** G2 (non-live half).
 - **Verify:** `tool/ci.sh`.
 
-### Prompt 3 — Screen-consistency polish (non-live)
+### Prompt 3 — Screen-consistency polish (non-live) ✅ COMPLETE (2026-05-31)
+> **Done.** All four findings closed on the non-live surface.
+> **G8** — `recent_sessions` now shows the stable anchor `'Recent sessions'`
+> across every state (the `'Loading…'` / `'Could not load sessions'` /
+> `'Program not found'` strings live in the body `AppStateView` only; the
+> per-state `_titleFor` switch was deleted). The picker already anchored on the
+> contextual program name; the lone status leak —
+> `WorkoutDayPickerProgramNotFound → 'Program not found'`, which duplicated the
+> body — now returns `''` (that state carries no program name to anchor on, so
+> the bar stays empty and the body owns the error). **G9** — dropped the
+> terminal periods: `'Workout day not found'` / `'Library entry not found'`,
+> matching `'Program not found'` / `'Session not found'`. **G10** — authored
+> `AppSpacing.compactAction = 36` (the sub-`touchMin` inline-action height,
+> Phase 0.6) and routed the "Edit day" button's `Size(0, 36)` onto it; tokenized
+> the `workout_day_list_tile` magic dims — bullet dot `4×4` → `AppSpacing.xs`,
+> its `top: 6` offset → `AppSpacing.sm` (centers the dot on the first text
+> line), the EMPTY-badge `vertical: 2` → `AppSpacing.xxs` (the pill-inset role
+> that token documents). The live `Size(0, 32)` "Open video" buttons stay for
+> slice 4 (where they fold onto the same `compactAction` token). **G11** — the
+> bullet's premise was wrong: the non-live popups did **not** mostly inherit the
+> theme. They drifted three ways — a themed `_MenuRow` (workout_day), stock
+> `ListTile` + leading `Icon` (program/library/editor menus), and an ad-hoc
+> `Row(Icon + SizedBox + Text)` (session history). Per the chosen
+> *consolidate-to-shared-row* path, authored `AppMenuRow`
+> ([app_menu_row.dart](mobile/lib/building_blocks/app_menu_row.dart)) — a small
+> themed row (`AppIconSize.md` glyph, `AppSpacing.md` gap, `typography.label`)
+> with an `AppMenuRowTone {normal, warning, destructive}` + `enabled` flag — and
+> routed all five non-live popups **and** `workout_day_list_tile`'s `_MenuRow`
+> (now deleted) through it. **Deliberately preserved each delete's existing
+> tone** (the two editor menus keep their neutral delete; list/history/day-menu
+> deletes stay `destructive`) — this is a structural consolidation with ~nil
+> visual diff, and delete-tone *coloring* consistency was not in G11's scope;
+> the only intended shift is the two editor menus gaining the standard 48-dp
+> `PopupMenuItem` height (the old `dense`/`contentPadding: zero` ListTiles
+> dropped). The live `exercise_card` popup stays for slice 4. `tool/ci.sh` green
+> (offline-imports OK, format/analyze clean, 633 tests pass).
 - **App-bar titles (G8):** apply the Phase 0.5 rule — stop surfacing
   `'Loading…'` / `'Could not load sessions'` in `recent_sessions` /
   `workout_day_picker` app bars; keep a stable identity title (loaded-state

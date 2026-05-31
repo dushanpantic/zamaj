@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:zamaj/building_blocks/building_blocks.dart';
 import 'package:zamaj/core/app_spacing.dart';
 import 'package:zamaj/core/app_theme.dart';
 import 'package:zamaj/core/app_typography.dart';
@@ -104,19 +105,14 @@ class ProgramListTile extends StatelessWidget {
               itemBuilder: (context) => [
                 const PopupMenuItem(
                   value: _TileAction.edit,
-                  child: ListTile(
-                    leading: Icon(Icons.edit_outlined),
-                    title: Text('Edit'),
-                  ),
+                  child: AppMenuRow(icon: Icons.edit_outlined, label: 'Edit'),
                 ),
-                PopupMenuItem(
+                const PopupMenuItem(
                   value: _TileAction.delete,
-                  child: ListTile(
-                    leading: Icon(Icons.delete_outline, color: colors.error),
-                    title: Text(
-                      'Delete',
-                      style: TextStyle(color: colors.error),
-                    ),
+                  child: AppMenuRow(
+                    icon: Icons.delete_outline,
+                    label: 'Delete',
+                    tone: AppMenuRowTone.destructive,
                   ),
                 ),
               ],

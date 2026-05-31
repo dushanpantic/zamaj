@@ -5,6 +5,7 @@
 library;
 
 export 'package:zamaj/building_blocks/app_confirm_dialog.dart';
+export 'package:zamaj/building_blocks/app_menu_row.dart';
 export 'package:zamaj/building_blocks/app_notice_banner.dart';
 export 'package:zamaj/building_blocks/app_skeleton.dart';
 export 'package:zamaj/building_blocks/app_state_view.dart';

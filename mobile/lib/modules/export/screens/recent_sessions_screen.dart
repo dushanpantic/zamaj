@@ -25,7 +25,10 @@ class RecentSessionsScreen extends StatelessWidget {
         return Scaffold(
           backgroundColor: colors.background,
           appBar: AppBar(
-            title: Text(_titleFor(state)),
+            // Title is a stable anchor, not a status line: state ('Loading…',
+            // 'Could not load sessions', 'Program not found') lives in the body
+            // AppStateView only (G8 / Phase 0.5).
+            title: const Text('Recent sessions'),
             actions: state is RecentSessionsLoaded && state.hasWeekSessions
                 ? [
                     IconButton(
@@ -40,15 +43,6 @@ class RecentSessionsScreen extends StatelessWidget {
         );
       },
     );
-  }
-
-  String _titleFor(RecentSessionsState state) {
-    return switch (state) {
-      RecentSessionsInitial() || RecentSessionsLoading() => 'Loading…',
-      RecentSessionsProgramNotFound() => 'Program not found',
-      RecentSessionsFailure() => 'Could not load sessions',
-      RecentSessionsLoaded() => 'Recent sessions',
-    };
   }
 
   Widget _body(BuildContext context, RecentSessionsState state) {
