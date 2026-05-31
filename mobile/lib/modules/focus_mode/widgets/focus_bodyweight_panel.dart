@@ -123,18 +123,6 @@ class _BigNumericField extends StatelessWidget {
           ],
           onSubmitted: onSubmitted,
           style: typography.numericHero.copyWith(color: colors.onSurface),
-          decoration: InputDecoration(
-            filled: true,
-            fillColor: colors.surfaceVariant,
-            contentPadding: const EdgeInsets.symmetric(
-              horizontal: AppSpacing.md,
-              vertical: AppSpacing.md,
-            ),
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(AppRadius.md),
-              borderSide: BorderSide(color: colors.outline),
-            ),
-          ),
         ),
         const SizedBox(height: AppSpacing.xs),
         Center(

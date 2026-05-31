@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:zamaj/core/app_elevation.dart';
+import 'package:zamaj/core/app_icon.dart';
 import 'package:zamaj/core/app_motion.dart';
 import 'package:zamaj/core/app_spacing.dart';
 import 'package:zamaj/core/app_theme.dart';
@@ -37,10 +39,10 @@ class DragHandle extends StatelessWidget {
     final icon = SizedBox(
       width: AppSpacing.touchMin,
       height: AppSpacing.touchMin,
-      child: Icon(
+      child: AppIcon(
         Icons.drag_indicator,
         color: colors.onSurfaceMuted,
-        size: 20,
+        size: AppIconSize.lg,
         semanticLabel: 'Drag handle',
       ),
     );
@@ -104,7 +106,7 @@ class _DragFeedbackPill extends StatelessWidget {
           duration: AppDuration.base,
           opacity: dimmed ? 0.6 : 1.0,
           child: Material(
-            elevation: 8,
+            elevation: AppElevation.drag,
             color: Colors.transparent,
             borderRadius: BorderRadius.circular(AppRadius.pill),
             child: Container(
@@ -114,11 +116,18 @@ class _DragFeedbackPill extends StatelessWidget {
               decoration: BoxDecoration(
                 color: colors.surface,
                 borderRadius: BorderRadius.circular(AppRadius.pill),
-                border: Border.all(color: colors.primary, width: 2),
+                border: Border.all(
+                  color: colors.primary,
+                  width: AppStroke.emphasis,
+                ),
               ),
               child: Row(
                 children: [
-                  Icon(Icons.drag_indicator, size: 20, color: colors.primary),
+                  AppIcon(
+                    Icons.drag_indicator,
+                    size: AppIconSize.lg,
+                    color: colors.primary,
+                  ),
                   const SizedBox(width: AppSpacing.sm),
                   Expanded(
                     child: Text(
@@ -129,7 +138,11 @@ class _DragFeedbackPill extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(width: AppSpacing.sm),
-                  Icon(Icons.swap_vert, size: 18, color: colors.onSurfaceMuted),
+                  AppIcon(
+                    Icons.swap_vert,
+                    size: AppIconSize.md,
+                    color: colors.onSurfaceMuted,
+                  ),
                 ],
               ),
             ),

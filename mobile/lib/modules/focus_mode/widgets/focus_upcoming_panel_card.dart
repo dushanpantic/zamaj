@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:zamaj/core/app_icon.dart';
+import 'package:zamaj/core/app_opacity.dart';
 import 'package:zamaj/core/app_spacing.dart';
 import 'package:zamaj/core/app_theme.dart';
 import 'package:zamaj/core/app_typography.dart';
@@ -56,9 +58,11 @@ class FocusUpcomingPanelCard extends StatelessWidget {
             vertical: AppSpacing.sm,
           ),
           decoration: BoxDecoration(
-            color: colors.surface.withValues(alpha: 0.3),
+            color: colors.surface.withValues(alpha: AppOpacity.recede3),
             borderRadius: BorderRadius.circular(AppRadius.lg),
-            border: Border.all(color: colors.outline.withValues(alpha: 0.6)),
+            border: Border.all(
+              color: colors.outline.withValues(alpha: AppOpacity.borderTint),
+            ),
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -92,10 +96,10 @@ class FocusUpcomingPanelCard extends StatelessWidget {
                   ),
                   const SizedBox(width: AppSpacing.sm),
                   if (isCompleted)
-                    Icon(
+                    AppIcon(
                       Icons.check_circle,
                       color: colors.exerciseCompleted,
-                      size: 20,
+                      size: AppIconSize.status,
                     )
                   else
                     FocusSetProgress(

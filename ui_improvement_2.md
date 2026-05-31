@@ -304,7 +304,7 @@ Everything downstream is authored against them.
 | 1 ✅ | Token gaps: opacity + stroke + depth policy | `AppOpacity`, adopt `AppStroke`, `AppElevation.drag` | G4¹, G5¹, G6¹ | no | low |
 | 2 ✅ | `AppNoticeBanner` + non-live migration | `AppNoticeBanner` | G2¹ | no | low |
 | 3 ✅ | Screen-consistency polish (non-live) | title rule, copy, spacing tokens | G8, G9, G10¹, G11¹ | no | low |
-| 4 | **Live-surface finish** (isolated) | — (migration only) | G1, G3, G7, plus live halves of G2/G4/G5/G6/G10/G11 | **yes** | **high** |
+| 4 ✅ | **Live-surface finish** (isolated) | — (migration only) | G1, G3, G7, plus live halves of G2/G4/G5/G6/G10/G11 | **yes** | **high** |
 
 ¹ non-live half only; the live remainder closes in slice 4.
 
@@ -430,7 +430,56 @@ Everything downstream is authored against them.
 - **Closes:** G8, G9, G10 (non-live), G11 (non-live).
 - **Verify:** `tool/ci.sh`.
 
-### Prompt 4 — Live-surface finish *(careful, last, isolated)*
+### Prompt 4 — Live-surface finish ✅ COMPLETE (2026-05-31) *(careful, last, isolated)*
+> **Done.** The fault line is closed — `workout_overview/` and `focus_mode/`
+> now speak round-1/round-2 vocabulary like the rest of the app.
+> **G1** — all 5 live state views deleted their bespoke `Column`s and route
+> through `AppStateView`: `FocusNotFoundView` / `WorkoutOverviewNotFoundView`
+> (neutral, `search_off`, Back), `FocusErrorView` / `WorkoutOverviewErrorView`
+> (`AppStateTone.error`, presented title/body, Retry), and
+> `FocusWorkoutCompleteView` (`AppStateTone.success`). The 48-vs-64 /
+> `title`-vs-`titleSmall` drift dies with them. **G3** — every live `Icon(size:)`
+> literal → `AppIcon`/`AppIconSize`; the state-marker checks use the explicit
+> `AppIconSize.status` role, the lone `26` log-set check settled to `xl`, and the
+> upcoming-card's `20` completed-check dropped to `status` (18) to match the
+> previous-card's. (Size-less app-bar icons that inherit `IconTheme` — e.g. the
+> switch-exercise trigger — are left as-is; they carry no literal.) **G2 live** —
+> both transient banners route through `AppNoticeBanner`. The workout-overview
+> one is inline (default margin, translucent tint over the scaffold);
+> `FocusTransientErrorBanner` floats over the panels, so it keeps an **opaque
+> `background` base** (reproducing the inline look while occluding content) and
+> the **`Colors.black` drop-shadow is dropped** (§2.6). **G5 live** — active
+> borders → `AppStroke.emphasis` (`exercise_card` current/drop, `set_row`
+> log-set circle, `drag_handle` pill); the focus card's lone `1.5` settled to
+> `emphasis` and its `0.7` accent border to `borderTint` (the canonical
+> loggableHint-border alpha, matching `set_row`). **G6 live** — the focus recede
+> ladder `0.18/0.25/0.3/0.5` → `recede1…recede4` (previous→current), the
+> `outline` card borders `0.4/0.6` → `borderTint`, and `drag_handle`'s
+> `elevation: 8` → `AppElevation.drag`. **G7** — the 3 focus numeric panels drop
+> their hand-rolled `filled`/`fillColor`/`contentPadding`/`OutlineInputBorder`
+> (identical to `inputDecorationTheme`, and they already inherited its
+> `focusedBorder` via merge), keeping only `suffixText: 'kg'`; the 2 hand-drawn
+> `Divider(height: 1, …)` → the `dividerTheme` default `const Divider()`.
+> **G10 live** — every sub-`touchMin` `Size(0, 32)` compact action →
+> `AppSpacing.compactAction` (exercise-card Open-video, superset Ungroup,
+> time-panel Remove, notes-section Add); the focus warmup pill's `vertical: 2` →
+> `xxs`, `width: 4` → `xs`, fill `0.15` → `tintFill`, border `0.5` →
+> `borderTint`; the rest-indicator gap `2` → `xxs`. **G11 live** — the
+> exercise-card popup's stock `ListTile`s → `AppMenuRow`. **Deliberately left
+> (documented, the live analog of slice 1's `onPrimary @ 0.75`):** the
+> `reorder_gap` / `superset_reorder_gap` drag-indicator alphas (`0.55`/`0.4`,
+> tuned as a coupled rest→active→hover progression alongside the bar heights) and
+> the rest-timer **track** tint (`0.18`) — bespoke indicator/track values, not
+> instances of the tintFill/borderTint/muted *role* families G4 catalogued, and
+> `0.55` has no ramp equivalent (collapsing it would be a wrong-role mapping);
+> the switch-exercise menu keeps its `(current)`-bearing ad-hoc row (not the
+> G11-named exercise-card popup, and `AppMenuRow` can't carry the trailing
+> marker); `session_ended_banner` stays its own success-toned widget
+> (`AppNoticeBanner` has only error/warning/info tones) but its `0.12`/`0.4`
+> alphas + icon are tokenized; `set_row`'s `width: 28` "Set N" column is a
+> content width, not a spacer. `tool/ci.sh` green (offline-imports OK, codegen,
+> format/analyze clean, 633 tests pass). **Visual sign-off — run a real session
+> — is the user's** (per round 1 / colors.md §6).
 > **Re-read the CLAUDE.md sweaty-hands section before starting.** This is the
 > only slice that edits `workout_overview/` and `focus_mode/`; a real session is
 > the visual sign-off (per round 1 / colors.md §6). Isolated PR.

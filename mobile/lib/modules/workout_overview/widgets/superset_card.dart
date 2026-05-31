@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:zamaj/core/app_icon.dart';
 import 'package:zamaj/core/app_spacing.dart';
 import 'package:zamaj/core/app_theme.dart';
 import 'package:zamaj/core/app_typography.dart';
@@ -107,7 +108,11 @@ class SupersetCard extends StatelessWidget {
             ),
             child: Row(
               children: [
-                Icon(Icons.link, color: colors.primary, size: 16),
+                AppIcon(
+                  Icons.link,
+                  color: colors.primary,
+                  size: AppIconSize.sm,
+                ),
                 const SizedBox(width: AppSpacing.xs),
                 Text(
                   'Superset',
@@ -117,13 +122,13 @@ class SupersetCard extends StatelessWidget {
                 if (canMutate && anyUnfinished)
                   TextButton.icon(
                     onPressed: onUngroupPressed,
-                    icon: const Icon(Icons.call_split, size: 16),
+                    icon: const AppIcon(Icons.call_split, size: AppIconSize.sm),
                     label: const Text('Ungroup'),
                     style: TextButton.styleFrom(
                       padding: const EdgeInsets.symmetric(
                         horizontal: AppSpacing.sm,
                       ),
-                      minimumSize: const Size(0, 32),
+                      minimumSize: const Size(0, AppSpacing.compactAction),
                     ),
                   ),
               ],

@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:zamaj/core/app_icon.dart';
+import 'package:zamaj/core/app_opacity.dart';
 import 'package:zamaj/core/app_spacing.dart';
 import 'package:zamaj/core/app_theme.dart';
 import 'package:zamaj/core/app_typography.dart';
@@ -53,7 +55,7 @@ class FocusPreviousPanelCard extends StatelessWidget {
             vertical: AppSpacing.xs,
           ),
           decoration: BoxDecoration(
-            color: colors.surface.withValues(alpha: 0.18),
+            color: colors.surface.withValues(alpha: AppOpacity.recede1),
             borderRadius: BorderRadius.circular(AppRadius.lg),
           ),
           child: Row(
@@ -70,10 +72,10 @@ class FocusPreviousPanelCard extends StatelessWidget {
               ),
               const SizedBox(width: AppSpacing.sm),
               if (isCompleted)
-                Icon(
+                AppIcon(
                   Icons.check_circle,
                   color: colors.exerciseCompleted,
-                  size: 18,
+                  size: AppIconSize.status,
                 )
               else
                 Text(

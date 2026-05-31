@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:zamaj/core/app_icon.dart';
 import 'package:zamaj/core/app_spacing.dart';
 import 'package:zamaj/core/app_theme.dart';
 import 'package:zamaj/modules/focus_mode/bloc/bloc.dart';
@@ -33,9 +34,9 @@ class FocusSwitchExerciseButton extends StatelessWidget {
             enabled: !option.isCurrent,
             child: Row(
               children: [
-                Icon(
+                AppIcon(
                   option.isSuperset ? Icons.link : Icons.fitness_center,
-                  size: 18,
+                  size: AppIconSize.md,
                   color: colors.onSurfaceMuted,
                 ),
                 const SizedBox(width: AppSpacing.sm),

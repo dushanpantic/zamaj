@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:zamaj/core/app_opacity.dart';
 import 'package:zamaj/core/app_spacing.dart';
 import 'package:zamaj/core/app_theme.dart';
 import 'package:zamaj/modules/focus_mode/bloc/bloc.dart';
@@ -35,9 +36,12 @@ class FocusCurrentPanelCard extends StatelessWidget {
       key: ValueKey('current-panel-${panel.sessionExerciseId}'),
       padding: const EdgeInsets.all(AppSpacing.md),
       decoration: BoxDecoration(
-        color: colors.surface.withValues(alpha: 0.5),
+        color: colors.surface.withValues(alpha: AppOpacity.recede4),
         borderRadius: BorderRadius.circular(AppRadius.lg),
-        border: Border.all(color: accent.withValues(alpha: 0.7), width: 1.5),
+        border: Border.all(
+          color: accent.withValues(alpha: AppOpacity.borderTint),
+          width: AppStroke.emphasis,
+        ),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,

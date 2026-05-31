@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:zamaj/building_blocks/building_blocks.dart';
 import 'package:zamaj/core/app_spacing.dart';
 import 'package:zamaj/core/app_theme.dart';
-import 'package:zamaj/core/app_typography.dart';
 import 'package:zamaj/modules/domain/domain.dart';
 import 'package:zamaj/modules/program_management/services/domain_error_presenter.dart';
 
@@ -20,27 +20,12 @@ class FocusNotFoundView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colors = Theme.of(context).appColors;
-    const typography = AppTypography.standard;
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(AppSpacing.xl),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(Icons.search_off, color: colors.onSurfaceMuted, size: 48),
-            const SizedBox(height: AppSpacing.lg),
-            Text(
-              'Session not found',
-              style: typography.titleSmall.copyWith(color: colors.onSurface),
-            ),
-            const SizedBox(height: AppSpacing.xl),
-            FilledButton(
-              onPressed: () => Navigator.of(context).maybePop(),
-              child: const Text('Back'),
-            ),
-          ],
-        ),
+    return AppStateView(
+      icon: Icons.search_off,
+      title: 'Session not found',
+      primaryAction: AppStateAction(
+        label: 'Back',
+        onPressed: () => Navigator.of(context).maybePop(),
       ),
     );
   }
@@ -54,38 +39,16 @@ class FocusErrorView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colors = Theme.of(context).appColors;
-    const typography = AppTypography.standard;
     final presented = DomainErrorPresenter.present(error);
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(AppSpacing.xl),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(Icons.error_outline, color: colors.error, size: 48),
-            const SizedBox(height: AppSpacing.lg),
-            Text(
-              presented.title,
-              style: typography.titleSmall.copyWith(color: colors.onSurface),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: AppSpacing.sm),
-            Text(
-              presented.body,
-              style: typography.bodySmall.copyWith(
-                color: colors.onSurfaceMuted,
-              ),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: AppSpacing.xl),
-            FilledButton.icon(
-              onPressed: onRetry,
-              icon: const Icon(Icons.refresh, size: 18),
-              label: const Text('Retry'),
-            ),
-          ],
-        ),
+    return AppStateView(
+      icon: Icons.error_outline,
+      tone: AppStateTone.error,
+      title: presented.title,
+      message: presented.body,
+      primaryAction: AppStateAction(
+        label: 'Retry',
+        icon: Icons.refresh,
+        onPressed: onRetry,
       ),
     );
   }
@@ -104,58 +67,20 @@ class FocusTransientErrorBanner extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colors = Theme.of(context).appColors;
-    const typography = AppTypography.standard;
     final presented = DomainErrorPresenter.present(error);
+    // Floats over the scrolling panels (positioned by `focus_ready_body`), so
+    // it sits on an opaque `background` base to occlude what's behind it — the
+    // same effective look the inline banner has over the scaffold. Depth is the
+    // tint + outline, never a drop-shadow (dark-first house style).
     return Material(
-      color: Colors.transparent,
-      child: Container(
-        padding: const EdgeInsets.all(AppSpacing.md),
-        decoration: BoxDecoration(
-          color: colors.background,
-          borderRadius: BorderRadius.circular(AppRadius.md),
-          border: Border.all(color: colors.error.withValues(alpha: 0.6)),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.2),
-              blurRadius: 8,
-              offset: const Offset(0, 2),
-            ),
-          ],
-        ),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Icon(Icons.error_outline, color: colors.error, size: 20),
-            const SizedBox(width: AppSpacing.sm),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    presented.title,
-                    style: typography.label.copyWith(color: colors.error),
-                  ),
-                  const SizedBox(height: 2),
-                  Text(
-                    presented.body,
-                    style: typography.bodySmall.copyWith(
-                      color: colors.onSurface,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            IconButton(
-              onPressed: onDismiss,
-              tooltip: 'Dismiss',
-              icon: Icon(Icons.close, color: colors.onSurfaceMuted, size: 18),
-              constraints: const BoxConstraints(
-                minWidth: AppSpacing.touchMin,
-                minHeight: AppSpacing.touchMin,
-              ),
-            ),
-          ],
-        ),
+      color: colors.background,
+      borderRadius: BorderRadius.circular(AppRadius.md),
+      clipBehavior: Clip.antiAlias,
+      child: AppNoticeBanner(
+        title: presented.title,
+        body: presented.body,
+        onDismiss: onDismiss,
+        margin: EdgeInsets.zero,
       ),
     );
   }

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:zamaj/core/app_icon.dart';
 import 'package:zamaj/core/app_spacing.dart';
 import 'package:zamaj/core/app_theme.dart';
 import 'package:zamaj/core/app_typography.dart';
@@ -151,7 +152,7 @@ class _FocusTimeBasedPanelState extends State<FocusTimeBasedPanel> {
           child: isRunning
               ? FilledButton.icon(
                   onPressed: widget.enabled ? widget.onStopwatchStop : null,
-                  icon: const Icon(Icons.stop, size: 18),
+                  icon: const AppIcon(Icons.stop, size: AppIconSize.md),
                   label: const Text('STOP'),
                   style: FilledButton.styleFrom(
                     backgroundColor: colors.error,
@@ -160,7 +161,7 @@ class _FocusTimeBasedPanelState extends State<FocusTimeBasedPanel> {
                 )
               : FilledButton.icon(
                   onPressed: widget.enabled ? widget.onStopwatchStart : null,
-                  icon: const Icon(Icons.play_arrow, size: 18),
+                  icon: const AppIcon(Icons.play_arrow, size: AppIconSize.md),
                   label: const Text('START TIMER'),
                 ),
         ),
@@ -202,18 +203,6 @@ class _FocusTimeBasedPanelState extends State<FocusTimeBasedPanel> {
                   final parsed = int.tryParse(text.trim());
                   if (parsed != null) widget.onDurationCommitted(parsed);
                 },
-                decoration: InputDecoration(
-                  filled: true,
-                  fillColor: colors.surfaceVariant,
-                  contentPadding: const EdgeInsets.symmetric(
-                    horizontal: AppSpacing.md,
-                    vertical: AppSpacing.md,
-                  ),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(AppRadius.md),
-                    borderSide: BorderSide(color: colors.outline),
-                  ),
-                ),
                 style: typography.numeric.copyWith(color: colors.onSurface),
               ),
             ),
@@ -242,7 +231,7 @@ class _FocusTimeBasedPanelState extends State<FocusTimeBasedPanel> {
         ),
         if (widget.weightKg != null) ...[
           const SizedBox(height: AppSpacing.md),
-          Divider(color: colors.outline, height: 1),
+          const Divider(),
           const SizedBox(height: AppSpacing.sm),
           Row(
             children: [
@@ -255,14 +244,14 @@ class _FocusTimeBasedPanelState extends State<FocusTimeBasedPanel> {
               const Spacer(),
               TextButton.icon(
                 onPressed: widget.enabled ? widget.onWeightCleared : null,
-                icon: const Icon(Icons.close, size: 16),
+                icon: const AppIcon(Icons.close, size: AppIconSize.sm),
                 label: const Text('Remove'),
                 style: TextButton.styleFrom(
                   foregroundColor: colors.onSurfaceMuted,
                   padding: const EdgeInsets.symmetric(
                     horizontal: AppSpacing.sm,
                   ),
-                  minimumSize: const Size(0, 32),
+                  minimumSize: const Size(0, AppSpacing.compactAction),
                 ),
               ),
             ],
@@ -314,19 +303,7 @@ class _FocusTimeBasedPanelState extends State<FocusTimeBasedPanel> {
                     final parsed = double.tryParse(raw);
                     if (parsed != null) widget.onWeightCommitted(parsed);
                   },
-                  decoration: InputDecoration(
-                    filled: true,
-                    fillColor: colors.surfaceVariant,
-                    suffixText: 'kg',
-                    contentPadding: const EdgeInsets.symmetric(
-                      horizontal: AppSpacing.md,
-                      vertical: AppSpacing.md,
-                    ),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(AppRadius.md),
-                      borderSide: BorderSide(color: colors.outline),
-                    ),
-                  ),
+                  decoration: const InputDecoration(suffixText: 'kg'),
                   style: typography.numeric.copyWith(color: colors.onSurface),
                 ),
               ),
@@ -361,7 +338,7 @@ class _FocusTimeBasedPanelState extends State<FocusTimeBasedPanel> {
               onPressed: widget.enabled
                   ? () => widget.onWeightCommitted(0)
                   : null,
-              icon: const Icon(Icons.add, size: 16),
+              icon: const AppIcon(Icons.add, size: AppIconSize.sm),
               label: const Text('Add weight'),
             ),
           ),

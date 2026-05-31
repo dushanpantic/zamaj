@@ -105,7 +105,7 @@ class _Section extends StatelessWidget {
                     icon: const AppIcon(Icons.add, size: AppIconSize.sm),
                     label: Text(addLabel),
                     style: TextButton.styleFrom(
-                      minimumSize: const Size(0, 32),
+                      minimumSize: const Size(0, AppSpacing.compactAction),
                       padding: const EdgeInsets.symmetric(
                         horizontal: AppSpacing.sm,
                       ),

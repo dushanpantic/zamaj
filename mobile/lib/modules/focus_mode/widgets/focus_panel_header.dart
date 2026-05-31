@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:zamaj/core/app_colors.dart';
+import 'package:zamaj/core/app_icon.dart';
+import 'package:zamaj/core/app_opacity.dart';
 import 'package:zamaj/core/app_spacing.dart';
 import 'package:zamaj/core/app_theme.dart';
 import 'package:zamaj/core/app_typography.dart';
@@ -51,18 +53,24 @@ class _WarmupPill extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(
         horizontal: AppSpacing.sm,
-        vertical: 2,
+        vertical: AppSpacing.xxs,
       ),
       decoration: BoxDecoration(
-        color: colors.warmup.withValues(alpha: 0.15),
+        color: colors.warmup.withValues(alpha: AppOpacity.tintFill),
         borderRadius: BorderRadius.circular(AppRadius.pill),
-        border: Border.all(color: colors.warmup.withValues(alpha: 0.5)),
+        border: Border.all(
+          color: colors.warmup.withValues(alpha: AppOpacity.borderTint),
+        ),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(Icons.local_fire_department, size: 12, color: colors.warmup),
-          const SizedBox(width: 4),
+          AppIcon(
+            Icons.local_fire_department,
+            size: AppIconSize.xs,
+            color: colors.warmup,
+          ),
+          const SizedBox(width: AppSpacing.xs),
           Text(
             'WARMUP',
             style: AppTypography.standard.caption.copyWith(

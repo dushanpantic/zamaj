@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:zamaj/building_blocks/building_blocks.dart';
 import 'package:zamaj/core/app_colors.dart';
+import 'package:zamaj/core/app_icon.dart';
+import 'package:zamaj/core/app_opacity.dart';
 import 'package:zamaj/core/app_spacing.dart';
 import 'package:zamaj/core/app_theme.dart';
 import 'package:zamaj/core/app_typography.dart';
@@ -305,10 +307,14 @@ class _SetRowState extends State<SetRow> {
     final decorated = isHighlighted
         ? Container(
             decoration: BoxDecoration(
-              color: colors.loggableHint.withValues(alpha: 0.08),
+              color: colors.loggableHint.withValues(
+                alpha: AppOpacity.tintFillSubtle,
+              ),
               borderRadius: BorderRadius.circular(AppRadius.sm),
               border: Border.all(
-                color: colors.loggableHint.withValues(alpha: 0.35),
+                color: colors.loggableHint.withValues(
+                  alpha: AppOpacity.borderTint,
+                ),
               ),
             ),
             child: content,
@@ -463,23 +469,23 @@ class _StatusIcon extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return switch (mode) {
-      SetRowMode.completed => Icon(
+      SetRowMode.completed => AppIcon(
         Icons.check_circle,
         color: colors.exerciseCompleted,
-        size: 18,
+        size: AppIconSize.status,
       ),
-      SetRowMode.trailing => Icon(
+      SetRowMode.trailing => AppIcon(
         Icons.check_circle,
         color: colors.exerciseCompleted,
-        size: 18,
+        size: AppIconSize.status,
       ),
       // Loggable rows render the tappable `_LoggableCircleButton` instead of
       // a status icon, so this branch is never hit for them.
       SetRowMode.loggable => const SizedBox.shrink(),
-      SetRowMode.future => Icon(
+      SetRowMode.future => AppIcon(
         Icons.circle_outlined,
         color: colors.onSurfaceMuted,
-        size: 18,
+        size: AppIconSize.status,
       ),
     };
   }
@@ -512,13 +518,16 @@ class _LoggableCircleButton extends StatelessWidget {
             height: _size,
             decoration: BoxDecoration(
               shape: BoxShape.circle,
-              color: colors.primary.withValues(alpha: 0.10),
-              border: Border.all(color: colors.primary, width: 2),
+              color: colors.primary.withValues(alpha: AppOpacity.tintFill),
+              border: Border.all(
+                color: colors.primary,
+                width: AppStroke.emphasis,
+              ),
             ),
-            child: Icon(
+            child: AppIcon(
               Icons.check,
               color: colors.primary,
-              size: 26,
+              size: AppIconSize.xl,
               semanticLabel: 'Log set',
             ),
           ),
@@ -545,7 +554,11 @@ class _CollapseButton extends StatelessWidget {
         tooltip: 'Collapse',
         onPressed: onPressed,
         padding: EdgeInsets.zero,
-        icon: Icon(Icons.expand_less, color: colors.onSurfaceMuted, size: 24),
+        icon: AppIcon(
+          Icons.expand_less,
+          color: colors.onSurfaceMuted,
+          size: AppIconSize.xl,
+        ),
       ),
     );
   }

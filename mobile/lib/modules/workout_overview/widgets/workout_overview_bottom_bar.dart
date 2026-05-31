@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:zamaj/core/app_icon.dart';
 import 'package:zamaj/core/app_spacing.dart';
 import 'package:zamaj/core/app_theme.dart';
 import 'package:zamaj/modules/workout_overview/bloc/bloc.dart';
@@ -64,7 +65,10 @@ class WorkoutOverviewBottomBar extends StatelessWidget {
             Expanded(
               child: FilledButton.icon(
                 onPressed: hasOpenTarget && !state.isEnded ? onFocusMode : null,
-                icon: const Icon(Icons.center_focus_strong, size: 18),
+                icon: const AppIcon(
+                  Icons.center_focus_strong,
+                  size: AppIconSize.md,
+                ),
                 label: Text(
                   label,
                   maxLines: 1,
@@ -106,7 +110,7 @@ class _SecondaryActionButton extends StatelessWidget {
             padding: EdgeInsets.zero,
             minimumSize: const Size.square(AppSpacing.touchMin),
           ),
-          child: Icon(icon, size: 20, semanticLabel: tooltip),
+          child: AppIcon(icon, size: AppIconSize.lg, semanticLabel: tooltip),
         ),
       ),
     );

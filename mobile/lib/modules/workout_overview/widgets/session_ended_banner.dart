@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:zamaj/core/app_icon.dart';
+import 'package:zamaj/core/app_opacity.dart';
 import 'package:zamaj/core/app_spacing.dart';
 import 'package:zamaj/core/app_theme.dart';
 import 'package:zamaj/core/app_typography.dart';
@@ -18,15 +20,21 @@ class SessionEndedBanner extends StatelessWidget {
       ),
       padding: const EdgeInsets.all(AppSpacing.md),
       decoration: BoxDecoration(
-        color: colors.exerciseCompleted.withValues(alpha: 0.12),
+        color: colors.exerciseCompleted.withValues(alpha: AppOpacity.tintFill),
         borderRadius: BorderRadius.circular(AppRadius.md),
         border: Border.all(
-          color: colors.exerciseCompleted.withValues(alpha: 0.4),
+          color: colors.exerciseCompleted.withValues(
+            alpha: AppOpacity.borderTint,
+          ),
         ),
       ),
       child: Row(
         children: [
-          Icon(Icons.check_circle, color: colors.exerciseCompleted, size: 20),
+          AppIcon(
+            Icons.check_circle,
+            color: colors.exerciseCompleted,
+            size: AppIconSize.lg,
+          ),
           const SizedBox(width: AppSpacing.sm),
           Expanded(
             child: Text(

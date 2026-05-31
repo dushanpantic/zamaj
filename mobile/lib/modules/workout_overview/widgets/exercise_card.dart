@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:zamaj/building_blocks/building_blocks.dart';
 import 'package:zamaj/core/app_colors.dart';
+import 'package:zamaj/core/app_icon.dart';
 import 'package:zamaj/core/app_motion.dart';
 import 'package:zamaj/core/app_spacing.dart';
 import 'package:zamaj/core/app_theme.dart';
@@ -100,7 +101,9 @@ class ExerciseCard extends StatelessWidget {
     final borderColor = isDropTarget || isCurrent
         ? colors.primary
         : colors.outline;
-    final borderWidth = isDropTarget || isCurrent ? 2.0 : 1.0;
+    final borderWidth = isDropTarget || isCurrent
+        ? AppStroke.emphasis
+        : AppStroke.hairline;
     return AnimatedContainer(
       duration: AppDuration.base,
       decoration: BoxDecoration(
@@ -316,8 +319,12 @@ class _RestIndicator extends StatelessWidget {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        Icon(Icons.timer_outlined, size: 12, color: colors.onSurfaceMuted),
-        const SizedBox(width: 2),
+        AppIcon(
+          Icons.timer_outlined,
+          size: AppIconSize.xs,
+          color: colors.onSurfaceMuted,
+        ),
+        const SizedBox(width: AppSpacing.xxs),
         Text(
           RestFormatter.format(seconds),
           style: typography.numericXs.copyWith(color: colors.onSurfaceMuted),
@@ -406,22 +413,26 @@ class _Actions extends StatelessWidget {
               tooltip: 'Replace',
               onPressed: onReplace,
               padding: EdgeInsets.zero,
-              icon: Icon(
+              icon: AppIcon(
                 Icons.swap_horiz,
                 color: colors.onSurfaceMuted,
-                size: 20,
+                size: AppIconSize.lg,
               ),
             ),
           ),
-        Icon(
+        AppIcon(
           isExpanded ? Icons.expand_less : Icons.expand_more,
           color: colors.onSurfaceMuted,
-          size: 20,
+          size: AppIconSize.lg,
         ),
         if (hasMenu)
           PopupMenuButton<_MenuAction>(
             tooltip: 'Exercise actions',
-            icon: Icon(Icons.more_vert, color: colors.onSurfaceMuted, size: 20),
+            icon: AppIcon(
+              Icons.more_vert,
+              color: colors.onSurfaceMuted,
+              size: AppIconSize.lg,
+            ),
             padding: EdgeInsets.zero,
             onSelected: (action) {
               switch (action) {
@@ -440,41 +451,30 @@ class _Actions extends StatelessWidget {
               if (canGroupInto)
                 const PopupMenuItem(
                   value: _MenuAction.groupInto,
-                  child: ListTile(
-                    leading: Icon(Icons.link),
-                    title: Text('Group into superset…'),
-                    contentPadding: EdgeInsets.zero,
-                    dense: true,
+                  child: AppMenuRow(
+                    icon: Icons.link,
+                    label: 'Group into superset…',
                   ),
                 ),
               if (canMarkDone)
                 const PopupMenuItem(
                   value: _MenuAction.markDone,
-                  child: ListTile(
-                    leading: Icon(Icons.check_circle_outline),
-                    title: Text('Mark done'),
-                    contentPadding: EdgeInsets.zero,
-                    dense: true,
+                  child: AppMenuRow(
+                    icon: Icons.check_circle_outline,
+                    label: 'Mark done',
                   ),
                 ),
               if (canMutate && isUnfinished)
                 const PopupMenuItem(
                   value: _MenuAction.skip,
-                  child: ListTile(
-                    leading: Icon(Icons.skip_next),
-                    title: Text('Skip'),
-                    contentPadding: EdgeInsets.zero,
-                    dense: true,
-                  ),
+                  child: AppMenuRow(icon: Icons.skip_next, label: 'Skip'),
                 ),
               if (videoUrl != null && videoUrl!.isNotEmpty)
                 const PopupMenuItem(
                   value: _MenuAction.openVideo,
-                  child: ListTile(
-                    leading: Icon(Icons.play_circle_outline),
-                    title: Text('Open video'),
-                    contentPadding: EdgeInsets.zero,
-                    dense: true,
+                  child: AppMenuRow(
+                    icon: Icons.play_circle_outline,
+                    label: 'Open video',
                   ),
                 ),
             ],
@@ -541,7 +541,7 @@ class _ExpandedBody extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Divider(color: colors.outline, height: 1, thickness: 1),
+        const Divider(),
         if (replacementBanner != null) ...[
           const SizedBox(height: AppSpacing.sm),
           replacementBanner,
@@ -584,11 +584,14 @@ class _ExpandedBody extends StatelessWidget {
                   const SizedBox(height: AppSpacing.xs),
                   TextButton.icon(
                     onPressed: () => onOpenVideo(videoUrl),
-                    icon: const Icon(Icons.play_circle_outline, size: 18),
+                    icon: const AppIcon(
+                      Icons.play_circle_outline,
+                      size: AppIconSize.md,
+                    ),
                     label: const Text('Open video'),
                     style: TextButton.styleFrom(
                       padding: EdgeInsets.zero,
-                      minimumSize: const Size(0, 32),
+                      minimumSize: const Size(0, AppSpacing.compactAction),
                       alignment: Alignment.centerLeft,
                     ),
                   ),

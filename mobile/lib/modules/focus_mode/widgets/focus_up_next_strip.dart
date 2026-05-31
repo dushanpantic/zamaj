@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:zamaj/core/app_icon.dart';
+import 'package:zamaj/core/app_opacity.dart';
 import 'package:zamaj/core/app_spacing.dart';
 import 'package:zamaj/core/app_theme.dart';
 import 'package:zamaj/core/app_typography.dart';
@@ -28,14 +30,20 @@ class FocusUpNextStrip extends StatelessWidget {
         vertical: AppSpacing.sm,
       ),
       decoration: BoxDecoration(
-        color: colors.surface.withValues(alpha: 0.25),
+        color: colors.surface.withValues(alpha: AppOpacity.recede2),
         border: Border(
-          bottom: BorderSide(color: colors.outline.withValues(alpha: 0.4)),
+          bottom: BorderSide(
+            color: colors.outline.withValues(alpha: AppOpacity.borderTint),
+          ),
         ),
       ),
       child: Row(
         children: [
-          Icon(Icons.arrow_forward, size: 16, color: colors.onSurfaceMuted),
+          AppIcon(
+            Icons.arrow_forward,
+            size: AppIconSize.sm,
+            color: colors.onSurfaceMuted,
+          ),
           const SizedBox(width: AppSpacing.xs),
           Expanded(
             child: FocusMarqueeText(
