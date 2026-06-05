@@ -345,7 +345,7 @@ class _StateBadge extends StatelessWidget {
     // The active exercise carries no badge — the card's 2dp primary border is
     // the "current" signal on its own. Done reads as a quiet glyph; the rarer
     // exception states (Skipped / Replaced) keep a labelled pill. Both go
-    // through the shared [StatusBadge] (Phase 0.2 vocabulary).
+    // through the shared [StatusBadge].
     return switch (state) {
       CompletedState() => StatusBadge.icon(
         icon: Icons.check_circle,
@@ -396,8 +396,8 @@ class _Actions extends StatelessWidget {
   Widget build(BuildContext context) {
     final canGroupInto = canMutate && isUnfinished && onGroupInto != null;
     final showReplace = canMutate && isUnfinished;
-    // Replace is no longer in the kebab — the icon button above owns it.
-    // The kebab still owns Group into / Mark done / Skip / Open video.
+    // The icon button above owns Replace; the kebab owns Group into /
+    // Mark done / Skip / Open video.
     final hasMenu =
         (canMutate && isUnfinished) ||
         canGroupInto ||

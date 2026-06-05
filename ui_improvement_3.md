@@ -338,7 +338,7 @@ Strip-to-minimal the design-essay/changelog/phase-ID comments in
 non-obvious notes (one line max). Comments only — no behaviour change.
 *Exit:* no phase IDs or changelog narration in these dirs; `tool/ci.sh` green.
 
-**Prompt 9 — Strip T9 comments in module widgets/screens.**
+**Prompt 9 — Strip T9 comments in module widgets/screens. ✅ COMPLETE.**
 Same treatment across `lib/modules/**/widgets|screens`, starting with the
 in-session surfaces (`workout_overview/`, `focus_mode/`) whose headers carry the
 most essay. Comments only.

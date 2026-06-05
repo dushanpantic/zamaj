@@ -27,7 +27,7 @@ class RecentSessionsScreen extends StatelessWidget {
           appBar: AppBar(
             // Title is a stable anchor, not a status line: state ('Loading…',
             // 'Could not load sessions', 'Program not found') lives in the body
-            // AppStateView only (G8 / Phase 0.5).
+            // AppStateView only.
             title: const Text('Recent sessions'),
             actions: state is RecentSessionsLoaded && state.hasWeekSessions
                 ? [

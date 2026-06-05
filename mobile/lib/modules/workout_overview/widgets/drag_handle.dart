@@ -81,8 +81,8 @@ class DragHandle extends StatelessWidget {
 /// Compact pill shown under the finger while dragging an exercise card.
 /// Occludes far less of the screen than dragging the full card, so the
 /// user can see and aim at the reorder gaps between groups. Fades to 60%
-/// opacity (P3.2) when the pointer has been outside every valid drop
-/// target for more than 250 ms, signalling "no target here".
+/// opacity when the pointer has been outside every valid drop target for
+/// more than 250 ms, signalling "no target here".
 class _DragFeedbackPill extends StatelessWidget {
   const _DragFeedbackPill({
     required this.exerciseName,
