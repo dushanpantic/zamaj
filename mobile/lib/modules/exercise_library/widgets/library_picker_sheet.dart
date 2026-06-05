@@ -58,6 +58,7 @@ class LibraryPickerSheet extends StatefulWidget {
     return showModalBottomSheet<LibraryPickerResult>(
       context: context,
       isScrollControlled: true,
+      showDragHandle: true,
       backgroundColor: Theme.of(context).appColors.surfaceElevated,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(AppRadius.lg)),
@@ -139,7 +140,6 @@ class _LibraryPickerSheetState extends State<LibraryPickerSheet> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              _Handle(color: colors.outline),
               Padding(
                 padding: const EdgeInsets.fromLTRB(
                   AppSpacing.lg,
@@ -259,27 +259,6 @@ class _LibraryPickerSheetState extends State<LibraryPickerSheet> {
           onTap: () => Navigator.of(context).pop(LibraryPickerSelected(entry)),
         );
       },
-    );
-  }
-}
-
-class _Handle extends StatelessWidget {
-  const _Handle({required this.color});
-
-  final Color color;
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.only(top: AppSpacing.sm),
-      child: Container(
-        width: 36,
-        height: 4,
-        decoration: BoxDecoration(
-          color: color,
-          borderRadius: BorderRadius.circular(AppRadius.pill),
-        ),
-      ),
     );
   }
 }

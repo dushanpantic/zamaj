@@ -76,6 +76,7 @@ class _ProgramEditorScreenState extends State<ProgramEditorScreen> {
       context: context,
       backgroundColor: colors.surfaceElevated,
       isScrollControlled: true,
+      showDragHandle: true,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(AppRadius.lg)),
       ),

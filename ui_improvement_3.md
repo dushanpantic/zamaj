@@ -304,7 +304,7 @@ Add an `AppStroke.indicator` (or equivalent) and point every
 `link_suggestion_screen.dart`, `library_entry_tile.dart`.
 *Exit:* no literal `strokeWidth:` on progress indicators; `tool/ci.sh` green.
 
-**Prompt 4 — One bottom-sheet drag handle (B3).**
+**Prompt 4 — One bottom-sheet drag handle (B3). ✅ COMPLETE.**
 Adopt `showDragHandle: true` for `add_workout_day_sheet` and
 `library_picker_sheet`; delete their hand-rolled pills so all sheets read from
 `bottomSheetTheme.dragHandleColor`. Confirm `export_preview_sheet` already
