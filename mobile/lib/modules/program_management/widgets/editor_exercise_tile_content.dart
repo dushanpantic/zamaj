@@ -59,7 +59,7 @@ class EditorExerciseTileContent extends StatelessWidget {
             ],
           ],
         ),
-        const SizedBox(height: 2),
+        const SizedBox(height: AppSpacing.xxs),
         Row(
           children: [
             Flexible(
@@ -164,7 +164,7 @@ class _RestChip extends StatelessWidget {
           size: AppIconSize.xs,
           color: colors.onSurfaceMuted,
         ),
-        const SizedBox(width: 2),
+        const SizedBox(width: AppSpacing.xxs),
         Text(
           RestFormatter.format(seconds),
           style: AppTypography.standard.numericXs.copyWith(

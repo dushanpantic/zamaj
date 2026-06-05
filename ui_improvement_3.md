@@ -286,7 +286,7 @@ Files: `building_blocks/primary_action_button.dart`,
 `grep -rn "alpha: 0\." lib` surfaces.
 *Exit:* no raw alpha literals remain under `lib/`; `tool/ci.sh` green.
 
-**Prompt 2 — Hard-coded pixel sizes → tokens (B5).**
+**Prompt 2 — Hard-coded pixel sizes → tokens (B5). ✅ COMPLETE.**
 `set_row.dart` log circle → `AppInSessionSize.controlMin`; "Set N" column width →
 a named `AppSpacing`-derived value; `editor_exercise_tile_content.dart` `2`s →
 `AppSpacing.xxs`; `day_tile.dart` trailing `96`/`120` → named constants or

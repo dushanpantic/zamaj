@@ -367,12 +367,16 @@ class _Header extends StatelessWidget {
   /// Toggles the opt-in ± editor open/closed.
   final VoidCallback onToggleEditor;
 
+  /// Width of the leading "Set N" label, sized so single- and double-digit set
+  /// numbers share one column and planned values line up across rows.
+  static const double _setLabelWidth = AppSpacing.xl + AppSpacing.xs;
+
   @override
   Widget build(BuildContext context) {
     return Row(
       children: [
         SizedBox(
-          width: 28,
+          width: _setLabelWidth,
           child: Text(
             'Set ${viewModel.position + 1}',
             style: typography.caption.copyWith(color: colors.onSurfaceMuted),
@@ -498,7 +502,7 @@ class _StatusIcon extends StatelessWidget {
 class _LoggableCircleButton extends StatelessWidget {
   const _LoggableCircleButton({required this.onTap, required this.colors});
 
-  static const double _size = 56;
+  static const double _size = AppInSessionSize.controlMin;
 
   final VoidCallback? onTap;
   final AppColors colors;

@@ -131,17 +131,10 @@ class _Section extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Padding(
-                      padding: const EdgeInsets.only(
-                        top: 6,
-                        right: AppSpacing.sm,
-                      ),
-                      child: Container(
-                        width: 4,
-                        height: 4,
-                        decoration: BoxDecoration(
-                          color: colors.onSurfaceMuted,
-                          shape: BoxShape.circle,
-                        ),
+                      padding: const EdgeInsets.only(right: AppSpacing.sm),
+                      child: Bullet(
+                        textStyle: typography.bodySmall,
+                        color: colors.onSurfaceMuted,
                       ),
                     ),
                     Expanded(

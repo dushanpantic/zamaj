@@ -29,6 +29,11 @@ class DayTile extends StatelessWidget {
   onResumePressed;
   final void Function(String workoutDayId) onRetryPressed;
 
+  /// Width reserved for the trailing start/resume action across every tile
+  /// state, so the loading placeholder and the resolved button occupy the same
+  /// slot and the tile body doesn't reflow when history loads.
+  static const double _trailingActionWidth = 120;
+
   @override
   Widget build(BuildContext context) {
     final colors = Theme.of(context).appColors;
@@ -173,7 +178,7 @@ class DayTile extends StatelessWidget {
   Widget _trailing() {
     return switch (viewModel.status) {
       DayTileLoading() => const SizedBox(
-        width: 96,
+        width: _trailingActionWidth,
         height: AppSpacing.touchMin,
       ),
       DayTileFailure() => SizedBox(
@@ -185,7 +190,7 @@ class DayTile extends StatelessWidget {
         ),
       ),
       DayTileLoaded(:final summary) => SizedBox(
-        width: 120,
+        width: _trailingActionWidth,
         child: _LoadedTrailing(
           workoutDayId: viewModel.workoutDay.id,
           activeSessionId: summary.activeSessionId,
