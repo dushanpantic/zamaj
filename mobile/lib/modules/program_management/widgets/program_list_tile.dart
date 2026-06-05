@@ -22,8 +22,8 @@ class ProgramListTile extends StatelessWidget {
   final VoidCallback onEdit;
   final VoidCallback onDeleteRequested;
 
-  /// Whether the in-flight session belongs to this program. Drives the accent
-  /// bar, the `IN PROGRESS` chip, and the tinted leading anchor.
+  /// Whether the in-flight session belongs to this program. Drives the
+  /// `IN PROGRESS` badge next to the title and the left-edge accent bar.
   final bool isInProgress;
   final bool isDeleting;
 
@@ -60,18 +60,31 @@ class ProgramListTile extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    program.name,
-                    style: typography.titleSmall.copyWith(
-                      color: colors.onSurface,
-                    ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      Flexible(
+                        child: Text(
+                          program.name,
+                          style: typography.titleSmall.copyWith(
+                            color: colors.onSurface,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                      if (isInProgress) ...[
+                        const SizedBox(width: AppSpacing.sm),
+                        StatusBadge.pill(
+                          label: 'IN PROGRESS',
+                          color: colors.primary,
+                        ),
+                      ],
+                    ],
                   ),
                   const SizedBox(height: AppSpacing.xs),
                   _metadata(
                     captionStyle: captionStyle,
-                    primary: colors.primary,
                     isEmpty: isEmpty,
                     dayCountLabel: dayCountLabel,
                     relativeDate: relativeDate,
@@ -122,28 +135,7 @@ class ProgramListTile extends StatelessWidget {
     );
 
     final content = isInProgress
-        ? Stack(
-            children: [
-              body,
-              Positioned(
-                left: 0,
-                top: 0,
-                bottom: 0,
-                child: IgnorePointer(
-                  child: Container(
-                    width: AppSpacing.xs,
-                    decoration: BoxDecoration(
-                      color: colors.primary,
-                      borderRadius: const BorderRadius.only(
-                        topLeft: Radius.circular(AppRadius.md),
-                        bottomLeft: Radius.circular(AppRadius.md),
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-            ],
-          )
+        ? Stack(children: [body, const InProgressAccentBar()])
         : body;
 
     final tile = Material(
@@ -179,12 +171,10 @@ class ProgramListTile extends StatelessWidget {
   }
 
   /// Metadata line: `"{days} · Edited {date}"`, or `"No days yet · Tap to set
-  /// up"` for a draft. When the program owns the active session, a quiet
-  /// `primary`-coloured `"In progress"` leads the line (the accent bar carries
-  /// the louder signal).
+  /// up"` for a draft. The in-progress signal lives in the title badge and the
+  /// accent bar, not here.
   Widget _metadata({
     required TextStyle captionStyle,
-    required Color primary,
     required bool isEmpty,
     required String dayCountLabel,
     required String relativeDate,
@@ -192,25 +182,7 @@ class ProgramListTile extends StatelessWidget {
     if (isEmpty) {
       return Text('No days yet · Tap to set up', style: captionStyle);
     }
-    final rest = '$dayCountLabel · Edited $relativeDate';
-    if (!isInProgress) {
-      return Text(rest, style: captionStyle);
-    }
-    return Text.rich(
-      TextSpan(
-        style: captionStyle,
-        children: [
-          TextSpan(
-            text: 'In progress',
-            style: captionStyle.copyWith(
-              color: primary,
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-          TextSpan(text: ' · $rest'),
-        ],
-      ),
-    );
+    return Text('$dayCountLabel · Edited $relativeDate', style: captionStyle);
   }
 
   String _semanticsLabel(

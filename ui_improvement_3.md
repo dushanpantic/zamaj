@@ -311,7 +311,7 @@ Adopt `showDragHandle: true` for `add_workout_day_sheet` and
 matches.
 *Exit:* zero hand-rolled drag-handle containers; `tool/ci.sh` green.
 
-**Prompt 5 — Unify the "in progress" treatment (B1, B2).**
+**Prompt 5 — Unify the "in progress" treatment (B1, B2). ✅ COMPLETE.**
 Pick `StatusBadge.pill` as the single rendering; use it (one casing) in both
 `day_tile.dart` and `program_list_tile.dart`. Extract one `InProgressAccentBar`
 widget (or at minimum route both to `AppSpacing.xs`) so the accent bar has one

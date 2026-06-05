@@ -110,28 +110,7 @@ class DayTile extends StatelessWidget {
     );
 
     final content = hasActiveSession
-        ? Stack(
-            children: [
-              body,
-              Positioned(
-                left: 0,
-                top: 0,
-                bottom: 0,
-                child: IgnorePointer(
-                  child: Container(
-                    width: 4,
-                    decoration: BoxDecoration(
-                      color: colors.primary,
-                      borderRadius: const BorderRadius.only(
-                        topLeft: Radius.circular(AppRadius.md),
-                        bottomLeft: Radius.circular(AppRadius.md),
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-            ],
-          )
+        ? Stack(children: [body, const InProgressAccentBar()])
         : body;
 
     final tapHandler = _resolveTapHandler(activeSessionId);
