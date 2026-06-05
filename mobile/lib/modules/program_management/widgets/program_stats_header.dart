@@ -21,16 +21,16 @@ class ProgramStatsHeader extends StatelessWidget {
   Widget build(BuildContext context) {
     final colors = Theme.of(context).appColors;
     const typography = AppTypography.standard;
-    final parts = <String>[
-      '$dayCount ${dayCount == 1 ? 'day' : 'days'}',
-      '$exerciseCount ${exerciseCount == 1 ? 'exercise' : 'exercises'}',
-    ];
+    final dayLabel = '$dayCount ${dayCount == 1 ? 'day' : 'days'}';
+    final exerciseLabel =
+        '$exerciseCount ${exerciseCount == 1 ? 'exercise' : 'exercises'}';
+    var label = '$dayLabel and $exerciseLabel';
     if (lastEdited != null) {
       final relative = RelativeDateFormatter.format(
         lastEdited!,
         clock.now().toUtc(),
       );
-      parts.add('edited $relative');
+      label = '$label, edited $relative';
     }
 
     return Container(
@@ -43,7 +43,7 @@ class ProgramStatsHeader extends StatelessWidget {
         border: Border(bottom: BorderSide(color: colors.outline)),
       ),
       child: Text(
-        parts.join(' · '),
+        label,
         style: typography.caption.copyWith(color: colors.onSurfaceMuted),
       ),
     );

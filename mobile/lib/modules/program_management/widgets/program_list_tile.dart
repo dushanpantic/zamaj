@@ -170,8 +170,8 @@ class ProgramListTile extends StatelessWidget {
     );
   }
 
-  /// Metadata line: `"{days} · Edited {date}"`, or `"No days yet · Tap to set
-  /// up"` for a draft. The in-progress signal lives in the title badge and the
+  /// Metadata line: `"{days}, edited {date}"`, or `"No days yet. Tap to set
+  /// up."` for a draft. The in-progress signal lives in the title badge and the
   /// accent bar, not here.
   Widget _metadata({
     required TextStyle captionStyle,
@@ -180,9 +180,9 @@ class ProgramListTile extends StatelessWidget {
     required String relativeDate,
   }) {
     if (isEmpty) {
-      return Text('No days yet · Tap to set up', style: captionStyle);
+      return Text('No days yet. Tap to set up.', style: captionStyle);
     }
-    return Text('$dayCountLabel · Edited $relativeDate', style: captionStyle);
+    return Text('$dayCountLabel, edited $relativeDate', style: captionStyle);
   }
 
   String _semanticsLabel(

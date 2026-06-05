@@ -326,7 +326,7 @@ meaning and register. Files: `recent_sessions_screen.dart`,
 any `grep -rn "—" lib` surfaces in `Text(`/string literals (ignore comments).
 *Exit:* no em-dashes in user-facing strings; no tone change; `tool/ci.sh` green.
 
-**Prompt 7 — De-generate the middot metadata (Phase 1).**
+**Prompt 7 — De-generate the middot metadata (Phase 1). ✅ COMPLETE.**
 Replace ` · `-joined fact-lists that read as generated with plain neutral
 phrasing in `program_list_tile.dart` and `program_stats_header.dart`. Keep the
 current neutral voice; no personality added.
