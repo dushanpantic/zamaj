@@ -45,7 +45,7 @@ class WorkoutDaySaveChip extends StatelessWidget {
                     width: 12,
                     height: 12,
                     child: CircularProgressIndicator(
-                      strokeWidth: 1.5,
+                      strokeWidth: AppStroke.indicatorCompact,
                       color: color,
                     ),
                   ),

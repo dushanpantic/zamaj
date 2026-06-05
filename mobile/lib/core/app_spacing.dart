@@ -40,6 +40,13 @@ abstract final class AppRadius {
 abstract final class AppStroke {
   static const double hairline = 1;
   static const double emphasis = 2;
+
+  /// Stroke width for a standard [CircularProgressIndicator] (16–24 dp).
+  static const double indicator = 2;
+
+  /// Thinner indicator stroke for compact inline spinners (~12 dp), e.g. the
+  /// save-state chip, where the full [indicator] stroke reads too heavy.
+  static const double indicatorCompact = 1.5;
 }
 
 /// In-session (sweaty-hands) control sizes for the live-session surface

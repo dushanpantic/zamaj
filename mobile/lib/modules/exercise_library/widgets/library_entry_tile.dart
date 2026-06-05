@@ -83,7 +83,7 @@ class LibraryEntryTile extends StatelessWidget {
                   width: AppSpacing.xl,
                   height: AppSpacing.xl,
                   child: CircularProgressIndicator(
-                    strokeWidth: 2,
+                    strokeWidth: AppStroke.indicator,
                     color: colors.primary,
                   ),
                 )

@@ -174,7 +174,9 @@ class _ExportPreviewSheetState extends State<ExportPreviewSheet> {
                         ? const SizedBox(
                             height: 16,
                             width: 16,
-                            child: CircularProgressIndicator(strokeWidth: 2),
+                            child: CircularProgressIndicator(
+                              strokeWidth: AppStroke.indicator,
+                            ),
                           )
                         : const AppIcon(Icons.ios_share, size: AppIconSize.md),
                     label: const Text('Share'),

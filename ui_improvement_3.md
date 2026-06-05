@@ -296,7 +296,7 @@ intrinsic sizing; `notes_section.dart` bullet → a tiny shared `Bullet` widget
 `screens|widgets/` except where a token genuinely doesn't apply; `tool/ci.sh`
 green.
 
-**Prompt 3 — Spinner stroke token (B6).**
+**Prompt 3 — Spinner stroke token (B6). ✅ COMPLETE.**
 Add an `AppStroke.indicator` (or equivalent) and point every
 `CircularProgressIndicator(strokeWidth:)` at it. Files: `program_list_tile.dart`,
 `workout_day_save_chip.dart`, `program_editor_app_bar.dart`,
