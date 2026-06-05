@@ -319,7 +319,7 @@ source.
 *Exit:* "in progress" looks identical in both tiles; one accent-bar definition;
 `tool/ci.sh` green.
 
-**Prompt 6 — Purge em-dashes from UI copy (Phase 1).**
+**Prompt 6 — Purge em-dashes from UI copy (Phase 1). ✅ COMPLETE.**
 Rewrite every em-dash in a user-facing string as two sentences or a comma, same
 meaning and register. Files: `recent_sessions_screen.dart`,
 `exercise_library_list_screen.dart`, `exercise_library_editor_screen.dart`, plus

@@ -20,7 +20,7 @@ class WorkoutDaySaveChip extends StatelessWidget {
     final colors = Theme.of(context).appColors;
     final isError = hasError && !isSaving;
     final label = isError
-        ? 'Save failed — tap to retry'
+        ? 'Save failed. Tap to retry'
         : isSaving
         ? 'Saving…'
         : 'Saved';

@@ -84,14 +84,14 @@ class RecentSessionsScreen extends StatelessWidget {
   ) {
     ExportPreviewSheet.show(
       context,
-      title: 'This week — ${state.programName}',
+      title: 'This week, ${state.programName}',
       buildText: (includeWarmups) => WeekExportFormatter.format(
         weekStart: state.window.start,
         sessions: state.weekSessions,
         includeWarmups: includeWarmups,
       ),
       shareSubject:
-          '${state.programName} — week of '
+          '${state.programName}, week of '
           '${DateFormatter.isoDate(state.window.start.toLocal())}',
     );
   }
@@ -180,7 +180,7 @@ class _LoadedBody extends StatelessWidget {
         session,
         includeWarmups: includeWarmups,
       ),
-      shareSubject: '${item.workoutDayName} — workout',
+      shareSubject: '${item.workoutDayName} workout',
     );
   }
 

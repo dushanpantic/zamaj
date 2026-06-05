@@ -80,8 +80,8 @@ class _ExerciseLibraryListScreenState extends State<ExerciseLibraryListScreen> {
       context: context,
       title: 'Archive entry?',
       body:
-          'Hides "${entry.name}" from the picker. Kept in your history — '
-          'restore it anytime.',
+          'Hides "${entry.name}" from the picker. Kept in your history. '
+          'Restore it anytime.',
       confirmLabel: 'Archive',
     );
     if (confirmed != true || !mounted) return;

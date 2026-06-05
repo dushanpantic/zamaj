@@ -97,8 +97,8 @@ class _ExerciseLibraryEditorScreenState
       context: context,
       title: 'Archive entry?',
       body:
-          'Hides this entry from the picker. Kept in your history — '
-          'restore it anytime.',
+          'Hides this entry from the picker. Kept in your history. '
+          'Restore it anytime.',
       confirmLabel: 'Archive',
     );
     if (!context.mounted) return;
