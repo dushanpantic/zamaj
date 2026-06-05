@@ -64,7 +64,7 @@ class SessionHistoryTile extends StatelessWidget {
                     children: [
                       Text(
                         item.workoutDayName,
-                        style: typography.titleSmall.copyWith(
+                        style: typography.title.copyWith(
                           color: colors.onSurface,
                         ),
                         maxLines: 1,

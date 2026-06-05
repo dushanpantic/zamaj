@@ -66,7 +66,7 @@ class ProgramListTile extends StatelessWidget {
                       Flexible(
                         child: Text(
                           program.name,
-                          style: typography.titleSmall.copyWith(
+                          style: typography.title.copyWith(
                             color: colors.onSurface,
                           ),
                           maxLines: 1,

@@ -51,9 +51,7 @@ class LibraryEntryTile extends StatelessWidget {
                   children: [
                     Text(
                       entry.name,
-                      style: typography.titleSmall.copyWith(
-                        color: colors.onSurface,
-                      ),
+                      style: typography.title.copyWith(color: colors.onSurface),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                     ),

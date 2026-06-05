@@ -175,7 +175,7 @@ class _WorkoutDayListTileState extends State<WorkoutDayListTile> {
                                       )
                                     : Text(
                                         widget.name,
-                                        style: typography.titleSmall.copyWith(
+                                        style: typography.title.copyWith(
                                           color: colors.onSurface,
                                         ),
                                         maxLines: 1,
@@ -492,7 +492,7 @@ class _RenameField extends StatelessWidget {
       controller: controller,
       focusNode: focusNode,
       autofocus: true,
-      style: typography.titleSmall.copyWith(color: colors.onSurface),
+      style: typography.title.copyWith(color: colors.onSurface),
       maxLength: 100,
       buildCounter:
           (_, {required currentLength, required isFocused, maxLength}) => null,
@@ -506,7 +506,7 @@ class _RenameField extends StatelessWidget {
           borderSide: BorderSide(color: colors.primary),
         ),
         hintText: 'Day name',
-        hintStyle: typography.titleSmall.copyWith(color: colors.onSurfaceMuted),
+        hintStyle: typography.title.copyWith(color: colors.onSurfaceMuted),
       ),
       textInputAction: TextInputAction.done,
       onSubmitted: (_) => onSubmit(),

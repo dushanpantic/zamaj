@@ -345,7 +345,7 @@ most essay. Comments only.
 *Exit:* no phase IDs / "collapses the old …" narration in module UI; `tool/ci.sh`
 green.
 
-**Prompt 10 — Demote the rest timer's orange (Phase 3, accent).**
+**Prompt 10 — Demote the rest timer's orange (Phase 3, accent). ✅ COMPLETE.**
 Give the rest timer its own semantic colour (both palettes in `AppColors`) so it
 no longer shares `primary` with the LOG SET action. Leave the LOG SET circle, the
 LOG SET / primary button, and the current-card border orange.
@@ -353,17 +353,20 @@ Files: `core/app_colors.dart`, `focus_mode/widgets/focus_rest_timer_bar.dart`.
 *Exit:* on a resting focus screen, the LOG SET action is the only orange CTA;
 `tool/ci.sh` green. **You review visually.**
 
-**Prompt 11 — Differentiate the start/resume day tile (Phase 3, hierarchy).**
-*Blocked on a design pick.* I mock 2–3 treatments (filled / larger title /
-leading status) for the actionable `day_tile`; you choose; I implement the chosen
-one so the day picker has a clear focal point. Update `product-context.md` only if
-the change adds/renames a user-facing surface (it shouldn't).
+**Prompt 11 — Differentiate the start/resume day tile (Phase 3, hierarchy). ✅ COMPLETE.**
+*Design pick: filled surface.* The actionable `day_tile` now fills with the
+lighter `surfaceVariant` (one tonal step above the housekeeping tiles' `surface`),
+keeping the outline, so the day picker has a clear focal point. No user-facing
+surface added/renamed, so `product-context.md` is unchanged.
 *Exit:* the day to start out-weights housekeeping tiles; `tool/ci.sh` green.
 **You review visually.**
 
-**Prompt 12 — Type-scale contrast on list tiles (Phase 3, hierarchy).**
-Add one step of contrast between tile title and metadata across the list tiles so
-hierarchy reads at a glance, within the existing `AppTypography` scale.
+**Prompt 12 — Type-scale contrast on list tiles (Phase 3, hierarchy). ✅ COMPLETE.**
+Bumped every list-tile title one step up the scale, `titleSmall` (16px) →
+`title` (20px), keeping metadata at `caption` (12px), so the title→metadata ratio
+widens from 16:12 to 20:12. Applied consistently across `day_tile`,
+`program_list_tile`, `session_history_tile`, `library_entry_tile`, and
+`workout_day_list_tile` (incl. its rename field + hint so edit mode matches).
 *Exit:* clearer title/metadata separation; consistent across tiles; `tool/ci.sh`
 green. **You review visually.**
 

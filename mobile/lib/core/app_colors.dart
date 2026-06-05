@@ -74,6 +74,8 @@ class AppColors {
   /// low-alpha background or border tint, not full-bleed text.
   final Color loggableHint;
 
+  /// Rest-timer accent. Deliberately not [primary] so the live rest bar does
+  /// not compete with the orange LOG SET action; a cool tone reads as recovery.
   final Color restTimer;
 
   /// Translucent overlay color for modal/scrim layers behind dialogs and
@@ -104,7 +106,7 @@ class AppColors {
     warmup: Color(0xFF38BDF8),
     warmupBg: Color(0xFF13262B),
     loggableHint: Color(0xFFF97316),
-    restTimer: Color(0xFFF97316),
+    restTimer: Color(0xFF2DD4BF),
     scrim: Color(0xCC000000),
   );
 
@@ -133,7 +135,7 @@ class AppColors {
     warmup: Color(0xFF0284C7),
     warmupBg: Color(0xFFE0F2FE),
     loggableHint: Color(0xFFEA580C),
-    restTimer: Color(0xFFEA580C),
+    restTimer: Color(0xFF0D9488),
     scrim: Color(0x99000000),
   );
 }

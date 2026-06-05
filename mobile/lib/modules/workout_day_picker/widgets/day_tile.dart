@@ -58,7 +58,9 @@ class DayTile extends StatelessWidget {
         vertical: AppSpacing.md,
       ),
       decoration: BoxDecoration(
-        color: colors.surface,
+        // One tonal step above the housekeeping tiles (which sit on `surface`)
+        // so the day to start reads as the raised, actionable surface.
+        color: colors.surfaceVariant,
         borderRadius: BorderRadius.circular(AppRadius.md),
         border: Border.all(color: colors.outline),
       ),
@@ -75,7 +77,7 @@ class DayTile extends StatelessWidget {
                     Flexible(
                       child: Text(
                         day.name,
-                        style: typography.titleSmall.copyWith(
+                        style: typography.title.copyWith(
                           color: colors.onSurface,
                         ),
                         maxLines: 1,
