@@ -46,9 +46,7 @@ class AppTypography {
   final TextStyle badge;
 
   /// Section eyebrow / group label: small, semibold, tracked. Rendered
-  /// uppercase by [SectionHeader]. The single home for eyebrow tracking —
-  /// replaces the hand-set 0.5 / 0.6 / 1.2 letter-spacing that drifted across
-  /// section headers.
+  /// uppercase by [SectionHeader].
   final TextStyle overline;
 
   static const _tabular = <FontFeature>[FontFeature.tabularFigures()];

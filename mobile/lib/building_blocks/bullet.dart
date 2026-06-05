@@ -4,7 +4,7 @@ import 'package:zamaj/core/app_theme.dart';
 
 /// A small round list bullet that vertically centers against the first line of
 /// its accompanying text. Pass the [textStyle] of that text so the dot sits on
-/// the line's optical center, replacing per-call top-padding nudges.
+/// the line's optical center.
 class Bullet extends StatelessWidget {
   const Bullet({
     super.key,

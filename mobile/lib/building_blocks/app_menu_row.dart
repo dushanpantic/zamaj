@@ -14,11 +14,7 @@ enum AppMenuRowTone { normal, warning, destructive }
 /// The one popup-menu / action-sheet row for the app.
 ///
 /// A small themed row — [AppIconSize.md] glyph, [AppSpacing.md] gap, a
-/// `typography.label` — used as the `child` of a `PopupMenuItem` so every menu
-/// looks the same instead of being re-derived per screen. It replaces the
-/// three drifting treatments that coexisted before: a bespoke `_MenuRow`, a
-/// stock `ListTile` + leading `Icon` (untokenized size 24), and an ad-hoc
-/// `Row(Icon + SizedBox + Text)`.
+/// `typography.label` — used as the `child` of a `PopupMenuItem`.
 ///
 /// Sizing/height come from the enclosing `PopupMenuItem` (which centres its
 /// child in a `kMinInteractiveDimension` tap target), so this widget only owns

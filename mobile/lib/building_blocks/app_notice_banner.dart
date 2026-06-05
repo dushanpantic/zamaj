@@ -25,11 +25,7 @@ enum AppNoticeTone {
 ///
 /// Where [AppStateView] owns the *whole* screen ("this list is empty / broke"),
 /// [AppNoticeBanner] is the one-or-two-line strip pinned above a list or inside
-/// a card for "this thing went wrong but the screen is otherwise fine." It
-/// replaces the four re-derived banners — program management's
-/// `DomainErrorBanner`, the picker's `MaterialBanner`, and the two live-surface
-/// transient banners — that each re-guessed the same `error @ tintFill` fill,
-/// `error @ borderTint` hairline, leading icon, and dismiss affordance.
+/// a card for "this thing went wrong but the screen is otherwise fine."
 ///
 /// Chrome is entirely token-sourced: the fill is the tone colour at
 /// [AppOpacity.tintFill], the hairline border the same colour at

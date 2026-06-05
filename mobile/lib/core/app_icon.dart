@@ -1,12 +1,8 @@
 import 'package:flutter/widgets.dart';
 
-/// Icon-size scale for the Zamaj UI.
-///
-/// Mirrors [AppSpacing] / [AppRadius]: every icon reads its size from one of
-/// these named steps instead of a hand-picked literal, so the same role — an
-/// inline action glyph, an empty-state illustration — is the same size
-/// everywhere. Prefer [AppIcon] over a raw `Icon` so the size is always a
-/// token.
+/// Icon-size scale for the Zamaj UI: every icon reads its size from one of these
+/// named steps instead of a hand-picked literal. Prefer [AppIcon] over a raw
+/// `Icon` so the size is always a token.
 abstract final class AppIconSize {
   /// Tiny inline glyph in a dense row (e.g. a rest-timer dot).
   static const double xs = 12;
@@ -30,8 +26,8 @@ abstract final class AppIconSize {
   /// Hero glyph for an empty / not-found state view.
   static const double emptyState = 64;
 
-  /// Hero glyph for an error state view. Same value as [emptyState] — empty
-  /// and error views share one hero size (resolves the old 48-vs-64 drift).
+  /// Hero glyph for an error state view. Same value as [emptyState]; empty and
+  /// error views share one hero size.
   static const double errorState = 64;
 }
 

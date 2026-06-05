@@ -332,7 +332,7 @@ phrasing in `program_list_tile.dart` and `program_stats_header.dart`. Keep the
 current neutral voice; no personality added.
 *Exit:* metadata reads naturally, not as a fact-list; `tool/ci.sh` green.
 
-**Prompt 8 — Strip T9 comments in `core/` + `building_blocks/`.**
+**Prompt 8 — Strip T9 comments in `core/` + `building_blocks/`. ✅ COMPLETE.**
 Strip-to-minimal the design-essay/changelog/phase-ID comments in
 `lib/core/app_*.dart` and `lib/building_blocks/*`. Keep only genuinely
 non-obvious notes (one line max). Comments only — no behaviour change.

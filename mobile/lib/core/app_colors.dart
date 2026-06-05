@@ -62,8 +62,7 @@ class AppColors {
   final Color exerciseSkipped;
   final Color exerciseReplaced;
 
-  /// Foreground accent for warmup chips/badges/pills. Reused at the set
-  /// level if warmup sets land later.
+  /// Foreground accent for warmup chips/badges/pills.
   final Color warmup;
 
   /// Tinted surface background for warmup containers. Designed to combine
@@ -81,9 +80,7 @@ class AppColors {
   /// saving indicators. Always combined with an alpha around 0.4-0.6.
   final Color scrim;
 
-  // Palette: "Ember" (warm graphite + molten orange). The amber collision is
-  // split — `warning` is a purer yellow and `exerciseReplaced` is violet — so
-  // the three warm signals no longer read alike. See colors.md (Option A).
+  // Palette: "Ember", warm graphite surfaces with a molten-orange accent.
   static const AppColors dark = AppColors(
     background: Color(0xFF100E0C),
     surface: Color(0xFF1B1815),
@@ -111,8 +108,8 @@ class AppColors {
     scrim: Color(0xCC000000),
   );
 
-  // "Ember" light table — kept token-correct and compiling, but the app is
-  // dark-first; light-mode polish is deferred (see ui_improvement.md Phase 0.5).
+  // Light palette. The app is dark-first, so this is kept token-correct but
+  // unpolished.
   static const AppColors light = AppColors(
     background: Color(0xFFFBF8F4),
     surface: Color(0xFFFFFFFF),

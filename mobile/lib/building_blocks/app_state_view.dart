@@ -34,14 +34,9 @@ class AppStateAction {
   final IconData? icon;
 }
 
-/// The one full-screen empty / error / not-found view for the whole app.
-///
-/// Replaces the ~15 bespoke `_EmptyView` / `_FailureView` / `_NotFoundView`
-/// classes that each re-derived a centred `Column(icon + title + body +
-/// button)` with slightly different icon sizes and heading styles. The heading
-/// is locked to one role ([AppTypography.title]) and the hero glyph to one
-/// size ([AppIconSize.emptyState] / [AppIconSize.errorState]), so the "empty
-/// state heading" role no longer drifts between 16 px and 20 px across screens.
+/// The one full-screen empty / error / not-found view for the whole app. The
+/// heading uses [AppTypography.title] and the hero glyph
+/// [AppIconSize.emptyState] / [AppIconSize.errorState].
 ///
 /// Returns just the centred content — host it inside a `Scaffold`/`body` (it
 /// does not provide its own).

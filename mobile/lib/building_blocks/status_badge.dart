@@ -4,8 +4,7 @@ import 'package:zamaj/core/app_opacity.dart';
 import 'package:zamaj/core/app_spacing.dart';
 import 'package:zamaj/core/app_typography.dart';
 
-/// The one status marker for the app, encoding the single Phase 0.2
-/// vocabulary so "how we show state" stops reading like three authors:
+/// The one status marker for the app:
 ///
 /// * [StatusBadge.icon] — a tooltipped glyph for positive / neutral states
 ///   (done check, warmup flame). Quiet by design, and never colour-only: the
@@ -15,10 +14,6 @@ import 'package:zamaj/core/app_typography.dart';
 ///   The caller supplies the casing — in-progress stays UPPERCASE, while
 ///   Skipped / Replaced are Title-case — and the colour, from which the fill
 ///   and hairline border are derived.
-///
-/// Both branches read their dimensions from tokens ([AppIconSize.status],
-/// [AppStroke.hairline], the [AppTypography.badge] style), so a new status
-/// inherits the right size rather than re-deriving it.
 class StatusBadge extends StatelessWidget {
   /// Glyph variant for positive / neutral states. [label] is used as both the
   /// tooltip message and the screen-reader label so the state is announced.

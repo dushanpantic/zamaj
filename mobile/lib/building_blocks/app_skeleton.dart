@@ -5,12 +5,10 @@ import 'package:zamaj/core/app_theme.dart';
 /// A single placeholder bar standing in for a line of text while content
 /// loads.
 ///
-/// Replaces the two identical per-screen `_SkeletonBar` copies. Static (no
-/// shimmer) by design — motion tokens land in a later slice, and a calm
-/// placeholder reads fine on the near-black canvas. Provide at most one of
-/// [width] (a fixed size, for an inline bar inside a row) or [widthFactor] (a
-/// fraction of the available width, preferred inside tiles so bars scale with
-/// the card).
+/// Static (no shimmer) by design — a calm placeholder reads fine on the
+/// near-black canvas. Provide at most one of [width] (a fixed size, for an
+/// inline bar inside a row) or [widthFactor] (a fraction of the available
+/// width, preferred inside tiles so bars scale with the card).
 class AppSkeletonBar extends StatelessWidget {
   const AppSkeletonBar({
     super.key,

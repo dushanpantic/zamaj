@@ -8,12 +8,9 @@ import 'package:zamaj/core/app_typography.dart';
 /// chrome whether it reads `LOG SET` (focus / set-row), `SAVE` (editing an
 /// existing set), or any other in-session commit.
 ///
-/// Collapses the divergence (F4) where the focus `LOG SET` was 64 dp / radius
-/// `lg` with a sub-label and the inline editor's button was 56 dp / radius `md`
-/// with none: one height ([AppInSessionSize.primaryAction]), one radius
-/// ([AppRadius.lg]), one label style ([AppTypography.actionLabel]), and an
-/// optional [subLabel] (e.g. "Set 3 of 4"). [enabled] `false` greys it out and
-/// blocks the tap.
+/// One height ([AppInSessionSize.primaryAction]), one radius ([AppRadius.lg]),
+/// one label style ([AppTypography.actionLabel]), and an optional [subLabel]
+/// (e.g. "Set 3 of 4"). [enabled] `false` greys it out and blocks the tap.
 class PrimaryActionButton extends StatelessWidget {
   const PrimaryActionButton({
     super.key,

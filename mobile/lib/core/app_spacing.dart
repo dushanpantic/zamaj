@@ -20,8 +20,7 @@ abstract final class AppSpacing {
   /// Height for compact, sub-[touchMin] inline secondary actions — e.g. the
   /// "Edit day" peek button or an "Open video" link. These are dense, low-stakes
   /// affordances, not primary or live-session sweaty-hands controls, so a height
-  /// below [touchMin] is deliberate. Routes the old 32-vs-36 drift onto one
-  /// value (G10 / Phase 0.6).
+  /// below [touchMin] is deliberate.
   static const double compactAction = 36;
 }
 
