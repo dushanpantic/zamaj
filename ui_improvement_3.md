@@ -274,7 +274,7 @@ Run `tool/ci.sh` after each prompt.
 
 ---
 
-**Prompt 1 — Alpha literals → `AppOpacity` (B4).**
+**Prompt 1 — Alpha literals → `AppOpacity` (B4). ✅ COMPLETE.**
 Replace every raw `withValues(alpha: …)` literal under `lib/` with an
 `AppOpacity` role. Add named roles where none fits: a drag/drop-target-active
 role (~0.55) for `reorder_gap.dart` / `superset_reorder_gap.dart`, and route the

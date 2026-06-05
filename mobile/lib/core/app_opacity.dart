@@ -28,6 +28,17 @@ abstract final class AppOpacity {
   /// the old 0.4 / 0.5 / 0.6 notice borders onto one canonical step.
   static const double borderTint = 0.4;
 
+  /// Reorder drop-target line: [dropTargetActive] is the brighter accent line
+  /// shown while a drag is in progress and this gap is a live target;
+  /// [dropTargetIdle] is the faint resting line drawn between rows.
+  static const double dropTargetActive = 0.55;
+  static const double dropTargetIdle = 0.4;
+
+  /// Secondary/supporting label over a filled accent surface (e.g. the sub-label
+  /// under a primary action button's main label). Softly de-emphasized but still
+  /// prominent — a gentler step than [muted].
+  static const double labelSecondary = 0.75;
+
   /// Disabled / de-emphasized foreground or secondary glyph.
   static const double muted = 0.5;
 

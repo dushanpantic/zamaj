@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:zamaj/core/app_opacity.dart';
 import 'package:zamaj/core/app_spacing.dart';
 import 'package:zamaj/core/app_theme.dart';
 import 'package:zamaj/core/app_typography.dart';
@@ -52,7 +53,9 @@ class PrimaryActionButton extends StatelessWidget {
               Text(
                 subLabel!,
                 style: typography.caption.copyWith(
-                  color: colors.onPrimary.withValues(alpha: 0.75),
+                  color: colors.onPrimary.withValues(
+                    alpha: AppOpacity.labelSecondary,
+                  ),
                 ),
               ),
             ],

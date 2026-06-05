@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:zamaj/core/app_motion.dart';
+import 'package:zamaj/core/app_opacity.dart';
 import 'package:zamaj/core/app_spacing.dart';
 import 'package:zamaj/core/app_theme.dart';
 import 'package:zamaj/core/app_typography.dart';
@@ -114,8 +115,8 @@ class _ReorderGapState extends State<ReorderGap> {
             final barColor = hovering
                 ? colors.primary
                 : dragActive
-                ? colors.primary.withValues(alpha: 0.55)
-                : colors.outline.withValues(alpha: 0.4);
+                ? colors.primary.withValues(alpha: AppOpacity.dropTargetActive)
+                : colors.outline.withValues(alpha: AppOpacity.dropTargetIdle);
             return AnimatedContainer(
               duration: AppDuration.base,
               curve: AppCurve.standard,

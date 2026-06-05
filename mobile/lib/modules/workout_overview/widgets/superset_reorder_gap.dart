@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:zamaj/core/app_motion.dart';
+import 'package:zamaj/core/app_opacity.dart';
 import 'package:zamaj/core/app_spacing.dart';
 import 'package:zamaj/core/app_theme.dart';
 import 'package:zamaj/core/haptics.dart';
@@ -104,7 +105,7 @@ class _SupersetReorderGapState extends State<SupersetReorderGap> {
                 : 0.0;
             final barColor = hovering
                 ? colors.primary
-                : colors.primary.withValues(alpha: 0.55);
+                : colors.primary.withValues(alpha: AppOpacity.dropTargetActive);
             return AnimatedContainer(
               duration: AppDuration.base,
               curve: AppCurve.standard,

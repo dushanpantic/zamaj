@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:zamaj/core/app_opacity.dart';
 import 'package:zamaj/core/app_spacing.dart';
 import 'package:zamaj/core/app_theme.dart';
 import 'package:zamaj/core/app_typography.dart';
@@ -38,7 +39,7 @@ class FocusRestTimerBar extends StatelessWidget {
               height: _barHeight,
               child: LinearProgressIndicator(
                 value: timer.remainingFraction,
-                backgroundColor: tint.withValues(alpha: 0.18),
+                backgroundColor: tint.withValues(alpha: AppOpacity.recede1),
                 valueColor: AlwaysStoppedAnimation<Color>(tint),
                 minHeight: _barHeight,
               ),
