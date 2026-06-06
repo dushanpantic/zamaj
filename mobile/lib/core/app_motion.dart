@@ -11,6 +11,12 @@ abstract final class AppDuration {
 
   /// Larger panel / content transition (e.g. the focus panel resizing).
   static const Duration slow = Duration(milliseconds: 220);
+
+  /// Long-press hold before a drag grabs on the live-session reorder handle.
+  /// Short enough to feel responsive with sweaty hands, long enough that a
+  /// finger grazing the handle during a scroll-flick won't start an accidental
+  /// reorder (it stays a long-press, not an immediate `Draggable`).
+  static const Duration dragHold = Duration(milliseconds: 150);
 }
 
 /// Easing curves paired with [AppDuration]. Two curves cover the app: a

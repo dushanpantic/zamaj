@@ -130,8 +130,8 @@ class _WorkoutOverviewLoadedBodyState extends State<WorkoutOverviewLoadedBody>
           duration: const Duration(seconds: 8),
           backgroundColor: colors.surface,
           content: Text(
-            'Tip: Tap ⋮ on any exercise → Group into superset to combine '
-            'two. Or long-press and drag one card onto another.',
+            'Tip: Reorder with the drag handle, or tap ⋮ → Move up / Move '
+            'down. Drop one card onto another to group them into a superset.',
             style: AppTypography.standard.bodySmall.copyWith(
               color: colors.onSurface,
             ),

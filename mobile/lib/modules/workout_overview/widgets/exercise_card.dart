@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/semantics.dart';
 import 'package:zamaj/building_blocks/building_blocks.dart';
 import 'package:zamaj/core/app_colors.dart';
 import 'package:zamaj/core/app_icon.dart';
@@ -10,6 +11,13 @@ import 'package:zamaj/core/rest_formatter.dart';
 import 'package:zamaj/modules/domain/domain.dart';
 import 'package:zamaj/modules/workout_overview/models/exercise_view_model.dart';
 import 'package:zamaj/modules/workout_overview/widgets/set_row.dart';
+
+/// Width reserved in the card-header leading slot for the drag handle — and
+/// for the matching placeholder on non-draggable (finished) cards. Pinning
+/// both to one value keeps the title's left edge from shifting across the
+/// unfinished→done transition or the LOG-SET in-flight window. Sized to the
+/// sweaty-hands [AppInSessionSize.stepButton] (64 dp) grab target.
+const double kExerciseLeadingSlotWidth = AppInSessionSize.stepButton;
 
 /// Drag payload that travels with a LongPressDraggable started on this
 /// card's handle. Lives at the screen level too: the screen's DragTarget
@@ -48,6 +56,8 @@ class ExerciseCard extends StatelessWidget {
     required this.onReplacePressed,
     required this.onOpenVideo,
     this.onGroupIntoPressed,
+    this.onMoveUp,
+    this.onMoveDown,
     this.isCurrent = false,
     this.isLastTouched = false,
     this.dragHandle,
@@ -70,6 +80,14 @@ class ExerciseCard extends StatelessWidget {
   /// entry that opens the picker dialog. Null hides the entry — used inside
   /// already-grouped supersets and whenever no eligible partner exists.
   final VoidCallback? onGroupIntoPressed;
+
+  /// Tap-only reorder fallback: dispatched from the ⋮ menu's "Move up" /
+  /// "Move down" entries and the matching screen-reader custom actions, so
+  /// reordering never *requires* a drag. Null disables that direction — it's
+  /// a no-op end (top-most / bottom-most in the exercise's reorder scope) or
+  /// the card isn't reorderable (finished, or the session has ended).
+  final VoidCallback? onMoveUp;
+  final VoidCallback? onMoveDown;
 
   /// True when this card represents the "current" exercise — the one Focus
   /// mode and the bottom Focus button will open. Drives the accent border,
@@ -104,43 +122,55 @@ class ExerciseCard extends StatelessWidget {
     final borderWidth = isDropTarget || isCurrent
         ? AppStroke.emphasis
         : AppStroke.hairline;
-    return AnimatedContainer(
-      duration: AppDuration.base,
-      decoration: BoxDecoration(
-        color: colors.surface,
-        borderRadius: BorderRadius.circular(AppRadius.md),
-        border: Border.all(color: borderColor, width: borderWidth),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          _Header(
-            viewModel: viewModel,
-            isExpanded: isExpanded,
-            canMutate: canMutate,
-            canMarkDone: state is UnfinishedState && hasExecutedSet,
-            dragHandle: state is UnfinishedState ? dragHandle : null,
-            onTap: onToggleExpansion,
-            onSkip: onSkipPressed,
-            onMarkDone: onMarkDonePressed,
-            onReplace: onReplacePressed,
-            onOpenVideo: onOpenVideo,
-            onGroupInto: onGroupIntoPressed,
-            typography: typography,
-            colors: colors,
-          ),
-          if (isExpanded)
-            _ExpandedBody(
+    // Screen-reader equivalents of the ⋮ Move up/down entries: AT users get a
+    // reorder path that never depends on a precise drag gesture.
+    final moveActions = <CustomSemanticsAction, VoidCallback>{
+      const CustomSemanticsAction(label: 'Move up'): ?onMoveUp,
+      const CustomSemanticsAction(label: 'Move down'): ?onMoveDown,
+    };
+    return Semantics(
+      container: true,
+      customSemanticsActions: moveActions.isEmpty ? null : moveActions,
+      child: AnimatedContainer(
+        duration: AppDuration.base,
+        decoration: BoxDecoration(
+          color: colors.surface,
+          borderRadius: BorderRadius.circular(AppRadius.md),
+          border: Border.all(color: borderColor, width: borderWidth),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            _Header(
               viewModel: viewModel,
+              isExpanded: isExpanded,
               canMutate: canMutate,
-              isLastTouched: isLastTouched,
-              onLogSet: onLogSet,
-              onEditSet: onEditSet,
+              canMarkDone: state is UnfinishedState && hasExecutedSet,
+              dragHandle: state is UnfinishedState ? dragHandle : null,
+              onTap: onToggleExpansion,
+              onSkip: onSkipPressed,
+              onMarkDone: onMarkDonePressed,
+              onReplace: onReplacePressed,
               onOpenVideo: onOpenVideo,
+              onGroupInto: onGroupIntoPressed,
+              onMoveUp: onMoveUp,
+              onMoveDown: onMoveDown,
               typography: typography,
               colors: colors,
             ),
-        ],
+            if (isExpanded)
+              _ExpandedBody(
+                viewModel: viewModel,
+                canMutate: canMutate,
+                isLastTouched: isLastTouched,
+                onLogSet: onLogSet,
+                onEditSet: onEditSet,
+                onOpenVideo: onOpenVideo,
+                typography: typography,
+                colors: colors,
+              ),
+          ],
+        ),
       ),
     );
   }
@@ -159,6 +189,8 @@ class _Header extends StatelessWidget {
     required this.onReplace,
     required this.onOpenVideo,
     required this.onGroupInto,
+    required this.onMoveUp,
+    required this.onMoveDown,
     required this.typography,
     required this.colors,
   });
@@ -174,6 +206,8 @@ class _Header extends StatelessWidget {
   final VoidCallback onReplace;
   final void Function(String videoUrl) onOpenVideo;
   final VoidCallback? onGroupInto;
+  final VoidCallback? onMoveUp;
+  final VoidCallback? onMoveDown;
   final AppTypography typography;
   final AppColors colors;
 
@@ -214,7 +248,11 @@ class _Header extends StatelessWidget {
               if (dragHandle != null)
                 dragHandle!
               else
-                const SizedBox(width: AppSpacing.lg),
+                const SizedBox(width: kExerciseLeadingSlotWidth),
+              // Breathing room between the (now tinted) leading slot and the
+              // title. Outside the handle/placeholder branch so the title's
+              // left edge stays put across the unfinished→done transition.
+              const SizedBox(width: AppSpacing.sm),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -293,6 +331,8 @@ class _Header extends StatelessWidget {
                 onReplace: onReplace,
                 onOpenVideo: onOpenVideo,
                 onGroupInto: onGroupInto,
+                onMoveUp: onMoveUp,
+                onMoveDown: onMoveDown,
                 colors: colors,
               ),
             ],
@@ -377,6 +417,8 @@ class _Actions extends StatelessWidget {
     required this.onReplace,
     required this.onOpenVideo,
     required this.onGroupInto,
+    required this.onMoveUp,
+    required this.onMoveDown,
     required this.colors,
   });
 
@@ -390,16 +432,23 @@ class _Actions extends StatelessWidget {
   final VoidCallback onReplace;
   final void Function(String videoUrl) onOpenVideo;
   final VoidCallback? onGroupInto;
+  final VoidCallback? onMoveUp;
+  final VoidCallback? onMoveDown;
   final AppColors colors;
 
   @override
   Widget build(BuildContext context) {
     final canGroupInto = canMutate && isUnfinished && onGroupInto != null;
     final canReplace = canMutate && isUnfinished;
-    // Every secondary action lives in the kebab: Replace / Group into /
-    // Mark done / Skip / Open video. The card surface stays reserved for the
-    // one direct control that matters in the gym, LOG SET.
+    // Tap-only reorder fallback. Shown whenever at least one direction can
+    // actually move the exercise; the no-op direction at a sequence end is
+    // rendered disabled so the menu layout stays stable.
+    final canReorder = onMoveUp != null || onMoveDown != null;
+    // Every secondary action lives in the kebab: Move up/down / Replace /
+    // Group into / Mark done / Skip / Open video. The card surface stays
+    // reserved for the one direct control that matters in the gym, LOG SET.
     final hasMenu =
+        canReorder ||
         canReplace ||
         canGroupInto ||
         (videoUrl != null && videoUrl!.isNotEmpty);
@@ -422,6 +471,10 @@ class _Actions extends StatelessWidget {
             padding: EdgeInsets.zero,
             onSelected: (action) {
               switch (action) {
+                case _MenuAction.moveUp:
+                  onMoveUp?.call();
+                case _MenuAction.moveDown:
+                  onMoveDown?.call();
                 case _MenuAction.replace:
                   onReplace();
                 case _MenuAction.groupInto:
@@ -436,6 +489,26 @@ class _Actions extends StatelessWidget {
               }
             },
             itemBuilder: (context) => [
+              if (canReorder) ...[
+                PopupMenuItem(
+                  value: _MenuAction.moveUp,
+                  enabled: onMoveUp != null,
+                  child: AppMenuRow(
+                    icon: Icons.arrow_upward,
+                    label: 'Move up',
+                    enabled: onMoveUp != null,
+                  ),
+                ),
+                PopupMenuItem(
+                  value: _MenuAction.moveDown,
+                  enabled: onMoveDown != null,
+                  child: AppMenuRow(
+                    icon: Icons.arrow_downward,
+                    label: 'Move down',
+                    enabled: onMoveDown != null,
+                  ),
+                ),
+              ],
               if (canReplace)
                 const PopupMenuItem(
                   value: _MenuAction.replace,
@@ -482,7 +555,15 @@ class _Actions extends StatelessWidget {
   }
 }
 
-enum _MenuAction { replace, groupInto, skip, markDone, openVideo }
+enum _MenuAction {
+  moveUp,
+  moveDown,
+  replace,
+  groupInto,
+  skip,
+  markDone,
+  openVideo,
+}
 
 class _ExpandedBody extends StatelessWidget {
   const _ExpandedBody({

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:zamaj/core/app_elevation.dart';
 import 'package:zamaj/core/app_icon.dart';
 import 'package:zamaj/core/app_motion.dart';
+import 'package:zamaj/core/app_opacity.dart';
 import 'package:zamaj/core/app_spacing.dart';
 import 'package:zamaj/core/app_theme.dart';
 import 'package:zamaj/core/app_typography.dart';
@@ -11,13 +12,20 @@ import 'package:zamaj/modules/workout_overview/services/drag_auto_scroller.dart'
 import 'package:zamaj/modules/workout_overview/services/drag_session.dart';
 import 'package:zamaj/modules/workout_overview/widgets/exercise_card.dart';
 
-/// The drag *source* for an exercise card. Lives inside the leading 48 dp
-/// slot of the card header so the long-press gesture is scoped to a visible,
-/// dedicated affordance and never competes with taps on LOG SET, the kebab,
-/// or header-tap-to-expand. Builds the same payload shape and drives the
-/// same auto-scroller / drag-session machinery as the previous whole-card
-/// draggable, so drop targets behave identically.
-class DragHandle extends StatelessWidget {
+/// The drag *source* for an exercise card. Lives in the card header's leading
+/// slot so the long-press gesture is scoped to a visible, dedicated affordance
+/// and never competes with taps on LOG SET, the kebab, or header-tap-to-expand.
+/// Builds the same payload shape and drives the same auto-scroller /
+/// drag-session machinery as the previous whole-card draggable, so drop targets
+/// behave identically.
+///
+/// Sized as a sweaty-hands grab target ([kExerciseLeadingSlotWidth], ≈ full
+/// header height) with a drawn resting fill, so users aim at the whole region
+/// rather than a 20 px glyph. A [Listener]-driven "grab forming" press state
+/// confirms the touch *during* the long-press window — not only once it
+/// succeeds — so a near-miss or slight drift no longer reads as nothing
+/// happening.
+class DragHandle extends StatefulWidget {
   const DragHandle({
     super.key,
     required this.exercise,
@@ -32,48 +40,82 @@ class DragHandle extends StatelessWidget {
   final DragSession dragSession;
 
   @override
+  State<DragHandle> createState() => _DragHandleState();
+}
+
+class _DragHandleState extends State<DragHandle> {
+  bool _pressed = false;
+
+  void _setPressed(bool value) {
+    if (_pressed == value || !mounted) return;
+    setState(() => _pressed = value);
+  }
+
+  @override
   Widget build(BuildContext context) {
     final colors = Theme.of(context).appColors;
     final screenWidth = MediaQuery.of(context).size.width;
     final pillWidth = (screenWidth * 0.7).clamp(220.0, 360.0);
-    final icon = SizedBox(
-      width: AppSpacing.touchMin,
-      height: AppSpacing.touchMin,
-      child: AppIcon(
-        Icons.drag_indicator,
-        color: colors.onSurfaceMuted,
-        size: AppIconSize.lg,
-        semanticLabel: 'Drag handle',
+    final handle = AnimatedScale(
+      duration: AppDuration.fast,
+      curve: AppCurve.standard,
+      scale: _pressed ? 0.94 : 1,
+      child: AnimatedContainer(
+        duration: AppDuration.fast,
+        curve: AppCurve.standard,
+        width: kExerciseLeadingSlotWidth,
+        height: kExerciseLeadingSlotWidth,
+        alignment: Alignment.center,
+        decoration: BoxDecoration(
+          color: _pressed
+              ? colors.primary.withValues(alpha: AppOpacity.tintFill)
+              : colors.surfaceVariant,
+          borderRadius: BorderRadius.circular(AppRadius.md),
+        ),
+        child: AppIcon(
+          Icons.drag_indicator,
+          color: _pressed ? colors.primary : colors.onSurfaceMuted,
+          size: AppIconSize.lg,
+          semanticLabel: 'Drag handle',
+        ),
       ),
     );
-    return LongPressDraggable<ExerciseDragPayload>(
-      data: ExerciseDragPayload(
-        sessionExerciseId: exercise.sessionExercise.id,
-        supersetTag: exercise.sessionExercise.supersetTag,
+    return Listener(
+      onPointerDown: (_) => _setPressed(true),
+      onPointerUp: (_) => _setPressed(false),
+      onPointerCancel: (_) => _setPressed(false),
+      child: LongPressDraggable<ExerciseDragPayload>(
+        data: ExerciseDragPayload(
+          sessionExerciseId: widget.exercise.sessionExercise.id,
+          supersetTag: widget.exercise.sessionExercise.supersetTag,
+        ),
+        delay: AppDuration.dragHold,
+        onDragStarted: () {
+          _setPressed(false);
+          Haptics.grab();
+          widget.autoScroller.begin();
+          widget.dragSession.begin();
+        },
+        onDragUpdate: (details) =>
+            widget.autoScroller.updatePointer(details.globalPosition.dy),
+        onDragEnd: (_) {
+          _setPressed(false);
+          widget.autoScroller.end();
+          widget.dragSession.end();
+        },
+        onDraggableCanceled: (_, _) {
+          _setPressed(false);
+          widget.autoScroller.end();
+          widget.dragSession.end();
+        },
+        feedback: _DragFeedbackPill(
+          exerciseName: widget.exerciseName,
+          width: pillWidth,
+          dragSession: widget.dragSession,
+        ),
+        childWhenDragging: Opacity(opacity: 0.3, child: handle),
+        child: handle,
       ),
-      delay: const Duration(milliseconds: 250),
-      onDragStarted: () {
-        Haptics.grab();
-        autoScroller.begin();
-        dragSession.begin();
-      },
-      onDragUpdate: (details) =>
-          autoScroller.updatePointer(details.globalPosition.dy),
-      onDragEnd: (_) {
-        autoScroller.end();
-        dragSession.end();
-      },
-      onDraggableCanceled: (_, _) {
-        autoScroller.end();
-        dragSession.end();
-      },
-      feedback: _DragFeedbackPill(
-        exerciseName: exerciseName,
-        width: pillWidth,
-        dragSession: dragSession,
-      ),
-      childWhenDragging: Opacity(opacity: 0.3, child: icon),
-      child: icon,
     );
   }
 }

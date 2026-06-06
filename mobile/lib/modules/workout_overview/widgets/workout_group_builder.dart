@@ -4,10 +4,12 @@ import 'package:zamaj/core/app_spacing.dart';
 import 'package:zamaj/core/haptics.dart';
 import 'package:zamaj/modules/domain/domain.dart';
 import 'package:zamaj/modules/workout_overview/bloc/bloc.dart';
+import 'package:zamaj/modules/workout_overview/models/drop_intent.dart';
 import 'package:zamaj/modules/workout_overview/models/exercise_view_model.dart';
 import 'package:zamaj/modules/workout_overview/models/superset_group_view_model.dart';
 import 'package:zamaj/modules/workout_overview/services/drag_auto_scroller.dart';
 import 'package:zamaj/modules/workout_overview/services/drag_session.dart';
+import 'package:zamaj/modules/workout_overview/services/reorder_move_resolver.dart';
 import 'package:zamaj/modules/workout_overview/widgets/drag_handle.dart';
 import 'package:zamaj/modules/workout_overview/widgets/draggable_exercise.dart';
 import 'package:zamaj/modules/workout_overview/widgets/exercise_card.dart';
@@ -86,6 +88,27 @@ class WorkoutGroupBuilder extends StatelessWidget {
     return result;
   }
 
+  /// Builds the tap-only Move up/down handler for [exerciseId] aimed at
+  /// [target], or null when that direction is a no-op (so the menu disables
+  /// it). Reuses the drag reorder path — the same event the reorder gaps
+  /// dispatch — so no engine/resolver change is needed.
+  VoidCallback? _moveHandler(
+    BuildContext context,
+    String exerciseId,
+    DropTarget? target,
+  ) {
+    if (target == null) return null;
+    return () {
+      Haptics.tap();
+      context.read<WorkoutOverviewBloc>().add(
+        WorkoutOverviewDropResolved(
+          draggedSessionExerciseId: exerciseId,
+          target: target,
+        ),
+      );
+    };
+  }
+
   @override
   Widget build(BuildContext context) {
     return switch (group) {
@@ -114,6 +137,12 @@ class WorkoutGroupBuilder extends StatelessWidget {
     // collapsed and reappeared. Drops started mid-flight resolve safely —
     // the DragTarget and bloc both reject when canMutate is false.
     final canDrag = !state.isEnded && isUnfinished;
+    final moveTargets = canMutate && isUnfinished
+        ? ReorderMoveResolver.targetsFor(
+            groups: state.groups,
+            sessionExerciseId: exerciseId,
+          )
+        : MoveTargets.none;
     return DraggableExercise(
       exercise: exercise,
       canMutate: canMutate,
@@ -151,6 +180,8 @@ class WorkoutGroupBuilder extends StatelessWidget {
         onGroupIntoPressed: (candidates.isEmpty && eligibleGroups.isEmpty)
             ? null
             : () => onGroupInto(exercise, candidates, eligibleGroups),
+        onMoveUp: _moveHandler(context, exerciseId, moveTargets.up),
+        onMoveDown: _moveHandler(context, exerciseId, moveTargets.down),
         dragHandle: canDrag
             ? DragHandle(
                 exercise: exercise,
@@ -192,6 +223,26 @@ class WorkoutGroupBuilder extends StatelessWidget {
         exerciseName: member.displayName,
         autoScroller: autoScroller,
         dragSession: dragSession,
+      );
+    }
+
+    // Per-member tap-only reorder: scoped to within-group swaps, mirroring the
+    // intra-superset gaps. ReorderMoveResolver disables a direction at the
+    // group's unfinished ends so a move can never break the group.
+    ({VoidCallback? up, VoidCallback? down}) memberMove(
+      ExerciseViewModel member,
+    ) {
+      if (!canMutate || member.sessionExercise.state is! UnfinishedState) {
+        return (up: null, down: null);
+      }
+      final id = member.sessionExercise.id;
+      final targets = ReorderMoveResolver.targetsFor(
+        groups: state.groups,
+        sessionExerciseId: id,
+      );
+      return (
+        up: _moveHandler(context, id, targets.up),
+        down: _moveHandler(context, id, targets.down),
       );
     }
 
@@ -295,6 +346,7 @@ class WorkoutGroupBuilder extends StatelessWidget {
           onReplace(exercises.firstWhere((e) => e.sessionExercise.id == id)),
       onOpenVideo: onOpenVideo,
       memberDragHandleBuilder: memberDragHandle,
+      memberMoveBuilder: memberMove,
       gapBuilder: gapWrap,
     );
 

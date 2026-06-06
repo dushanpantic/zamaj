@@ -30,6 +30,7 @@ class SupersetCard extends StatelessWidget {
     this.lastTouchedSessionExerciseId,
     this.isDropTarget = false,
     this.memberDragHandleBuilder,
+    this.memberMoveBuilder,
     this.gapBuilder,
   });
 
@@ -64,6 +65,14 @@ class SupersetCard extends StatelessWidget {
   /// wrapped icon so the drag-to-reorder gesture lives on the handle only
   /// and doesn't fight taps elsewhere on the card.
   final Widget? Function(ExerciseViewModel member)? memberDragHandleBuilder;
+
+  /// Optional per-member tap-only reorder handlers, surfaced as the member
+  /// card's ⋮ Move up/down entries. A null direction (or null builder) leaves
+  /// that direction disabled. Scoped to within-group moves by the caller.
+  final ({VoidCallback? up, VoidCallback? down}) Function(
+    ExerciseViewModel member,
+  )?
+  memberMoveBuilder;
 
   /// Optional builder for the gap widgets surrounding each member.
   /// `position` ranges over `0..exercises.length` inclusive:
@@ -143,6 +152,7 @@ class SupersetCard extends StatelessWidget {
               Builder(
                 builder: (context) {
                   final memberId = exercises[i].sessionExercise.id;
+                  final move = memberMoveBuilder?.call(exercises[i]);
                   return ExerciseCard(
                     viewModel: exercises[i],
                     isExpanded: expandedExerciseIds.contains(memberId),
@@ -157,6 +167,8 @@ class SupersetCard extends StatelessWidget {
                     onMarkDonePressed: () => onMarkDonePressed(memberId),
                     onReplacePressed: () => onReplacePressed(memberId),
                     onOpenVideo: onOpenVideo,
+                    onMoveUp: move?.up,
+                    onMoveDown: move?.down,
                     dragHandle: memberDragHandleBuilder?.call(exercises[i]),
                   );
                 },
