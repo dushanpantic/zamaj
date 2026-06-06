@@ -18,3 +18,20 @@ T wrapDeserializationErrors<T>(
     );
   }
 }
+
+/// Decodes [raw] into one of [values] by matching its bare enum name.
+///
+/// Throws [DeserializationError] (the same error surfaced by
+/// [wrapDeserializationErrors]) when [raw] matches no value, naming the
+/// offending value as the discriminator. Used by the plain-enum
+/// `fromJson` codecs that serialize as their bare name.
+T decodeEnum<T extends Enum>(List<T> values, String raw, String typeName) {
+  for (final value in values) {
+    if (value.name == raw) return value;
+  }
+  throw DeserializationError(
+    field: typeName,
+    discriminator: raw,
+    message: 'Unknown $typeName "$raw"',
+  );
+}
