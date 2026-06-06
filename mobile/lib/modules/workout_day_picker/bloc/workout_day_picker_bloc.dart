@@ -150,6 +150,11 @@ class WorkoutDayPickerBloc
     final current = state;
     if (current is! WorkoutDayPickerLoaded) return;
     if (current.launchInFlightWorkoutDayId != null) return;
+    // A session is already in progress (this program or another). Only one
+    // session may run at a time, so refuse to start a new one — the UI keeps
+    // the START affordance disabled, this guards the race where state went
+    // stale between render and tap.
+    if (current.activeSession != null) return;
 
     emit(
       current.copyWith(
@@ -282,6 +287,7 @@ class WorkoutDayPickerBloc
 
     final Program? program;
     final List<WorkoutDay> workoutDays;
+    final Session? activeSession;
     try {
       program = await _programRepository.getProgram(programId);
       if (program == null) {
@@ -291,6 +297,7 @@ class WorkoutDayPickerBloc
       workoutDays = await _programRepository.listWorkoutDaysForProgram(
         programId,
       );
+      activeSession = await _sessionRepository.getActiveSession();
     } on DomainError catch (e) {
       emit(
         WorkoutDayPickerScreenFailure(
@@ -322,6 +329,7 @@ class WorkoutDayPickerBloc
         dayViewModels: viewModels,
         referenceNow: now,
         window: window,
+        activeSession: activeSession,
       ),
     );
   }

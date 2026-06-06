@@ -33,7 +33,7 @@ Durable identity for each movement so the same "BB Bench Press" on PUSH day and 
 - **Link suggestions** — [link_suggestion_screen.dart](mobile/lib/modules/exercise_library/screens/link_suggestion_screen.dart). Bulk-link existing program exercises that match by normalised name.
 
 ### Starting a session — [workout_day_picker/](mobile/lib/modules/workout_day_picker/)
-- **Workout-day picker** — [workout_day_picker_screen.dart](mobile/lib/modules/workout_day_picker/screens/workout_day_picker_screen.dart). Choose which day of the program to do today; resume an in-progress session if one exists.
+- **Workout-day picker** — [workout_day_picker_screen.dart](mobile/lib/modules/workout_day_picker/screens/workout_day_picker_screen.dart). Choose which day of the program to do today. Only one session runs at a time: while any session is in progress (this program or another), starting a new day is disabled and only resuming the in-progress session is offered — inline on its own day, or via a banner when it belongs to a day not shown here.
 
 ### In-session (sweaty-hands)
 - **Workout overview** — [workout_overview_screen.dart](mobile/lib/modules/workout_overview/screens/workout_overview_screen.dart). The full session: every exercise card expands to its set list, where the active set logs in one tap on its circle (recording the suggested value, with an UNDO snackbar) or opens an inline ± editor to log a value that differs from plan; drag-to-reorder between cards, drag-onto-card to form a superset, ungroup, replace / skip / mark-done per exercise, session notes, extra work, end session.

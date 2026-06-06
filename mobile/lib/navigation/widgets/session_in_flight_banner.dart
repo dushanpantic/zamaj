@@ -31,7 +31,7 @@ class SessionInFlightBanner extends StatelessWidget {
       builder: (context, snapshot) {
         final session = snapshot.data;
         if (session == null) return const SizedBox.shrink();
-        return _ActiveBanner(
+        return SessionInProgressBanner(
           session: session,
           onTap: () => _resume(context, session),
         );
@@ -40,8 +40,18 @@ class SessionInFlightBanner extends StatelessWidget {
   }
 }
 
-class _ActiveBanner extends StatelessWidget {
-  const _ActiveBanner({required this.session, required this.onTap});
+/// Presentational "Workout in progress" strip. Renders the [session]'s day name
+/// and a Resume affordance; tapping invokes [onTap]. Stateless on purpose so
+/// callers own both visibility (whether a session is active) and what Resume
+/// does — [SessionInFlightBanner] drives it from a stream and navigates
+/// directly, while the day picker drives it from bloc state and routes Resume
+/// through its bloc so returning refreshes the screen.
+class SessionInProgressBanner extends StatelessWidget {
+  const SessionInProgressBanner({
+    super.key,
+    required this.session,
+    required this.onTap,
+  });
 
   final Session session;
   final VoidCallback onTap;

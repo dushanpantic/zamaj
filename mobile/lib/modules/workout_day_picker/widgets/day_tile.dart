@@ -16,6 +16,7 @@ class DayTile extends StatelessWidget {
     required this.viewModel,
     required this.referenceNow,
     required this.launchInFlightWorkoutDayId,
+    required this.startLocked,
     required this.onStartPressed,
     required this.onResumePressed,
     required this.onRetryPressed,
@@ -24,6 +25,12 @@ class DayTile extends StatelessWidget {
   final DayViewModel viewModel;
   final DateTime referenceNow;
   final String? launchInFlightWorkoutDayId;
+
+  /// True when a session is already in progress somewhere (this program or
+  /// another), so starting a *new* one is disallowed. Tiles that own the
+  /// active session ignore this — they offer Resume instead.
+  final bool startLocked;
+
   final void Function(String workoutDayId) onStartPressed;
   final void Function(String workoutDayId, String activeSessionId)
   onResumePressed;
@@ -133,6 +140,8 @@ class DayTile extends StatelessWidget {
     if (activeSessionId != null) {
       return () => onResumePressed(workoutDayId, activeSessionId);
     }
+    // Cannot start a new session while one is in progress elsewhere.
+    if (startLocked) return null;
     return () => onStartPressed(workoutDayId);
   }
 
@@ -173,6 +182,7 @@ class DayTile extends StatelessWidget {
           workoutDayId: viewModel.workoutDay.id,
           activeSessionId: summary.activeSessionId,
           launchInFlightWorkoutDayId: launchInFlightWorkoutDayId,
+          startLocked: startLocked,
           onStartPressed: onStartPressed,
           onResumePressed: onResumePressed,
         ),
@@ -186,6 +196,7 @@ class _LoadedTrailing extends StatelessWidget {
     required this.workoutDayId,
     required this.activeSessionId,
     required this.launchInFlightWorkoutDayId,
+    required this.startLocked,
     required this.onStartPressed,
     required this.onResumePressed,
   });
@@ -193,6 +204,7 @@ class _LoadedTrailing extends StatelessWidget {
   final String workoutDayId;
   final String? activeSessionId;
   final String? launchInFlightWorkoutDayId;
+  final bool startLocked;
   final void Function(String workoutDayId) onStartPressed;
   final void Function(String workoutDayId, String activeSessionId)
   onResumePressed;
@@ -202,7 +214,9 @@ class _LoadedTrailing extends StatelessWidget {
     final isResume = activeSessionId != null;
     final anyInFlight = launchInFlightWorkoutDayId != null;
     final thisBusy = launchInFlightWorkoutDayId == workoutDayId;
-    final enabled = !anyInFlight || thisBusy;
+    // START is unavailable while another session is in progress; Resume is
+    // always allowed for the day that owns the active session.
+    final enabled = (!anyInFlight || thisBusy) && (isResume || !startLocked);
 
     return StartResumeActionButton(
       isResume: isResume,

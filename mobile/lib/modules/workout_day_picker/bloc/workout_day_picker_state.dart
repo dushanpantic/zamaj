@@ -62,6 +62,7 @@ final class WorkoutDayPickerLoaded extends WorkoutDayPickerState {
     required this.dayViewModels,
     required this.referenceNow,
     required this.window,
+    this.activeSession,
     this.launchInFlightWorkoutDayId,
     this.lastTransientError,
   });
@@ -70,14 +71,33 @@ final class WorkoutDayPickerLoaded extends WorkoutDayPickerState {
   final List<DayViewModel> dayViewModels;
   final DateTime referenceNow;
   final CurrentWeekWindow window;
+
+  /// The single in-flight session anywhere in the app (its `endedAt` is null),
+  /// or null when nothing is in progress. While this is non-null, starting a
+  /// *new* session is disallowed app-wide — only resuming the one already in
+  /// progress is offered (Req: at most one session runs at a time).
+  final Session? activeSession;
+
   final String? launchInFlightWorkoutDayId;
   final DomainError? lastTransientError;
+
+  /// True when a session is in progress for a workout day that is not one of
+  /// the tiles on screen (e.g. it belongs to a different program). Used to
+  /// surface a resume affordance here, since no tile can offer it inline.
+  bool get hasOffscreenActiveSession {
+    final session = activeSession;
+    if (session == null) return false;
+    return dayViewModels.every(
+      (vm) => vm.workoutDay.id != session.workoutDayId,
+    );
+  }
 
   WorkoutDayPickerLoaded copyWith({
     Program? program,
     List<DayViewModel>? dayViewModels,
     DateTime? referenceNow,
     CurrentWeekWindow? window,
+    Session? Function()? activeSession,
     String? Function()? launchInFlightWorkoutDayId,
     DomainError? Function()? lastTransientError,
   }) {
@@ -86,6 +106,9 @@ final class WorkoutDayPickerLoaded extends WorkoutDayPickerState {
       dayViewModels: dayViewModels ?? this.dayViewModels,
       referenceNow: referenceNow ?? this.referenceNow,
       window: window ?? this.window,
+      activeSession: activeSession != null
+          ? activeSession()
+          : this.activeSession,
       launchInFlightWorkoutDayId: launchInFlightWorkoutDayId != null
           ? launchInFlightWorkoutDayId()
           : this.launchInFlightWorkoutDayId,
@@ -101,6 +124,7 @@ final class WorkoutDayPickerLoaded extends WorkoutDayPickerState {
     dayViewModels,
     referenceNow,
     window,
+    activeSession,
     launchInFlightWorkoutDayId,
     lastTransientError,
   ];
