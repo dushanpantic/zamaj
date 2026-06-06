@@ -3,6 +3,7 @@ library;
 
 export 'errors.dart';
 export 'models/actual_set_values.dart';
+export 'models/canonical_seed_exercise.dart';
 export 'models/executed_set.dart';
 export 'models/exercise.dart';
 export 'models/exercise_group.dart';
@@ -30,6 +31,7 @@ export 'models/workout_set.dart';
 export 'repositories/exercise_library_repository.dart';
 export 'repositories/program_repository.dart';
 export 'repositories/session_repository.dart';
+export 'services/canonical_seed_catalog.dart';
 export 'services/log_target.dart';
 export 'services/session_export_formatter.dart';
 export 'services/session_flow_engine.dart';
