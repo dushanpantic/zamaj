@@ -171,7 +171,7 @@ Feature: Pre-populated exercise library (clear-and-reseed)
 ### Steps
 
 - [x] Step 1: Domain enums — MuscleGroup, Prominence, LibrarySource
-- [ ] Step 2: Extend LibraryExercise with prominence, muscles, source
+- [x] Step 2: Extend LibraryExercise with prominence, muscles, source
 - [ ] Step 3: CanonicalSeedExercise DTO + catalog parser
 - [ ] Step 4: Persistence schema — columns, drift bump, clear-and-migrate, mapper
 - [ ] Step 5: Repository — defaults, common-first sort, idempotent seedCanonical

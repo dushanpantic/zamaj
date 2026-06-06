@@ -3,7 +3,10 @@ import 'dart:math';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:zamaj/modules/domain/errors.dart';
 import 'package:zamaj/modules/domain/models/library_exercise.dart';
+import 'package:zamaj/modules/domain/models/library_source.dart';
 import 'package:zamaj/modules/domain/models/measurement_type.dart';
+import 'package:zamaj/modules/domain/models/muscle_group.dart';
+import 'package:zamaj/modules/domain/models/prominence.dart';
 
 import '../support/generators.dart';
 
@@ -14,6 +17,10 @@ void main() {
     String? id,
     String name = 'BB Bench Press',
     MeasurementType measurementType = const MeasurementType.repBased(),
+    Prominence prominence = Prominence.common,
+    List<MuscleGroup> primaryMuscles = const [],
+    List<MuscleGroup> secondaryMuscles = const [],
+    LibrarySource source = LibrarySource.user,
     String? videoUrl,
     String? cues,
     DateTime? archivedAt,
@@ -23,6 +30,10 @@ void main() {
       id: id ?? anyUuidV4(rng),
       name: name,
       measurementType: measurementType,
+      prominence: prominence,
+      primaryMuscles: primaryMuscles,
+      secondaryMuscles: secondaryMuscles,
+      source: source,
       videoUrl: videoUrl,
       cues: cues,
       archivedAt: archivedAt,
@@ -130,6 +141,64 @@ void main() {
       final future = makeEntry(archivedAt: DateTime.utc(2099));
       expect(past.archivedAt, isNotNull);
       expect(future.archivedAt, isNotNull);
+    });
+  });
+
+  group('LibraryExercise prominence, muscles, and source', () {
+    test('defaults to common prominence, user source, empty muscles', () {
+      final entry = LibraryExercise(
+        id: anyUuidV4(rng),
+        name: 'Plain Entry',
+        measurementType: const MeasurementType.repBased(),
+        createdAt: DateTime.utc(2026),
+        updatedAt: DateTime.utc(2026),
+        schemaVersion: 1,
+      );
+      expect(entry.prominence, Prominence.common);
+      expect(entry.source, LibrarySource.user);
+      expect(entry.primaryMuscles, isEmpty);
+      expect(entry.secondaryMuscles, isEmpty);
+    });
+
+    test('accepts explicit prominence, muscles, and source', () {
+      final entry = makeEntry(
+        prominence: Prominence.specialized,
+        primaryMuscles: const [MuscleGroup.chest],
+        secondaryMuscles: const [MuscleGroup.triceps, MuscleGroup.shoulders],
+        source: LibrarySource.canonicalSeed,
+      );
+      expect(entry.prominence, Prominence.specialized);
+      expect(entry.primaryMuscles, const [MuscleGroup.chest]);
+      expect(
+        entry.secondaryMuscles,
+        const [MuscleGroup.triceps, MuscleGroup.shoulders],
+      );
+      expect(entry.source, LibrarySource.canonicalSeed);
+    });
+
+    test('disjoint primary/secondary muscle sets are accepted', () {
+      final entry = makeEntry(
+        primaryMuscles: const [MuscleGroup.lats, MuscleGroup.upperBack],
+        secondaryMuscles: const [MuscleGroup.biceps],
+      );
+      expect(entry.primaryMuscles, isNotEmpty);
+      expect(entry.secondaryMuscles, isNotEmpty);
+    });
+
+    test('overlapping primary/secondary muscles throw ValidationError', () {
+      expect(
+        () => makeEntry(
+          primaryMuscles: const [MuscleGroup.chest, MuscleGroup.triceps],
+          secondaryMuscles: const [MuscleGroup.triceps],
+        ),
+        throwsA(
+          isA<ValidationError>().having(
+            (e) => e.invariant,
+            'invariant',
+            'muscles_not_disjoint',
+          ),
+        ),
+      );
     });
   });
 

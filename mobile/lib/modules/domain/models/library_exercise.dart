@@ -1,7 +1,10 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:zamaj/core/deserialization.dart';
 import 'package:zamaj/modules/domain/errors.dart';
+import 'package:zamaj/modules/domain/models/library_source.dart';
 import 'package:zamaj/modules/domain/models/measurement_type.dart';
+import 'package:zamaj/modules/domain/models/muscle_group.dart';
+import 'package:zamaj/modules/domain/models/prominence.dart';
 
 part 'library_exercise.freezed.dart';
 part 'library_exercise.g.dart';
@@ -37,12 +40,28 @@ abstract class LibraryExercise with _$LibraryExercise {
         message: 'cues must be null or non-empty, got ""',
       );
     }
+    final overlap = primaryMuscles.toSet().intersection(
+      secondaryMuscles.toSet(),
+    );
+    if (overlap.isNotEmpty) {
+      throw ValidationError(
+        entityId: id,
+        invariant: 'muscles_not_disjoint',
+        message:
+            'primary and secondary muscles must be disjoint, '
+            'overlap: ${overlap.map((m) => m.name).join(', ')}',
+      );
+    }
   }
 
   factory LibraryExercise({
     required String id,
     required String name,
     required MeasurementType measurementType,
+    @Default(Prominence.common) Prominence prominence,
+    @Default(<MuscleGroup>[]) List<MuscleGroup> primaryMuscles,
+    @Default(<MuscleGroup>[]) List<MuscleGroup> secondaryMuscles,
+    @Default(LibrarySource.user) LibrarySource source,
     String? videoUrl,
     String? cues,
     DateTime? archivedAt,
