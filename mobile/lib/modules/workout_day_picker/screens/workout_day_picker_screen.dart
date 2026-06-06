@@ -208,12 +208,10 @@ class _LoadedBody extends StatelessWidget {
         ? null
         : DomainErrorPresenter.present(transientError);
 
-    // A session in progress for a day not shown here (e.g. another program)
-    // can't surface Resume on any tile, so offer it as a banner. Routed
-    // through the bloc so returning from the session refreshes this screen.
-    final offscreenActiveSession = state.hasOffscreenActiveSession
-        ? state.activeSession
-        : null;
+    // While any session is in progress, no new day can be started — so the one
+    // available action (resume) lives in a banner at the top. Routed through
+    // the bloc so returning from the session refreshes this screen.
+    final activeSession = state.activeSession;
 
     return Column(
       children: [
@@ -223,13 +221,10 @@ class _LoadedBody extends StatelessWidget {
             body: presentedError.body,
             onDismiss: onDismissError,
           ),
-        if (offscreenActiveSession != null)
+        if (activeSession != null)
           SessionInProgressBanner(
-            session: offscreenActiveSession,
-            onTap: () => onResume(
-              offscreenActiveSession.workoutDayId,
-              offscreenActiveSession.id,
-            ),
+            session: activeSession,
+            onTap: () => onResume(activeSession.workoutDayId, activeSession.id),
           ),
         Expanded(
           child: RefreshIndicator(

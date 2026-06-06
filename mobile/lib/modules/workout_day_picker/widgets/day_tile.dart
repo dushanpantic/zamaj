@@ -59,6 +59,11 @@ class DayTile extends StatelessWidget {
     };
     final hasActiveSession = activeSessionId != null;
 
+    // A session is running elsewhere and this isn't the day that owns it, so
+    // there's nothing to do here right now. Let the tile recede to the
+    // housekeeping `surface` tone and drop its action.
+    final isInert = startLocked && !hasActiveSession;
+
     final body = Container(
       padding: const EdgeInsets.symmetric(
         horizontal: AppSpacing.lg,
@@ -66,8 +71,9 @@ class DayTile extends StatelessWidget {
       ),
       decoration: BoxDecoration(
         // One tonal step above the housekeeping tiles (which sit on `surface`)
-        // so the day to start reads as the raised, actionable surface.
-        color: colors.surfaceVariant,
+        // so the day to start reads as the raised, actionable surface. Inert
+        // days drop back to `surface` to read as not-actionable-right-now.
+        color: isInert ? colors.surface : colors.surfaceVariant,
         borderRadius: BorderRadius.circular(AppRadius.md),
         border: Border.all(color: colors.outline),
       ),
@@ -176,13 +182,18 @@ class DayTile extends StatelessWidget {
           label: const Text('Retry'),
         ),
       ),
+      // Inert day (a session runs elsewhere): no action — the top-of-screen
+      // "in progress" banner carries the only thing the user can do (resume),
+      // so we drop the trailing slot entirely rather than show a dead button.
+      DayTileLoaded(:final summary)
+          when summary.activeSessionId == null && startLocked =>
+        const SizedBox.shrink(),
       DayTileLoaded(:final summary) => SizedBox(
         width: _trailingActionWidth,
         child: _LoadedTrailing(
           workoutDayId: viewModel.workoutDay.id,
           activeSessionId: summary.activeSessionId,
           launchInFlightWorkoutDayId: launchInFlightWorkoutDayId,
-          startLocked: startLocked,
           onStartPressed: onStartPressed,
           onResumePressed: onResumePressed,
         ),
@@ -196,7 +207,6 @@ class _LoadedTrailing extends StatelessWidget {
     required this.workoutDayId,
     required this.activeSessionId,
     required this.launchInFlightWorkoutDayId,
-    required this.startLocked,
     required this.onStartPressed,
     required this.onResumePressed,
   });
@@ -204,7 +214,6 @@ class _LoadedTrailing extends StatelessWidget {
   final String workoutDayId;
   final String? activeSessionId;
   final String? launchInFlightWorkoutDayId;
-  final bool startLocked;
   final void Function(String workoutDayId) onStartPressed;
   final void Function(String workoutDayId, String activeSessionId)
   onResumePressed;
@@ -214,9 +223,10 @@ class _LoadedTrailing extends StatelessWidget {
     final isResume = activeSessionId != null;
     final anyInFlight = launchInFlightWorkoutDayId != null;
     final thisBusy = launchInFlightWorkoutDayId == workoutDayId;
-    // START is unavailable while another session is in progress; Resume is
-    // always allowed for the day that owns the active session.
-    final enabled = (!anyInFlight || thisBusy) && (isResume || !startLocked);
+    // Inert (start-locked) days never reach here — they render no trailing
+    // action — so this only ever shows START for an idle day or RESUME for the
+    // day that owns the active session. Disable only during an in-flight launch.
+    final enabled = !anyInFlight || thisBusy;
 
     return StartResumeActionButton(
       isResume: isResume,

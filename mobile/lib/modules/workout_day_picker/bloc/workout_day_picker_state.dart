@@ -81,17 +81,6 @@ final class WorkoutDayPickerLoaded extends WorkoutDayPickerState {
   final String? launchInFlightWorkoutDayId;
   final DomainError? lastTransientError;
 
-  /// True when a session is in progress for a workout day that is not one of
-  /// the tiles on screen (e.g. it belongs to a different program). Used to
-  /// surface a resume affordance here, since no tile can offer it inline.
-  bool get hasOffscreenActiveSession {
-    final session = activeSession;
-    if (session == null) return false;
-    return dayViewModels.every(
-      (vm) => vm.workoutDay.id != session.workoutDayId,
-    );
-  }
-
   WorkoutDayPickerLoaded copyWith({
     Program? program,
     List<DayViewModel>? dayViewModels,
