@@ -395,31 +395,17 @@ class _Actions extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final canGroupInto = canMutate && isUnfinished && onGroupInto != null;
-    final showReplace = canMutate && isUnfinished;
-    // The icon button above owns Replace; the kebab owns Group into /
-    // Mark done / Skip / Open video.
+    final canReplace = canMutate && isUnfinished;
+    // Every secondary action lives in the kebab: Replace / Group into /
+    // Mark done / Skip / Open video. The card surface stays reserved for the
+    // one direct control that matters in the gym, LOG SET.
     final hasMenu =
-        (canMutate && isUnfinished) ||
+        canReplace ||
         canGroupInto ||
         (videoUrl != null && videoUrl!.isNotEmpty);
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        if (showReplace)
-          SizedBox(
-            width: AppSpacing.touchMin,
-            height: AppSpacing.touchMin,
-            child: IconButton(
-              tooltip: 'Replace',
-              onPressed: onReplace,
-              padding: EdgeInsets.zero,
-              icon: AppIcon(
-                Icons.swap_horiz,
-                color: colors.onSurfaceMuted,
-                size: AppIconSize.lg,
-              ),
-            ),
-          ),
         AppIcon(
           isExpanded ? Icons.expand_less : Icons.expand_more,
           color: colors.onSurfaceMuted,
@@ -436,6 +422,8 @@ class _Actions extends StatelessWidget {
             padding: EdgeInsets.zero,
             onSelected: (action) {
               switch (action) {
+                case _MenuAction.replace:
+                  onReplace();
                 case _MenuAction.groupInto:
                   onGroupInto?.call();
                 case _MenuAction.skip:
@@ -448,6 +436,14 @@ class _Actions extends StatelessWidget {
               }
             },
             itemBuilder: (context) => [
+              if (canReplace)
+                const PopupMenuItem(
+                  value: _MenuAction.replace,
+                  child: AppMenuRow(
+                    icon: Icons.swap_horiz,
+                    label: 'Replace exercise',
+                  ),
+                ),
               if (canGroupInto)
                 const PopupMenuItem(
                   value: _MenuAction.groupInto,
@@ -486,7 +482,7 @@ class _Actions extends StatelessWidget {
   }
 }
 
-enum _MenuAction { groupInto, skip, markDone, openVideo }
+enum _MenuAction { replace, groupInto, skip, markDone, openVideo }
 
 class _ExpandedBody extends StatelessWidget {
   const _ExpandedBody({

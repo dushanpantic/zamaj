@@ -47,11 +47,19 @@ class FocusTimeBasedPanel extends StatefulWidget {
   State<FocusTimeBasedPanel> createState() => _FocusTimeBasedPanelState();
 }
 
-class _FocusTimeBasedPanelState extends State<FocusTimeBasedPanel> {
+class _FocusTimeBasedPanelState extends State<FocusTimeBasedPanel>
+    with SingleTickerProviderStateMixin {
   late final TextEditingController _seconds;
   late final TextEditingController _weight;
   final FocusNode _secondsFocus = FocusNode();
   final FocusNode _weightFocus = FocusNode();
+
+  /// Drives the blinking 00:00 while the countdown rests in its finished
+  /// hold. One half-period per direction, reversed on repeat, so the hero
+  /// pulses between full and dimmed.
+  static const Duration _flashHalfPeriod = Duration(milliseconds: 450);
+  late final AnimationController _flash;
+  late final Animation<double> _flashOpacity;
 
   @override
   void initState() {
@@ -64,6 +72,9 @@ class _FocusTimeBasedPanelState extends State<FocusTimeBasedPanel> {
     );
     _secondsFocus.addListener(_commitOnBlur);
     _weightFocus.addListener(_commitWeightOnBlur);
+    _flash = AnimationController(vsync: this, duration: _flashHalfPeriod);
+    _flashOpacity = _flash.drive(Tween(begin: 1.0, end: 0.2));
+    if (widget.stopwatch.isFinished) _flash.repeat(reverse: true);
   }
 
   @override
@@ -78,6 +89,17 @@ class _FocusTimeBasedPanelState extends State<FocusTimeBasedPanel> {
           ? ''
           : WeightFormatter.formatKg(widget.weightKg!);
     }
+    final wasFinished = oldWidget.stopwatch.isFinished;
+    final nowFinished = widget.stopwatch.isFinished;
+    if (nowFinished && !wasFinished) {
+      _flash
+        ..reset()
+        ..repeat(reverse: true);
+    } else if (!nowFinished && wasFinished) {
+      _flash
+        ..stop()
+        ..value = 0;
+    }
   }
 
   @override
@@ -88,6 +110,7 @@ class _FocusTimeBasedPanelState extends State<FocusTimeBasedPanel> {
     _weight.dispose();
     _secondsFocus.dispose();
     _weightFocus.dispose();
+    _flash.dispose();
     super.dispose();
   }
 
@@ -123,26 +146,37 @@ class _FocusTimeBasedPanelState extends State<FocusTimeBasedPanel> {
     final colors = Theme.of(context).appColors;
     const typography = AppTypography.standard;
     final isRunning = widget.stopwatch.isRunning;
+    final isFinished = widget.stopwatch.isFinished;
+    // "Engaged" covers the live countdown and the brief 00:00 finish flash;
+    // both show the countdown reading rather than the idle target.
+    final isCountingDown = isRunning || isFinished;
+    // The hero counts down from the set duration; the input below stays put.
+    final remainingSeconds =
+        widget.durationSeconds - widget.stopwatch.elapsedSeconds;
+
+    final hero = Text(
+      _formatMmss(isCountingDown ? remainingSeconds : widget.durationSeconds),
+      style: typography.numericHero.copyWith(
+        color: isCountingDown ? colors.primary : colors.onSurface,
+      ),
+    );
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         Center(
-          child: Text(
-            _formatMmss(
-              isRunning
-                  ? widget.stopwatch.elapsedSeconds
-                  : widget.durationSeconds,
-            ),
-            style: typography.numericHero.copyWith(
-              color: isRunning ? colors.primary : colors.onSurface,
-            ),
-          ),
+          child: isFinished
+              ? FadeTransition(opacity: _flashOpacity, child: hero)
+              : hero,
         ),
         const SizedBox(height: AppSpacing.xs),
         Center(
           child: Text(
-            'seconds',
+            isFinished
+                ? 'done'
+                : isRunning
+                ? 'remaining'
+                : 'seconds',
             style: typography.caption.copyWith(color: colors.onSurfaceMuted),
           ),
         ),
@@ -160,7 +194,9 @@ class _FocusTimeBasedPanelState extends State<FocusTimeBasedPanel> {
                   ),
                 )
               : FilledButton.icon(
-                  onPressed: widget.enabled ? widget.onStopwatchStart : null,
+                  onPressed: widget.enabled && widget.durationSeconds > 0
+                      ? widget.onStopwatchStart
+                      : null,
                   icon: const AppIcon(Icons.play_arrow, size: AppIconSize.md),
                   label: const Text('START TIMER'),
                 ),
@@ -172,7 +208,7 @@ class _FocusTimeBasedPanelState extends State<FocusTimeBasedPanel> {
               child: SizedBox(
                 height: AppInSessionSize.stepButton,
                 child: OutlinedButton(
-                  onPressed: widget.enabled && !isRunning
+                  onPressed: widget.enabled && !isCountingDown
                       ? () => widget.onDurationBump(-5)
                       : null,
                   style: OutlinedButton.styleFrom(
@@ -195,7 +231,7 @@ class _FocusTimeBasedPanelState extends State<FocusTimeBasedPanel> {
               child: TextField(
                 controller: _seconds,
                 focusNode: _secondsFocus,
-                enabled: widget.enabled && !isRunning,
+                enabled: widget.enabled && !isCountingDown,
                 textAlign: TextAlign.center,
                 keyboardType: TextInputType.number,
                 inputFormatters: [FilteringTextInputFormatter.digitsOnly],
@@ -211,7 +247,7 @@ class _FocusTimeBasedPanelState extends State<FocusTimeBasedPanel> {
               child: SizedBox(
                 height: AppInSessionSize.stepButton,
                 child: OutlinedButton(
-                  onPressed: widget.enabled && !isRunning
+                  onPressed: widget.enabled && !isCountingDown
                       ? () => widget.onDurationBump(5)
                       : null,
                   style: OutlinedButton.styleFrom(

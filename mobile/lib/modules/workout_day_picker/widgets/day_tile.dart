@@ -86,10 +86,7 @@ class DayTile extends StatelessWidget {
                     ),
                     if (hasActiveSession) ...[
                       const SizedBox(width: AppSpacing.sm),
-                      StatusBadge.pill(
-                        label: 'IN PROGRESS',
-                        color: colors.primary,
-                      ),
+                      const InProgressLabel(),
                     ],
                   ],
                 ),

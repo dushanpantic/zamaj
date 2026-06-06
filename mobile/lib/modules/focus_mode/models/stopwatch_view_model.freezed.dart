@@ -14,7 +14,7 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$StopwatchViewModel {
 
- bool get isRunning; int get elapsedSeconds;
+ bool get isRunning; int get elapsedSeconds; bool get isFinished;
 /// Create a copy of StopwatchViewModel
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -25,16 +25,16 @@ $StopwatchViewModelCopyWith<StopwatchViewModel> get copyWith => _$StopwatchViewM
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is StopwatchViewModel&&(identical(other.isRunning, isRunning) || other.isRunning == isRunning)&&(identical(other.elapsedSeconds, elapsedSeconds) || other.elapsedSeconds == elapsedSeconds));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is StopwatchViewModel&&(identical(other.isRunning, isRunning) || other.isRunning == isRunning)&&(identical(other.elapsedSeconds, elapsedSeconds) || other.elapsedSeconds == elapsedSeconds)&&(identical(other.isFinished, isFinished) || other.isFinished == isFinished));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,isRunning,elapsedSeconds);
+int get hashCode => Object.hash(runtimeType,isRunning,elapsedSeconds,isFinished);
 
 @override
 String toString() {
-  return 'StopwatchViewModel(isRunning: $isRunning, elapsedSeconds: $elapsedSeconds)';
+  return 'StopwatchViewModel(isRunning: $isRunning, elapsedSeconds: $elapsedSeconds, isFinished: $isFinished)';
 }
 
 
@@ -45,7 +45,7 @@ abstract mixin class $StopwatchViewModelCopyWith<$Res>  {
   factory $StopwatchViewModelCopyWith(StopwatchViewModel value, $Res Function(StopwatchViewModel) _then) = _$StopwatchViewModelCopyWithImpl;
 @useResult
 $Res call({
- bool isRunning, int elapsedSeconds
+ bool isRunning, int elapsedSeconds, bool isFinished
 });
 
 
@@ -62,11 +62,12 @@ class _$StopwatchViewModelCopyWithImpl<$Res>
 
 /// Create a copy of StopwatchViewModel
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? isRunning = null,Object? elapsedSeconds = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? isRunning = null,Object? elapsedSeconds = null,Object? isFinished = null,}) {
   return _then(_self.copyWith(
 isRunning: null == isRunning ? _self.isRunning : isRunning // ignore: cast_nullable_to_non_nullable
 as bool,elapsedSeconds: null == elapsedSeconds ? _self.elapsedSeconds : elapsedSeconds // ignore: cast_nullable_to_non_nullable
-as int,
+as int,isFinished: null == isFinished ? _self.isFinished : isFinished // ignore: cast_nullable_to_non_nullable
+as bool,
   ));
 }
 
@@ -151,10 +152,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( bool isRunning,  int elapsedSeconds)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( bool isRunning,  int elapsedSeconds,  bool isFinished)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _StopwatchViewModel() when $default != null:
-return $default(_that.isRunning,_that.elapsedSeconds);case _:
+return $default(_that.isRunning,_that.elapsedSeconds,_that.isFinished);case _:
   return orElse();
 
 }
@@ -172,10 +173,10 @@ return $default(_that.isRunning,_that.elapsedSeconds);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( bool isRunning,  int elapsedSeconds)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( bool isRunning,  int elapsedSeconds,  bool isFinished)  $default,) {final _that = this;
 switch (_that) {
 case _StopwatchViewModel():
-return $default(_that.isRunning,_that.elapsedSeconds);case _:
+return $default(_that.isRunning,_that.elapsedSeconds,_that.isFinished);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -192,10 +193,10 @@ return $default(_that.isRunning,_that.elapsedSeconds);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( bool isRunning,  int elapsedSeconds)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( bool isRunning,  int elapsedSeconds,  bool isFinished)?  $default,) {final _that = this;
 switch (_that) {
 case _StopwatchViewModel() when $default != null:
-return $default(_that.isRunning,_that.elapsedSeconds);case _:
+return $default(_that.isRunning,_that.elapsedSeconds,_that.isFinished);case _:
   return null;
 
 }
@@ -207,11 +208,12 @@ return $default(_that.isRunning,_that.elapsedSeconds);case _:
 
 
 class _StopwatchViewModel implements StopwatchViewModel {
-  const _StopwatchViewModel({required this.isRunning, required this.elapsedSeconds});
+  const _StopwatchViewModel({required this.isRunning, required this.elapsedSeconds, this.isFinished = false});
   
 
 @override final  bool isRunning;
 @override final  int elapsedSeconds;
+@override@JsonKey() final  bool isFinished;
 
 /// Create a copy of StopwatchViewModel
 /// with the given fields replaced by the non-null parameter values.
@@ -223,16 +225,16 @@ _$StopwatchViewModelCopyWith<_StopwatchViewModel> get copyWith => __$StopwatchVi
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _StopwatchViewModel&&(identical(other.isRunning, isRunning) || other.isRunning == isRunning)&&(identical(other.elapsedSeconds, elapsedSeconds) || other.elapsedSeconds == elapsedSeconds));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _StopwatchViewModel&&(identical(other.isRunning, isRunning) || other.isRunning == isRunning)&&(identical(other.elapsedSeconds, elapsedSeconds) || other.elapsedSeconds == elapsedSeconds)&&(identical(other.isFinished, isFinished) || other.isFinished == isFinished));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,isRunning,elapsedSeconds);
+int get hashCode => Object.hash(runtimeType,isRunning,elapsedSeconds,isFinished);
 
 @override
 String toString() {
-  return 'StopwatchViewModel(isRunning: $isRunning, elapsedSeconds: $elapsedSeconds)';
+  return 'StopwatchViewModel(isRunning: $isRunning, elapsedSeconds: $elapsedSeconds, isFinished: $isFinished)';
 }
 
 
@@ -243,7 +245,7 @@ abstract mixin class _$StopwatchViewModelCopyWith<$Res> implements $StopwatchVie
   factory _$StopwatchViewModelCopyWith(_StopwatchViewModel value, $Res Function(_StopwatchViewModel) _then) = __$StopwatchViewModelCopyWithImpl;
 @override @useResult
 $Res call({
- bool isRunning, int elapsedSeconds
+ bool isRunning, int elapsedSeconds, bool isFinished
 });
 
 
@@ -260,11 +262,12 @@ class __$StopwatchViewModelCopyWithImpl<$Res>
 
 /// Create a copy of StopwatchViewModel
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? isRunning = null,Object? elapsedSeconds = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? isRunning = null,Object? elapsedSeconds = null,Object? isFinished = null,}) {
   return _then(_StopwatchViewModel(
 isRunning: null == isRunning ? _self.isRunning : isRunning // ignore: cast_nullable_to_non_nullable
 as bool,elapsedSeconds: null == elapsedSeconds ? _self.elapsedSeconds : elapsedSeconds // ignore: cast_nullable_to_non_nullable
-as int,
+as int,isFinished: null == isFinished ? _self.isFinished : isFinished // ignore: cast_nullable_to_non_nullable
+as bool,
   ));
 }
 

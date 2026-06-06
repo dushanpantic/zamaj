@@ -23,7 +23,7 @@ class ProgramListTile extends StatelessWidget {
   final VoidCallback onDeleteRequested;
 
   /// Whether the in-flight session belongs to this program. Drives the
-  /// `IN PROGRESS` badge next to the title and the left-edge accent bar.
+  /// "In progress" label next to the title and the left-edge accent bar.
   final bool isInProgress;
   final bool isDeleting;
 
@@ -75,10 +75,7 @@ class ProgramListTile extends StatelessWidget {
                       ),
                       if (isInProgress) ...[
                         const SizedBox(width: AppSpacing.sm),
-                        StatusBadge.pill(
-                          label: 'IN PROGRESS',
-                          color: colors.primary,
-                        ),
+                        const InProgressLabel(),
                       ],
                     ],
                   ),

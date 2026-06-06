@@ -46,6 +46,7 @@ class FocusModeBloc extends Bloc<FocusModeEvent, FocusModeState> {
     on<FocusModeStopwatchStarted>(_onStopwatchStarted);
     on<FocusModeStopwatchStopped>(_onStopwatchStopped);
     on<FocusModeStopwatchTicked>(_onStopwatchTicked);
+    on<FocusModeStopwatchReset>(_onStopwatchReset);
 
     on<FocusModeSetCompleted>(_onSetCompleted);
     on<FocusModeUndoRequested>(_onUndoRequested);
@@ -60,8 +61,14 @@ class FocusModeBloc extends Bloc<FocusModeEvent, FocusModeState> {
 
   final SessionFlowEngine _engine;
 
+  /// How long the countdown holds (and blinks) at 00:00 before the panel
+  /// resets to its target value. A deliberate "done" beat, not a transition,
+  /// so it sits outside the [AppDuration] motion scale.
+  static const Duration _stopwatchFinishedFlash = Duration(seconds: 5);
+
   Timer? _restTicker;
   Timer? _stopwatchTicker;
+  Timer? _stopwatchFlashTimer;
   StreamSubscription<SessionState?>? _streamSub;
   String? _watchedSessionId;
   String? _pendingAnchorId;
@@ -70,6 +77,7 @@ class FocusModeBloc extends Bloc<FocusModeEvent, FocusModeState> {
   Future<void> close() async {
     _restTicker?.cancel();
     _stopwatchTicker?.cancel();
+    _stopwatchFlashTimer?.cancel();
     await _streamSub?.cancel();
     return super.close();
   }
@@ -368,6 +376,7 @@ class FocusModeBloc extends Bloc<FocusModeEvent, FocusModeState> {
     if (panel == null) return;
     if (panel.effectiveMeasurementType is! TimeBasedMeasurement) return;
     _stopRestTicker();
+    _stopStopwatchFlashTimer();
     _startStopwatchTicker();
     emit(
       current.copyWith(
@@ -387,20 +396,33 @@ class FocusModeBloc extends Bloc<FocusModeEvent, FocusModeState> {
     if (!current.stopwatch.isRunning) return;
     final exerciseId = current.activeStopwatchExerciseId;
     if (exerciseId == null) return;
-    final next = current.stopwatch.elapsedSeconds + 1;
+    // The timer is a guide for a prescribed hold, not a measurement: it
+    // counts down from the duration the user set and the draft is left
+    // untouched, so the logged value stays exactly that target. The draft
+    // duration therefore doubles as the countdown's fixed origin.
     final draft = current.draftFor(exerciseId);
-    final newDraft = draft is ActualTimeBased
-        ? ActualSetValues.timeBased(
-            durationSeconds: next,
-            weightKg: draft.weightKg,
-          )
-        : draft;
+    final target = draft is ActualTimeBased ? draft.durationSeconds : 0;
+    final next = current.stopwatch.elapsedSeconds + 1;
+    if (next >= target) {
+      // Reached the target. Stop ticking and enter the `finished` flash: the
+      // panel holds 00:00 for a beat (active id stays set so it keeps showing
+      // the countdown), then [_onStopwatchReset] returns it to idle.
+      _stopStopwatchTicker();
+      _startStopwatchFlashTimer();
+      emit(
+        current.copyWith(
+          stopwatch: StopwatchViewModel(
+            isRunning: false,
+            elapsedSeconds: target,
+            isFinished: true,
+          ),
+        ),
+      );
+      return;
+    }
     emit(
       current.copyWith(
         stopwatch: StopwatchViewModel(isRunning: true, elapsedSeconds: next),
-        drafts: newDraft == null
-            ? current.drafts
-            : _replaceDraft(current.drafts, exerciseId, newDraft),
       ),
     );
   }
@@ -412,13 +434,32 @@ class FocusModeBloc extends Bloc<FocusModeEvent, FocusModeState> {
     final current = state;
     if (current is! FocusModeReady) return;
     _stopStopwatchTicker();
+    _stopStopwatchFlashTimer();
     if (!current.stopwatch.isRunning) return;
+    // Manual stop cancels the guide: reset to idle so the panel returns to
+    // the target value, and so the zero elapsed marks this as a cancel
+    // rather than a completed hold.
     emit(
       current.copyWith(
-        stopwatch: StopwatchViewModel(
-          isRunning: false,
-          elapsedSeconds: current.stopwatch.elapsedSeconds,
-        ),
+        stopwatch: StopwatchViewModel.idle(),
+        activeStopwatchExerciseId: () => null,
+      ),
+    );
+  }
+
+  Future<void> _onStopwatchReset(
+    FocusModeStopwatchReset event,
+    Emitter<FocusModeState> emit,
+  ) async {
+    _stopStopwatchFlashTimer();
+    final current = state;
+    if (current is! FocusModeReady) return;
+    // Only the live `finished` flash clears here; if anything else already
+    // moved the stopwatch on (a new hold, a logged set), this is a no-op.
+    if (!current.stopwatch.isFinished) return;
+    emit(
+      current.copyWith(
+        stopwatch: StopwatchViewModel.idle(),
         activeStopwatchExerciseId: () => null,
       ),
     );
@@ -439,6 +480,7 @@ class FocusModeBloc extends Bloc<FocusModeEvent, FocusModeState> {
     if (draft == null) return;
     if (current.activeStopwatchExerciseId == event.sessionExerciseId) {
       _stopStopwatchTicker();
+      _stopStopwatchFlashTimer();
     }
 
     emit(current.copyWith(mutationInFlight: true));
@@ -952,6 +994,19 @@ class FocusModeBloc extends Bloc<FocusModeEvent, FocusModeState> {
   void _stopStopwatchTicker() {
     _stopwatchTicker?.cancel();
     _stopwatchTicker = null;
+  }
+
+  void _startStopwatchFlashTimer() {
+    _stopwatchFlashTimer?.cancel();
+    _stopwatchFlashTimer = Timer(
+      _stopwatchFinishedFlash,
+      () => add(const FocusModeStopwatchReset()),
+    );
+  }
+
+  void _stopStopwatchFlashTimer() {
+    _stopwatchFlashTimer?.cancel();
+    _stopwatchFlashTimer = null;
   }
 
   String? _sessionIdOrNull() => switch (state) {

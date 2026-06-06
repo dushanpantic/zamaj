@@ -39,6 +39,10 @@ class _FocusModeScreenState extends State<FocusModeScreen> {
           listenWhen: _restJustEnded,
           listener: (_, _) => Haptics.emphasis(),
         ),
+        BlocListener<FocusModeBloc, FocusModeState>(
+          listenWhen: _countdownJustFinished,
+          listener: (_, _) => Haptics.emphasis(),
+        ),
       ],
       child: BlocBuilder<FocusModeBloc, FocusModeState>(
         builder: (context, state) {
@@ -65,6 +69,14 @@ class _FocusModeScreenState extends State<FocusModeScreen> {
     if (priorTimer == null) return false;
     if (c.restTimer != null) return false;
     return priorTimer.remainingSeconds <= 1;
+  }
+
+  /// The timed-set countdown reached its target and entered its 00:00 flash.
+  /// Keys off the explicit finished flag, so a manual cancel stays quiet.
+  static bool _countdownJustFinished(FocusModeState p, FocusModeState c) {
+    if (c is! FocusModeReady) return false;
+    final priorFinished = p is FocusModeReady && p.stopwatch.isFinished;
+    return c.stopwatch.isFinished && !priorFinished;
   }
 
   PreferredSizeWidget _appBarFor(BuildContext context, FocusModeState state) {

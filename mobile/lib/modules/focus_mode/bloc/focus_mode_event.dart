@@ -167,6 +167,12 @@ final class FocusModeStopwatchTicked extends FocusModeEvent {
   const FocusModeStopwatchTicked();
 }
 
+/// Fired after the brief 00:00 hold once a countdown finishes, clearing the
+/// `finished` flash and returning the panel to its idle target value.
+final class FocusModeStopwatchReset extends FocusModeEvent {
+  const FocusModeStopwatchReset();
+}
+
 // Set completion + undo -----------------------------------------------------
 
 final class FocusModeSetCompleted extends FocusModeEvent {
