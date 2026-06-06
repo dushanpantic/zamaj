@@ -37,7 +37,15 @@ abstract final class ExportRouter {
     final args = settings.arguments! as SessionDetailArgs;
     return MaterialPageRoute<void>(
       settings: settings,
-      builder: (_) => SessionDetailScreen(session: args.session),
+      builder: (context) => BlocProvider(
+        create: (_) => SessionDetailBloc(
+          session: args.session,
+          sessionRepository: context.read<SessionRepository>(),
+          engine: context.read<SessionFlowEngine>(),
+          clock: context.read<Clock>(),
+        ),
+        child: const SessionDetailScreen(),
+      ),
     );
   }
 }

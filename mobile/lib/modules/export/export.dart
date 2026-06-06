@@ -20,3 +20,4 @@ export 'services/share_service.dart';
 export 'widgets/export_preview_sheet.dart';
 export 'widgets/session_detail_exercise_card.dart';
 export 'widgets/session_history_tile.dart';
+export 'widgets/set_value_editor_sheet.dart';

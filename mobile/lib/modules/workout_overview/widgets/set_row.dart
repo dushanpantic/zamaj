@@ -11,6 +11,7 @@ import 'package:zamaj/core/increment_rules.dart';
 import 'package:zamaj/core/weight_formatter.dart';
 import 'package:zamaj/modules/domain/domain.dart';
 import 'package:zamaj/modules/workout_overview/models/set_row_view_model.dart';
+import 'package:zamaj/modules/workout_overview/services/set_value_input_mapper.dart';
 
 enum SetRowMode {
   /// Already executed; tap to edit values.
@@ -119,21 +120,10 @@ class _SetRowState extends State<SetRow> {
         vm.executedSet?.actualValues ??
         vm.suggestedActualValues ??
         _plannedAsActual(vm.plannedValues);
-    switch (widget.measurementType) {
-      case RepBasedMeasurement():
-        final rb = seed is ActualRepBased ? seed : null;
-        _weight.text = WeightFormatter.formatKg(rb?.weightKg ?? 0);
-        _reps.text = (rb?.reps ?? 0).toString();
-      case TimeBasedMeasurement():
-        final tb = seed is ActualTimeBased ? seed : null;
-        _duration.text = (tb?.durationSeconds ?? 0).toString();
-        _weight.text = tb?.weightKg != null
-            ? WeightFormatter.formatKg(tb!.weightKg!)
-            : '';
-      case BodyweightMeasurement():
-        final bw = seed is ActualBodyweight ? seed : null;
-        _reps.text = (bw?.reps ?? 0).toString();
-    }
+    final fields = SetValueInputMapper.seed(seed, widget.measurementType);
+    _weight.text = fields.weight;
+    _reps.text = fields.reps;
+    _duration.text = fields.duration;
   }
 
   static ActualSetValues? _plannedAsActual(PlannedSetValues? planned) =>
@@ -197,44 +187,12 @@ class _SetRowState extends State<SetRow> {
     widget.onLogSet(values, widget.viewModel.plannedSetIdInSnapshot);
   }
 
-  ActualSetValues? _readValues() {
-    return switch (widget.measurementType) {
-      RepBasedMeasurement() => _readRepBased(),
-      TimeBasedMeasurement() => _readTimeBased(),
-      BodyweightMeasurement() => _readBodyweight(),
-    };
-  }
-
-  ActualSetValues? _readBodyweight() {
-    final reps = int.tryParse(_reps.text.trim());
-    if (reps == null || reps < 0) return null;
-    return ActualSetValues.bodyweight(reps: reps);
-  }
-
-  ActualSetValues? _readRepBased() {
-    final weight = double.tryParse(_weight.text.trim());
-    final reps = int.tryParse(_reps.text.trim());
-    if (weight == null || reps == null) return null;
-    if (weight < 0 || reps < 0) return null;
-    final rounded = (weight * 2).round() / 2;
-    return ActualSetValues.repBased(weightKg: rounded, reps: reps);
-  }
-
-  ActualSetValues? _readTimeBased() {
-    final seconds = int.tryParse(_duration.text.trim());
-    if (seconds == null || seconds < 0) return null;
-    final weightRaw = _weight.text.trim();
-    double? weightKg;
-    if (weightRaw.isNotEmpty) {
-      final parsed = double.tryParse(weightRaw);
-      if (parsed == null || parsed < 0) return null;
-      weightKg = (parsed * 2).round() / 2;
-    }
-    return ActualSetValues.timeBased(
-      durationSeconds: seconds,
-      weightKg: weightKg,
-    );
-  }
+  ActualSetValues? _readValues() => SetValueInputMapper.parse(
+    measurementType: widget.measurementType,
+    weightText: _weight.text,
+    repsText: _reps.text,
+    durationText: _duration.text,
+  );
 
   @override
   Widget build(BuildContext context) {

@@ -15,7 +15,7 @@ A solo lifter following a structured strength program — squats, bench, accesso
 
 ## How a session works
 
-Starting a session takes a **snapshot** of the planned workout day at that moment. The program template can keep evolving afterwards, but this session's plan is frozen at start. Completed sessions are meant to read as a faithful record of "the plan I was on, and what I did against it" — with room to allow editing of recently-completed entries if something got mis-logged in the moment (not yet built; a deliberate softening of strict immutability).
+Starting a session takes a **snapshot** of the planned workout day at that moment. The program template can keep evolving afterwards, but this session's plan is frozen at start. Completed sessions are meant to read as a faithful record of "the plan I was on, and what I did against it". A deliberate, narrow softening of strict immutability lets you correct a mis-logged **actual** value on a session from the current week — values only, never adding or removing sets, and never touching the frozen plan snapshot.
 
 ## Features by screen
 
@@ -41,7 +41,7 @@ Durable identity for each movement so the same "BB Bench Press" on PUSH day and 
 
 ### After a session — [export/](mobile/lib/modules/export/)
 - **Recent sessions** — [recent_sessions_screen.dart](mobile/lib/modules/export/screens/recent_sessions_screen.dart). Completed sessions bucketed into "This week" and "Earlier", with a one-tap "export this week" action. Tapping a session opens its review.
-- **Session detail (review)** — [session_detail_screen.dart](mobile/lib/modules/export/screens/session_detail_screen.dart). Read-only review of a finished session: the frozen plan beside what was actually logged, set by set, with skipped/replaced exercises marked, supersets grouped, and the session's notes and extra work. Per-session plain-text export lives here, behind the app-bar share icon.
+- **Session detail (review)** — [session_detail_screen.dart](mobile/lib/modules/export/screens/session_detail_screen.dart). Review of a finished session: the frozen plan beside what was actually logged, set by set, with skipped/replaced exercises marked, supersets grouped, and the session's notes and extra work. For a session from the current week, tapping a logged value opens an editor to correct a mis-logged actual (values only — the plan snapshot stays frozen); older sessions stay read-only. Per-session plain-text export lives here, behind the app-bar share icon.
 
 ## Explicit non-goals
 - **No social, streaks, badges, friends, or leaderboards.** This is a logbook, not a community app.
