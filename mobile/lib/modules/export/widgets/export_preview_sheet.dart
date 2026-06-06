@@ -99,15 +99,19 @@ class _ExportPreviewSheetState extends State<ExportPreviewSheet> {
     final colors = Theme.of(context).appColors;
     const typography = AppTypography.standard;
     final maxHeight = MediaQuery.of(context).size.height * 0.85;
+    // `useSafeArea: true` only guards the top, so the sheet still extends behind
+    // the Android system navigation bar. Pad the bottom by that inset so the
+    // Copy / Share buttons clear the nav buttons (and the gesture bar).
+    final bottomInset = MediaQuery.viewPaddingOf(context).bottom;
 
     return ConstrainedBox(
       constraints: BoxConstraints(maxHeight: maxHeight),
       child: Padding(
-        padding: const EdgeInsets.fromLTRB(
+        padding: EdgeInsets.fromLTRB(
           AppSpacing.lg,
           AppSpacing.sm,
           AppSpacing.lg,
-          AppSpacing.lg,
+          AppSpacing.lg + bottomInset,
         ),
         child: Column(
           mainAxisSize: MainAxisSize.min,

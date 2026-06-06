@@ -5,6 +5,15 @@ import 'package:zamaj/modules/workout_overview/models/superset_group_view_model.
 import 'package:zamaj/modules/workout_overview/services/planned_summary_formatter.dart';
 
 abstract final class ExerciseViewModelAssembler {
+  /// Builds fully read-only view models for a finished [session]: with no open
+  /// targets every exercise and set row reports `isLoggable == false`, so the
+  /// post-session review screen reuses the exact pairing and superset grouping
+  /// without re-implementing it.
+  static List<SupersetGroupViewModel> assembleReadOnly(Session session) =>
+      assemble(
+        SessionState(session: session, openTargets: const [], isComplete: true),
+      );
+
   static List<SupersetGroupViewModel> assemble(SessionState sessionState) {
     final session = sessionState.session;
     final loggableSetIndexByExerciseId = <String, int>{

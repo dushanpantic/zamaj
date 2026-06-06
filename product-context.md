@@ -40,7 +40,8 @@ Durable identity for each movement so the same "BB Bench Press" on PUSH day and 
 - **Focus mode** — [focus_mode_screen.dart](mobile/lib/modules/focus_mode/screens/focus_mode_screen.dart). One exercise (or one superset group) at a time. Large LOG SET button, rest timer with overtime indicator, undo last set, partner cards for superset members. Optimised for between-set use.
 
 ### After a session — [export/](mobile/lib/modules/export/)
-- **Recent sessions** — [recent_sessions_screen.dart](mobile/lib/modules/export/screens/recent_sessions_screen.dart). Completed sessions bucketed into "This week" and "Earlier", with a one-tap "export this week" action.
+- **Recent sessions** — [recent_sessions_screen.dart](mobile/lib/modules/export/screens/recent_sessions_screen.dart). Completed sessions bucketed into "This week" and "Earlier", with a one-tap "export this week" action. Tapping a session opens its review.
+- **Session detail (review)** — [session_detail_screen.dart](mobile/lib/modules/export/screens/session_detail_screen.dart). Read-only review of a finished session: the frozen plan beside what was actually logged, set by set, with skipped/replaced exercises marked, supersets grouped, and the session's notes and extra work. Per-session plain-text export lives here, behind the app-bar share icon.
 
 ## Explicit non-goals
 - **No social, streaks, badges, friends, or leaderboards.** This is a logbook, not a community app.

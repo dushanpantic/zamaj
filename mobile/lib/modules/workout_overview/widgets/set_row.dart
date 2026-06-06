@@ -8,7 +8,6 @@ import 'package:zamaj/core/app_spacing.dart';
 import 'package:zamaj/core/app_theme.dart';
 import 'package:zamaj/core/app_typography.dart';
 import 'package:zamaj/core/increment_rules.dart';
-import 'package:zamaj/core/rep_target_formatter.dart';
 import 'package:zamaj/core/weight_formatter.dart';
 import 'package:zamaj/modules/domain/domain.dart';
 import 'package:zamaj/modules/workout_overview/models/set_row_view_model.dart';
@@ -385,7 +384,10 @@ class _Header extends StatelessWidget {
         const SizedBox(width: AppSpacing.md),
         Expanded(
           child: Text(
-            _plannedLabel(viewModel.plannedValues, measurementType),
+            SetValueFormatter.formatPlanned(
+              viewModel.plannedValues,
+              measurementType,
+            ),
             style: typography.bodySmall.copyWith(color: colors.planned),
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
@@ -409,7 +411,7 @@ class _Header extends StatelessWidget {
             Padding(
               padding: const EdgeInsets.only(right: AppSpacing.sm),
               child: Text(
-                '→ ${_formatActual(suggestedActual!)}',
+                '→ ${SetValueFormatter.formatActual(suggestedActual!)}',
                 style: typography.numericSm.copyWith(
                   color: colors.onSurfaceMuted,
                 ),
@@ -436,32 +438,9 @@ class _Header extends StatelessWidget {
     );
   }
 
-  String _plannedLabel(PlannedSetValues? planned, MeasurementType mt) {
-    if (planned == null) return '—';
-    return switch (planned) {
-      PlannedRepBased(:final weightKg, :final repTarget) =>
-        '${WeightFormatter.formatKg(weightKg)}kg × ${RepTargetFormatter.format(repTarget)}',
-      PlannedTimeBased(:final durationSeconds, :final weightKg) =>
-        weightKg == null
-            ? '${durationSeconds}s'
-            : '${WeightFormatter.formatKg(weightKg)}kg × ${durationSeconds}s',
-      PlannedBodyweight(:final repTarget) =>
-        '× ${RepTargetFormatter.format(repTarget)}',
-    };
-  }
-
-  String _actualLabel(ExecutedSet? executed) =>
-      executed == null ? '—' : _formatActual(executed.actualValues);
-
-  static String _formatActual(ActualSetValues values) => switch (values) {
-    ActualRepBased(:final weightKg, :final reps) =>
-      '${WeightFormatter.formatKg(weightKg)} × $reps',
-    ActualTimeBased(:final durationSeconds, :final weightKg) =>
-      weightKg == null
-          ? '${durationSeconds}s'
-          : '${WeightFormatter.formatKg(weightKg)} × ${durationSeconds}s',
-    ActualBodyweight(:final reps) => '× $reps',
-  };
+  String _actualLabel(ExecutedSet? executed) => executed == null
+      ? '—'
+      : SetValueFormatter.formatActual(executed.actualValues);
 }
 
 class _StatusIcon extends StatelessWidget {

@@ -311,6 +311,76 @@ void main() {
       },
     );
   });
+
+  group('ExerciseViewModelAssembler.assembleReadOnly', () {
+    test('completed session with completed/skipped/replaced + superset → '
+        'grouped, every row read-only', () {
+      final session = _sessionFromGroups([
+        _standalone(
+          'a',
+          state: const ExerciseState.completed(),
+          plannedSetCount: 2,
+          executedSetCount: 2,
+        ),
+        _standalone(
+          'b',
+          state: const ExerciseState.skipped(),
+          plannedSetCount: 2,
+        ),
+        _standalone(
+          'c',
+          state: const ExerciseState.completed(),
+          plannedSetCount: 2,
+          executedSetCount: 2,
+          supersetTag: 'tag-x',
+        ),
+        _standalone(
+          'd',
+          state: const ExerciseState.completed(),
+          plannedSetCount: 2,
+          executedSetCount: 2,
+          supersetTag: 'tag-x',
+        ),
+        _standalone(
+          'e',
+          state: ExerciseState.replaced(
+            substitute: SubstituteExercise(
+              name: 'Cable Fly',
+              measurementType: const MeasurementType.repBased(),
+              plannedValues: PlannedSetValues.repBased(
+                weightKg: 20,
+                repTarget: RepTarget.fixed(reps: 12),
+              ),
+              setCount: 3,
+              metadata: const ExerciseMetadata(),
+            ),
+          ),
+          plannedSetCount: 3,
+          executedSetCount: 0,
+        ),
+      ]);
+
+      final groups = ExerciseViewModelAssembler.assembleReadOnly(session);
+
+      // Skipped/replaced are present, not hidden: 5 exercises across 4
+      // top-level groups (the adjacent tag-x pair forms one superset).
+      expect(groups, hasLength(4));
+      expect(groups[2], isA<SupersetGroup>());
+      expect((groups[2] as SupersetGroup).tag, 'tag-x');
+      final allExercises = groups
+          .expand((SupersetGroupViewModel g) => g.allExercises)
+          .toList();
+      expect(allExercises, hasLength(5));
+
+      // The whole point of the read-only entry point: nothing is loggable.
+      for (final ex in allExercises) {
+        expect(ex.isLoggable, isFalse);
+        for (final row in ex.setRows) {
+          expect(row.isLoggable, isFalse);
+        }
+      }
+    });
+  });
 }
 
 class _ExerciseSpec {

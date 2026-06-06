@@ -6,7 +6,9 @@ import 'package:zamaj/core/app_theme.dart';
 import 'package:zamaj/core/date_formatter.dart';
 import 'package:zamaj/modules/domain/domain.dart';
 import 'package:zamaj/modules/export/bloc/bloc.dart';
+import 'package:zamaj/modules/export/models/session_detail_args.dart';
 import 'package:zamaj/modules/export/models/session_history_item.dart';
+import 'package:zamaj/modules/export/navigation/export_routes.dart';
 import 'package:zamaj/modules/export/widgets/export_preview_sheet.dart';
 import 'package:zamaj/modules/export/widgets/session_history_tile.dart';
 import 'package:zamaj/modules/program_management/services/domain_error_presenter.dart';
@@ -173,14 +175,11 @@ class _LoadedBody extends StatelessWidget {
   ) {
     final session = state.sessionsById[item.sessionId];
     if (session == null) return;
-    ExportPreviewSheet.show(
-      context,
-      title: item.workoutDayName,
-      buildText: (includeWarmups) => SessionExportFormatter.format(
-        session,
-        includeWarmups: includeWarmups,
-      ),
-      shareSubject: '${item.workoutDayName} workout',
+    // The detail screen now hosts per-session text export behind its own share
+    // icon; tapping a tile opens the read-only review rather than the sheet.
+    Navigator.of(context).pushNamed(
+      ExportRoutes.sessionDetail,
+      arguments: SessionDetailArgs(session: session),
     );
   }
 
