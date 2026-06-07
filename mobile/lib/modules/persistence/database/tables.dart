@@ -99,6 +99,12 @@ class LibraryExercises extends Table {
   TextColumn get nameLower => text()();
   TextColumn get measurementTypeDiscriminator => text()();
   TextColumn get measurementTypePayloadJson => text()();
+  TextColumn get source => text().withDefault(const Constant('user'))();
+  TextColumn get prominence => text().withDefault(const Constant('common'))();
+  TextColumn get primaryMusclesJson =>
+      text().withDefault(const Constant('[]'))();
+  TextColumn get secondaryMusclesJson =>
+      text().withDefault(const Constant('[]'))();
   TextColumn get videoUrl => text().nullable()();
   TextColumn get cues => text().nullable()();
   IntColumn get archivedAtMs => integer().nullable()();

@@ -3,7 +3,10 @@ import 'dart:convert';
 import 'package:drift/drift.dart';
 import 'package:zamaj/core/canonical_json.dart';
 import 'package:zamaj/modules/domain/models/library_exercise.dart' as domain;
+import 'package:zamaj/modules/domain/models/library_source.dart';
 import 'package:zamaj/modules/domain/models/measurement_type.dart';
+import 'package:zamaj/modules/domain/models/muscle_group.dart';
+import 'package:zamaj/modules/domain/models/prominence.dart';
 import 'package:zamaj/modules/persistence/database/app_database.dart';
 
 class LibraryExerciseMapper {
@@ -15,6 +18,10 @@ class LibraryExerciseMapper {
       id: row.id,
       name: row.name,
       measurementType: measurementType,
+      prominence: Prominence.fromJson(row.prominence),
+      primaryMuscles: _decodeMuscles(row.primaryMusclesJson),
+      secondaryMuscles: _decodeMuscles(row.secondaryMusclesJson),
+      source: LibrarySource.fromJson(row.source),
       videoUrl: row.videoUrl,
       cues: row.cues,
       archivedAt: row.archivedAtMs == null
@@ -40,6 +47,10 @@ class LibraryExerciseMapper {
       nameLower: Value(_normalize(entry.name)),
       measurementTypeDiscriminator: Value(measurementJson['type'] as String),
       measurementTypePayloadJson: Value(CanonicalJson.encode(measurementJson)),
+      source: Value(entry.source.toJson()),
+      prominence: Value(entry.prominence.toJson()),
+      primaryMusclesJson: Value(_encodeMuscles(entry.primaryMuscles)),
+      secondaryMusclesJson: Value(_encodeMuscles(entry.secondaryMuscles)),
       videoUrl: Value(entry.videoUrl),
       cues: Value(entry.cues),
       archivedAtMs: Value(entry.archivedAt?.millisecondsSinceEpoch),
@@ -52,4 +63,14 @@ class LibraryExerciseMapper {
   static String normalize(String name) => _normalize(name);
 
   static String _normalize(String name) => name.trim().toLowerCase();
+
+  /// Encodes a muscle list as a canonical JSON array of enum discriminators,
+  /// e.g. `["chest","triceps"]`. Paired with [_decodeMuscles].
+  static String _encodeMuscles(List<MuscleGroup> muscles) =>
+      CanonicalJson.encode(muscles.map((m) => m.toJson()).toList());
+
+  static List<MuscleGroup> _decodeMuscles(String json) =>
+      (jsonDecode(json) as List<dynamic>)
+          .map((m) => MuscleGroup.fromJson(m as String))
+          .toList();
 }

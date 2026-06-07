@@ -51,6 +51,53 @@ abstract final class AppMigrations {
       await m.createIndex(db.libraryExercisesNameLower);
       await m.addColumn(db.exercises, db.exercises.libraryExerciseId);
     }
+    if (from < 12) {
+      await _clearLibraryForCanonicalReseed(m, db);
+    }
+  }
+
+  /// Clears the manually-built exercise library so the embedded canonical
+  /// catalog can seed from a clean slate. Adds the seed metadata columns
+  /// (`source`, `prominence`, `primary_muscles_json`, `secondary_muscles_json`),
+  /// unlinks every program exercise, then drops every library row.
+  ///
+  /// One-time and intentional — single-install app, no compat layer, matching
+  /// the v6→v7 [_wipeAllDomainTables] precedent. After this, the user re-links
+  /// program exercises via the existing picker ("Keep local" preserves names).
+  ///
+  /// The `library_exercise_id` null-out is explicit because drift disables
+  /// foreign-key enforcement during migrations, so the `ON DELETE SET NULL`
+  /// cascade does not fire — without this the delete would orphan the FK.
+  ///
+  /// The columns are added behind an existence guard: an upgrade originating
+  /// before v11 runs the `from < 11` `createTable` first, which builds the
+  /// table from the current (v12) schema and therefore already includes these
+  /// columns — re-adding them would raise "duplicate column name".
+  static Future<void> _clearLibraryForCanonicalReseed(
+    Migrator m,
+    AppDatabase db,
+  ) async {
+    const table = 'library_exercises';
+    if (!await _columnExists(db, table, 'source')) {
+      await m.addColumn(db.libraryExercises, db.libraryExercises.source);
+    }
+    if (!await _columnExists(db, table, 'prominence')) {
+      await m.addColumn(db.libraryExercises, db.libraryExercises.prominence);
+    }
+    if (!await _columnExists(db, table, 'primary_muscles_json')) {
+      await m.addColumn(
+        db.libraryExercises,
+        db.libraryExercises.primaryMusclesJson,
+      );
+    }
+    if (!await _columnExists(db, table, 'secondary_muscles_json')) {
+      await m.addColumn(
+        db.libraryExercises,
+        db.libraryExercises.secondaryMusclesJson,
+      );
+    }
+    await db.customStatement('UPDATE exercises SET library_exercise_id = NULL');
+    await db.customStatement('DELETE FROM library_exercises');
   }
 
   /// Rewrites every session's canonical snapshot JSON to include the new

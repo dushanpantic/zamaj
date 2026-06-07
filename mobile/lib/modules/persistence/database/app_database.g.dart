@@ -1764,6 +1764,52 @@ class $LibraryExercisesTable extends LibraryExercises
         type: DriftSqlType.string,
         requiredDuringInsert: true,
       );
+  static const VerificationMeta _sourceMeta = const VerificationMeta('source');
+  @override
+  late final GeneratedColumn<String> source = GeneratedColumn<String>(
+    'source',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('user'),
+  );
+  static const VerificationMeta _prominenceMeta = const VerificationMeta(
+    'prominence',
+  );
+  @override
+  late final GeneratedColumn<String> prominence = GeneratedColumn<String>(
+    'prominence',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('common'),
+  );
+  static const VerificationMeta _primaryMusclesJsonMeta =
+      const VerificationMeta('primaryMusclesJson');
+  @override
+  late final GeneratedColumn<String> primaryMusclesJson =
+      GeneratedColumn<String>(
+        'primary_muscles_json',
+        aliasedName,
+        false,
+        type: DriftSqlType.string,
+        requiredDuringInsert: false,
+        defaultValue: const Constant('[]'),
+      );
+  static const VerificationMeta _secondaryMusclesJsonMeta =
+      const VerificationMeta('secondaryMusclesJson');
+  @override
+  late final GeneratedColumn<String> secondaryMusclesJson =
+      GeneratedColumn<String>(
+        'secondary_muscles_json',
+        aliasedName,
+        false,
+        type: DriftSqlType.string,
+        requiredDuringInsert: false,
+        defaultValue: const Constant('[]'),
+      );
   static const VerificationMeta _videoUrlMeta = const VerificationMeta(
     'videoUrl',
   );
@@ -1835,6 +1881,10 @@ class $LibraryExercisesTable extends LibraryExercises
     nameLower,
     measurementTypeDiscriminator,
     measurementTypePayloadJson,
+    source,
+    prominence,
+    primaryMusclesJson,
+    secondaryMusclesJson,
     videoUrl,
     cues,
     archivedAtMs,
@@ -1896,6 +1946,36 @@ class $LibraryExercisesTable extends LibraryExercises
       );
     } else if (isInserting) {
       context.missing(_measurementTypePayloadJsonMeta);
+    }
+    if (data.containsKey('source')) {
+      context.handle(
+        _sourceMeta,
+        source.isAcceptableOrUnknown(data['source']!, _sourceMeta),
+      );
+    }
+    if (data.containsKey('prominence')) {
+      context.handle(
+        _prominenceMeta,
+        prominence.isAcceptableOrUnknown(data['prominence']!, _prominenceMeta),
+      );
+    }
+    if (data.containsKey('primary_muscles_json')) {
+      context.handle(
+        _primaryMusclesJsonMeta,
+        primaryMusclesJson.isAcceptableOrUnknown(
+          data['primary_muscles_json']!,
+          _primaryMusclesJsonMeta,
+        ),
+      );
+    }
+    if (data.containsKey('secondary_muscles_json')) {
+      context.handle(
+        _secondaryMusclesJsonMeta,
+        secondaryMusclesJson.isAcceptableOrUnknown(
+          data['secondary_muscles_json']!,
+          _secondaryMusclesJsonMeta,
+        ),
+      );
     }
     if (data.containsKey('video_url')) {
       context.handle(
@@ -1980,6 +2060,22 @@ class $LibraryExercisesTable extends LibraryExercises
         DriftSqlType.string,
         data['${effectivePrefix}measurement_type_payload_json'],
       )!,
+      source: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}source'],
+      )!,
+      prominence: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}prominence'],
+      )!,
+      primaryMusclesJson: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}primary_muscles_json'],
+      )!,
+      secondaryMusclesJson: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}secondary_muscles_json'],
+      )!,
       videoUrl: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
         data['${effectivePrefix}video_url'],
@@ -2019,6 +2115,10 @@ class LibraryExercise extends DataClass implements Insertable<LibraryExercise> {
   final String nameLower;
   final String measurementTypeDiscriminator;
   final String measurementTypePayloadJson;
+  final String source;
+  final String prominence;
+  final String primaryMusclesJson;
+  final String secondaryMusclesJson;
   final String? videoUrl;
   final String? cues;
   final int? archivedAtMs;
@@ -2031,6 +2131,10 @@ class LibraryExercise extends DataClass implements Insertable<LibraryExercise> {
     required this.nameLower,
     required this.measurementTypeDiscriminator,
     required this.measurementTypePayloadJson,
+    required this.source,
+    required this.prominence,
+    required this.primaryMusclesJson,
+    required this.secondaryMusclesJson,
     this.videoUrl,
     this.cues,
     this.archivedAtMs,
@@ -2050,6 +2154,10 @@ class LibraryExercise extends DataClass implements Insertable<LibraryExercise> {
     map['measurement_type_payload_json'] = Variable<String>(
       measurementTypePayloadJson,
     );
+    map['source'] = Variable<String>(source);
+    map['prominence'] = Variable<String>(prominence);
+    map['primary_muscles_json'] = Variable<String>(primaryMusclesJson);
+    map['secondary_muscles_json'] = Variable<String>(secondaryMusclesJson);
     if (!nullToAbsent || videoUrl != null) {
       map['video_url'] = Variable<String>(videoUrl);
     }
@@ -2072,6 +2180,10 @@ class LibraryExercise extends DataClass implements Insertable<LibraryExercise> {
       nameLower: Value(nameLower),
       measurementTypeDiscriminator: Value(measurementTypeDiscriminator),
       measurementTypePayloadJson: Value(measurementTypePayloadJson),
+      source: Value(source),
+      prominence: Value(prominence),
+      primaryMusclesJson: Value(primaryMusclesJson),
+      secondaryMusclesJson: Value(secondaryMusclesJson),
       videoUrl: videoUrl == null && nullToAbsent
           ? const Value.absent()
           : Value(videoUrl),
@@ -2100,6 +2212,14 @@ class LibraryExercise extends DataClass implements Insertable<LibraryExercise> {
       measurementTypePayloadJson: serializer.fromJson<String>(
         json['measurementTypePayloadJson'],
       ),
+      source: serializer.fromJson<String>(json['source']),
+      prominence: serializer.fromJson<String>(json['prominence']),
+      primaryMusclesJson: serializer.fromJson<String>(
+        json['primaryMusclesJson'],
+      ),
+      secondaryMusclesJson: serializer.fromJson<String>(
+        json['secondaryMusclesJson'],
+      ),
       videoUrl: serializer.fromJson<String?>(json['videoUrl']),
       cues: serializer.fromJson<String?>(json['cues']),
       archivedAtMs: serializer.fromJson<int?>(json['archivedAtMs']),
@@ -2121,6 +2241,10 @@ class LibraryExercise extends DataClass implements Insertable<LibraryExercise> {
       'measurementTypePayloadJson': serializer.toJson<String>(
         measurementTypePayloadJson,
       ),
+      'source': serializer.toJson<String>(source),
+      'prominence': serializer.toJson<String>(prominence),
+      'primaryMusclesJson': serializer.toJson<String>(primaryMusclesJson),
+      'secondaryMusclesJson': serializer.toJson<String>(secondaryMusclesJson),
       'videoUrl': serializer.toJson<String?>(videoUrl),
       'cues': serializer.toJson<String?>(cues),
       'archivedAtMs': serializer.toJson<int?>(archivedAtMs),
@@ -2136,6 +2260,10 @@ class LibraryExercise extends DataClass implements Insertable<LibraryExercise> {
     String? nameLower,
     String? measurementTypeDiscriminator,
     String? measurementTypePayloadJson,
+    String? source,
+    String? prominence,
+    String? primaryMusclesJson,
+    String? secondaryMusclesJson,
     Value<String?> videoUrl = const Value.absent(),
     Value<String?> cues = const Value.absent(),
     Value<int?> archivedAtMs = const Value.absent(),
@@ -2150,6 +2278,10 @@ class LibraryExercise extends DataClass implements Insertable<LibraryExercise> {
         measurementTypeDiscriminator ?? this.measurementTypeDiscriminator,
     measurementTypePayloadJson:
         measurementTypePayloadJson ?? this.measurementTypePayloadJson,
+    source: source ?? this.source,
+    prominence: prominence ?? this.prominence,
+    primaryMusclesJson: primaryMusclesJson ?? this.primaryMusclesJson,
+    secondaryMusclesJson: secondaryMusclesJson ?? this.secondaryMusclesJson,
     videoUrl: videoUrl.present ? videoUrl.value : this.videoUrl,
     cues: cues.present ? cues.value : this.cues,
     archivedAtMs: archivedAtMs.present ? archivedAtMs.value : this.archivedAtMs,
@@ -2168,6 +2300,16 @@ class LibraryExercise extends DataClass implements Insertable<LibraryExercise> {
       measurementTypePayloadJson: data.measurementTypePayloadJson.present
           ? data.measurementTypePayloadJson.value
           : this.measurementTypePayloadJson,
+      source: data.source.present ? data.source.value : this.source,
+      prominence: data.prominence.present
+          ? data.prominence.value
+          : this.prominence,
+      primaryMusclesJson: data.primaryMusclesJson.present
+          ? data.primaryMusclesJson.value
+          : this.primaryMusclesJson,
+      secondaryMusclesJson: data.secondaryMusclesJson.present
+          ? data.secondaryMusclesJson.value
+          : this.secondaryMusclesJson,
       videoUrl: data.videoUrl.present ? data.videoUrl.value : this.videoUrl,
       cues: data.cues.present ? data.cues.value : this.cues,
       archivedAtMs: data.archivedAtMs.present
@@ -2195,6 +2337,10 @@ class LibraryExercise extends DataClass implements Insertable<LibraryExercise> {
             'measurementTypeDiscriminator: $measurementTypeDiscriminator, ',
           )
           ..write('measurementTypePayloadJson: $measurementTypePayloadJson, ')
+          ..write('source: $source, ')
+          ..write('prominence: $prominence, ')
+          ..write('primaryMusclesJson: $primaryMusclesJson, ')
+          ..write('secondaryMusclesJson: $secondaryMusclesJson, ')
           ..write('videoUrl: $videoUrl, ')
           ..write('cues: $cues, ')
           ..write('archivedAtMs: $archivedAtMs, ')
@@ -2212,6 +2358,10 @@ class LibraryExercise extends DataClass implements Insertable<LibraryExercise> {
     nameLower,
     measurementTypeDiscriminator,
     measurementTypePayloadJson,
+    source,
+    prominence,
+    primaryMusclesJson,
+    secondaryMusclesJson,
     videoUrl,
     cues,
     archivedAtMs,
@@ -2229,6 +2379,10 @@ class LibraryExercise extends DataClass implements Insertable<LibraryExercise> {
           other.measurementTypeDiscriminator ==
               this.measurementTypeDiscriminator &&
           other.measurementTypePayloadJson == this.measurementTypePayloadJson &&
+          other.source == this.source &&
+          other.prominence == this.prominence &&
+          other.primaryMusclesJson == this.primaryMusclesJson &&
+          other.secondaryMusclesJson == this.secondaryMusclesJson &&
           other.videoUrl == this.videoUrl &&
           other.cues == this.cues &&
           other.archivedAtMs == this.archivedAtMs &&
@@ -2243,6 +2397,10 @@ class LibraryExercisesCompanion extends UpdateCompanion<LibraryExercise> {
   final Value<String> nameLower;
   final Value<String> measurementTypeDiscriminator;
   final Value<String> measurementTypePayloadJson;
+  final Value<String> source;
+  final Value<String> prominence;
+  final Value<String> primaryMusclesJson;
+  final Value<String> secondaryMusclesJson;
   final Value<String?> videoUrl;
   final Value<String?> cues;
   final Value<int?> archivedAtMs;
@@ -2256,6 +2414,10 @@ class LibraryExercisesCompanion extends UpdateCompanion<LibraryExercise> {
     this.nameLower = const Value.absent(),
     this.measurementTypeDiscriminator = const Value.absent(),
     this.measurementTypePayloadJson = const Value.absent(),
+    this.source = const Value.absent(),
+    this.prominence = const Value.absent(),
+    this.primaryMusclesJson = const Value.absent(),
+    this.secondaryMusclesJson = const Value.absent(),
     this.videoUrl = const Value.absent(),
     this.cues = const Value.absent(),
     this.archivedAtMs = const Value.absent(),
@@ -2270,6 +2432,10 @@ class LibraryExercisesCompanion extends UpdateCompanion<LibraryExercise> {
     required String nameLower,
     required String measurementTypeDiscriminator,
     required String measurementTypePayloadJson,
+    this.source = const Value.absent(),
+    this.prominence = const Value.absent(),
+    this.primaryMusclesJson = const Value.absent(),
+    this.secondaryMusclesJson = const Value.absent(),
     this.videoUrl = const Value.absent(),
     this.cues = const Value.absent(),
     this.archivedAtMs = const Value.absent(),
@@ -2291,6 +2457,10 @@ class LibraryExercisesCompanion extends UpdateCompanion<LibraryExercise> {
     Expression<String>? nameLower,
     Expression<String>? measurementTypeDiscriminator,
     Expression<String>? measurementTypePayloadJson,
+    Expression<String>? source,
+    Expression<String>? prominence,
+    Expression<String>? primaryMusclesJson,
+    Expression<String>? secondaryMusclesJson,
     Expression<String>? videoUrl,
     Expression<String>? cues,
     Expression<int>? archivedAtMs,
@@ -2307,6 +2477,12 @@ class LibraryExercisesCompanion extends UpdateCompanion<LibraryExercise> {
         'measurement_type_discriminator': measurementTypeDiscriminator,
       if (measurementTypePayloadJson != null)
         'measurement_type_payload_json': measurementTypePayloadJson,
+      if (source != null) 'source': source,
+      if (prominence != null) 'prominence': prominence,
+      if (primaryMusclesJson != null)
+        'primary_muscles_json': primaryMusclesJson,
+      if (secondaryMusclesJson != null)
+        'secondary_muscles_json': secondaryMusclesJson,
       if (videoUrl != null) 'video_url': videoUrl,
       if (cues != null) 'cues': cues,
       if (archivedAtMs != null) 'archived_at_ms': archivedAtMs,
@@ -2323,6 +2499,10 @@ class LibraryExercisesCompanion extends UpdateCompanion<LibraryExercise> {
     Value<String>? nameLower,
     Value<String>? measurementTypeDiscriminator,
     Value<String>? measurementTypePayloadJson,
+    Value<String>? source,
+    Value<String>? prominence,
+    Value<String>? primaryMusclesJson,
+    Value<String>? secondaryMusclesJson,
     Value<String?>? videoUrl,
     Value<String?>? cues,
     Value<int?>? archivedAtMs,
@@ -2339,6 +2519,10 @@ class LibraryExercisesCompanion extends UpdateCompanion<LibraryExercise> {
           measurementTypeDiscriminator ?? this.measurementTypeDiscriminator,
       measurementTypePayloadJson:
           measurementTypePayloadJson ?? this.measurementTypePayloadJson,
+      source: source ?? this.source,
+      prominence: prominence ?? this.prominence,
+      primaryMusclesJson: primaryMusclesJson ?? this.primaryMusclesJson,
+      secondaryMusclesJson: secondaryMusclesJson ?? this.secondaryMusclesJson,
       videoUrl: videoUrl ?? this.videoUrl,
       cues: cues ?? this.cues,
       archivedAtMs: archivedAtMs ?? this.archivedAtMs,
@@ -2369,6 +2553,20 @@ class LibraryExercisesCompanion extends UpdateCompanion<LibraryExercise> {
     if (measurementTypePayloadJson.present) {
       map['measurement_type_payload_json'] = Variable<String>(
         measurementTypePayloadJson.value,
+      );
+    }
+    if (source.present) {
+      map['source'] = Variable<String>(source.value);
+    }
+    if (prominence.present) {
+      map['prominence'] = Variable<String>(prominence.value);
+    }
+    if (primaryMusclesJson.present) {
+      map['primary_muscles_json'] = Variable<String>(primaryMusclesJson.value);
+    }
+    if (secondaryMusclesJson.present) {
+      map['secondary_muscles_json'] = Variable<String>(
+        secondaryMusclesJson.value,
       );
     }
     if (videoUrl.present) {
@@ -2405,6 +2603,10 @@ class LibraryExercisesCompanion extends UpdateCompanion<LibraryExercise> {
             'measurementTypeDiscriminator: $measurementTypeDiscriminator, ',
           )
           ..write('measurementTypePayloadJson: $measurementTypePayloadJson, ')
+          ..write('source: $source, ')
+          ..write('prominence: $prominence, ')
+          ..write('primaryMusclesJson: $primaryMusclesJson, ')
+          ..write('secondaryMusclesJson: $secondaryMusclesJson, ')
           ..write('videoUrl: $videoUrl, ')
           ..write('cues: $cues, ')
           ..write('archivedAtMs: $archivedAtMs, ')
@@ -8814,6 +9016,10 @@ typedef $$LibraryExercisesTableCreateCompanionBuilder =
       required String nameLower,
       required String measurementTypeDiscriminator,
       required String measurementTypePayloadJson,
+      Value<String> source,
+      Value<String> prominence,
+      Value<String> primaryMusclesJson,
+      Value<String> secondaryMusclesJson,
       Value<String?> videoUrl,
       Value<String?> cues,
       Value<int?> archivedAtMs,
@@ -8829,6 +9035,10 @@ typedef $$LibraryExercisesTableUpdateCompanionBuilder =
       Value<String> nameLower,
       Value<String> measurementTypeDiscriminator,
       Value<String> measurementTypePayloadJson,
+      Value<String> source,
+      Value<String> prominence,
+      Value<String> primaryMusclesJson,
+      Value<String> secondaryMusclesJson,
       Value<String?> videoUrl,
       Value<String?> cues,
       Value<int?> archivedAtMs,
@@ -8899,6 +9109,26 @@ class $$LibraryExercisesTableFilterComposer
 
   ColumnFilters<String> get measurementTypePayloadJson => $composableBuilder(
     column: $table.measurementTypePayloadJson,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get source => $composableBuilder(
+    column: $table.source,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get prominence => $composableBuilder(
+    column: $table.prominence,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get primaryMusclesJson => $composableBuilder(
+    column: $table.primaryMusclesJson,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get secondaryMusclesJson => $composableBuilder(
+    column: $table.secondaryMusclesJson,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -8993,6 +9223,26 @@ class $$LibraryExercisesTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<String> get source => $composableBuilder(
+    column: $table.source,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get prominence => $composableBuilder(
+    column: $table.prominence,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get primaryMusclesJson => $composableBuilder(
+    column: $table.primaryMusclesJson,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get secondaryMusclesJson => $composableBuilder(
+    column: $table.secondaryMusclesJson,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<String> get videoUrl => $composableBuilder(
     column: $table.videoUrl,
     builder: (column) => ColumnOrderings(column),
@@ -9050,6 +9300,24 @@ class $$LibraryExercisesTableAnnotationComposer
 
   GeneratedColumn<String> get measurementTypePayloadJson => $composableBuilder(
     column: $table.measurementTypePayloadJson,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get source =>
+      $composableBuilder(column: $table.source, builder: (column) => column);
+
+  GeneratedColumn<String> get prominence => $composableBuilder(
+    column: $table.prominence,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get primaryMusclesJson => $composableBuilder(
+    column: $table.primaryMusclesJson,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get secondaryMusclesJson => $composableBuilder(
+    column: $table.secondaryMusclesJson,
     builder: (column) => column,
   );
 
@@ -9141,6 +9409,10 @@ class $$LibraryExercisesTableTableManager
                 Value<String> measurementTypeDiscriminator =
                     const Value.absent(),
                 Value<String> measurementTypePayloadJson = const Value.absent(),
+                Value<String> source = const Value.absent(),
+                Value<String> prominence = const Value.absent(),
+                Value<String> primaryMusclesJson = const Value.absent(),
+                Value<String> secondaryMusclesJson = const Value.absent(),
                 Value<String?> videoUrl = const Value.absent(),
                 Value<String?> cues = const Value.absent(),
                 Value<int?> archivedAtMs = const Value.absent(),
@@ -9154,6 +9426,10 @@ class $$LibraryExercisesTableTableManager
                 nameLower: nameLower,
                 measurementTypeDiscriminator: measurementTypeDiscriminator,
                 measurementTypePayloadJson: measurementTypePayloadJson,
+                source: source,
+                prominence: prominence,
+                primaryMusclesJson: primaryMusclesJson,
+                secondaryMusclesJson: secondaryMusclesJson,
                 videoUrl: videoUrl,
                 cues: cues,
                 archivedAtMs: archivedAtMs,
@@ -9169,6 +9445,10 @@ class $$LibraryExercisesTableTableManager
                 required String nameLower,
                 required String measurementTypeDiscriminator,
                 required String measurementTypePayloadJson,
+                Value<String> source = const Value.absent(),
+                Value<String> prominence = const Value.absent(),
+                Value<String> primaryMusclesJson = const Value.absent(),
+                Value<String> secondaryMusclesJson = const Value.absent(),
                 Value<String?> videoUrl = const Value.absent(),
                 Value<String?> cues = const Value.absent(),
                 Value<int?> archivedAtMs = const Value.absent(),
@@ -9182,6 +9462,10 @@ class $$LibraryExercisesTableTableManager
                 nameLower: nameLower,
                 measurementTypeDiscriminator: measurementTypeDiscriminator,
                 measurementTypePayloadJson: measurementTypePayloadJson,
+                source: source,
+                prominence: prominence,
+                primaryMusclesJson: primaryMusclesJson,
+                secondaryMusclesJson: secondaryMusclesJson,
                 videoUrl: videoUrl,
                 cues: cues,
                 archivedAtMs: archivedAtMs,
