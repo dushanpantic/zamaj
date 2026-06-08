@@ -2,7 +2,7 @@
 
 **Created**: 2026-06-06
 **Branch**: master
-**Status**: approved
+**Status**: in-progress
 
 ## Goal
 
@@ -176,12 +176,12 @@ Feature: Pre-populated exercise library (clear-and-reseed)
 - [x] Step 4: Persistence schema — columns, drift bump, clear-and-migrate, mapper
 - [x] Step 5: Repository — defaults, common-first sort, idempotent seedCanonical
 - [x] Step 6: Catalog asset, UUID tool, integrity + frozen-id tests, authored content
-- [ ] Step 7: Wire seeding into launch
+- [x] Step 7: Wire seeding into launch
 
 ### Acceptance Criteria
 
 - [x] v12 migration clears library + nulls libraryExerciseId; programs/sessions intact
-- [ ] Library populated with canonical catalog on launch
+- [x] Library populated with canonical catalog on launch
 - [x] Seeding idempotent; no duplicates; user edits to seeded rows preserved
 - [x] List + picker ordered common-first, then specialized, alpha within tier
 - [x] Every exercise carries prominence + disjoint primary/secondary muscles
