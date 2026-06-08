@@ -175,7 +175,7 @@ Feature: Pre-populated exercise library (clear-and-reseed)
 - [x] Step 3: CanonicalSeedExercise DTO + catalog parser
 - [x] Step 4: Persistence schema — columns, drift bump, clear-and-migrate, mapper
 - [x] Step 5: Repository — defaults, common-first sort, idempotent seedCanonical
-- [ ] Step 6: Catalog asset, UUID tool, integrity + frozen-id tests, authored content
+- [x] Step 6: Catalog asset, UUID tool, integrity + frozen-id tests, authored content
 - [ ] Step 7: Wire seeding into launch
 
 ### Acceptance Criteria
@@ -184,10 +184,10 @@ Feature: Pre-populated exercise library (clear-and-reseed)
 - [ ] Library populated with canonical catalog on launch
 - [x] Seeding idempotent; no duplicates; user edits to seeded rows preserved
 - [x] List + picker ordered common-first, then specialized, alpha within tier
-- [ ] Every exercise carries prominence + disjoint primary/secondary muscles
-- [ ] Seed UUIDs tool-generated; tool only fills missing ids
-- [ ] Frozen-id test enforces append-only ids
-- [ ] Integrity test enforces id/name/enum/muscle validity
+- [x] Every exercise carries prominence + disjoint primary/secondary muscles
+- [x] Seed UUIDs tool-generated; tool only fills missing ids
+- [x] Frozen-id test enforces append-only ids
+- [x] Integrity test enforces id/name/enum/muscle validity
 - [ ] `tool/ci.sh` passes
 
 ## Plan Review Summary

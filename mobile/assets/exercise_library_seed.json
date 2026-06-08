@@ -1,0 +1,1031 @@
+[
+  {
+    "id": "dce24b66-dab3-4033-8210-eb7082c32884",
+    "name": "Barbell Bench Press",
+    "measurementType": "repBased",
+    "prominence": "common",
+    "primaryMuscles": [
+      "chest"
+    ],
+    "secondaryMuscles": [
+      "triceps",
+      "shoulders"
+    ],
+    "cues": "Retract the shoulder blades and keep the bar over the mid-chest."
+  },
+  {
+    "id": "7b057b8a-d3b7-4adc-bf13-85e43e99678c",
+    "name": "Incline Barbell Bench Press",
+    "measurementType": "repBased",
+    "prominence": "common",
+    "primaryMuscles": [
+      "chest"
+    ],
+    "secondaryMuscles": [
+      "shoulders",
+      "triceps"
+    ]
+  },
+  {
+    "id": "3a9bcee8-6fc2-4e32-bba7-4c5b6ce2ddb3",
+    "name": "Dumbbell Bench Press",
+    "measurementType": "repBased",
+    "prominence": "common",
+    "primaryMuscles": [
+      "chest"
+    ],
+    "secondaryMuscles": [
+      "triceps",
+      "shoulders"
+    ]
+  },
+  {
+    "id": "37a6e29e-f418-4181-b3f1-2b5a9a7b7c23",
+    "name": "Incline Dumbbell Press",
+    "measurementType": "repBased",
+    "prominence": "common",
+    "primaryMuscles": [
+      "chest"
+    ],
+    "secondaryMuscles": [
+      "shoulders",
+      "triceps"
+    ]
+  },
+  {
+    "id": "b7716db8-3ffc-466e-b7fc-8eeb62efbfaa",
+    "name": "Machine Chest Press",
+    "measurementType": "repBased",
+    "prominence": "common",
+    "primaryMuscles": [
+      "chest"
+    ],
+    "secondaryMuscles": [
+      "triceps",
+      "shoulders"
+    ]
+  },
+  {
+    "id": "f6a9c1ab-d01b-4ace-bae4-b278bca5e4e7",
+    "name": "Cable Fly",
+    "measurementType": "repBased",
+    "prominence": "common",
+    "primaryMuscles": [
+      "chest"
+    ],
+    "secondaryMuscles": [
+      "shoulders"
+    ]
+  },
+  {
+    "id": "e9ddb61b-0c5d-4553-a97f-27ba1e7e4152",
+    "name": "Pec Deck",
+    "measurementType": "repBased",
+    "prominence": "specialized",
+    "primaryMuscles": [
+      "chest"
+    ],
+    "secondaryMuscles": [
+      "shoulders"
+    ]
+  },
+  {
+    "id": "c660076a-ef7b-42bd-a02f-5e34922ec352",
+    "name": "Dumbbell Fly",
+    "measurementType": "repBased",
+    "prominence": "specialized",
+    "primaryMuscles": [
+      "chest"
+    ],
+    "secondaryMuscles": [
+      "shoulders"
+    ]
+  },
+  {
+    "id": "29a30d10-d240-41ba-8f62-c5ad00fc4ad6",
+    "name": "Push-Up",
+    "measurementType": "bodyweight",
+    "prominence": "common",
+    "primaryMuscles": [
+      "chest"
+    ],
+    "secondaryMuscles": [
+      "triceps",
+      "shoulders"
+    ]
+  },
+  {
+    "id": "5d43cae6-7d14-42fb-91cf-64b4b012163a",
+    "name": "Chest Dip",
+    "measurementType": "bodyweight",
+    "prominence": "common",
+    "primaryMuscles": [
+      "chest"
+    ],
+    "secondaryMuscles": [
+      "triceps",
+      "shoulders"
+    ]
+  },
+  {
+    "id": "d119a84a-09b7-4cda-84ea-582b51987ba5",
+    "name": "Conventional Deadlift",
+    "measurementType": "repBased",
+    "prominence": "common",
+    "primaryMuscles": [
+      "glutes",
+      "hamstrings",
+      "lowerBack"
+    ],
+    "secondaryMuscles": [
+      "traps",
+      "forearms",
+      "quadriceps"
+    ],
+    "cues": "Brace hard, push the floor away, and keep the bar against the legs."
+  },
+  {
+    "id": "46f9f818-3baf-46f8-a412-a3b62cc3efd9",
+    "name": "Bent-Over Barbell Row",
+    "measurementType": "repBased",
+    "prominence": "common",
+    "primaryMuscles": [
+      "upperBack",
+      "lats"
+    ],
+    "secondaryMuscles": [
+      "biceps",
+      "lowerBack",
+      "forearms"
+    ]
+  },
+  {
+    "id": "1404e3d0-c2a0-4f15-9dba-e8eeba745ed2",
+    "name": "Pendlay Row",
+    "measurementType": "repBased",
+    "prominence": "specialized",
+    "primaryMuscles": [
+      "upperBack",
+      "lats"
+    ],
+    "secondaryMuscles": [
+      "biceps",
+      "lowerBack"
+    ]
+  },
+  {
+    "id": "c9d44975-ff3d-4b48-b46c-220c0eb4c929",
+    "name": "Pull-Up",
+    "measurementType": "bodyweight",
+    "prominence": "common",
+    "primaryMuscles": [
+      "lats"
+    ],
+    "secondaryMuscles": [
+      "biceps",
+      "upperBack",
+      "forearms"
+    ]
+  },
+  {
+    "id": "62068bf8-b207-421f-b206-9b8167a59da9",
+    "name": "Chin-Up",
+    "measurementType": "bodyweight",
+    "prominence": "common",
+    "primaryMuscles": [
+      "lats"
+    ],
+    "secondaryMuscles": [
+      "biceps",
+      "upperBack"
+    ]
+  },
+  {
+    "id": "a5a575a6-61b8-4965-accb-fd638fd824d2",
+    "name": "Lat Pulldown",
+    "measurementType": "repBased",
+    "prominence": "common",
+    "primaryMuscles": [
+      "lats"
+    ],
+    "secondaryMuscles": [
+      "biceps",
+      "upperBack"
+    ]
+  },
+  {
+    "id": "0947f1b9-27a8-4a9c-b92d-691498014d4d",
+    "name": "Seated Cable Row",
+    "measurementType": "repBased",
+    "prominence": "common",
+    "primaryMuscles": [
+      "upperBack",
+      "lats"
+    ],
+    "secondaryMuscles": [
+      "biceps",
+      "forearms"
+    ]
+  },
+  {
+    "id": "2ab512dc-20fb-439d-ab30-d06d3e85a3fc",
+    "name": "Single-Arm Dumbbell Row",
+    "measurementType": "repBased",
+    "prominence": "common",
+    "primaryMuscles": [
+      "lats",
+      "upperBack"
+    ],
+    "secondaryMuscles": [
+      "biceps",
+      "forearms"
+    ]
+  },
+  {
+    "id": "47ce4eac-dbc0-496b-acca-20280ee98855",
+    "name": "T-Bar Row",
+    "measurementType": "repBased",
+    "prominence": "specialized",
+    "primaryMuscles": [
+      "upperBack",
+      "lats"
+    ],
+    "secondaryMuscles": [
+      "biceps"
+    ]
+  },
+  {
+    "id": "b43de103-85ee-4e17-b9a0-97919c024b5b",
+    "name": "Inverted Row",
+    "measurementType": "bodyweight",
+    "prominence": "specialized",
+    "primaryMuscles": [
+      "upperBack",
+      "lats"
+    ],
+    "secondaryMuscles": [
+      "biceps"
+    ]
+  },
+  {
+    "id": "a6e9e0f6-48a4-4ca0-b538-e9a3924fc24c",
+    "name": "Straight-Arm Pulldown",
+    "measurementType": "repBased",
+    "prominence": "specialized",
+    "primaryMuscles": [
+      "lats"
+    ],
+    "secondaryMuscles": []
+  },
+  {
+    "id": "6ad7a943-da44-4ef8-af77-a12be8641ac9",
+    "name": "Face Pull",
+    "measurementType": "repBased",
+    "prominence": "common",
+    "primaryMuscles": [
+      "shoulders",
+      "upperBack"
+    ],
+    "secondaryMuscles": [
+      "biceps"
+    ]
+  },
+  {
+    "id": "1cf5709c-dd73-41a2-965e-8341cb19c862",
+    "name": "Barbell Shrug",
+    "measurementType": "repBased",
+    "prominence": "common",
+    "primaryMuscles": [
+      "traps"
+    ],
+    "secondaryMuscles": [
+      "forearms"
+    ]
+  },
+  {
+    "id": "b5624f31-b2d0-4cf8-96b5-d85c1091dc82",
+    "name": "Dumbbell Shrug",
+    "measurementType": "repBased",
+    "prominence": "specialized",
+    "primaryMuscles": [
+      "traps"
+    ],
+    "secondaryMuscles": [
+      "forearms"
+    ]
+  },
+  {
+    "id": "71ff7d3b-93d2-47af-a5c3-6f7e28e15ae4",
+    "name": "Back Extension",
+    "measurementType": "bodyweight",
+    "prominence": "common",
+    "primaryMuscles": [
+      "lowerBack"
+    ],
+    "secondaryMuscles": [
+      "glutes",
+      "hamstrings"
+    ]
+  },
+  {
+    "id": "0b26612c-c087-424e-b703-06f8b09f52be",
+    "name": "Overhead Press",
+    "measurementType": "repBased",
+    "prominence": "common",
+    "primaryMuscles": [
+      "shoulders"
+    ],
+    "secondaryMuscles": [
+      "triceps",
+      "traps"
+    ],
+    "cues": "Squeeze the glutes and press the bar to a locked-out overhead stack."
+  },
+  {
+    "id": "f3d11cac-0466-4a52-9f26-ea222d83f925",
+    "name": "Seated Dumbbell Shoulder Press",
+    "measurementType": "repBased",
+    "prominence": "common",
+    "primaryMuscles": [
+      "shoulders"
+    ],
+    "secondaryMuscles": [
+      "triceps"
+    ]
+  },
+  {
+    "id": "2ebf4d11-b4cd-4351-b695-a757dc9d39f4",
+    "name": "Arnold Press",
+    "measurementType": "repBased",
+    "prominence": "specialized",
+    "primaryMuscles": [
+      "shoulders"
+    ],
+    "secondaryMuscles": [
+      "triceps"
+    ]
+  },
+  {
+    "id": "5b4b89b9-4118-4b47-a421-1e0940c78072",
+    "name": "Dumbbell Lateral Raise",
+    "measurementType": "repBased",
+    "prominence": "common",
+    "primaryMuscles": [
+      "shoulders"
+    ],
+    "secondaryMuscles": []
+  },
+  {
+    "id": "386d0dd1-6658-43a2-bd55-2fb263e951e2",
+    "name": "Cable Lateral Raise",
+    "measurementType": "repBased",
+    "prominence": "specialized",
+    "primaryMuscles": [
+      "shoulders"
+    ],
+    "secondaryMuscles": []
+  },
+  {
+    "id": "fd73e98d-a71b-4e70-8b83-e77602f2c94d",
+    "name": "Dumbbell Front Raise",
+    "measurementType": "repBased",
+    "prominence": "specialized",
+    "primaryMuscles": [
+      "shoulders"
+    ],
+    "secondaryMuscles": []
+  },
+  {
+    "id": "88144b22-6717-4d8c-80a5-c92c17833e55",
+    "name": "Reverse Pec Deck",
+    "measurementType": "repBased",
+    "prominence": "common",
+    "primaryMuscles": [
+      "shoulders"
+    ],
+    "secondaryMuscles": [
+      "upperBack"
+    ]
+  },
+  {
+    "id": "49d0f3df-dae0-40ba-8324-0ea0f4c32b74",
+    "name": "Upright Row",
+    "measurementType": "repBased",
+    "prominence": "specialized",
+    "primaryMuscles": [
+      "shoulders",
+      "traps"
+    ],
+    "secondaryMuscles": [
+      "biceps"
+    ]
+  },
+  {
+    "id": "ab2a4c4b-01bc-4c0c-95b1-af7dbe8e6308",
+    "name": "Landmine Press",
+    "measurementType": "repBased",
+    "prominence": "specialized",
+    "primaryMuscles": [
+      "shoulders"
+    ],
+    "secondaryMuscles": [
+      "triceps",
+      "chest"
+    ]
+  },
+  {
+    "id": "6f440d9b-2f85-40c6-a9e2-a82ccf53fb6c",
+    "name": "Back Squat",
+    "measurementType": "repBased",
+    "prominence": "common",
+    "primaryMuscles": [
+      "quadriceps",
+      "glutes"
+    ],
+    "secondaryMuscles": [
+      "hamstrings",
+      "lowerBack"
+    ],
+    "cues": "Brace, break at the hips and knees together, and drive up evenly."
+  },
+  {
+    "id": "bf23214a-a19d-45d6-839f-480a618b7737",
+    "name": "Front Squat",
+    "measurementType": "repBased",
+    "prominence": "common",
+    "primaryMuscles": [
+      "quadriceps"
+    ],
+    "secondaryMuscles": [
+      "glutes",
+      "upperBack"
+    ]
+  },
+  {
+    "id": "5bad0505-0034-46ae-a41e-1ea1762c894b",
+    "name": "Leg Press",
+    "measurementType": "repBased",
+    "prominence": "common",
+    "primaryMuscles": [
+      "quadriceps",
+      "glutes"
+    ],
+    "secondaryMuscles": [
+      "hamstrings"
+    ]
+  },
+  {
+    "id": "e1bb6f66-f65f-493b-bcd0-14c9d3a490ce",
+    "name": "Hack Squat",
+    "measurementType": "repBased",
+    "prominence": "specialized",
+    "primaryMuscles": [
+      "quadriceps"
+    ],
+    "secondaryMuscles": [
+      "glutes"
+    ]
+  },
+  {
+    "id": "c7e3281b-625c-4710-9637-a973b7d7dd31",
+    "name": "Bulgarian Split Squat",
+    "measurementType": "repBased",
+    "prominence": "common",
+    "primaryMuscles": [
+      "quadriceps",
+      "glutes"
+    ],
+    "secondaryMuscles": [
+      "hamstrings"
+    ]
+  },
+  {
+    "id": "2ef041fa-c214-465d-9786-8c54ee9bece3",
+    "name": "Walking Lunge",
+    "measurementType": "repBased",
+    "prominence": "common",
+    "primaryMuscles": [
+      "quadriceps",
+      "glutes"
+    ],
+    "secondaryMuscles": [
+      "hamstrings"
+    ]
+  },
+  {
+    "id": "6b2bd07f-ba04-499b-9f90-034729e8ca3b",
+    "name": "Leg Extension",
+    "measurementType": "repBased",
+    "prominence": "common",
+    "primaryMuscles": [
+      "quadriceps"
+    ],
+    "secondaryMuscles": []
+  },
+  {
+    "id": "ee126a40-37db-426a-a539-2f4130c7a707",
+    "name": "Romanian Deadlift",
+    "measurementType": "repBased",
+    "prominence": "common",
+    "primaryMuscles": [
+      "hamstrings",
+      "glutes"
+    ],
+    "secondaryMuscles": [
+      "lowerBack",
+      "forearms"
+    ]
+  },
+  {
+    "id": "97ef3769-c8f8-4244-990d-802ed4b34683",
+    "name": "Lying Leg Curl",
+    "measurementType": "repBased",
+    "prominence": "common",
+    "primaryMuscles": [
+      "hamstrings"
+    ],
+    "secondaryMuscles": [
+      "calves"
+    ]
+  },
+  {
+    "id": "8697822b-4b42-488b-86a7-3d62076c1a7f",
+    "name": "Seated Leg Curl",
+    "measurementType": "repBased",
+    "prominence": "common",
+    "primaryMuscles": [
+      "hamstrings"
+    ],
+    "secondaryMuscles": [
+      "calves"
+    ]
+  },
+  {
+    "id": "47788c7d-2639-4b6a-8e2f-e1a3d0cfa87b",
+    "name": "Hip Thrust",
+    "measurementType": "repBased",
+    "prominence": "common",
+    "primaryMuscles": [
+      "glutes"
+    ],
+    "secondaryMuscles": [
+      "hamstrings"
+    ]
+  },
+  {
+    "id": "b83df108-eda4-4f07-a7f6-2809553673ba",
+    "name": "Glute Bridge",
+    "measurementType": "bodyweight",
+    "prominence": "specialized",
+    "primaryMuscles": [
+      "glutes"
+    ],
+    "secondaryMuscles": [
+      "hamstrings"
+    ]
+  },
+  {
+    "id": "09308936-7f19-4a5c-b41c-3f9993dc4c08",
+    "name": "Goblet Squat",
+    "measurementType": "repBased",
+    "prominence": "common",
+    "primaryMuscles": [
+      "quadriceps",
+      "glutes"
+    ],
+    "secondaryMuscles": [
+      "hamstrings"
+    ]
+  },
+  {
+    "id": "92891e0c-b014-4c83-96b9-31654ce2cd5a",
+    "name": "Standing Calf Raise",
+    "measurementType": "repBased",
+    "prominence": "common",
+    "primaryMuscles": [
+      "calves"
+    ],
+    "secondaryMuscles": []
+  },
+  {
+    "id": "f53db468-b7ca-45bd-81bf-a5093832f19c",
+    "name": "Seated Calf Raise",
+    "measurementType": "repBased",
+    "prominence": "common",
+    "primaryMuscles": [
+      "calves"
+    ],
+    "secondaryMuscles": []
+  },
+  {
+    "id": "c50c31b6-b401-44fe-b041-d57b2b6c9407",
+    "name": "Hip Adduction Machine",
+    "measurementType": "repBased",
+    "prominence": "specialized",
+    "primaryMuscles": [
+      "adductors"
+    ],
+    "secondaryMuscles": []
+  },
+  {
+    "id": "de87bc0b-bd8b-48ad-a1ca-09047bd6fca4",
+    "name": "Hip Abduction Machine",
+    "measurementType": "repBased",
+    "prominence": "specialized",
+    "primaryMuscles": [
+      "abductors",
+      "glutes"
+    ],
+    "secondaryMuscles": []
+  },
+  {
+    "id": "c03f592f-02c8-48e2-8364-118b946f8a0f",
+    "name": "Pistol Squat",
+    "measurementType": "bodyweight",
+    "prominence": "specialized",
+    "primaryMuscles": [
+      "quadriceps",
+      "glutes"
+    ],
+    "secondaryMuscles": [
+      "hamstrings",
+      "calves"
+    ]
+  },
+  {
+    "id": "943f65db-cc43-4dce-992f-8c086635716b",
+    "name": "Nordic Hamstring Curl",
+    "measurementType": "bodyweight",
+    "prominence": "specialized",
+    "primaryMuscles": [
+      "hamstrings"
+    ],
+    "secondaryMuscles": [
+      "glutes"
+    ]
+  },
+  {
+    "id": "9fdb3596-6cc5-4a8f-b4f5-95fd8a612424",
+    "name": "Pendulum Squat",
+    "measurementType": "repBased",
+    "prominence": "specialized",
+    "primaryMuscles": [
+      "quadriceps"
+    ],
+    "secondaryMuscles": [
+      "glutes"
+    ]
+  },
+  {
+    "id": "c11f4334-5589-4e5a-ba72-24f9f9fe676b",
+    "name": "Jefferson Deadlift",
+    "measurementType": "repBased",
+    "prominence": "specialized",
+    "primaryMuscles": [
+      "glutes",
+      "quadriceps"
+    ],
+    "secondaryMuscles": [
+      "hamstrings",
+      "lowerBack"
+    ]
+  },
+  {
+    "id": "2646289a-e6f7-483d-a993-04bb9d3206d8",
+    "name": "Zercher Squat",
+    "measurementType": "repBased",
+    "prominence": "specialized",
+    "primaryMuscles": [
+      "quadriceps",
+      "glutes"
+    ],
+    "secondaryMuscles": [
+      "upperBack",
+      "lowerBack"
+    ]
+  },
+  {
+    "id": "af4402d6-9507-416a-bef6-c21564b99bc7",
+    "name": "Good Morning",
+    "measurementType": "repBased",
+    "prominence": "specialized",
+    "primaryMuscles": [
+      "hamstrings",
+      "lowerBack"
+    ],
+    "secondaryMuscles": [
+      "glutes"
+    ]
+  },
+  {
+    "id": "6e0680cd-fd5c-428b-805f-0c93204b42c1",
+    "name": "Barbell Curl",
+    "measurementType": "repBased",
+    "prominence": "common",
+    "primaryMuscles": [
+      "biceps"
+    ],
+    "secondaryMuscles": [
+      "forearms"
+    ]
+  },
+  {
+    "id": "fdd39d72-997a-47c8-9e08-3a72479f774d",
+    "name": "Dumbbell Curl",
+    "measurementType": "repBased",
+    "prominence": "common",
+    "primaryMuscles": [
+      "biceps"
+    ],
+    "secondaryMuscles": [
+      "forearms"
+    ]
+  },
+  {
+    "id": "1e114900-c3c5-4911-ac62-ddeb1a243916",
+    "name": "Hammer Curl",
+    "measurementType": "repBased",
+    "prominence": "common",
+    "primaryMuscles": [
+      "biceps",
+      "forearms"
+    ],
+    "secondaryMuscles": []
+  },
+  {
+    "id": "f376955c-0e7e-4629-863b-a0e02186d461",
+    "name": "Preacher Curl",
+    "measurementType": "repBased",
+    "prominence": "common",
+    "primaryMuscles": [
+      "biceps"
+    ],
+    "secondaryMuscles": [
+      "forearms"
+    ]
+  },
+  {
+    "id": "6c6c141d-e95a-4907-80bf-1459193722d6",
+    "name": "Incline Dumbbell Curl",
+    "measurementType": "repBased",
+    "prominence": "specialized",
+    "primaryMuscles": [
+      "biceps"
+    ],
+    "secondaryMuscles": [
+      "forearms"
+    ]
+  },
+  {
+    "id": "fb972eab-4807-40c8-a9e8-fb870c977db9",
+    "name": "Concentration Curl",
+    "measurementType": "repBased",
+    "prominence": "specialized",
+    "primaryMuscles": [
+      "biceps"
+    ],
+    "secondaryMuscles": [
+      "forearms"
+    ]
+  },
+  {
+    "id": "481367db-e7a8-44b4-ba92-8b8be8eed4a0",
+    "name": "Spider Curl",
+    "measurementType": "repBased",
+    "prominence": "specialized",
+    "primaryMuscles": [
+      "biceps"
+    ],
+    "secondaryMuscles": [
+      "forearms"
+    ]
+  },
+  {
+    "id": "dad61073-d513-4bc2-adca-2c68463f8a7a",
+    "name": "Cable Curl",
+    "measurementType": "repBased",
+    "prominence": "common",
+    "primaryMuscles": [
+      "biceps"
+    ],
+    "secondaryMuscles": [
+      "forearms"
+    ]
+  },
+  {
+    "id": "420c6218-bad8-4ffd-a6bf-88239092cb1f",
+    "name": "Triceps Pushdown",
+    "measurementType": "repBased",
+    "prominence": "common",
+    "primaryMuscles": [
+      "triceps"
+    ],
+    "secondaryMuscles": []
+  },
+  {
+    "id": "cc7f8d95-f5a8-4319-b2b8-bdd33dae917a",
+    "name": "Overhead Triceps Extension",
+    "measurementType": "repBased",
+    "prominence": "common",
+    "primaryMuscles": [
+      "triceps"
+    ],
+    "secondaryMuscles": []
+  },
+  {
+    "id": "888ab688-ab5b-4600-8a53-99b96778987e",
+    "name": "Skull Crusher",
+    "measurementType": "repBased",
+    "prominence": "common",
+    "primaryMuscles": [
+      "triceps"
+    ],
+    "secondaryMuscles": []
+  },
+  {
+    "id": "ee55a766-26d7-4a93-9125-92e869a0f578",
+    "name": "Close-Grip Bench Press",
+    "measurementType": "repBased",
+    "prominence": "common",
+    "primaryMuscles": [
+      "triceps"
+    ],
+    "secondaryMuscles": [
+      "chest",
+      "shoulders"
+    ]
+  },
+  {
+    "id": "632d016a-8f1f-4384-8cc7-6c2a1b7e9ed1",
+    "name": "JM Press",
+    "measurementType": "repBased",
+    "prominence": "specialized",
+    "primaryMuscles": [
+      "triceps"
+    ],
+    "secondaryMuscles": [
+      "chest"
+    ]
+  },
+  {
+    "id": "95184e7b-ece7-4506-8dc0-d8c7c720edb5",
+    "name": "Dumbbell Triceps Kickback",
+    "measurementType": "repBased",
+    "prominence": "specialized",
+    "primaryMuscles": [
+      "triceps"
+    ],
+    "secondaryMuscles": []
+  },
+  {
+    "id": "a18e40b0-ccf9-4de3-9c8c-eed3a85a832a",
+    "name": "Wrist Curl",
+    "measurementType": "repBased",
+    "prominence": "specialized",
+    "primaryMuscles": [
+      "forearms"
+    ],
+    "secondaryMuscles": []
+  },
+  {
+    "id": "382396cc-734f-449d-a8f5-4525ce8545f7",
+    "name": "Reverse Wrist Curl",
+    "measurementType": "repBased",
+    "prominence": "specialized",
+    "primaryMuscles": [
+      "forearms"
+    ],
+    "secondaryMuscles": []
+  },
+  {
+    "id": "0379f1d3-0dd4-474e-b804-400d7ba70919",
+    "name": "Plank",
+    "measurementType": "timeBased",
+    "prominence": "common",
+    "primaryMuscles": [
+      "abs"
+    ],
+    "secondaryMuscles": [
+      "obliques"
+    ]
+  },
+  {
+    "id": "af9770a0-d9e5-4337-bc61-71285d3b9f0e",
+    "name": "Side Plank",
+    "measurementType": "timeBased",
+    "prominence": "common",
+    "primaryMuscles": [
+      "obliques"
+    ],
+    "secondaryMuscles": [
+      "abs"
+    ]
+  },
+  {
+    "id": "37aee4ce-1ff0-4c2c-ae0a-39ccddc13435",
+    "name": "Hanging Leg Raise",
+    "measurementType": "bodyweight",
+    "prominence": "common",
+    "primaryMuscles": [
+      "abs"
+    ],
+    "secondaryMuscles": [
+      "hipFlexors",
+      "forearms"
+    ]
+  },
+  {
+    "id": "138c2193-d069-4aaf-b469-dd5197f6e4f7",
+    "name": "Cable Crunch",
+    "measurementType": "repBased",
+    "prominence": "common",
+    "primaryMuscles": [
+      "abs"
+    ],
+    "secondaryMuscles": []
+  },
+  {
+    "id": "1e50000e-865d-4d89-87e7-3572eef13925",
+    "name": "Crunch",
+    "measurementType": "bodyweight",
+    "prominence": "common",
+    "primaryMuscles": [
+      "abs"
+    ],
+    "secondaryMuscles": []
+  },
+  {
+    "id": "7176081f-af76-4ac5-b97e-279c2eb6d485",
+    "name": "Russian Twist",
+    "measurementType": "repBased",
+    "prominence": "specialized",
+    "primaryMuscles": [
+      "obliques"
+    ],
+    "secondaryMuscles": [
+      "abs"
+    ]
+  },
+  {
+    "id": "a8d65fd7-676d-454c-a74f-8cad897515f9",
+    "name": "Hollow Body Hold",
+    "measurementType": "timeBased",
+    "prominence": "specialized",
+    "primaryMuscles": [
+      "abs"
+    ],
+    "secondaryMuscles": [
+      "hipFlexors"
+    ]
+  },
+  {
+    "id": "8e66bf1c-e2e2-4dc7-bbbc-b71529f042d9",
+    "name": "Ab Wheel Rollout",
+    "measurementType": "bodyweight",
+    "prominence": "specialized",
+    "primaryMuscles": [
+      "abs"
+    ],
+    "secondaryMuscles": [
+      "lowerBack"
+    ]
+  },
+  {
+    "id": "98c717be-efad-4de3-a01c-df1adf315f8a",
+    "name": "Dead Hang",
+    "measurementType": "timeBased",
+    "prominence": "specialized",
+    "primaryMuscles": [
+      "forearms"
+    ],
+    "secondaryMuscles": [
+      "lats"
+    ]
+  },
+  {
+    "id": "6b317363-72ca-4e1b-b62b-85243a4145fc",
+    "name": "Farmer's Carry",
+    "measurementType": "timeBased",
+    "prominence": "common",
+    "primaryMuscles": [
+      "forearms",
+      "traps"
+    ],
+    "secondaryMuscles": [
+      "abs",
+      "obliques"
+    ]
+  },
+  {
+    "id": "d2c397cc-b81f-4ae2-9856-5c60e152bc9f",
+    "name": "Wall Sit",
+    "measurementType": "timeBased",
+    "prominence": "specialized",
+    "primaryMuscles": [
+      "quadriceps"
+    ],
+    "secondaryMuscles": [
+      "glutes"
+    ]
+  }
+]
