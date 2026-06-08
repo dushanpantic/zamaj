@@ -36,10 +36,10 @@ void main() {
       expect(entry.source, LibrarySource.canonicalSeed);
       expect(entry.prominence, Prominence.common);
       expect(entry.primaryMuscles, const [MuscleGroup.chest]);
-      expect(
-        entry.secondaryMuscles,
-        const [MuscleGroup.triceps, MuscleGroup.shoulders],
-      );
+      expect(entry.secondaryMuscles, const [
+        MuscleGroup.triceps,
+        MuscleGroup.shoulders,
+      ]);
     });
 
     test('toRow encodes source, prominence, and muscle lists as JSON', () {
@@ -51,8 +51,14 @@ void main() {
         primaryMuscles: const [MuscleGroup.lats],
         secondaryMuscles: const [MuscleGroup.biceps],
         source: LibrarySource.canonicalSeed,
-        createdAt: DateTime.fromMillisecondsSinceEpoch(1700000000000, isUtc: true),
-        updatedAt: DateTime.fromMillisecondsSinceEpoch(1700000001000, isUtc: true),
+        createdAt: DateTime.fromMillisecondsSinceEpoch(
+          1700000000000,
+          isUtc: true,
+        ),
+        updatedAt: DateTime.fromMillisecondsSinceEpoch(
+          1700000001000,
+          isUtc: true,
+        ),
         schemaVersion: 8,
       );
 
@@ -73,8 +79,14 @@ void main() {
         primaryMuscles: const [MuscleGroup.abs],
         secondaryMuscles: const [],
         source: LibrarySource.user,
-        createdAt: DateTime.fromMillisecondsSinceEpoch(1700000000000, isUtc: true),
-        updatedAt: DateTime.fromMillisecondsSinceEpoch(1700000001000, isUtc: true),
+        createdAt: DateTime.fromMillisecondsSinceEpoch(
+          1700000000000,
+          isUtc: true,
+        ),
+        updatedAt: DateTime.fromMillisecondsSinceEpoch(
+          1700000001000,
+          isUtc: true,
+        ),
         schemaVersion: 8,
       );
 
@@ -83,7 +95,8 @@ void main() {
         id: companion.id.value,
         name: companion.name.value,
         nameLower: companion.nameLower.value,
-        measurementTypeDiscriminator: companion.measurementTypeDiscriminator.value,
+        measurementTypeDiscriminator:
+            companion.measurementTypeDiscriminator.value,
         measurementTypePayloadJson: companion.measurementTypePayloadJson.value,
         source: companion.source.value,
         prominence: companion.prominence.value,

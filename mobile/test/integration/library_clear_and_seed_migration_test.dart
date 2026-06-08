@@ -38,9 +38,7 @@ void main() {
         final libCols = await db
             .customSelect("PRAGMA table_info('library_exercises')")
             .get();
-        final libColNames = libCols
-            .map((r) => r.read<String>('name'))
-            .toSet();
+        final libColNames = libCols.map((r) => r.read<String>('name')).toSet();
         for (final col in const [
           'source',
           'prominence',

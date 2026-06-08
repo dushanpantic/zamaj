@@ -53,10 +53,10 @@ void main() {
       expect(bench.measurementType, const MeasurementType.repBased());
       expect(bench.prominence, Prominence.common);
       expect(bench.primaryMuscles, const [MuscleGroup.chest]);
-      expect(
-        bench.secondaryMuscles,
-        const [MuscleGroup.triceps, MuscleGroup.shoulders],
-      );
+      expect(bench.secondaryMuscles, const [
+        MuscleGroup.triceps,
+        MuscleGroup.shoulders,
+      ]);
 
       final plank = entries.last;
       expect(plank.measurementType, const MeasurementType.timeBased());
@@ -110,8 +110,11 @@ void main() {
       expect(
         () => CanonicalSeedCatalog.parse(json),
         throwsA(
-          isA<DeserializationError>()
-              .having((e) => e.discriminator, 'discriminator', 'mainstream'),
+          isA<DeserializationError>().having(
+            (e) => e.discriminator,
+            'discriminator',
+            'mainstream',
+          ),
         ),
       );
     });
@@ -138,8 +141,7 @@ void main() {
       expect(
         () => CanonicalSeedCatalog.parse(json),
         throwsA(
-          isA<DeserializationError>()
-              .having((e) => e.field, 'field', 'id'),
+          isA<DeserializationError>().having((e) => e.field, 'field', 'id'),
         ),
       );
     });

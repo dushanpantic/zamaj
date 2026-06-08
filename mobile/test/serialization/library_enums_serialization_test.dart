@@ -21,8 +21,11 @@ void main() {
       expect(
         () => Prominence.fromJson('mainstream'),
         throwsA(
-          isA<DeserializationError>()
-              .having((e) => e.discriminator, 'discriminator', 'mainstream'),
+          isA<DeserializationError>().having(
+            (e) => e.discriminator,
+            'discriminator',
+            'mainstream',
+          ),
         ),
       );
     });
@@ -65,8 +68,11 @@ void main() {
       expect(
         () => MuscleGroup.fromJson('not_a_muscle'),
         throwsA(
-          isA<DeserializationError>()
-              .having((e) => e.discriminator, 'discriminator', 'not_a_muscle'),
+          isA<DeserializationError>().having(
+            (e) => e.discriminator,
+            'discriminator',
+            'not_a_muscle',
+          ),
         ),
       );
     });

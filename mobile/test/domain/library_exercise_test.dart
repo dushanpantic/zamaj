@@ -169,10 +169,10 @@ void main() {
       );
       expect(entry.prominence, Prominence.specialized);
       expect(entry.primaryMuscles, const [MuscleGroup.chest]);
-      expect(
-        entry.secondaryMuscles,
-        const [MuscleGroup.triceps, MuscleGroup.shoulders],
-      );
+      expect(entry.secondaryMuscles, const [
+        MuscleGroup.triceps,
+        MuscleGroup.shoulders,
+      ]);
       expect(entry.source, LibrarySource.canonicalSeed);
     });
 

@@ -31,10 +31,10 @@ void main() {
       expect(restored.prominence, Prominence.common);
       expect(restored.source, LibrarySource.canonicalSeed);
       expect(restored.primaryMuscles, const [MuscleGroup.chest]);
-      expect(
-        restored.secondaryMuscles,
-        const [MuscleGroup.triceps, MuscleGroup.shoulders],
-      );
+      expect(restored.secondaryMuscles, const [
+        MuscleGroup.triceps,
+        MuscleGroup.shoulders,
+      ]);
     });
 
     test('serializes enums as their bare names', () {
