@@ -4,8 +4,11 @@ import 'package:uuid/uuid.dart';
 import 'package:zamaj/core/canonical_json.dart';
 import 'package:zamaj/core/schema_versions.dart';
 import 'package:zamaj/modules/domain/errors.dart';
+import 'package:zamaj/modules/domain/models/canonical_seed_exercise.dart';
 import 'package:zamaj/modules/domain/models/library_exercise.dart' as domain;
+import 'package:zamaj/modules/domain/models/library_source.dart';
 import 'package:zamaj/modules/domain/models/measurement_type.dart';
+import 'package:zamaj/modules/domain/models/prominence.dart';
 import 'package:zamaj/modules/domain/repositories/exercise_library_repository.dart';
 import 'package:zamaj/modules/persistence/database/app_database.dart';
 import 'package:zamaj/modules/persistence/database/datetime_utils.dart';
@@ -56,6 +59,57 @@ class DriftExerciseLibraryRepository implements ExerciseLibraryRepository {
   }
 
   @override
+  Future<int> seedCanonical(List<CanonicalSeedExercise> entries) async {
+    if (entries.isEmpty) return 0;
+    final now = _clock.now().toUtc();
+    return _db.transaction(() async {
+      // Insert is keyed by id: skip entries whose id already exists so a
+      // user edit to a previously-seeded row is never clobbered. The
+      // insertOrIgnore mode is a belt-and-suspenders guard on the same key.
+      final ids = entries.map((e) => e.id).toList();
+      final existing = await (_db.select(
+        _db.libraryExercises,
+      )..where((t) => t.id.isIn(ids))).get();
+      final existingIds = existing.map((r) => r.id).toSet();
+      final toInsert = entries
+          .where((e) => !existingIds.contains(e.id))
+          .toList();
+      if (toInsert.isEmpty) return 0;
+
+      await _db.batch((batch) {
+        for (final entry in toInsert) {
+          final measurementJson = entry.measurementType.toJson();
+          batch.insert(
+            _db.libraryExercises,
+            LibraryExercisesCompanion.insert(
+              id: entry.id,
+              name: entry.name,
+              nameLower: LibraryExerciseMapper.normalize(entry.name),
+              measurementTypeDiscriminator: measurementJson['type'] as String,
+              measurementTypePayloadJson: CanonicalJson.encode(measurementJson),
+              source: Value(LibrarySource.canonicalSeed.toJson()),
+              prominence: Value(entry.prominence.toJson()),
+              primaryMusclesJson: Value(
+                LibraryExerciseMapper.encodeMuscles(entry.primaryMuscles),
+              ),
+              secondaryMusclesJson: Value(
+                LibraryExerciseMapper.encodeMuscles(entry.secondaryMuscles),
+              ),
+              videoUrl: Value(entry.videoUrl),
+              cues: Value(entry.cues),
+              createdAtMs: utcToMs(now),
+              updatedAtMs: utcToMs(now),
+              schemaVersion: SchemaVersions.domain,
+            ),
+            mode: InsertMode.insertOrIgnore,
+          );
+        }
+      });
+      return toInsert.length;
+    });
+  }
+
+  @override
   Future<domain.LibraryExercise?> get(String id) async {
     final row = await (_db.select(
       _db.libraryExercises,
@@ -86,10 +140,17 @@ class DriftExerciseLibraryRepository implements ExerciseLibraryRepository {
       query.where((t) => t.nameLower.like(needle));
     }
 
-    query.orderBy([(t) => OrderingTerm.asc(t.nameLower)]);
+    query.orderBy([_commonFirst, (t) => OrderingTerm.asc(t.nameLower)]);
     final rows = await query.get();
     return rows.map(_mapper.toDomain).toList();
   }
+
+  /// Orders [Prominence.common] entries ahead of [Prominence.specialized] via
+  /// an explicit rank (common → 0, specialized → 1), so the tier ordering is
+  /// the stated intent — not a coincidence of how the discriminators happen to
+  /// sort alphabetically.
+  static OrderingTerm _commonFirst($LibraryExercisesTable t) =>
+      OrderingTerm.asc(t.prominence.equals(Prominence.specialized.toJson()));
 
   @override
   Future<domain.LibraryExercise> update(domain.LibraryExercise entry) async {

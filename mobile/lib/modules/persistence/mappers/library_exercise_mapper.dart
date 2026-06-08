@@ -49,8 +49,8 @@ class LibraryExerciseMapper {
       measurementTypePayloadJson: Value(CanonicalJson.encode(measurementJson)),
       source: Value(entry.source.toJson()),
       prominence: Value(entry.prominence.toJson()),
-      primaryMusclesJson: Value(_encodeMuscles(entry.primaryMuscles)),
-      secondaryMusclesJson: Value(_encodeMuscles(entry.secondaryMuscles)),
+      primaryMusclesJson: Value(encodeMuscles(entry.primaryMuscles)),
+      secondaryMusclesJson: Value(encodeMuscles(entry.secondaryMuscles)),
       videoUrl: Value(entry.videoUrl),
       cues: Value(entry.cues),
       archivedAtMs: Value(entry.archivedAt?.millisecondsSinceEpoch),
@@ -66,7 +66,7 @@ class LibraryExerciseMapper {
 
   /// Encodes a muscle list as a canonical JSON array of enum discriminators,
   /// e.g. `["chest","triceps"]`. Paired with [_decodeMuscles].
-  static String _encodeMuscles(List<MuscleGroup> muscles) =>
+  static String encodeMuscles(List<MuscleGroup> muscles) =>
       CanonicalJson.encode(muscles.map((m) => m.toJson()).toList());
 
   static List<MuscleGroup> _decodeMuscles(String json) =>

@@ -3,10 +3,14 @@ import 'dart:math';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:zamaj/core/schema_versions.dart';
 import 'package:zamaj/modules/domain/errors.dart';
+import 'package:zamaj/modules/domain/models/canonical_seed_exercise.dart';
 import 'package:zamaj/modules/domain/models/exercise.dart' as domain;
 import 'package:zamaj/modules/domain/models/exercise_group_kind.dart';
 import 'package:zamaj/modules/domain/models/exercise_metadata.dart';
+import 'package:zamaj/modules/domain/models/library_source.dart';
 import 'package:zamaj/modules/domain/models/measurement_type.dart';
+import 'package:zamaj/modules/domain/models/muscle_group.dart';
+import 'package:zamaj/modules/domain/models/prominence.dart';
 import 'package:zamaj/modules/persistence/database/app_database.dart';
 import 'package:zamaj/modules/persistence/repositories/drift_exercise_library_repository.dart';
 import 'package:zamaj/modules/persistence/repositories/drift_program_repository.dart';
@@ -55,6 +59,18 @@ void main() {
       expect(entry.videoUrl, equals('https://example.com/plank'));
       expect(entry.cues, equals('Tight glutes. Neutral spine.'));
       expect(entry.measurementType, isA<TimeBasedMeasurement>());
+    });
+
+    test('stamps user source, common prominence, and empty muscles', () async {
+      final entry = await repo.create(
+        name: 'BB Bench Press',
+        measurementType: const MeasurementType.repBased(),
+      );
+
+      expect(entry.source, equals(LibrarySource.user));
+      expect(entry.prominence, equals(Prominence.common));
+      expect(entry.primaryMuscles, isEmpty);
+      expect(entry.secondaryMuscles, isEmpty);
     });
   });
 
@@ -346,4 +362,107 @@ void main() {
       );
     });
   });
+
+  group('seedCanonical', () {
+    test('inserts every entry stamped with the canonicalSeed source', () async {
+      final inserted = await repo.seedCanonical([
+        _seedEntry('11111111-1111-4111-8111-111111111111', 'Barbell Squat'),
+        _seedEntry(
+          '22222222-2222-4222-8222-222222222222',
+          'Zercher Squat',
+          prominence: Prominence.specialized,
+          primary: const [MuscleGroup.quadriceps],
+          secondary: const [MuscleGroup.glutes],
+        ),
+      ]);
+
+      expect(inserted, equals(2));
+      final entries = await repo.list();
+      expect(entries.map((e) => e.name).toSet(), {
+        'Barbell Squat',
+        'Zercher Squat',
+      });
+      expect(
+        entries.every((e) => e.source == LibrarySource.canonicalSeed),
+        isTrue,
+        reason: 'seeded rows must be tagged canonicalSeed',
+      );
+      final zercher = entries.firstWhere((e) => e.name == 'Zercher Squat');
+      expect(zercher.prominence, equals(Prominence.specialized));
+      expect(zercher.primaryMuscles, equals([MuscleGroup.quadriceps]));
+      expect(zercher.secondaryMuscles, equals([MuscleGroup.glutes]));
+    });
+
+    test(
+      'orders common-first, then specialized, alpha within each tier',
+      () async {
+        // Names are chosen so a pure alphabetical sort (the old behavior) would
+        // interleave the tiers — common-first ordering must dominate the name.
+        await repo.seedCanonical([
+          _seedEntry(
+            '33333333-3333-4333-8333-333333333333',
+            'Alpha',
+            prominence: Prominence.specialized,
+          ),
+          _seedEntry(
+            '44444444-4444-4444-8444-444444444444',
+            'Zulu',
+            prominence: Prominence.common,
+          ),
+          _seedEntry(
+            '55555555-5555-4555-8555-555555555555',
+            'Bravo',
+            prominence: Prominence.specialized,
+          ),
+          _seedEntry(
+            '66666666-6666-4666-8666-666666666666',
+            'Yankee',
+            prominence: Prominence.common,
+          ),
+        ]);
+
+        final entries = await repo.list();
+        expect(entries.map((e) => e.name).toList(), [
+          'Yankee', // common tier, alpha-first within it
+          'Zulu', // common tier
+          'Alpha', // specialized tier, alpha-first within it
+          'Bravo', // specialized tier
+        ]);
+      },
+    );
+
+    test(
+      'is idempotent: re-seeding inserts nothing and adds no rows',
+      () async {
+        final entries = [
+          _seedEntry('77777777-7777-4777-8777-777777777777', 'Deadlift'),
+          _seedEntry('88888888-8888-4888-8888-888888888888', 'Front Squat'),
+        ];
+
+        final firstInserted = await repo.seedCanonical(entries);
+        final secondInserted = await repo.seedCanonical(entries);
+
+        expect(firstInserted, equals(2));
+        expect(secondInserted, equals(0));
+        expect((await repo.list()).length, equals(2));
+      },
+    );
+  });
+}
+
+CanonicalSeedExercise _seedEntry(
+  String id,
+  String name, {
+  Prominence prominence = Prominence.common,
+  List<MuscleGroup> primary = const [MuscleGroup.chest],
+  List<MuscleGroup> secondary = const [],
+}) {
+  return CanonicalSeedExercise(
+    id: id,
+    name: name,
+    measurementType: const MeasurementType.repBased(),
+    prominence: prominence,
+    primaryMuscles: primary,
+    secondaryMuscles: secondary,
+  );
 }

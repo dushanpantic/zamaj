@@ -4,7 +4,9 @@
 /// signatures are typed solely in domain terms (Req 10.1).
 library;
 
+import 'package:zamaj/modules/domain/models/canonical_seed_exercise.dart';
 import 'package:zamaj/modules/domain/models/library_exercise.dart';
+import 'package:zamaj/modules/domain/models/library_source.dart';
 import 'package:zamaj/modules/domain/models/measurement_type.dart';
 
 abstract class ExerciseLibraryRepository {
@@ -14,6 +16,15 @@ abstract class ExerciseLibraryRepository {
     String? videoUrl,
     String? cues,
   });
+
+  /// Idempotently inserts the embedded canonical catalog.
+  ///
+  /// Insertion is keyed by id: an entry whose id already exists is left
+  /// untouched, so user edits to a previously-seeded row survive re-seeding
+  /// (subsequent launches, app updates). Inserted rows are stamped
+  /// [LibrarySource.canonicalSeed] with repository-managed timestamps.
+  /// Returns the number of rows actually inserted.
+  Future<int> seedCanonical(List<CanonicalSeedExercise> entries);
 
   Future<LibraryExercise?> get(String id);
 
