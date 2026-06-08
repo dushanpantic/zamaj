@@ -214,6 +214,32 @@
     ]
   },
   {
+    "id": "882225a9-a49a-47e6-b6e2-1248ca35d5f8",
+    "name": "Underhand Lat Pulldown",
+    "measurementType": "repBased",
+    "prominence": "specialized",
+    "primaryMuscles": [
+      "lats",
+      "biceps"
+    ],
+    "secondaryMuscles": [
+      "upperBack"
+    ]
+  },
+  {
+    "id": "eea5266f-8d72-4f1b-a038-6f0cc9c9ad92",
+    "name": "Lat Pulldown Machine",
+    "measurementType": "repBased",
+    "prominence": "specialized",
+    "primaryMuscles": [
+      "lats"
+    ],
+    "secondaryMuscles": [
+      "biceps",
+      "upperBack"
+    ]
+  },
+  {
     "id": "0947f1b9-27a8-4a9c-b92d-691498014d4d",
     "name": "Seated Cable Row",
     "measurementType": "repBased",
