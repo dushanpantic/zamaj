@@ -308,6 +308,91 @@
     ]
   },
   {
+    "id": "b957da82-1f09-42cc-8f7e-e5b9cb2b061d",
+    "name": "TRX Chest Press",
+    "measurementType": "bodyweight",
+    "prominence": "specialized",
+    "primaryMuscles": [
+      "chest"
+    ],
+    "secondaryMuscles": [
+      "triceps",
+      "shoulders"
+    ]
+  },
+  {
+    "id": "c79baead-1b2c-4d7d-b8b2-49b7639ac017",
+    "name": "TRX Y-Raise",
+    "measurementType": "bodyweight",
+    "prominence": "specialized",
+    "primaryMuscles": [
+      "shoulders"
+    ],
+    "secondaryMuscles": [
+      "upperBack"
+    ]
+  },
+  {
+    "id": "9cb70c86-e135-4f3c-96c2-3b9708067593",
+    "name": "TRX Face Pull",
+    "measurementType": "bodyweight",
+    "prominence": "specialized",
+    "primaryMuscles": [
+      "shoulders",
+      "upperBack"
+    ],
+    "secondaryMuscles": [
+      "biceps"
+    ]
+  },
+  {
+    "id": "177645a1-a6ad-47fe-8846-cb028fbbfe24",
+    "name": "TRX Bicep Curl",
+    "measurementType": "bodyweight",
+    "prominence": "specialized",
+    "primaryMuscles": [
+      "biceps"
+    ],
+    "secondaryMuscles": [
+      "forearms"
+    ]
+  },
+  {
+    "id": "975e0fd4-450e-4225-8fa8-337c362b9ac4",
+    "name": "TRX Tricep Press",
+    "measurementType": "bodyweight",
+    "prominence": "specialized",
+    "primaryMuscles": [
+      "triceps"
+    ],
+    "secondaryMuscles": []
+  },
+  {
+    "id": "6b34a4d3-ce22-4653-95f1-c7dc26d28c5d",
+    "name": "TRX Hamstring Curl",
+    "measurementType": "bodyweight",
+    "prominence": "specialized",
+    "primaryMuscles": [
+      "hamstrings"
+    ],
+    "secondaryMuscles": [
+      "glutes"
+    ]
+  },
+  {
+    "id": "5bb6567e-c4ba-4e7e-a831-ec88c7a2e97c",
+    "name": "TRX Pistol Squat",
+    "measurementType": "bodyweight",
+    "prominence": "specialized",
+    "primaryMuscles": [
+      "quadriceps",
+      "glutes"
+    ],
+    "secondaryMuscles": [
+      "hamstrings"
+    ]
+  },
+  {
     "id": "a6e9e0f6-48a4-4ca0-b538-e9a3924fc24c",
     "name": "Straight-Arm Pulldown",
     "measurementType": "repBased",
