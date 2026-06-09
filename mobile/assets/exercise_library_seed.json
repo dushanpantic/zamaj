@@ -511,6 +511,16 @@
     "secondaryMuscles": []
   },
   {
+    "id": "9f668eae-bb75-4901-a4d5-cc7c7363cdbe",
+    "name": "Nordic Shoulder",
+    "measurementType": "repBased",
+    "prominence": "specialized",
+    "primaryMuscles": [
+      "shoulders"
+    ],
+    "secondaryMuscles": []
+  },
+  {
     "id": "fd73e98d-a71b-4e70-8b83-e77602f2c94d",
     "name": "Dumbbell Front Raise",
     "measurementType": "repBased",
@@ -638,6 +648,46 @@
     ]
   },
   {
+    "id": "17293b28-b4cd-4cd0-8fd8-2149f46ac9c3",
+    "name": "Cossack Squat",
+    "measurementType": "repBased",
+    "prominence": "specialized",
+    "primaryMuscles": [
+      "quadriceps",
+      "glutes",
+      "adductors"
+    ],
+    "secondaryMuscles": [
+      "hamstrings"
+    ]
+  },
+  {
+    "id": "b719c0af-421a-46ea-9878-00717b659873",
+    "name": "Step-Down",
+    "measurementType": "repBased",
+    "prominence": "specialized",
+    "primaryMuscles": [
+      "quadriceps",
+      "glutes"
+    ],
+    "secondaryMuscles": [
+      "hamstrings"
+    ]
+  },
+  {
+    "id": "89c4ef1c-747e-45fe-b75c-b5cc1b414163",
+    "name": "Lateral Step-Down",
+    "measurementType": "repBased",
+    "prominence": "specialized",
+    "primaryMuscles": [
+      "quadriceps",
+      "glutes"
+    ],
+    "secondaryMuscles": [
+      "abductors"
+    ]
+  },
+  {
     "id": "6b2bd07f-ba04-499b-9f90-034729e8ca3b",
     "name": "Leg Extension",
     "measurementType": "repBased",
@@ -762,6 +812,19 @@
       "glutes"
     ],
     "secondaryMuscles": []
+  },
+  {
+    "id": "4db93185-9dba-4b08-84a9-076f312b4f0e",
+    "name": "Side-Lying Hip Abduction Raise",
+    "measurementType": "repBased",
+    "prominence": "specialized",
+    "primaryMuscles": [
+      "abductors",
+      "glutes"
+    ],
+    "secondaryMuscles": [
+      "obliques"
+    ]
   },
   {
     "id": "c03f592f-02c8-48e2-8364-118b946f8a0f",
@@ -1047,6 +1110,19 @@
     ]
   },
   {
+    "id": "d54f5ae3-58ce-446a-82b5-b28fd7810728",
+    "name": "Copenhagen Plank",
+    "measurementType": "timeBased",
+    "prominence": "specialized",
+    "primaryMuscles": [
+      "adductors"
+    ],
+    "secondaryMuscles": [
+      "abs",
+      "obliques"
+    ]
+  },
+  {
     "id": "37aee4ce-1ff0-4c2c-ae0a-39ccddc13435",
     "name": "Hanging Leg Raise",
     "measurementType": "bodyweight",
@@ -1078,6 +1154,18 @@
       "abs"
     ],
     "secondaryMuscles": []
+  },
+  {
+    "id": "3e74e190-242b-46f6-895d-48a3e7c20514",
+    "name": "Weighted Sit-Up",
+    "measurementType": "repBased",
+    "prominence": "common",
+    "primaryMuscles": [
+      "abs"
+    ],
+    "secondaryMuscles": [
+      "hipFlexors"
+    ]
   },
   {
     "id": "7176081f-af76-4ac5-b97e-279c2eb6d485",
@@ -1113,6 +1201,19 @@
     ],
     "secondaryMuscles": [
       "lowerBack"
+    ]
+  },
+  {
+    "id": "b110b2b3-d1f4-4957-bbdc-db708ff15168",
+    "name": "Stir The Pot",
+    "measurementType": "bodyweight",
+    "prominence": "specialized",
+    "primaryMuscles": [
+      "abs"
+    ],
+    "secondaryMuscles": [
+      "obliques",
+      "shoulders"
     ]
   },
   {
