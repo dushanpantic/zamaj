@@ -294,6 +294,20 @@
     ]
   },
   {
+    "id": "46e6d86d-81b7-4f0c-be0a-006f1c8e6b01",
+    "name": "TRX Row",
+    "measurementType": "bodyweight",
+    "prominence": "specialized",
+    "primaryMuscles": [
+      "upperBack",
+      "lats"
+    ],
+    "secondaryMuscles": [
+      "biceps",
+      "forearms"
+    ]
+  },
+  {
     "id": "a6e9e0f6-48a4-4ca0-b538-e9a3924fc24c",
     "name": "Straight-Arm Pulldown",
     "measurementType": "repBased",
