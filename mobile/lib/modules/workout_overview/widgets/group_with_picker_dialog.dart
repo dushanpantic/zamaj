@@ -21,65 +21,83 @@ abstract final class GroupWithPickerDialog {
     required List<ExerciseViewModel> candidates,
     List<SupersetGroup> supersetGroups = const [],
   }) {
-    return showDialog<String>(
+    return showModalBottomSheet<String>(
       context: context,
+      isScrollControlled: true,
+      showDragHandle: true,
+      backgroundColor: Theme.of(context).appColors.surfaceElevated,
       builder: (ctx) {
         final colors = Theme.of(ctx).appColors;
         const typography = AppTypography.standard;
         final totalRows = candidates.length + supersetGroups.length;
-        return AlertDialog(
-          backgroundColor: colors.surface,
-          title: Text(
-            'Group with…',
-            style: typography.titleSmall.copyWith(color: colors.onSurface),
-          ),
-          contentPadding: const EdgeInsets.symmetric(vertical: AppSpacing.sm),
-          content: SizedBox(
-            width: double.maxFinite,
-            child: ListView.builder(
-              shrinkWrap: true,
-              itemCount: totalRows,
-              itemBuilder: (_, i) {
-                if (i < supersetGroups.length) {
-                  final group = supersetGroups[i];
-                  return ListTile(
-                    leading: Icon(Icons.link, color: colors.primary),
-                    title: Text(
-                      'Add to: ${_groupLabel(group)}',
-                      style: typography.body.copyWith(color: colors.onSurface),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    onTap: () => Navigator.of(
-                      ctx,
-                    ).pop(group.exercises.first.sessionExercise.id),
-                    minVerticalPadding: AppSpacing.sm,
-                  );
-                }
-                final c = candidates[i - supersetGroups.length];
-                return ListTile(
-                  leading: Icon(Icons.link, color: colors.primary),
-                  title: Text(
-                    _displayName(c),
-                    style: typography.body.copyWith(color: colors.onSurface),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
+        final maxHeight = MediaQuery.of(ctx).size.height * 0.85;
+        return SafeArea(
+          child: ConstrainedBox(
+            constraints: BoxConstraints(maxHeight: maxHeight),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(
+                    AppSpacing.lg,
+                    AppSpacing.sm,
+                    AppSpacing.lg,
+                    AppSpacing.sm,
                   ),
-                  onTap: () => Navigator.of(ctx).pop(c.sessionExercise.id),
-                  minVerticalPadding: AppSpacing.sm,
-                );
-              },
+                  child: Text(
+                    'Group with…',
+                    style: typography.titleSmall.copyWith(
+                      color: colors.onSurface,
+                    ),
+                  ),
+                ),
+                Flexible(
+                  child: ListView.builder(
+                    shrinkWrap: true,
+                    itemCount: totalRows,
+                    itemBuilder: (_, i) {
+                      if (i < supersetGroups.length) {
+                        final group = supersetGroups[i];
+                        return ListTile(
+                          // Row tap IS the commit on this live surface, so the
+                          // 56 dp floor applies to the row, not a button.
+                          minTileHeight: AppInSessionSize.controlMin,
+                          leading: Icon(Icons.link, color: colors.primary),
+                          title: Text(
+                            'Add to: ${_groupLabel(group)}',
+                            style: typography.body.copyWith(
+                              color: colors.onSurface,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          onTap: () => Navigator.of(
+                            ctx,
+                          ).pop(group.exercises.first.sessionExercise.id),
+                        );
+                      }
+                      final c = candidates[i - supersetGroups.length];
+                      return ListTile(
+                        minTileHeight: AppInSessionSize.controlMin,
+                        leading: Icon(Icons.link, color: colors.primary),
+                        title: Text(
+                          _displayName(c),
+                          style: typography.body.copyWith(
+                            color: colors.onSurface,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        onTap: () =>
+                            Navigator.of(ctx).pop(c.sessionExercise.id),
+                      );
+                    },
+                  ),
+                ),
+              ],
             ),
           ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(ctx).pop(),
-              child: Text(
-                'Cancel',
-                style: typography.label.copyWith(color: colors.onSurfaceMuted),
-              ),
-            ),
-          ],
         );
       },
     );

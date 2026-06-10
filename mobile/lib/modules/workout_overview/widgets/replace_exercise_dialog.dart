@@ -110,6 +110,11 @@ class ReplaceExerciseResult {
   final String? libraryExerciseId;
 }
 
+/// Mid-session "replace this exercise" editor. Presented as a scroll-controlled
+/// bottom sheet on the live surface (keyboard pushes the form up rather than
+/// clipping it); the historical `Dialog` name is kept so the
+/// [show] → `Future<ReplaceExerciseResult?>` contract that [presentReplaceFlow]
+/// depends on does not change shape.
 class ReplaceExerciseDialog extends StatefulWidget {
   const ReplaceExerciseDialog({
     super.key,
@@ -143,8 +148,12 @@ class ReplaceExerciseDialog extends StatefulWidget {
     String? seedLibraryExerciseId,
     bool lockMeasurementType = false,
   }) {
-    return showDialog<ReplaceExerciseResult>(
+    return showModalBottomSheet<ReplaceExerciseResult>(
       context: context,
+      isScrollControlled: true,
+      useSafeArea: true,
+      showDragHandle: true,
+      backgroundColor: Theme.of(context).appColors.surfaceElevated,
       builder: (_) => ReplaceExerciseDialog(
         plannedExerciseName: plannedExerciseName,
         defaultMeasurementType: defaultMeasurementType,
@@ -327,90 +336,107 @@ class _ReplaceExerciseDialogState extends State<ReplaceExerciseDialog> {
   @override
   Widget build(BuildContext context) {
     final colors = Theme.of(context).appColors;
-    return AlertDialog(
-      backgroundColor: colors.surface,
-      title: Text(
-        'Replace ${widget.plannedExerciseName}',
-        style: TextStyle(color: colors.onSurface),
+    const typography = AppTypography.standard;
+    return SingleChildScrollView(
+      padding: EdgeInsets.fromLTRB(
+        AppSpacing.lg,
+        AppSpacing.sm,
+        AppSpacing.lg,
+        AppSpacing.lg + MediaQuery.viewInsetsOf(context).bottom,
       ),
-      content: SingleChildScrollView(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            TextField(
-              controller: _name,
-              autofocus: true,
-              decoration: const InputDecoration(
-                labelText: 'Substitute exercise name',
-                hintText: 'e.g. Cable Fly',
-              ),
-              style: TextStyle(color: colors.onSurface),
-              onChanged: (_) => setState(() {}),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Text(
+            'Replace ${widget.plannedExerciseName}',
+            style: typography.titleSmall.copyWith(color: colors.onSurface),
+          ),
+          const SizedBox(height: AppSpacing.lg),
+          TextField(
+            controller: _name,
+            autofocus: true,
+            decoration: const InputDecoration(
+              labelText: 'Substitute exercise name',
+              hintText: 'e.g. Cable Fly',
             ),
-            const SizedBox(height: AppSpacing.lg),
-            Text(
-              'Measurement',
-              style: AppTypography.standard.badge.copyWith(
-                color: colors.onSurfaceMuted,
-              ),
-            ),
-            const SizedBox(height: AppSpacing.xs),
-            SegmentedButton<int>(
-              segments: const [
-                ButtonSegment(value: 0, label: Text('Reps')),
-                ButtonSegment(value: 1, label: Text('Time')),
-                ButtonSegment(value: 2, label: Text('Bodyweight')),
-              ],
-              selected: {
-                switch (_measurementType) {
-                  RepBasedMeasurement() => 0,
-                  TimeBasedMeasurement() => 1,
-                  BodyweightMeasurement() => 2,
-                },
+            style: TextStyle(color: colors.onSurface),
+            onChanged: (_) => setState(() {}),
+          ),
+          const SizedBox(height: AppSpacing.lg),
+          Text(
+            'Measurement',
+            style: typography.badge.copyWith(color: colors.onSurfaceMuted),
+          ),
+          const SizedBox(height: AppSpacing.xs),
+          SegmentedButton<int>(
+            segments: const [
+              ButtonSegment(value: 0, label: Text('Reps')),
+              ButtonSegment(value: 1, label: Text('Time')),
+              ButtonSegment(value: 2, label: Text('Bodyweight')),
+            ],
+            selected: {
+              switch (_measurementType) {
+                RepBasedMeasurement() => 0,
+                TimeBasedMeasurement() => 1,
+                BodyweightMeasurement() => 2,
               },
-              onSelectionChanged: widget.lockMeasurementType
-                  ? null
-                  : (selection) {
-                      _onMeasurementTypeChanged(switch (selection.first) {
-                        0 => const MeasurementType.repBased(),
-                        1 => const MeasurementType.timeBased(),
-                        _ => const MeasurementType.bodyweight(),
-                      });
-                    },
+            },
+            onSelectionChanged: widget.lockMeasurementType
+                ? null
+                : (selection) {
+                    _onMeasurementTypeChanged(switch (selection.first) {
+                      0 => const MeasurementType.repBased(),
+                      1 => const MeasurementType.timeBased(),
+                      _ => const MeasurementType.bodyweight(),
+                    });
+                  },
+          ),
+          const SizedBox(height: AppSpacing.lg),
+          _PlannedFields(
+            measurementType: _measurementType,
+            weightController: _weight,
+            repsController: _reps,
+            durationController: _duration,
+            setsController: _sets,
+            onChanged: () => setState(() {}),
+          ),
+          const SizedBox(height: AppSpacing.lg),
+          TextField(
+            controller: _notes,
+            maxLines: 2,
+            decoration: const InputDecoration(
+              labelText: 'Notes (optional)',
+              hintText: 'e.g. left shoulder pain',
             ),
-            const SizedBox(height: AppSpacing.lg),
-            _PlannedFields(
-              measurementType: _measurementType,
-              weightController: _weight,
-              repsController: _reps,
-              durationController: _duration,
-              setsController: _sets,
-              onChanged: () => setState(() {}),
+            style: TextStyle(color: colors.onSurface),
+          ),
+          const SizedBox(height: AppSpacing.lg),
+          SizedBox(
+            height: AppInSessionSize.controlMin,
+            child: Row(
+              children: [
+                Expanded(
+                  child: OutlinedButton(
+                    onPressed: () => Navigator.of(context).pop(),
+                    child: const Text('Cancel'),
+                  ),
+                ),
+                const SizedBox(width: AppSpacing.sm),
+                Expanded(
+                  child: FilledButton(
+                    onPressed: _canSubmit ? _submit : null,
+                    style: FilledButton.styleFrom(
+                      textStyle: typography.actionLabel,
+                    ),
+                    child: const Text('Replace'),
+                  ),
+                ),
+              ],
             ),
-            const SizedBox(height: AppSpacing.lg),
-            TextField(
-              controller: _notes,
-              maxLines: 2,
-              decoration: const InputDecoration(
-                labelText: 'Notes (optional)',
-                hintText: 'e.g. left shoulder pain',
-              ),
-              style: TextStyle(color: colors.onSurface),
-            ),
-          ],
-        ),
+          ),
+        ],
       ),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.of(context).pop(),
-          child: const Text('Cancel'),
-        ),
-        FilledButton(
-          onPressed: _canSubmit ? _submit : null,
-          child: const Text('Replace'),
-        ),
-      ],
     );
   }
 }
