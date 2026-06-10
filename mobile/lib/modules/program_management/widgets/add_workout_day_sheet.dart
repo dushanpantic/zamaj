@@ -257,7 +257,7 @@ class _SheetOption extends StatelessWidget {
                         title,
                         style: typography.titleSmall.copyWith(color: fg),
                       ),
-                      const SizedBox(height: 2),
+                      const SizedBox(height: AppSpacing.xxs),
                       Text(
                         subtitle,
                         style: typography.caption.copyWith(

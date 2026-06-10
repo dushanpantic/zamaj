@@ -69,8 +69,8 @@ class _Pip extends StatelessWidget {
         ? colors.primary
         : colors.outline;
     return Container(
-      width: 8,
-      height: 8,
+      width: AppSpacing.sm,
+      height: AppSpacing.sm,
       decoration: BoxDecoration(
         color: isCompleted || isCurrent ? color : Colors.transparent,
         border: isCompleted || isCurrent ? null : Border.all(color: color),

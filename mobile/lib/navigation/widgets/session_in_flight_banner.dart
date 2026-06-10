@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:zamaj/building_blocks/building_blocks.dart';
 import 'package:zamaj/core/app_icon.dart';
 import 'package:zamaj/core/app_spacing.dart';
 import 'package:zamaj/core/app_theme.dart';
@@ -56,8 +57,6 @@ class SessionInProgressBanner extends StatelessWidget {
   final Session session;
   final VoidCallback onTap;
 
-  static const double _height = 56;
-
   @override
   Widget build(BuildContext context) {
     final colors = Theme.of(context).appColors;
@@ -68,53 +67,62 @@ class SessionInProgressBanner extends StatelessWidget {
       color: colors.surface,
       child: InkWell(
         onTap: onTap,
-        child: SizedBox(
-          height: _height,
-          child: Row(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(minHeight: AppSpacing.bannerMin),
+          child: Stack(
+            alignment: Alignment.centerLeft,
             children: [
-              Container(width: 4, height: _height, color: colors.primary),
-              const SizedBox(width: AppSpacing.md),
-              AppIcon(
-                Icons.fitness_center,
-                color: colors.primary,
-                size: AppIconSize.lg,
-              ),
-              const SizedBox(width: AppSpacing.md),
-              Expanded(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisAlignment: MainAxisAlignment.center,
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: AppSpacing.sm),
+                child: Row(
                   children: [
-                    Text(
-                      'Workout in progress',
-                      style: typography.caption.copyWith(
-                        color: colors.onSurfaceMuted,
+                    // Leading inset clears the accent bar (xs) plus its gap (md).
+                    const SizedBox(width: AppSpacing.lg),
+                    AppIcon(
+                      Icons.fitness_center,
+                      color: colors.primary,
+                      size: AppIconSize.lg,
+                    ),
+                    const SizedBox(width: AppSpacing.md),
+                    Expanded(
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Text(
+                            'Workout in progress',
+                            style: typography.caption.copyWith(
+                              color: colors.onSurfaceMuted,
+                            ),
+                          ),
+                          Text(
+                            dayName,
+                            style: typography.labelSmall.copyWith(
+                              color: colors.onSurface,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ],
                       ),
                     ),
+                    const SizedBox(width: AppSpacing.sm),
                     Text(
-                      dayName,
-                      style: typography.labelSmall.copyWith(
-                        color: colors.onSurface,
-                      ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
+                      'Resume',
+                      style: typography.label.copyWith(color: colors.primary),
                     ),
+                    const SizedBox(width: AppSpacing.sm),
+                    AppIcon(
+                      Icons.arrow_forward,
+                      color: colors.primary,
+                      size: AppIconSize.md,
+                    ),
+                    const SizedBox(width: AppSpacing.lg),
                   ],
                 ),
               ),
-              const SizedBox(width: AppSpacing.sm),
-              Text(
-                'Resume',
-                style: typography.label.copyWith(color: colors.primary),
-              ),
-              const SizedBox(width: AppSpacing.sm),
-              AppIcon(
-                Icons.arrow_forward,
-                color: colors.primary,
-                size: AppIconSize.md,
-              ),
-              const SizedBox(width: AppSpacing.lg),
+              const InProgressAccentBar(),
             ],
           ),
         ),
