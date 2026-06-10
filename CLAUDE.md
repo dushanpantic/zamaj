@@ -69,7 +69,7 @@ No hard-coded pixels, no `Color(0x...)` literals.
 - Colors: `Theme.of(context).appColors` (extension in `lib/core/app_theme.dart`). Never import `AppColors.dark`/`AppColors.light` directly.
 - Spacing/radius: `AppSpacing.xs..xxxl`, `AppRadius.sm|md|lg|pill`. Tap targets ≥ `AppSpacing.touchMin` (48 dp).
 - Typography: `Theme.of(context).textTheme.*`; use `AppTypography.standard.numeric` / `numericLarge` for any numeric readout so tabular figures don't jitter.
-- Semantic colors: `planned`/`actual`, `exerciseCompleted|Skipped|Replaced`, `restTimer`/`restTimerOvertime`. Add new semantic fields to `AppColors` (both palettes) rather than one-off values.
+- Semantic colors: `planned`/`actual`, `exerciseCompleted|Skipped|Replaced`, `restTimer`. Add new semantic fields to `AppColors` (both palettes) rather than one-off values.
 
 ### In-session sweaty-hands ergonomics (`workout_overview/`, `focus_mode/`)
 

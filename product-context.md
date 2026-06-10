@@ -37,7 +37,7 @@ Ships **pre-populated** with a curated canonical catalog (~80 common and special
 
 ### In-session (sweaty-hands)
 - **Workout overview** — [workout_overview_screen.dart](mobile/lib/modules/workout_overview/screens/workout_overview_screen.dart). The full session: every exercise card expands to its set list, where the active set logs in one tap on its circle (recording the suggested value, with an UNDO snackbar) or opens an inline ± editor to log a value that differs from plan; drag-to-reorder between cards, drag-onto-card (or a partner-picker sheet) to form a superset, ungroup, replace / skip / mark-done per exercise, session notes, extra work, end session. The note, extra-work, replace-exercise, and group-with-partner flows each open as a bottom sheet.
-- **Focus mode** — [focus_mode_screen.dart](mobile/lib/modules/focus_mode/screens/focus_mode_screen.dart). One exercise (or one superset group) at a time. Large LOG SET button, rest timer with overtime indicator, undo last set, partner cards for superset members. Optimised for between-set use.
+- **Focus mode** — [focus_mode_screen.dart](mobile/lib/modules/focus_mode/screens/focus_mode_screen.dart). One exercise (or one superset group) at a time. Large LOG SET button, a rest timer that auto-dismisses at zero (with a haptic), undo last set, partner cards for superset members. Optimised for between-set use.
 
 ### After a session — [export/](mobile/lib/modules/export/)
 - **Recent sessions** — [recent_sessions_screen.dart](mobile/lib/modules/export/screens/recent_sessions_screen.dart). Completed sessions bucketed into "This week" and "Earlier", with a one-tap "export this week" action. Tapping a session opens its review.
