@@ -214,3 +214,17 @@ sealed class PlannedSetDraftValues with _$PlannedSetDraftValues {
   factory PlannedSetDraftValues.fromJson(Map<String, dynamic> json) =>
       _$PlannedSetDraftValuesFromJson(json);
 }
+
+extension PlannedSetDraftBlankness on PlannedSetDraft {
+  /// True when every input field is empty — an untouched placeholder row.
+  /// Blank rows don't count toward validation and are stripped on save, so
+  /// an exercise can be saved with zero sets (e.g. to persist a library link
+  /// before planning the sets).
+  bool get isBlank => switch (values) {
+    PlannedSetDraftRepBased(:final weightInput, :final repsInput) =>
+      weightInput.trim().isEmpty && repsInput.trim().isEmpty,
+    PlannedSetDraftTimeBased(:final durationInput, :final weightInput) =>
+      durationInput.trim().isEmpty && weightInput.trim().isEmpty,
+    PlannedSetDraftBodyweight(:final repsInput) => repsInput.trim().isEmpty,
+  };
+}

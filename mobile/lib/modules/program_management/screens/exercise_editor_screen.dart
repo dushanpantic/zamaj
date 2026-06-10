@@ -24,6 +24,7 @@ class _ExerciseEditorScreenState extends State<ExerciseEditorScreen> {
   late final TextEditingController _videoUrlController;
 
   bool _controllersInitialized = false;
+  bool _didInitialControllerSync = false;
 
   @override
   void initState() {
@@ -55,12 +56,7 @@ class _ExerciseEditorScreenState extends State<ExerciseEditorScreen> {
   }
 
   void _syncControllers(ExerciseDraft draft) {
-    if (_nameController.text != draft.name) {
-      _nameController.value = _nameController.value.copyWith(
-        text: draft.name,
-        selection: TextSelection.collapsed(offset: draft.name.length),
-      );
-    }
+    _syncLinkProvidedFields(draft);
 
     final restText = draft.plannedRestSeconds?.toString() ?? '';
     if (_plannedRestController.text != restText) {
@@ -70,6 +66,19 @@ class _ExerciseEditorScreenState extends State<ExerciseEditorScreen> {
     final notes = draft.metadata.notes ?? '';
     if (_notesController.text != notes) {
       _notesController.text = notes;
+    }
+  }
+
+  /// Syncs only the fields a library link can rewrite (name, video URL).
+  /// Planned rest must stay untouched here: its source of truth is the raw
+  /// input tracked inside the bloc, not the draft, so rewriting it from the
+  /// draft would revert unsaved typing.
+  void _syncLinkProvidedFields(ExerciseDraft draft) {
+    if (_nameController.text != draft.name) {
+      _nameController.value = _nameController.value.copyWith(
+        text: draft.name,
+        selection: TextSelection.collapsed(offset: draft.name.length),
+      );
     }
 
     final videoUrl = draft.metadata.videoUrl ?? '';
@@ -105,9 +114,12 @@ class _ExerciseEditorScreenState extends State<ExerciseEditorScreen> {
       listenWhen: (previous, current) {
         if (current is ExerciseEditorSaved) return true;
         if (current is ExerciseEditorVideoLinkError) return true;
-        if (current is ExerciseEditorEditing &&
-            previous is! ExerciseEditorEditing) {
-          return true;
+        if (current is ExerciseEditorEditing) {
+          if (previous is! ExerciseEditorEditing) return true;
+          // The bloc rewrote controller-backed text (e.g. library link with
+          // "update row") — resync, but never on plain typing emissions.
+          return previous.controllerSyncRevision !=
+              current.controllerSyncRevision;
         }
         return false;
       },
@@ -126,7 +138,12 @@ class _ExerciseEditorScreenState extends State<ExerciseEditorScreen> {
 
         if (state is ExerciseEditorEditing) {
           if (!_controllersInitialized) return;
-          _syncControllers(state.draft);
+          if (_didInitialControllerSync) {
+            _syncLinkProvidedFields(state.draft);
+          } else {
+            _syncControllers(state.draft);
+            _didInitialControllerSync = true;
+          }
         }
       },
       builder: (context, state) {

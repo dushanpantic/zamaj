@@ -44,9 +44,15 @@ final class ExerciseDraftValidation extends Equatable {
         ProgramValidation.validateVideoUrl(videoUrl) is Valid<Uri?>;
     final isNotesValid =
         ProgramValidation.validateNotes(notes) is Valid<String?>;
+    // Fully-blank rows are placeholders: they don't count toward the set
+    // minimum and don't have to parse — they're stripped on save.
+    final nonBlankSets = sets.where((s) => !s.isBlank).toList();
     final isSetCountValid =
-        ProgramValidation.validateSetCount(sets.length) is Valid<int>;
-    final areSetsValid = sets.every((s) => _isSetValid(s, measurementType));
+        nonBlankSets.isEmpty ||
+        ProgramValidation.validateSetCount(nonBlankSets.length) is Valid<int>;
+    final areSetsValid = nonBlankSets.every(
+      (s) => _isSetValid(s, measurementType),
+    );
     return ExerciseDraftValidation(
       isNameValid: isNameValid,
       isPlannedRestValid: isPlannedRestValid,
@@ -125,16 +131,25 @@ final class ExerciseEditorEditing extends ExerciseEditorState {
     required this.draft,
     required this.validation,
     this.lastSaveError,
+    this.controllerSyncRevision = 0,
   });
 
   final ExerciseDraft draft;
   final ExerciseDraftValidation validation;
   final DomainError? lastSaveError;
 
+  /// Bumped when the bloc rewrites controller-backed text (name, video URL)
+  /// programmatically — e.g. linking to a library entry with "update row".
+  /// The screen resyncs its text editing controllers when this changes;
+  /// ordinary typing emissions leave it untouched so controllers are never
+  /// clobbered mid-keystroke.
+  final int controllerSyncRevision;
+
   ExerciseEditorEditing copyWith({
     ExerciseDraft? draft,
     ExerciseDraftValidation? validation,
     DomainError? Function()? lastSaveError,
+    int? controllerSyncRevision,
   }) {
     return ExerciseEditorEditing(
       draft: draft ?? this.draft,
@@ -142,11 +157,18 @@ final class ExerciseEditorEditing extends ExerciseEditorState {
       lastSaveError: lastSaveError != null
           ? lastSaveError()
           : this.lastSaveError,
+      controllerSyncRevision:
+          controllerSyncRevision ?? this.controllerSyncRevision,
     );
   }
 
   @override
-  List<Object?> get props => [draft, validation, lastSaveError];
+  List<Object?> get props => [
+    draft,
+    validation,
+    lastSaveError,
+    controllerSyncRevision,
+  ];
 }
 
 final class ExerciseEditorSaving extends ExerciseEditorState {

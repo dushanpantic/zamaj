@@ -326,9 +326,10 @@ class ExerciseEditorBloc
     try {
       final measurementType = current.draft.measurementType;
       final baselineSetsById = {for (final s in baseline.sets) s.id: s};
+      final setDrafts = current.draft.sets.where((s) => !s.isBlank).toList();
       final sets = <WorkoutSet>[];
-      for (var i = 0; i < current.draft.sets.length; i++) {
-        final setDraft = current.draft.sets[i];
+      for (var i = 0; i < setDrafts.length; i++) {
+        final setDraft = setDrafts[i];
         final plannedValues = _draftToPlannedValues(
           setDraft.values,
           measurementType,
@@ -376,6 +377,7 @@ class ExerciseEditorBloc
           draft: current.draft,
           validation: validation,
           lastSaveError: e,
+          controllerSyncRevision: current.controllerSyncRevision,
         ),
       );
     }
@@ -397,7 +399,15 @@ class ExerciseEditorBloc
       );
     }
     final validation = _computeValidation(draft);
-    emit(current.copyWith(draft: draft, validation: validation));
+    emit(
+      current.copyWith(
+        draft: draft,
+        validation: validation,
+        controllerSyncRevision: event.overwriteNameAndVideo
+            ? current.controllerSyncRevision + 1
+            : null,
+      ),
+    );
   }
 
   Future<void> _onLibraryUnlinked(
