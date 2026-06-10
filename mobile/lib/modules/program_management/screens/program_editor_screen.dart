@@ -220,13 +220,13 @@ class _ProgramEditorScreenState extends State<ProgramEditorScreen> {
     return switch (state) {
       ProgramEditorInitial() ||
       ProgramEditorLoading() => const Scaffold(body: AppListSkeleton()),
-      ProgramEditorNotFound(:final programId) => Scaffold(
+      ProgramEditorNotFound() => Scaffold(
         appBar: AppBar(),
         body: AppStateView(
           icon: Icons.error_outline,
           tone: AppStateTone.error,
           title: 'Program not found',
-          message: programId,
+          message: 'It may have been deleted.',
           primaryAction: AppStateAction(
             label: 'Go back',
             onPressed: () => Navigator.of(context).pop(),
@@ -254,11 +254,7 @@ class _ProgramEditorScreenState extends State<ProgramEditorScreen> {
               nameController: _nameController,
               nameFocus: _nameFocus,
               isSaving: isSaving,
-            ),
-            floatingActionButton: FloatingActionButton(
-              onPressed: () => _showAddWorkoutDaySheet(state),
-              tooltip: 'Add workout day',
-              child: const Icon(Icons.add),
+              onAddWorkoutDay: () => _showAddWorkoutDaySheet(state),
             ),
             body: Column(
               children: [

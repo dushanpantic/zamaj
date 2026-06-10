@@ -15,11 +15,13 @@ class ProgramEditorAppBar extends StatelessWidget
     required this.nameController,
     required this.nameFocus,
     required this.isSaving,
+    required this.onAddWorkoutDay,
   });
 
   final TextEditingController nameController;
   final FocusNode nameFocus;
   final bool isSaving;
+  final VoidCallback onAddWorkoutDay;
 
   @override
   Size get preferredSize => const Size.fromHeight(kToolbarHeight);
@@ -73,6 +75,11 @@ class ProgramEditorAppBar extends StatelessWidget
             padding: EdgeInsets.only(right: AppSpacing.md),
             child: Center(child: AppInlineSpinner()),
           ),
+        IconButton(
+          icon: Icon(Icons.add, color: colors.primary),
+          tooltip: 'Add workout day',
+          onPressed: isSaving ? null : onAddWorkoutDay,
+        ),
       ],
     );
   }
