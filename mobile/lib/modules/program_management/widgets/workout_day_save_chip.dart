@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:zamaj/building_blocks/building_blocks.dart';
 import 'package:zamaj/core/app_spacing.dart';
 import 'package:zamaj/core/app_theme.dart';
 import 'package:zamaj/core/app_typography.dart';
@@ -41,13 +42,9 @@ class WorkoutDaySaveChip extends StatelessWidget {
               if (isSaving)
                 Padding(
                   padding: const EdgeInsets.only(right: AppSpacing.xs),
-                  child: SizedBox(
-                    width: 12,
-                    height: 12,
-                    child: CircularProgressIndicator(
-                      strokeWidth: AppStroke.indicatorCompact,
-                      color: color,
-                    ),
+                  child: AppInlineSpinner(
+                    size: AppInlineSpinnerSize.sm,
+                    color: color,
                   ),
                 ),
               Text(

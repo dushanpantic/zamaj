@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:zamaj/building_blocks/building_blocks.dart';
 import 'package:zamaj/core/app_icon.dart';
 import 'package:zamaj/core/app_spacing.dart';
 import 'package:zamaj/core/app_theme.dart';
@@ -31,14 +32,7 @@ class StartResumeActionButton extends StatelessWidget {
       child: FilledButton.icon(
         onPressed: canTap ? onPressed : null,
         icon: busy
-            ? SizedBox(
-                width: 16,
-                height: 16,
-                child: CircularProgressIndicator(
-                  strokeWidth: AppStroke.indicator,
-                  color: colors.onPrimary,
-                ),
-              )
+            ? AppInlineSpinner(color: colors.onPrimary)
             : AppIcon(
                 isResume ? Icons.play_arrow : Icons.fitness_center,
                 size: AppIconSize.lg,

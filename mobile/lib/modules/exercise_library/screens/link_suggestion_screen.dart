@@ -227,14 +227,7 @@ class _ClusterCard extends StatelessWidget {
                 child: FilledButton.icon(
                   onPressed: isApplying ? null : onAccept,
                   icon: isApplying
-                      ? SizedBox(
-                          width: 16,
-                          height: 16,
-                          child: CircularProgressIndicator(
-                            strokeWidth: AppStroke.indicator,
-                            color: colors.onPrimary,
-                          ),
-                        )
+                      ? AppInlineSpinner(color: colors.onPrimary)
                       : const Icon(Icons.link),
                   label: const Text('Create & link all'),
                 ),

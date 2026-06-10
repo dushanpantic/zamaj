@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:zamaj/building_blocks/building_blocks.dart';
 import 'package:zamaj/core/app_icon.dart';
 import 'package:zamaj/core/app_spacing.dart';
 import 'package:zamaj/core/app_theme.dart';
@@ -68,18 +69,9 @@ class ProgramEditorAppBar extends StatelessWidget
       ),
       actions: [
         if (isSaving)
-          Padding(
-            padding: const EdgeInsets.only(right: AppSpacing.md),
-            child: Center(
-              child: SizedBox(
-                width: 16,
-                height: 16,
-                child: CircularProgressIndicator(
-                  strokeWidth: AppStroke.indicator,
-                  color: colors.onSurfaceMuted,
-                ),
-              ),
-            ),
+          const Padding(
+            padding: EdgeInsets.only(right: AppSpacing.md),
+            child: Center(child: AppInlineSpinner()),
           ),
       ],
     );

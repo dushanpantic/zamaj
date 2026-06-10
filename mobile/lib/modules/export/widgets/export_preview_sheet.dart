@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:zamaj/building_blocks/building_blocks.dart';
 import 'package:zamaj/core/app_icon.dart';
 import 'package:zamaj/core/app_spacing.dart';
 import 'package:zamaj/core/app_theme.dart';
@@ -175,13 +176,7 @@ class _ExportPreviewSheetState extends State<ExportPreviewSheet> {
                   child: FilledButton.icon(
                     onPressed: _shareInFlight ? null : _onShare,
                     icon: _shareInFlight
-                        ? const SizedBox(
-                            height: 16,
-                            width: 16,
-                            child: CircularProgressIndicator(
-                              strokeWidth: AppStroke.indicator,
-                            ),
-                          )
+                        ? AppInlineSpinner(color: colors.onPrimary)
                         : const AppIcon(Icons.ios_share, size: AppIconSize.md),
                     label: const Text('Share'),
                   ),
