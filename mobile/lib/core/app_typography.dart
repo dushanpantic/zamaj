@@ -51,6 +51,13 @@ class AppTypography {
 
   static const _tabular = <FontFeature>[FontFeature.tabularFigures()];
 
+  /// The one sanctioned non-default font family: a monospace face used only on
+  /// the plan-text surfaces (import editor, plan-preview text, export preview)
+  /// where column alignment carries meaning. Every other style uses the app's
+  /// default family; this is intentionally the sole exception, referenced by
+  /// name so the "one family" typography guard can carve it out.
+  static const String monoFamily = 'monospace';
+
   static const AppTypography standard = AppTypography(
     display: TextStyle(fontSize: 32, fontWeight: FontWeight.w700, height: 1.15),
     displaySmall: TextStyle(

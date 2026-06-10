@@ -33,7 +33,7 @@ class PlanTextInput extends StatelessWidget {
               null,
       style: typography.body.copyWith(
         color: colors.onSurface,
-        fontFamily: 'monospace',
+        fontFamily: AppTypography.monoFamily,
       ),
       decoration: InputDecoration(
         hintText:
@@ -45,7 +45,7 @@ class PlanTextInput extends StatelessWidget {
             '…',
         hintStyle: typography.body.copyWith(
           color: colors.onSurfaceMuted,
-          fontFamily: 'monospace',
+          fontFamily: AppTypography.monoFamily,
         ),
         contentPadding: const EdgeInsets.all(AppSpacing.lg),
       ),

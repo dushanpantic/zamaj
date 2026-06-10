@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:zamaj/building_blocks/building_blocks.dart';
 import 'package:zamaj/core/app_icon.dart';
 import 'package:zamaj/core/app_spacing.dart';
 import 'package:zamaj/core/app_theme.dart';
@@ -138,15 +139,26 @@ class _PlanImportScreenState extends State<PlanImportScreen> {
                     onUseExample: isParsing ? null : _useExample,
                   ),
                   const SizedBox(height: AppSpacing.lg),
-                  if (isParsing)
-                    Center(
-                      child: CircularProgressIndicator(color: colors.primary),
-                    )
-                  else
-                    FilledButton(
-                      onPressed: canParse ? _onParseRequested : null,
-                      child: const Text('Parse'),
+                  FilledButton(
+                    onPressed: canParse && !isParsing
+                        ? _onParseRequested
+                        : null,
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        // Reserve the spinner's slot whether or not parsing so
+                        // the button keeps its layout when progress appears.
+                        SizedBox.square(
+                          dimension: AppSpinnerSize.md,
+                          child: isParsing
+                              ? AppInlineSpinner(color: colors.onPrimary)
+                              : null,
+                        ),
+                        const SizedBox(width: AppSpacing.sm),
+                        const Text('Parse'),
+                      ],
                     ),
+                  ),
                 ],
               ),
             );
@@ -260,7 +272,7 @@ class _ExampleDisclosure extends StatelessWidget {
                 _examplePlan,
                 style: typography.bodySmall.copyWith(
                   color: colors.onSurface,
-                  fontFamily: 'monospace',
+                  fontFamily: AppTypography.monoFamily,
                 ),
               ),
             ),

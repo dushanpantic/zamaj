@@ -153,7 +153,7 @@ class _ExportPreviewSheetState extends State<ExportPreviewSheet> {
                     _text,
                     style: typography.bodySmall.copyWith(
                       color: colors.onSurface,
-                      fontFamily: 'monospace',
+                      fontFamily: AppTypography.monoFamily,
                       fontFamilyFallback: const ['Menlo', 'Courier'],
                     ),
                   ),
