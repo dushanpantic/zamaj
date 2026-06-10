@@ -2,7 +2,10 @@
 
 **Created**: 2026-06-10
 **Branch**: master — build and commit directly on master; do **not** create a feature branch (owner decision, 2026-06-10)
-**Status**: approved (2026-06-10)
+**Status**: in-progress (2026-06-10) — all slices implemented & committed on
+master; CI green after every slice. Remaining (owner-run by design): bundle the
+Barlow TTFs (`mobile/tool/fetch_barlow.sh` + pubspec `fonts:` block) and the
+on-device visual pass (Slice 8.2 jitter/metrics, sheet keyboard, max-font sweep).
 **Spec**: [ui_improvement_4.md](../ui_improvement_4.md) (decisions closed 2026-06-10)
 
 ## Goal
@@ -576,59 +579,64 @@ graph TD
 ### Slices (grouped by wave)
 
 #### Wave 1
-- [ ] Slice 1: Shared building blocks & literal sweep
-  - [ ] Step 1.1: Add AppInlineSpinner, AppLoadingView, AppFormSkeleton
-  - [ ] Step 1.2: Replace the six hand-rolled inline spinners
-  - [ ] Step 1.3: Literal sweep — banner accent, stray pixels
-- [ ] Slice 3: Live-surface ergonomics
-  - [ ] Step 3.1: Bottom bar sizes and label style
-  - [ ] Step 3.2: Rest-timer readout → tabular numeric
-  - [ ] Step 3.3: Note / extra-work entry → bottom sheet
-  - [ ] Step 3.4: Replace-exercise + group-with picker → bottom sheets
-  - [ ] Step 3.5: product-context.md — sheet interactions
+- [x] Slice 1: Shared building blocks & literal sweep
+  - [x] Step 1.1: Add AppInlineSpinner, AppLoadingView, AppFormSkeleton
+  - [x] Step 1.2: Replace the six hand-rolled inline spinners
+  - [x] Step 1.3: Literal sweep — banner accent, stray pixels
+- [x] Slice 3: Live-surface ergonomics
+  - [x] Step 3.1: Bottom bar sizes and label style
+  - [x] Step 3.2: Rest-timer readout → tabular numeric
+  - [x] Step 3.3: Note / extra-work entry → bottom sheet
+  - [x] Step 3.4: Replace-exercise + group-with picker → bottom sheets
+  - [x] Step 3.5: product-context.md — sheet interactions
 
 #### Wave 2
-- [ ] Slice 2: One loading & saving story
-  - [ ] Step 2.1: Converge loading states
-  - [ ] Step 2.2: Converge save feedback — kill the scrims
-  - [ ] Step 2.3: Plan import — stable Parse control, monospace constant
-  - [ ] Step 2.4: Plan preview chrome — drop "Single" labels, shared warning chrome
-- [ ] Slice 5: Affordance convergence
-  - [ ] Step 5.1: Program editor FAB → app-bar +; de-leak not-found
-  - [ ] Step 5.2: Program tile — remove swipe, adopt inline spinner
-- [ ] Slice 6: Doc/code reconciliation
-  - [ ] Step 6.1: Reconcile rest-timer docs
-- [ ] Slice 7: Structural a11y hardening
-  - [ ] Step 7.1: Reduced-motion gate
-  - [ ] Step 7.2: Clamped text scaling on in-session numeric chrome
+- [x] Slice 2: One loading & saving story
+  - [x] Step 2.1: Converge loading states
+  - [x] Step 2.2: Converge save feedback — kill the scrims
+  - [x] Step 2.3: Plan import — stable Parse control, monospace constant
+  - [x] Step 2.4: Plan preview chrome — drop "Single" labels, shared warning chrome
+- [x] Slice 5: Affordance convergence
+  - [x] Step 5.1: Program editor FAB → app-bar +; de-leak not-found
+  - [x] Step 5.2: Program tile — remove swipe, adopt inline spinner
+- [x] Slice 6: Doc/code reconciliation
+  - [x] Step 6.1: Reconcile rest-timer docs
+- [x] Slice 7: Structural a11y hardening
+  - [x] Step 7.1: Reduced-motion gate
+  - [x] Step 7.2: Clamped text scaling on in-session numeric chrome
 
 #### Wave 3
-- [ ] Slice 4: Copy & icon pass
-  - [ ] Step 4.1: Copy fixes + not-found convergence
-  - [ ] Step 4.2: Icon corrections
+- [x] Slice 4: Copy & icon pass
+  - [x] Step 4.1: Copy fixes + not-found convergence
+  - [x] Step 4.2: Icon corrections
 
 #### Wave 4
 - [ ] Slice 8: Typeface — Barlow, whole app
-  - [ ] Step 8.1: Bundle Barlow and wire the family
-  - [ ] Step 8.2: Metrics pass + jitter acceptance
+  - [~] Step 8.1: Bundle Barlow and wire the family — **family wired + RED→GREEN
+    test done & committed**; TTF bundling (run `mobile/tool/fetch_barlow.sh` +
+    add the pubspec `fonts:` block) is the owner-run step (app falls back to the
+    platform face until then, no build break).
+  - [ ] Step 8.2: Metrics pass + jitter acceptance — **owner device pass**
+    (height/letterSpacing tuning + the rest-timer/99→100 jitter check can only
+    be judged with Barlow actually rendering).
 
 ### Acceptance Criteria
 
-- [ ] No bare default spinners; skeleton/form-skeleton/AppLoadingView per archetype
-- [ ] No scrim save overlays; one Save treatment; inline save progress
-- [ ] Parse control stable while parsing
-- [ ] Bottom bar 56 dp actions with actionLabel Focus
-- [ ] Rest-timer readout tabular, no jitter
-- [ ] Note/extra/replace/group-with flows are bottom sheets on surfaceElevated
-- [ ] All inline spinners use AppInlineSpinner
-- [ ] Copy: sentence case, no trailing periods, no raw IDs, no ⋮ in copy
-- [ ] Icons: platform share, link for suggestions, share for week export
-- [ ] FABs on browse screens only; editors add via app bar
-- [ ] Swipe-to-delete only on editor draft rows
-- [ ] restTimerOvertime gone from CLAUDE.md; product-context matches auto-dismiss
-- [ ] Reduced motion honored; in-session text scaling clamped; min-height banners
-- [ ] Barlow bundled and wired; tabular figures verified (fallback: IBM Plex Sans)
-- [ ] tool/ci.sh green after every slice
+- [x] No bare default spinners; skeleton/form-skeleton/AppLoadingView per archetype
+- [x] No scrim save overlays; one Save treatment; inline save progress
+- [x] Parse control stable while parsing
+- [x] Bottom bar 56 dp actions with actionLabel Focus
+- [x] Rest-timer readout tabular (code); no-jitter is the owner device check
+- [x] Note/extra/replace/group-with flows are bottom sheets on surfaceElevated
+- [x] All inline spinners use AppInlineSpinner
+- [x] Copy: sentence case, no trailing periods, no raw IDs, no ⋮ in copy
+- [x] Icons: platform share, link for suggestions, share for week export
+- [x] FABs on browse screens only; editors add via app bar
+- [x] Swipe-to-delete only on editor draft rows
+- [x] restTimerOvertime gone from CLAUDE.md; product-context matches auto-dismiss
+- [x] Reduced motion honored; in-session text scaling clamped; min-height banners
+- [~] Barlow wired + guard test (code done); bundling + tabular-figures verify are owner-run (fallback: IBM Plex Sans)
+- [x] tool/ci.sh green after every slice
 
 ## Plan Review Summary
 
