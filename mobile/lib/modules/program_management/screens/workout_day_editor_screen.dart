@@ -198,7 +198,7 @@ class _EditingBodyState extends State<_EditingBody> {
             backgroundColor: colors.surface,
             content: Text(
               'Swipe left to delete · Long-press to reorder · '
-              'Use the ⋮ menu for more',
+              'More actions live in each exercise\'s menu',
               style: AppTypography.standard.bodySmall.copyWith(
                 color: colors.onSurface,
               ),

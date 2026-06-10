@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:zamaj/building_blocks/building_blocks.dart';
-import 'package:zamaj/core/app_icon.dart';
 import 'package:zamaj/core/app_spacing.dart';
 import 'package:zamaj/core/app_theme.dart';
 import 'package:zamaj/core/app_typography.dart';
@@ -28,36 +27,15 @@ class ExerciseEditorNotFoundScaffold extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colors = Theme.of(context).appColors;
-    const typography = AppTypography.standard;
-
     return Scaffold(
-      body: Center(
-        child: Padding(
-          padding: const EdgeInsets.all(AppSpacing.xl),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              AppIcon(
-                Icons.error_outline,
-                color: colors.error,
-                size: AppIconSize.errorState,
-              ),
-              const SizedBox(height: AppSpacing.lg),
-              Text(
-                'Exercise not found.',
-                style: typography.titleSmall.copyWith(
-                  color: colors.onBackground,
-                ),
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: AppSpacing.xl),
-              FilledButton(
-                onPressed: () => Navigator.of(context).pop(),
-                child: const Text('Go back'),
-              ),
-            ],
-          ),
+      appBar: AppBar(),
+      body: AppStateView(
+        icon: Icons.error_outline,
+        tone: AppStateTone.error,
+        title: 'Exercise not found',
+        primaryAction: AppStateAction(
+          label: 'Go back',
+          onPressed: () => Navigator.of(context).pop(),
         ),
       ),
     );
@@ -95,7 +73,7 @@ class ExerciseEditorScaffold extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         title: Text(
-          'Edit Exercise',
+          'Edit exercise',
           style: typography.title.copyWith(color: colors.onBackground),
         ),
         actions: [
