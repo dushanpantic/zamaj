@@ -17,6 +17,14 @@ abstract final class AppSpacing {
 
   static const double touchMin = 48;
 
+  /// Minimum height for a full-width inline banner — e.g. the "Workout in
+  /// progress" strip. A *min-height*, not a tap-target floor: the banner grows
+  /// past this when its text wraps at large font sizes. Distinct in role from
+  /// [touchMin] (the 48 dp interactive floor) and the live-session-only
+  /// [AppInSessionSize.controlMin] (56 dp control floor), with which it happens
+  /// to share a value.
+  static const double bannerMin = 56;
+
   /// Height for compact, sub-[touchMin] inline secondary actions — e.g. the
   /// "Edit day" peek button or an "Open video" link. These are dense, low-stakes
   /// affordances, not primary or live-session sweaty-hands controls, so a height
@@ -46,6 +54,18 @@ abstract final class AppStroke {
   /// Thinner indicator stroke for compact inline spinners (~12 dp), e.g. the
   /// save-state chip, where the full [indicator] stroke reads too heavy.
   static const double indicatorCompact = 1.5;
+}
+
+/// Diameter scale for the inline progress spinner (`AppInlineSpinner`).
+///
+/// A small named scale so inline spinners pick a step instead of a raw pixel
+/// size: [sm] inside a dense chip/caption row, [md] (the default) for an inline
+/// button or app-bar slot, [lg] for a prominent inline wait such as a deleting
+/// list tile.
+abstract final class AppSpinnerSize {
+  static const double sm = 12;
+  static const double md = 16;
+  static const double lg = 24;
 }
 
 /// In-session (sweaty-hands) control sizes for the live-session surface
