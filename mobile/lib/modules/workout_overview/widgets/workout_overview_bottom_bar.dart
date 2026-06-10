@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:zamaj/core/app_icon.dart';
 import 'package:zamaj/core/app_spacing.dart';
 import 'package:zamaj/core/app_theme.dart';
+import 'package:zamaj/core/app_typography.dart';
 import 'package:zamaj/modules/workout_overview/bloc/bloc.dart';
 
 /// Pinned bottom action bar for a loaded session: two secondary icon
@@ -65,9 +66,13 @@ class WorkoutOverviewBottomBar extends StatelessWidget {
             Expanded(
               child: FilledButton.icon(
                 onPressed: hasOpenTarget && !state.isEnded ? onFocusMode : null,
+                style: FilledButton.styleFrom(
+                  minimumSize: const Size(0, AppInSessionSize.controlMin),
+                  textStyle: AppTypography.standard.actionLabel,
+                ),
                 icon: const AppIcon(
                   Icons.center_focus_strong,
-                  size: AppIconSize.md,
+                  size: AppIconSize.lg,
                 ),
                 label: Text(
                   label,
@@ -83,9 +88,11 @@ class WorkoutOverviewBottomBar extends StatelessWidget {
   }
 }
 
-/// Square 48dp icon button used in the bottom action bar for secondary
+/// Square 56dp icon button used in the bottom action bar for secondary
 /// actions (Note, Extra). Outlined to read as a peer of the primary
-/// FilledButton next to it, sized to satisfy [AppSpacing.touchMin].
+/// FilledButton next to it, sized to the live-session
+/// [AppInSessionSize.controlMin] floor (this bar is on the sweaty-hands
+/// surface, so 56 dp, not the ambient 48 dp [AppSpacing.touchMin]).
 class _SecondaryActionButton extends StatelessWidget {
   const _SecondaryActionButton({
     required this.icon,
@@ -100,15 +107,15 @@ class _SecondaryActionButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return SizedBox(
-      width: AppSpacing.touchMin,
-      height: AppSpacing.touchMin,
+      width: AppInSessionSize.controlMin,
+      height: AppInSessionSize.controlMin,
       child: Tooltip(
         message: tooltip,
         child: OutlinedButton(
           onPressed: onPressed,
           style: OutlinedButton.styleFrom(
             padding: EdgeInsets.zero,
-            minimumSize: const Size.square(AppSpacing.touchMin),
+            minimumSize: const Size.square(AppInSessionSize.controlMin),
           ),
           child: AppIcon(icon, size: AppIconSize.lg, semanticLabel: tooltip),
         ),
