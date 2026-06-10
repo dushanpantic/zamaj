@@ -257,68 +257,54 @@ class _Header extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Row(
-                      children: [
-                        Expanded(
-                          child: Text(
-                            displayName,
-                            style: typography.titleSmall.copyWith(
-                              color: colors.onSurface,
-                            ),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ),
-                        if (viewModel.plannedGroupRole ==
-                            ExerciseGroupRole.warmup) ...[
-                          const SizedBox(width: AppSpacing.sm),
-                          StatusBadge.icon(
-                            icon: Icons.local_fire_department,
-                            color: colors.warmup,
-                            label: 'Warmup',
-                          ),
-                        ],
-                        const SizedBox(width: AppSpacing.sm),
-                        _StateBadge(state: state, colors: colors),
-                      ],
+                    Text(
+                      displayName,
+                      style: typography.titleSmall.copyWith(
+                        color: colors.onSurface,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                     ),
                     const SizedBox(height: AppSpacing.xs),
                     Row(
                       children: [
-                        Expanded(
-                          child: Row(
-                            children: [
-                              Flexible(
-                                child: Text(
-                                  viewModel.plannedSummary,
-                                  style: typography.caption.copyWith(
-                                    color: colors.onSurfaceMuted,
-                                  ),
-                                  overflow: TextOverflow.ellipsis,
-                                ),
-                              ),
-                              if (viewModel.plannedRestSeconds != null) ...[
-                                const SizedBox(width: AppSpacing.sm),
-                                _RestIndicator(
-                                  seconds: viewModel.plannedRestSeconds!,
-                                  typography: typography,
-                                  colors: colors,
-                                ),
-                              ],
-                            ],
-                          ),
-                        ),
-                        if (totalPlanned > 0)
-                          Text(
-                            '$completedCount / $totalPlanned',
-                            style: typography.numericSm.copyWith(
+                        Flexible(
+                          child: Text(
+                            viewModel.plannedSummary,
+                            style: typography.caption.copyWith(
                               color: colors.onSurfaceMuted,
                             ),
+                            overflow: TextOverflow.ellipsis,
                           ),
+                        ),
+                        if (viewModel.plannedRestSeconds != null) ...[
+                          const SizedBox(width: AppSpacing.sm),
+                          _RestIndicator(
+                            seconds: viewModel.plannedRestSeconds!,
+                            typography: typography,
+                            colors: colors,
+                          ),
+                        ],
                       ],
                     ),
                   ],
                 ),
+              ),
+              const SizedBox(width: AppSpacing.sm),
+              // Badges and the set counter share one trailing block with a
+              // flush right edge. With a badge above (warmup flame, Done…)
+              // the counter keeps its stacked two-line look; without one —
+              // the common unfinished case — the lone counter centers
+              // vertically against the title/summary lines instead of
+              // dangling at the second line under empty space.
+              _TrailingMeta(
+                isWarmup:
+                    viewModel.plannedGroupRole == ExerciseGroupRole.warmup,
+                state: state,
+                completedCount: completedCount,
+                totalPlanned: totalPlanned,
+                typography: typography,
+                colors: colors,
               ),
               _Actions(
                 isUnfinished: isUnfinished,
@@ -369,6 +355,70 @@ class _RestIndicator extends StatelessWidget {
           RestFormatter.format(seconds),
           style: typography.numericXs.copyWith(color: colors.onSurfaceMuted),
         ),
+      ],
+    );
+  }
+}
+
+/// Right-edge meta block of the card header: status badges (warmup flame,
+/// Done / Skipped / Replaced) on the first line, the `completed / planned`
+/// set counter below them. Keeping them in one column guarantees a shared
+/// flush right edge, and when no badge renders the lone counter is centered
+/// vertically by the header row instead of sitting on the second text line
+/// with nothing above it.
+class _TrailingMeta extends StatelessWidget {
+  const _TrailingMeta({
+    required this.isWarmup,
+    required this.state,
+    required this.completedCount,
+    required this.totalPlanned,
+    required this.typography,
+    required this.colors,
+  });
+
+  final bool isWarmup;
+  final ExerciseState state;
+  final int completedCount;
+  final int totalPlanned;
+  final AppTypography typography;
+  final AppColors colors;
+
+  @override
+  Widget build(BuildContext context) {
+    final hasBadges = isWarmup || state is! UnfinishedState;
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.end,
+      children: [
+        if (hasBadges)
+          Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              if (isWarmup)
+                StatusBadge.icon(
+                  icon: Icons.local_fire_department,
+                  color: colors.warmup,
+                  label: 'Warmup',
+                ),
+              if (isWarmup && state is! UnfinishedState)
+                const SizedBox(width: AppSpacing.sm),
+              if (state is! UnfinishedState)
+                _StateBadge(state: state, colors: colors),
+            ],
+          ),
+        if (hasBadges && totalPlanned > 0)
+          const SizedBox(height: AppSpacing.xs),
+        if (totalPlanned > 0)
+          Semantics(
+            label: '$completedCount of $totalPlanned sets done',
+            excludeSemantics: true,
+            child: Text(
+              '$completedCount / $totalPlanned',
+              style: typography.numericSm.copyWith(
+                color: colors.onSurfaceMuted,
+              ),
+            ),
+          ),
       ],
     );
   }
