@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024">
+  <!-- v7 color study 1 "Inverted ember" — flat brand-orange tile, glyph in
+       the dark onPrimary tone (#1A1005). Geometry identical to v7. -->
+  <rect width="1024" height="1024" fill="#F97316"/>
+  <g transform="translate(512 512) scale(0.73) translate(-512 -512)" fill="#1A1005">
+    <rect x="446" y="92" width="132" height="61" rx="22"/>
+    <rect x="-56" y="-19" width="56" height="38" rx="19" transform="translate(470 128) rotate(28)"/>
+    <rect x="0" y="-19" width="56" height="38" rx="19" transform="translate(554 128) rotate(-28)"/>
+    <rect x="332" y="169" width="360" height="64" rx="32"/>
+    <rect x="332" y="791" width="360" height="64" rx="32"/>
+    <path d="M300 259H724A28 28 0 0 1 752 287V364A28 28 0 0 1 742 385L432 647H724A28 28 0 0 1 752 675V737A28 28 0 0 1 724 765H300A28 28 0 0 1 272 737V660A28 28 0 0 1 282 639L592 377H300A28 28 0 0 1 272 349V287A28 28 0 0 1 300 259Z"/>
+    <rect x="446" y="871" width="132" height="61" rx="22"/>
+    <rect x="-56" y="-19" width="56" height="38" rx="19" transform="translate(470 896) rotate(-28)"/>
+    <rect x="0" y="-19" width="56" height="38" rx="19" transform="translate(554 896) rotate(28)"/>
+  </g>
+</svg>

@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024">
+  <!-- Design A "Z-Bar" — monochrome glyph.
+       Android 13+ themed icons (alpha-only, system tints it) and the base for
+       the iOS 18 "tinted" variant. Same scale as the foreground layer: sized
+       for flutter_launcher_icons' 16% inset wrapper (see foreground.svg). -->
+  <g transform="translate(512 512) scale(1.2) translate(-512 -512)">
+    <path d="M292 262H732V380L484 644H732V762H292V644L540 380H292Z" fill="#FFFFFF"/>
+  </g>
+</svg>

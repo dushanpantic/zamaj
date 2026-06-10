@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024">
+  <!-- Design B "Ember Plate" — Android adaptive-icon background layer.
+       Opaque, full-bleed, center-weighted (OEM masks crop the outer ~16%). -->
+  <defs>
+    <radialGradient id="bg" gradientUnits="userSpaceOnUse" cx="512" cy="470" r="780">
+      <stop offset="0" stop-color="#211D19"/>
+      <stop offset="0.55" stop-color="#161310"/>
+      <stop offset="1" stop-color="#0D0B0A"/>
+    </radialGradient>
+    <radialGradient id="glow" gradientUnits="userSpaceOnUse" cx="512" cy="512" r="520">
+      <stop offset="0" stop-color="#F97316" stop-opacity="0.16"/>
+      <stop offset="1" stop-color="#F97316" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <rect width="1024" height="1024" fill="url(#bg)"/>
+  <rect width="1024" height="1024" fill="url(#glow)"/>
+</svg>

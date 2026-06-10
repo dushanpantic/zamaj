@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024">
+  <!-- Design C "Planned vs Actual" — full-bleed composite.
+       The app's first pillar as a mark: a ghost-outline pill (the plan, in the
+       muted `planned` token) beside a taller solid ember pill (the actual),
+       both grounded on a baseline. Heights differ deliberately so it reads as
+       a chart, never as a pause button.
+       Use for: iOS appiconset, Android legacy ic_launcher, Play Store 512. -->
+  <defs>
+    <radialGradient id="bg" gradientUnits="userSpaceOnUse" cx="512" cy="430" r="780">
+      <stop offset="0" stop-color="#211D19"/>
+      <stop offset="0.55" stop-color="#161310"/>
+      <stop offset="1" stop-color="#0D0B0A"/>
+    </radialGradient>
+    <radialGradient id="glow" gradientUnits="userSpaceOnUse" cx="512" cy="580" r="520">
+      <stop offset="0" stop-color="#F97316" stop-opacity="0.2"/>
+      <stop offset="1" stop-color="#F97316" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="ember" gradientUnits="userSpaceOnUse" x1="632" y1="262" x2="632" y2="742">
+      <stop offset="0" stop-color="#FB923C"/>
+      <stop offset="0.5" stop-color="#F97316"/>
+      <stop offset="1" stop-color="#C2410C"/>
+    </linearGradient>
+  </defs>
+  <rect width="1024" height="1024" fill="url(#bg)"/>
+  <rect width="1024" height="1024" fill="url(#glow)"/>
+  <rect x="297" y="742" width="430" height="20" rx="10" fill="#3D3833"/>
+  <rect x="317" y="412" width="150" height="330" rx="75" fill="none" stroke="#A39E96" stroke-width="26"/>
+  <rect x="557" y="262" width="150" height="480" rx="75" fill="url(#ember)"/>
+</svg>

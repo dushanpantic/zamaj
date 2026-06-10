@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024">
+  <!-- Design A "Z-Bar" — full-bleed composite.
+       Use for: iOS appiconset (all sizes), Android legacy ic_launcher, Play Store 512.
+       iOS applies its own squircle mask: do NOT pre-round corners, no alpha. -->
+  <defs>
+    <radialGradient id="bg" gradientUnits="userSpaceOnUse" cx="512" cy="430" r="780">
+      <stop offset="0" stop-color="#211D19"/>
+      <stop offset="0.55" stop-color="#161310"/>
+      <stop offset="1" stop-color="#0D0B0A"/>
+    </radialGradient>
+    <radialGradient id="glow" gradientUnits="userSpaceOnUse" cx="512" cy="560" r="520">
+      <stop offset="0" stop-color="#F97316" stop-opacity="0.22"/>
+      <stop offset="1" stop-color="#F97316" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="ember" gradientUnits="userSpaceOnUse" x1="512" y1="262" x2="512" y2="762">
+      <stop offset="0" stop-color="#FB923C"/>
+      <stop offset="0.5" stop-color="#F97316"/>
+      <stop offset="1" stop-color="#C2410C"/>
+    </linearGradient>
+  </defs>
+  <rect width="1024" height="1024" fill="url(#bg)"/>
+  <rect width="1024" height="1024" fill="url(#glow)"/>
+  <!-- Glyph at ~56% of icon height. iOS shows the full square, while Android's
+       adaptive mask zooms its (padded) foreground layer ~1.5x, so the iOS
+       master needs a larger glyph for the two to read the same size. -->
+  <g transform="translate(512 512) scale(1.15) translate(-512 -512)">
+    <path d="M292 262H732V380L484 644H732V762H292V644L540 380H292Z" fill="url(#ember)"/>
+  </g>
+</svg>

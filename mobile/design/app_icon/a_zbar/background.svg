@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024">
+  <!-- Design A "Z-Bar" — Android adaptive-icon background layer.
+       Must be opaque and full-bleed; the outer ~16% can be cropped by OEM masks
+       and shifted by parallax, so the gradient is centered and subtle. -->
+  <defs>
+    <radialGradient id="bg" gradientUnits="userSpaceOnUse" cx="512" cy="470" r="780">
+      <stop offset="0" stop-color="#211D19"/>
+      <stop offset="0.55" stop-color="#161310"/>
+      <stop offset="1" stop-color="#0D0B0A"/>
+    </radialGradient>
+    <radialGradient id="glow" gradientUnits="userSpaceOnUse" cx="512" cy="512" r="520">
+      <stop offset="0" stop-color="#F97316" stop-opacity="0.16"/>
+      <stop offset="1" stop-color="#F97316" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <rect width="1024" height="1024" fill="url(#bg)"/>
+  <rect width="1024" height="1024" fill="url(#glow)"/>
+</svg>

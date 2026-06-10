@@ -32,6 +32,18 @@ dev_dependencies:
   json_serializable: ^6.13.2
   drift_dev: ^2.33.0
   sqlite3: ^3.3.1
+  flutter_launcher_icons: ^0.14.4
+
+# Launcher icons are generated from the SVG masters in design/app_icon/ via
+# tool/generate_app_icons.sh (rasterizes the SVGs, then runs this tool).
+flutter_launcher_icons:
+  android: true
+  ios: true
+  image_path: design/app_icon/d_z_dumbbell/exports/full-1024.png
+  adaptive_icon_background: design/app_icon/d_z_dumbbell/exports/background-1024.png
+  adaptive_icon_foreground: design/app_icon/d_z_dumbbell/exports/foreground-1024.png
+  adaptive_icon_monochrome: design/app_icon/d_z_dumbbell/exports/monochrome-1024.png
+  remove_alpha_ios: true
 
 flutter:
   uses-material-design: true

@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024">
+  <!-- Z-Dumbbell variation 2 "Chunky" — preview composite, flat.
+       One bigger plate per side instead of two, thicker 45° handle,
+       heavier main plates. Handle lands flush in squared plate corners.
+       If chosen, the four layer masters get derived from this geometry. -->
+  <rect width="1024" height="1024" fill="#161310"/>
+  <g transform="translate(512 512) scale(0.84) translate(-512 -512)" fill="#F97316">
+    <rect x="352" y="149" width="320" height="64" rx="32"/>
+    <path d="M320 247H704A28 28 0 0 1 732 275V367H320A28 28 0 0 1 292 339V275A28 28 0 0 1 320 247Z"/>
+    <path d="M582 359H732V367L442 657V665H292V657L582 367Z"/>
+    <path d="M292 657H704A28 28 0 0 1 732 685V749A28 28 0 0 1 704 777H320A28 28 0 0 1 292 749V657Z"/>
+    <rect x="352" y="811" width="320" height="64" rx="32"/>
+  </g>
+</svg>

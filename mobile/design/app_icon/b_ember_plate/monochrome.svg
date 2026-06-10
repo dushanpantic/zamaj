@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024">
+  <!-- Design B "Ember Plate" — monochrome glyph (solid annulus, grooves dropped:
+       they would vanish at themed-icon sizes). Android 13+ themed icons and
+       the base for the iOS 18 "tinted" variant. -->
+  <path d="M802 512A290 290 0 1 1 222 512A290 290 0 1 1 802 512ZM616 512A104 104 0 1 0 408 512A104 104 0 1 0 616 512Z"
+        fill="#FFFFFF" fill-rule="evenodd"/>
+</svg>

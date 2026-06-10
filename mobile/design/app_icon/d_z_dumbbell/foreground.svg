@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024">
+  <!-- Design D "Z-Dumbbell" — Android adaptive-icon foreground layer
+       (transparent bg, c2 duotone). Sized for flutter_launcher_icons'
+       16% inset convention (the generated mipmap-anydpi-v26/ic_launcher.xml
+       wraps this layer in a 16% inset): at scale 0.75 the glyph lands at
+       ~45dp tall after the inset — inside the ⌀66dp safe zone, ~63% of the
+       visible ~72dp window, matching the iOS master's ~60%. Do not
+       pre-shrink this layer to the safe zone; the inset already does that. -->
+  <g transform="translate(512 512) scale(0.75) translate(-512 -512)">
+    <g fill="#ECEAE6">
+      <rect x="446" y="92" width="132" height="61" rx="22"/>
+      <rect x="-56" y="-19" width="56" height="38" rx="19" transform="translate(470 128) rotate(28)"/>
+      <rect x="0" y="-19" width="56" height="38" rx="19" transform="translate(554 128) rotate(-28)"/>
+      <rect x="332" y="169" width="360" height="64" rx="32"/>
+      <rect x="332" y="791" width="360" height="64" rx="32"/>
+      <rect x="446" y="871" width="132" height="61" rx="22"/>
+      <rect x="-56" y="-19" width="56" height="38" rx="19" transform="translate(470 896) rotate(-28)"/>
+      <rect x="0" y="-19" width="56" height="38" rx="19" transform="translate(554 896) rotate(28)"/>
+    </g>
+    <path fill="#F97316" d="M300 259H724A28 28 0 0 1 752 287V364A28 28 0 0 1 742 385L432 647H724A28 28 0 0 1 752 675V737A28 28 0 0 1 724 765H300A28 28 0 0 1 272 737V660A28 28 0 0 1 282 639L592 377H300A28 28 0 0 1 272 349V287A28 28 0 0 1 300 259Z"/>
+  </g>
+</svg>

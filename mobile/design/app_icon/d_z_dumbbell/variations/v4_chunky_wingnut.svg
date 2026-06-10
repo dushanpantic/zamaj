@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024">
+  <!-- Z-Dumbbell variation 4 "Chunky + wing nut" — preview composite, flat.
+       The chunky layout plus the spinlock wing nut outboard of each small
+       plate: a hub with two pill wings sweeping up-and-out (down-and-out on
+       the bottom nut — 180° symmetry like the rest of the mark). Wings are
+       anchored at the hub center so their inner ends stay fully inside the
+       hub silhouette. Plates widened vs v2 to rebalance the taller stack.
+       If chosen, the four layer masters get derived from this geometry. -->
+  <rect width="1024" height="1024" fill="#161310"/>
+  <g transform="translate(512 512) scale(0.7) translate(-512 -512)" fill="#F97316">
+    <!-- top wing nut -->
+    <rect x="474" y="92" width="76" height="61" rx="18"/>
+    <rect x="-130" y="-23" width="130" height="46" rx="23" transform="translate(512 122) rotate(24)"/>
+    <rect x="0" y="-23" width="130" height="46" rx="23" transform="translate(512 122) rotate(-24)"/>
+    <!-- plate stack -->
+    <rect x="332" y="169" width="360" height="64" rx="32"/>
+    <path d="M300 259H724A28 28 0 0 1 752 287V377H300A28 28 0 0 1 272 349V287A28 28 0 0 1 300 259Z"/>
+    <!-- handle, corner-to-corner -->
+    <path d="M592 369H752V377L432 647V655H272V647L592 377Z"/>
+    <path d="M272 647H724A28 28 0 0 1 752 675V737A28 28 0 0 1 724 765H300A28 28 0 0 1 272 737V647Z"/>
+    <rect x="332" y="791" width="360" height="64" rx="32"/>
+    <!-- bottom wing nut -->
+    <rect x="474" y="871" width="76" height="61" rx="18"/>
+    <rect x="-130" y="-23" width="130" height="46" rx="23" transform="translate(512 902) rotate(-24)"/>
+    <rect x="0" y="-23" width="130" height="46" rx="23" transform="translate(512 902) rotate(24)"/>
+  </g>
+</svg>

@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024">
+  <!-- Design C "Planned vs Actual" — monochrome glyph. The outline-vs-fill
+       distinction survives tinting because the themed-icon system tints the
+       alpha channel. Android 13+ themed icons and the iOS 18 tinted base. -->
+  <g transform="translate(512 512) scale(0.88) translate(-512 -512)">
+    <rect x="297" y="742" width="430" height="20" rx="10" fill="#FFFFFF"/>
+    <rect x="317" y="412" width="150" height="330" rx="75" fill="none" stroke="#FFFFFF" stroke-width="26"/>
+    <rect x="557" y="262" width="150" height="480" rx="75" fill="#FFFFFF"/>
+  </g>
+</svg>

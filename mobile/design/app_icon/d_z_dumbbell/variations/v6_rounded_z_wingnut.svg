@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024">
+  <!-- Z-Dumbbell variation 6 — preview, flat.
+       Changes vs v5: the Z (both plates + handle) is one continuous path
+       with r28 fillets on the outer junctions where the plate edge flows
+       into the diagonal — rounded like every other plate corner. Wing-nut
+       hub widened to 132; wings shrunk to short stubs (56x28) anchored at
+       the hub shoulders, peeking out rather than sweeping.
+       If chosen, the four layer masters get derived from this geometry. -->
+  <rect width="1024" height="1024" fill="#161310"/>
+  <g transform="translate(512 512) scale(0.73) translate(-512 -512)" fill="#F97316">
+    <!-- top wing nut -->
+    <rect x="446" y="92" width="132" height="61" rx="22"/>
+    <rect x="-56" y="-14" width="56" height="28" rx="14" transform="translate(470 128) rotate(28)"/>
+    <rect x="0" y="-14" width="56" height="28" rx="14" transform="translate(554 128) rotate(-28)"/>
+    <!-- small plates -->
+    <rect x="332" y="169" width="360" height="64" rx="32"/>
+    <rect x="332" y="791" width="360" height="64" rx="32"/>
+    <!-- the Z: plates + handle as one path, outer junctions filleted r28 -->
+    <path d="M300 259H724A28 28 0 0 1 752 287V364A28 28 0 0 1 742 385L432 647H724A28 28 0 0 1 752 675V737A28 28 0 0 1 724 765H300A28 28 0 0 1 272 737V660A28 28 0 0 1 282 639L592 377H300A28 28 0 0 1 272 349V287A28 28 0 0 1 300 259Z"/>
+    <!-- bottom wing nut -->
+    <rect x="446" y="871" width="132" height="61" rx="22"/>
+    <rect x="-56" y="-14" width="56" height="28" rx="14" transform="translate(470 896) rotate(-28)"/>
+    <rect x="0" y="-14" width="56" height="28" rx="14" transform="translate(554 896) rotate(28)"/>
+  </g>
+</svg>

@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024">
+  <!-- Design B "Ember Plate" — Android adaptive-icon foreground layer.
+       Plate scaled so the outer radius (290 of 1024 ≈ 30.6dp of 108) sits
+       inside the 66dp-diameter safe zone. -->
+  <defs>
+    <radialGradient id="plate" gradientUnits="userSpaceOnUse" cx="430" cy="400" r="580">
+      <stop offset="0" stop-color="#FB923C"/>
+      <stop offset="0.55" stop-color="#F97316"/>
+      <stop offset="1" stop-color="#C2410C"/>
+    </radialGradient>
+  </defs>
+  <g transform="translate(512 512) scale(0.88) translate(-512 -512)">
+    <path d="M842 512A330 330 0 1 1 182 512A330 330 0 1 1 842 512ZM630 512A118 118 0 1 0 394 512A118 118 0 1 0 630 512Z"
+          fill="url(#plate)" fill-rule="evenodd"/>
+    <circle cx="512" cy="512" r="265" fill="none" stroke="#7C2D12" stroke-opacity="0.45" stroke-width="10"/>
+    <circle cx="512" cy="512" r="180" fill="none" stroke="#7C2D12" stroke-opacity="0.45" stroke-width="10"/>
+    <circle cx="512" cy="512" r="124" fill="none" stroke="#FDBA74" stroke-opacity="0.6" stroke-width="8"/>
+  </g>
+</svg>

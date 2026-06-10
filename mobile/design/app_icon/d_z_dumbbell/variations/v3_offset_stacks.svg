@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024">
+  <!-- Z-Dumbbell variation 3 "Offset stacks" — preview composite, flat.
+       Same core as the main masters, but the smaller plates are flush-aligned
+       toward the handle's attachment side (top stack to the right, bottom
+       stack to the left), staircasing with the Z diagonal — closer to how
+       plates sit over the bar on the real object. 180° symmetry preserved.
+       If chosen, the four layer masters get derived from this geometry. -->
+  <rect width="1024" height="1024" fill="#161310"/>
+  <g transform="translate(512 512) scale(0.82) translate(-512 -512)" fill="#F97316">
+    <rect x="492" y="126" width="230" height="50" rx="24"/>
+    <rect x="390" y="206" width="332" height="50" rx="24"/>
+    <path d="M326 286H698A24 24 0 0 1 722 310V386H326A24 24 0 0 1 302 362V310A24 24 0 0 1 326 286Z"/>
+    <path d="M590 378H722V386L434 638V646H302V638L590 386Z"/>
+    <path d="M302 638H698A24 24 0 0 1 722 662V714A24 24 0 0 1 698 738H326A24 24 0 0 1 302 714V638Z"/>
+    <rect x="302" y="768" width="332" height="50" rx="24"/>
+    <rect x="302" y="848" width="230" height="50" rx="24"/>
+  </g>
+</svg>
