@@ -92,19 +92,22 @@ class _FocusMarqueeTextState extends State<FocusMarqueeText>
       context,
     ).style.merge(widget.style);
     final textScaler = MediaQuery.textScalerOf(context);
+    // Under reduce-motion, never scroll: fall back to a static, ellipsized
+    // line. A long name truncates (the accepted trade) rather than ticking.
+    final reduceMotion = MediaQuery.disableAnimationsOf(context);
     return LayoutBuilder(
       builder: (context, constraints) {
         final maxWidth = constraints.maxWidth;
         final textWidth = _measureWidth(effectiveStyle, textScaler);
 
-        if (!maxWidth.isFinite || textWidth <= maxWidth) {
+        if (reduceMotion || !maxWidth.isFinite || textWidth <= maxWidth) {
           _stopScroll();
           return Text(
             widget.text,
             style: widget.style,
             maxLines: 1,
             softWrap: false,
-            overflow: TextOverflow.clip,
+            overflow: TextOverflow.ellipsis,
           );
         }
 

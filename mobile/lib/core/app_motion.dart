@@ -1,4 +1,14 @@
-import 'package:flutter/animation.dart';
+import 'package:flutter/widgets.dart';
+
+/// Resolves [duration] against the platform reduce-motion setting: returns
+/// [Duration.zero] when `MediaQuery.disableAnimations` is on, so an implicit
+/// animation (e.g. an [AnimatedContainer]) completes instantly instead of
+/// tweening.
+///
+/// A top-level helper rather than a method on [AppDuration], which stays a pure
+/// static-const token class.
+Duration resolveDuration(BuildContext context, Duration duration) =>
+    MediaQuery.disableAnimationsOf(context) ? Duration.zero : duration;
 
 /// Motion tokens for the Zamaj UI: every animated widget reads its duration and
 /// curve from one of these named steps instead of a hand-picked literal.

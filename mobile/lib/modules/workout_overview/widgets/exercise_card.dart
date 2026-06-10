@@ -132,7 +132,7 @@ class ExerciseCard extends StatelessWidget {
       container: true,
       customSemanticsActions: moveActions.isEmpty ? null : moveActions,
       child: AnimatedContainer(
-        duration: AppDuration.base,
+        duration: resolveDuration(context, AppDuration.base),
         decoration: BoxDecoration(
           color: colors.surface,
           borderRadius: BorderRadius.circular(AppRadius.md),
