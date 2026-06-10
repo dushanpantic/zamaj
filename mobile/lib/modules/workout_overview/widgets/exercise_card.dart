@@ -4,6 +4,7 @@ import 'package:zamaj/building_blocks/building_blocks.dart';
 import 'package:zamaj/core/app_colors.dart';
 import 'package:zamaj/core/app_icon.dart';
 import 'package:zamaj/core/app_motion.dart';
+import 'package:zamaj/core/app_opacity.dart';
 import 'package:zamaj/core/app_spacing.dart';
 import 'package:zamaj/core/app_theme.dart';
 import 'package:zamaj/core/app_typography.dart';
@@ -13,10 +14,10 @@ import 'package:zamaj/modules/workout_overview/models/exercise_view_model.dart';
 import 'package:zamaj/modules/workout_overview/widgets/set_row.dart';
 
 /// Width reserved in the card-header leading slot for the drag handle — and
-/// for the matching placeholder on non-draggable (finished) cards. Pinning
-/// both to one value keeps the title's left edge from shifting across the
-/// unfinished→done transition or the LOG-SET in-flight window. Sized to the
-/// sweaty-hands [AppInSessionSize.stepButton] (64 dp) grab target.
+/// for the matching [_LeadingStateTile] on non-draggable (finished) cards.
+/// Pinning both to one value keeps the title's left edge from shifting across
+/// the unfinished→done transition or the LOG-SET in-flight window. Sized to
+/// the sweaty-hands [AppInSessionSize.stepButton] (64 dp) grab target.
 const double kExerciseLeadingSlotWidth = AppInSessionSize.stepButton;
 
 /// Drag payload that travels with a LongPressDraggable started on this
@@ -245,10 +246,10 @@ class _Header extends StatelessWidget {
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              if (dragHandle != null)
-                dragHandle!
-              else
-                const SizedBox(width: kExerciseLeadingSlotWidth),
+              AnimatedSwitcher(
+                duration: resolveDuration(context, AppDuration.base),
+                child: dragHandle ?? _LeadingStateTile(state: state),
+              ),
               // Breathing room between the (now tinted) leading slot and the
               // title. Outside the handle/placeholder branch so the title's
               // left edge stays put across the unfinished→done transition.
@@ -329,6 +330,56 @@ class _Header extends StatelessWidget {
   }
 }
 
+/// Fills the header's leading slot whenever the drag handle is absent —
+/// finished exercises, and every card once the session has ended. Mirrors the
+/// handle's exact geometry (64dp rounded square with a drawn fill) so the slot
+/// reads as the handle resolving into a status, never as a hole in the card.
+///
+/// Finished states get their semantic color as a tint fill + glyph; an
+/// unfinished exercise in an ended session keeps the handle's neutral fill
+/// with a muted hollow circle — an unchecked checkbox, "never completed".
+class _LeadingStateTile extends StatelessWidget {
+  const _LeadingStateTile({required this.state});
+
+  final ExerciseState state;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = Theme.of(context).appColors;
+    // Skipped / Replaced pass a null label: their trailing pill already
+    // announces the state, and a second identical announcement from the tile
+    // would just be screen-reader noise. Done and Not-completed have no other
+    // announcer, so the tile carries their label.
+    final (Color accent, IconData icon, String? label) = switch (state) {
+      CompletedState() => (colors.exerciseCompleted, Icons.check, 'Done'),
+      SkippedState() => (colors.exerciseSkipped, Icons.skip_next, null),
+      ReplacedState() => (colors.exerciseReplaced, Icons.swap_horiz, null),
+      UnfinishedState() => (
+        colors.onSurfaceMuted,
+        Icons.radio_button_unchecked,
+        'Not completed',
+      ),
+    };
+    return Container(
+      width: kExerciseLeadingSlotWidth,
+      height: kExerciseLeadingSlotWidth,
+      alignment: Alignment.center,
+      decoration: BoxDecoration(
+        color: state is UnfinishedState
+            ? colors.surfaceVariant
+            : accent.withValues(alpha: AppOpacity.tintFill),
+        borderRadius: BorderRadius.circular(AppRadius.md),
+      ),
+      child: AppIcon(
+        icon,
+        color: accent,
+        size: AppIconSize.lg,
+        semanticLabel: label,
+      ),
+    );
+  }
+}
+
 class _RestIndicator extends StatelessWidget {
   const _RestIndicator({
     required this.seconds,
@@ -361,7 +412,7 @@ class _RestIndicator extends StatelessWidget {
 }
 
 /// Right-edge meta block of the card header: status badges (warmup flame,
-/// Done / Skipped / Replaced) on the first line, the `completed / planned`
+/// Skipped / Replaced pills) on the first line, the `completed / planned`
 /// set counter below them. Keeping them in one column guarantees a shared
 /// flush right edge, and when no badge renders the lone counter is centered
 /// vertically by the header row instead of sitting on the second text line
@@ -385,7 +436,10 @@ class _TrailingMeta extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final hasBadges = isWarmup || state is! UnfinishedState;
+    // Done lives in the leading state tile now; only the rarer exception
+    // states (Skipped / Replaced) keep a labelled pill on the right.
+    final showStatePill = state is SkippedState || state is ReplacedState;
+    final hasBadges = isWarmup || showStatePill;
     return Column(
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.end,
@@ -400,10 +454,9 @@ class _TrailingMeta extends StatelessWidget {
                   color: colors.warmup,
                   label: 'Warmup',
                 ),
-              if (isWarmup && state is! UnfinishedState)
+              if (isWarmup && showStatePill)
                 const SizedBox(width: AppSpacing.sm),
-              if (state is! UnfinishedState)
-                _StateBadge(state: state, colors: colors),
+              if (showStatePill) _StateBadge(state: state, colors: colors),
             ],
           ),
         if (hasBadges && totalPlanned > 0)
@@ -432,16 +485,11 @@ class _StateBadge extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // The active exercise carries no badge — the card's 2dp primary border is
-    // the "current" signal on its own. Done reads as a quiet glyph; the rarer
-    // exception states (Skipped / Replaced) keep a labelled pill. Both go
-    // through the shared [StatusBadge].
+    // Only the exception states render here: Done is signalled by the leading
+    // [_LeadingStateTile], and the active exercise carries no badge — the
+    // card's 2dp primary border is the "current" signal on its own.
     return switch (state) {
-      CompletedState() => StatusBadge.icon(
-        icon: Icons.check_circle,
-        color: colors.exerciseCompleted,
-        label: 'Done',
-      ),
+      CompletedState() => const SizedBox.shrink(),
       SkippedState() => StatusBadge.pill(
         label: 'Skipped',
         color: colors.exerciseSkipped,
