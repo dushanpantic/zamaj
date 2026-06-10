@@ -58,76 +58,123 @@ class AppTypography {
   /// name so the "one family" typography guard can carve it out.
   static const String monoFamily = 'monospace';
 
+  /// The app's bundled default family (Barlow, weights 400–700). Set on every
+  /// [standard] style from this one definition point so the whole app renders
+  /// in Barlow offline rather than the platform face.
+  static const String _family = 'Barlow';
+
   static const AppTypography standard = AppTypography(
-    display: TextStyle(fontSize: 32, fontWeight: FontWeight.w700, height: 1.15),
+    display: TextStyle(
+      fontFamily: _family,
+      fontSize: 32,
+      fontWeight: FontWeight.w700,
+      height: 1.15,
+    ),
     displaySmall: TextStyle(
+      fontFamily: _family,
       fontSize: 28,
       fontWeight: FontWeight.w700,
       height: 1.15,
     ),
-    title: TextStyle(fontSize: 20, fontWeight: FontWeight.w600, height: 1.2),
+    title: TextStyle(
+      fontFamily: _family,
+      fontSize: 20,
+      fontWeight: FontWeight.w600,
+      height: 1.2,
+    ),
     titleSmall: TextStyle(
+      fontFamily: _family,
       fontSize: 16,
       fontWeight: FontWeight.w600,
       height: 1.25,
     ),
-    body: TextStyle(fontSize: 16, fontWeight: FontWeight.w400, height: 1.4),
+    body: TextStyle(
+      fontFamily: _family,
+      fontSize: 16,
+      fontWeight: FontWeight.w400,
+      height: 1.4,
+    ),
     bodySmall: TextStyle(
+      fontFamily: _family,
       fontSize: 14,
       fontWeight: FontWeight.w400,
       height: 1.4,
     ),
-    label: TextStyle(fontSize: 14, fontWeight: FontWeight.w500, height: 1.25),
+    label: TextStyle(
+      fontFamily: _family,
+      fontSize: 14,
+      fontWeight: FontWeight.w500,
+      height: 1.25,
+    ),
     labelSmall: TextStyle(
+      fontFamily: _family,
       fontSize: 13,
       fontWeight: FontWeight.w500,
       height: 1.25,
     ),
-    caption: TextStyle(fontSize: 12, fontWeight: FontWeight.w400, height: 1.3),
+    caption: TextStyle(
+      fontFamily: _family,
+      fontSize: 12,
+      fontWeight: FontWeight.w400,
+      height: 1.3,
+    ),
     numeric: TextStyle(
+      fontFamily: _family,
       fontSize: 18,
       fontWeight: FontWeight.w600,
       height: 1.2,
       fontFeatures: _tabular,
     ),
     numericXs: TextStyle(
+      fontFamily: _family,
       fontSize: 12,
       fontWeight: FontWeight.w600,
       height: 1.2,
       fontFeatures: _tabular,
     ),
     numericSm: TextStyle(
+      fontFamily: _family,
       fontSize: 14,
       fontWeight: FontWeight.w600,
       height: 1.2,
       fontFeatures: _tabular,
     ),
     numericMd: TextStyle(
+      fontFamily: _family,
       fontSize: 22,
       fontWeight: FontWeight.w700,
       height: 1.15,
       fontFeatures: _tabular,
     ),
     numericLarge: TextStyle(
+      fontFamily: _family,
       fontSize: 36,
       fontWeight: FontWeight.w700,
       height: 1.1,
       fontFeatures: _tabular,
     ),
     numericHero: TextStyle(
+      fontFamily: _family,
       fontSize: 44,
       fontWeight: FontWeight.w700,
       height: 1.05,
       fontFeatures: _tabular,
     ),
     actionLabel: TextStyle(
+      fontFamily: _family,
       fontSize: 18,
       fontWeight: FontWeight.w700,
       height: 1.2,
       letterSpacing: 0.5,
     ),
-    badge: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, height: 1.2),
+    badge: TextStyle(
+      fontFamily: _family,
+      fontSize: 12,
+      fontWeight: FontWeight.w600,
+      height: 1.2,
+    ),
     overline: TextStyle(
+      fontFamily: _family,
       fontSize: 12,
       fontWeight: FontWeight.w600,
       height: 1.2,
