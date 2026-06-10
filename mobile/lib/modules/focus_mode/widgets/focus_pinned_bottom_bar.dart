@@ -34,44 +34,49 @@ class FocusPinnedBottomBar extends StatelessWidget {
       return const SizedBox.shrink();
     }
 
-    return Container(
-      decoration: BoxDecoration(
-        color: colors.background,
-        border: Border(top: BorderSide(color: colors.outline)),
-      ),
-      padding: const EdgeInsets.fromLTRB(
-        AppSpacing.lg,
-        AppSpacing.md,
-        AppSpacing.lg,
-        AppSpacing.md,
-      ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          if (state.undoable != null) ...[
-            _UndoLastSetButton(undoable: state.undoable!, enabled: canMutate),
-            const SizedBox(height: AppSpacing.xs),
-          ],
-          if (isResting) ...[
-            FocusRestTimerBar(
-              timer: state.restTimer!,
-              onSkip: () => bloc.add(const FocusModeRestSkipped()),
-            ),
-            if (activePanel != null) const SizedBox(height: AppSpacing.sm),
-          ],
-          if (activePanel != null)
-            PrimaryActionButton(
-              onPressed: () => bloc.add(
-                FocusModeSetCompleted(activePanel!.sessionExerciseId),
+    // Clamp text scaling on this in-session control bar so the LOG SET button,
+    // rest-timer readout, and undo label stay laid out at large font sizes.
+    return MediaQuery.withClampedTextScaling(
+      maxScaleFactor: 1.3,
+      child: Container(
+        decoration: BoxDecoration(
+          color: colors.background,
+          border: Border(top: BorderSide(color: colors.outline)),
+        ),
+        padding: const EdgeInsets.fromLTRB(
+          AppSpacing.lg,
+          AppSpacing.md,
+          AppSpacing.lg,
+          AppSpacing.md,
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            if (state.undoable != null) ...[
+              _UndoLastSetButton(undoable: state.undoable!, enabled: canMutate),
+              const SizedBox(height: AppSpacing.xs),
+            ],
+            if (isResting) ...[
+              FocusRestTimerBar(
+                timer: state.restTimer!,
+                onSkip: () => bloc.add(const FocusModeRestSkipped()),
               ),
-              label: 'LOG SET',
-              subLabel: activePanel!.totalPlannedSets > 0
-                  ? 'Set ${activePanel!.currentSetIndex + 1} of ${activePanel!.totalPlannedSets}'
-                  : null,
-              enabled: canMutate,
-            ),
-        ],
+              if (activePanel != null) const SizedBox(height: AppSpacing.sm),
+            ],
+            if (activePanel != null)
+              PrimaryActionButton(
+                onPressed: () => bloc.add(
+                  FocusModeSetCompleted(activePanel!.sessionExerciseId),
+                ),
+                label: 'LOG SET',
+                subLabel: activePanel!.totalPlannedSets > 0
+                    ? 'Set ${activePanel!.currentSetIndex + 1} of ${activePanel!.totalPlannedSets}'
+                    : null,
+                enabled: canMutate,
+              ),
+          ],
+        ),
       ),
     );
   }

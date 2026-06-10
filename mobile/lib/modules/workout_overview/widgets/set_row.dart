@@ -362,21 +362,26 @@ class _Header extends StatelessWidget {
       if (editorOpen) {
         return _CollapseButton(onPressed: onToggleEditor, colors: colors);
       }
-      return Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          if (suggestedActual != null)
-            Padding(
-              padding: const EdgeInsets.only(right: AppSpacing.sm),
-              child: Text(
-                '→ ${SetValueFormatter.formatActual(suggestedActual!)}',
-                style: typography.numericSm.copyWith(
-                  color: colors.onSurfaceMuted,
+      // Clamp text scaling so the suggested-value readout stays beside the log
+      // circle without overflowing at large accessibility font sizes.
+      return MediaQuery.withClampedTextScaling(
+        maxScaleFactor: 1.3,
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            if (suggestedActual != null)
+              Padding(
+                padding: const EdgeInsets.only(right: AppSpacing.sm),
+                child: Text(
+                  '→ ${SetValueFormatter.formatActual(suggestedActual!)}',
+                  style: typography.numericSm.copyWith(
+                    color: colors.onSurfaceMuted,
+                  ),
                 ),
               ),
-            ),
-          _LoggableCircleButton(onTap: onQuickLog, colors: colors),
-        ],
+            _LoggableCircleButton(onTap: onQuickLog, colors: colors),
+          ],
+        ),
       );
     }
     return Row(
@@ -720,65 +725,70 @@ class _NumericFieldState extends State<_NumericField> {
     final negative = steps.first;
     final positive = steps.last;
 
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.center,
-      children: [
-        _StepButton(
-          label: _fmtStep(negative, widget.allowDecimal),
-          onPressed: () => _bump(negative),
-        ),
-        Expanded(
-          child: GestureDetector(
-            behavior: HitTestBehavior.opaque,
-            onTap: _focus.requestFocus,
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xs),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  TextField(
-                    controller: widget.controller,
-                    focusNode: _focus,
-                    keyboardType: TextInputType.numberWithOptions(
-                      decimal: widget.allowDecimal,
-                    ),
-                    inputFormatters: [
-                      FilteringTextInputFormatter.allow(
-                        widget.allowDecimal
-                            ? RegExp(r'[0-9.]')
-                            : RegExp(r'[0-9]'),
+    // Clamp text scaling on the numeric stepper so the value and ± labels stay
+    // within the fixed-size step buttons at large accessibility font sizes.
+    return MediaQuery.withClampedTextScaling(
+      maxScaleFactor: 1.3,
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          _StepButton(
+            label: _fmtStep(negative, widget.allowDecimal),
+            onPressed: () => _bump(negative),
+          ),
+          Expanded(
+            child: GestureDetector(
+              behavior: HitTestBehavior.opaque,
+              onTap: _focus.requestFocus,
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xs),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    TextField(
+                      controller: widget.controller,
+                      focusNode: _focus,
+                      keyboardType: TextInputType.numberWithOptions(
+                        decimal: widget.allowDecimal,
                       ),
-                    ],
-                    textAlign: TextAlign.center,
-                    decoration: const InputDecoration(
-                      border: InputBorder.none,
-                      enabledBorder: InputBorder.none,
-                      focusedBorder: InputBorder.none,
-                      isDense: true,
-                      contentPadding: EdgeInsets.zero,
+                      inputFormatters: [
+                        FilteringTextInputFormatter.allow(
+                          widget.allowDecimal
+                              ? RegExp(r'[0-9.]')
+                              : RegExp(r'[0-9]'),
+                        ),
+                      ],
+                      textAlign: TextAlign.center,
+                      decoration: const InputDecoration(
+                        border: InputBorder.none,
+                        enabledBorder: InputBorder.none,
+                        focusedBorder: InputBorder.none,
+                        isDense: true,
+                        contentPadding: EdgeInsets.zero,
+                      ),
+                      style: typography.numericLarge.copyWith(
+                        color: colors.onSurface,
+                      ),
+                      onChanged: (_) => widget.onChanged(),
                     ),
-                    style: typography.numericLarge.copyWith(
-                      color: colors.onSurface,
+                    const SizedBox(height: AppSpacing.xs),
+                    Text(
+                      widget.label,
+                      style: typography.labelSmall.copyWith(
+                        color: colors.onSurfaceMuted,
+                      ),
                     ),
-                    onChanged: (_) => widget.onChanged(),
-                  ),
-                  const SizedBox(height: AppSpacing.xs),
-                  Text(
-                    widget.label,
-                    style: typography.labelSmall.copyWith(
-                      color: colors.onSurfaceMuted,
-                    ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
           ),
-        ),
-        _StepButton(
-          label: '+${_fmtStep(positive, widget.allowDecimal)}',
-          onPressed: () => _bump(positive),
-        ),
-      ],
+          _StepButton(
+            label: '+${_fmtStep(positive, widget.allowDecimal)}',
+            onPressed: () => _bump(positive),
+          ),
+        ],
+      ),
     );
   }
 

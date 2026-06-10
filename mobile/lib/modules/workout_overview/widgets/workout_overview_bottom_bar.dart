@@ -36,52 +36,59 @@ class WorkoutOverviewBottomBar extends StatelessWidget {
         ? 'Focus'
         : 'Focus: $currentExerciseName';
 
-    return SafeArea(
-      top: false,
-      child: Container(
-        padding: const EdgeInsets.fromLTRB(
-          AppSpacing.lg,
-          AppSpacing.sm,
-          AppSpacing.lg,
-          AppSpacing.sm,
-        ),
-        decoration: BoxDecoration(
-          color: colors.surface,
-          border: Border(top: BorderSide(color: colors.outline)),
-        ),
-        child: Row(
-          children: [
-            _SecondaryActionButton(
-              icon: Icons.sticky_note_2_outlined,
-              tooltip: 'Add note',
-              onPressed: canMutate ? onAddNote : null,
-            ),
-            const SizedBox(width: AppSpacing.xs),
-            _SecondaryActionButton(
-              icon: Icons.add_task,
-              tooltip: 'Add extra work',
-              onPressed: canMutate ? onAddExtraWork : null,
-            ),
-            const SizedBox(width: AppSpacing.sm),
-            Expanded(
-              child: FilledButton.icon(
-                onPressed: hasOpenTarget && !state.isEnded ? onFocusMode : null,
-                style: FilledButton.styleFrom(
-                  minimumSize: const Size(0, AppInSessionSize.controlMin),
-                  textStyle: AppTypography.standard.actionLabel,
-                ),
-                icon: const AppIcon(
-                  Icons.center_focus_strong,
-                  size: AppIconSize.lg,
-                ),
-                label: Text(
-                  label,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
+    // Clamp text scaling on this in-session control bar so the Focus label and
+    // Note/Extra icons stay laid out at large accessibility font sizes.
+    return MediaQuery.withClampedTextScaling(
+      maxScaleFactor: 1.3,
+      child: SafeArea(
+        top: false,
+        child: Container(
+          padding: const EdgeInsets.fromLTRB(
+            AppSpacing.lg,
+            AppSpacing.sm,
+            AppSpacing.lg,
+            AppSpacing.sm,
+          ),
+          decoration: BoxDecoration(
+            color: colors.surface,
+            border: Border(top: BorderSide(color: colors.outline)),
+          ),
+          child: Row(
+            children: [
+              _SecondaryActionButton(
+                icon: Icons.sticky_note_2_outlined,
+                tooltip: 'Add note',
+                onPressed: canMutate ? onAddNote : null,
+              ),
+              const SizedBox(width: AppSpacing.xs),
+              _SecondaryActionButton(
+                icon: Icons.add_task,
+                tooltip: 'Add extra work',
+                onPressed: canMutate ? onAddExtraWork : null,
+              ),
+              const SizedBox(width: AppSpacing.sm),
+              Expanded(
+                child: FilledButton.icon(
+                  onPressed: hasOpenTarget && !state.isEnded
+                      ? onFocusMode
+                      : null,
+                  style: FilledButton.styleFrom(
+                    minimumSize: const Size(0, AppInSessionSize.controlMin),
+                    textStyle: AppTypography.standard.actionLabel,
+                  ),
+                  icon: const AppIcon(
+                    Icons.center_focus_strong,
+                    size: AppIconSize.lg,
+                  ),
+                  label: Text(
+                    label,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
                 ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
