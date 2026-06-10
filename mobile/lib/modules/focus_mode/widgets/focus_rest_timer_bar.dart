@@ -50,7 +50,7 @@ class FocusRestTimerBar extends StatelessWidget {
             children: [
               Text(
                 _formatMmss(timer.remainingSeconds),
-                style: typography.caption.copyWith(color: tint),
+                style: typography.numericMd.copyWith(color: tint),
               ),
               const Spacer(),
               InkWell(
