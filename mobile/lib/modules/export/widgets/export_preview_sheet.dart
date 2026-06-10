@@ -177,7 +177,7 @@ class _ExportPreviewSheetState extends State<ExportPreviewSheet> {
                     onPressed: _shareInFlight ? null : _onShare,
                     icon: _shareInFlight
                         ? AppInlineSpinner(color: colors.onPrimary)
-                        : const AppIcon(Icons.ios_share, size: AppIconSize.md),
+                        : const AppIcon(Icons.share, size: AppIconSize.md),
                     label: const Text('Share'),
                   ),
                 ),

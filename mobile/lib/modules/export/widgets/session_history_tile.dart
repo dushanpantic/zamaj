@@ -88,7 +88,7 @@ class SessionHistoryTile extends StatelessWidget {
               Padding(
                 padding: const EdgeInsets.only(right: AppSpacing.lg),
                 child: AppIcon(
-                  Icons.ios_share,
+                  Icons.share,
                   size: AppIconSize.lg,
                   color: colors.onSurfaceMuted,
                 ),

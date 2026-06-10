@@ -100,7 +100,7 @@ class _SessionDetailScreenState extends State<SessionDetailScreen> {
             actions: [
               IconButton(
                 tooltip: 'Share',
-                icon: const Icon(Icons.ios_share),
+                icon: const Icon(Icons.share),
                 onPressed: () => _showExport(context, session, workoutDayName),
               ),
             ],

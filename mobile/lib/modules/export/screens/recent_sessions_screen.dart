@@ -36,7 +36,7 @@ class RecentSessionsScreen extends StatelessWidget {
                     IconButton(
                       tooltip: 'Export this week',
                       onPressed: () => _showWeekExport(context, state),
-                      icon: const Icon(Icons.calendar_view_week),
+                      icon: const Icon(Icons.share),
                     ),
                   ]
                 : null,

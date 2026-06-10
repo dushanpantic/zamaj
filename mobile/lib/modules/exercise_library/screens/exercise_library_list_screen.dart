@@ -107,7 +107,7 @@ class _ExerciseLibraryListScreenState extends State<ExerciseLibraryListScreen> {
         actions: [
           IconButton(
             onPressed: _navigateToSuggestions,
-            icon: const Icon(Icons.auto_fix_high_outlined),
+            icon: const Icon(Icons.link),
             tooltip: 'Suggest from your programs',
           ),
         ],
@@ -294,7 +294,7 @@ class _LoadedView extends StatelessWidget {
                       ? null
                       : AppStateAction(
                           label: 'Suggest from your programs',
-                          icon: Icons.auto_fix_high_outlined,
+                          icon: Icons.link,
                           onPressed: onOpenSuggestions,
                         ),
                 )
