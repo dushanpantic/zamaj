@@ -10,8 +10,7 @@ class FocusLoadingView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colors = Theme.of(context).appColors;
-    return Center(child: CircularProgressIndicator(color: colors.primary));
+    return const AppLoadingView();
   }
 }
 

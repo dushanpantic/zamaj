@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:zamaj/building_blocks/building_blocks.dart';
 import 'package:zamaj/core/app_colors.dart';
 import 'package:zamaj/core/app_icon.dart';
 import 'package:zamaj/core/app_spacing.dart';
@@ -208,9 +209,9 @@ class _LibraryPickerSheetState extends State<LibraryPickerSheet> {
 
   Widget _buildList(AppColors colors) {
     if (_loading) {
-      return Padding(
-        padding: const EdgeInsets.all(AppSpacing.xl),
-        child: Center(child: CircularProgressIndicator(color: colors.primary)),
+      return const Padding(
+        padding: EdgeInsets.all(AppSpacing.xl),
+        child: AppLoadingView(),
       );
     }
     if (_loadError != null) {

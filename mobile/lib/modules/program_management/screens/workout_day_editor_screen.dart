@@ -131,7 +131,8 @@ class _LoadingView extends StatelessWidget {
     final colors = Theme.of(context).appColors;
     return Scaffold(
       backgroundColor: colors.background,
-      body: Center(child: CircularProgressIndicator(color: colors.primary)),
+      appBar: AppBar(),
+      body: const AppFormSkeleton(),
     );
   }
 }

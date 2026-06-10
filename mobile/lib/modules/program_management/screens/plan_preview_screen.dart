@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:zamaj/building_blocks/building_blocks.dart';
-import 'package:zamaj/core/app_icon.dart';
 import 'package:zamaj/core/app_opacity.dart';
 import 'package:zamaj/core/app_spacing.dart';
 import 'package:zamaj/core/app_theme.dart';
@@ -72,9 +71,7 @@ class _PlanPreviewScreenState extends State<PlanPreviewScreen> {
 
   Widget _buildScaffold(BuildContext context, PlanPreviewState state) {
     return switch (state) {
-      PlanPreviewInitial() => const Scaffold(
-        body: Center(child: CircularProgressIndicator()),
-      ),
+      PlanPreviewInitial() => const Scaffold(body: AppLoadingView()),
       PlanPreviewPreviewing(
         :final draft,
         :final warnings,
@@ -98,31 +95,18 @@ class _PlanPreviewScreenState extends State<PlanPreviewScreen> {
           ),
         ),
       PlanPreviewSaving(:final draft, :final warnings) => Scaffold(
-        appBar: _buildAppBar(context, enabled: false),
-        body: Stack(
-          children: [
-            _buildPreviewBody(context, draft, warnings),
-            Positioned.fill(
-              child: ColoredBox(
-                color: Theme.of(context).appColors.scrim,
-                child: const Center(child: CircularProgressIndicator()),
-              ),
-            ),
-          ],
-        ),
+        appBar: _buildAppBar(context, enabled: false, saving: true),
+        body: _buildPreviewBody(context, draft, warnings),
       ),
-      PlanPreviewSaved() => const Scaffold(
-        body: Center(child: CircularProgressIndicator()),
-      ),
-      PlanPreviewDiscarded() => const Scaffold(
-        body: Center(child: CircularProgressIndicator()),
-      ),
+      PlanPreviewSaved() => const Scaffold(body: AppLoadingView()),
+      PlanPreviewDiscarded() => const Scaffold(body: AppLoadingView()),
     };
   }
 
   PreferredSizeWidget _buildAppBar(
     BuildContext context, {
     required bool enabled,
+    bool saving = false,
   }) {
     final colors = Theme.of(context).appColors;
     const typography = AppTypography.standard;
@@ -145,15 +129,25 @@ class _PlanPreviewScreenState extends State<PlanPreviewScreen> {
             ),
           ),
         ),
+        if (saving)
+          const Padding(
+            padding: EdgeInsets.only(right: AppSpacing.sm),
+            child: Center(child: AppInlineSpinner()),
+          ),
         Padding(
           padding: const EdgeInsets.only(right: AppSpacing.sm),
-          child: FilledButton(
+          child: TextButton(
             onPressed: enabled
                 ? () => context.read<PlanPreviewBloc>().add(
                     const PlanPreviewSavePressed(),
                   )
                 : null,
-            child: const Text('Save'),
+            child: Text(
+              'Save',
+              style: typography.label.copyWith(
+                color: enabled ? colors.primary : colors.onSurfaceMuted,
+              ),
+            ),
           ),
         ),
       ],
@@ -242,9 +236,9 @@ class _ExerciseGroupSection extends StatelessWidget {
     final colors = Theme.of(context).appColors;
     const typography = AppTypography.standard;
 
-    final kindLabel = group.kind() == const ExerciseGroupKind.single()
-        ? 'Single'
-        : 'Superset';
+    // Only supersets carry a group label; a "Single" caption on every lone
+    // exercise is zero-information chrome.
+    final isSuperset = group.kind() != const ExerciseGroupKind.single();
 
     return Container(
       decoration: BoxDecoration(
@@ -255,17 +249,21 @@ class _ExerciseGroupSection extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Padding(
-            padding: const EdgeInsets.symmetric(
-              horizontal: AppSpacing.md,
-              vertical: AppSpacing.sm,
+          if (isSuperset) ...[
+            Padding(
+              padding: const EdgeInsets.symmetric(
+                horizontal: AppSpacing.md,
+                vertical: AppSpacing.sm,
+              ),
+              child: Text(
+                'Superset',
+                style: typography.caption.copyWith(
+                  color: colors.onSurfaceMuted,
+                ),
+              ),
             ),
-            child: Text(
-              kindLabel,
-              style: typography.caption.copyWith(color: colors.onSurfaceMuted),
-            ),
-          ),
-          const Divider(height: 1),
+            const Divider(height: 1),
+          ],
           for (final exercise in group.exercises)
             _ExerciseRow(
               exercise: exercise,
@@ -338,67 +336,27 @@ class _ExerciseRow extends StatelessWidget {
               ),
             ],
           ),
-          if (warnings.isNotEmpty) ...[
-            const SizedBox(height: AppSpacing.xs),
-            for (final warning in warnings) _WarningBadge(warning: warning),
-          ],
+          if (warnings.isNotEmpty)
+            for (final warning in warnings)
+              Padding(
+                padding: const EdgeInsets.only(top: AppSpacing.xs),
+                child: AppNoticeBanner(
+                  tone: AppNoticeTone.warning,
+                  title: _warningMessage(warning),
+                  margin: EdgeInsets.zero,
+                ),
+              ),
         ],
       ),
     );
   }
 }
 
-class _WarningBadge extends StatelessWidget {
-  const _WarningBadge({required this.warning});
-
-  final PlanParseWarning warning;
-
-  @override
-  Widget build(BuildContext context) {
-    final colors = Theme.of(context).appColors;
-    const typography = AppTypography.standard;
-
-    final message = _warningMessage(warning);
-
-    return Container(
-      margin: const EdgeInsets.only(top: AppSpacing.xs),
-      padding: const EdgeInsets.symmetric(
-        horizontal: AppSpacing.sm,
-        vertical: AppSpacing.xs,
-      ),
-      decoration: BoxDecoration(
-        color: colors.warning.withValues(alpha: AppOpacity.tintFill),
-        borderRadius: BorderRadius.circular(AppRadius.sm),
-        border: Border.all(
-          color: colors.warning.withValues(alpha: AppOpacity.borderTint),
-        ),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          AppIcon(
-            Icons.warning_amber_rounded,
-            color: colors.warning,
-            size: AppIconSize.sm,
-          ),
-          const SizedBox(width: AppSpacing.xs),
-          Flexible(
-            child: Text(
-              message,
-              style: typography.caption.copyWith(color: colors.warning),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  String _warningMessage(PlanParseWarning warning) {
-    return switch (warning.code) {
-      PlanParseWarningCode.invalidRestToken =>
-        'Invalid rest value: "${warning.offendingToken}"',
-      PlanParseWarningCode.unrecognizedTrailingToken =>
-        'Unrecognized token: "${warning.offendingToken}"',
-    };
-  }
+String _warningMessage(PlanParseWarning warning) {
+  return switch (warning.code) {
+    PlanParseWarningCode.invalidRestToken =>
+      'Invalid rest value: "${warning.offendingToken}"',
+    PlanParseWarningCode.unrecognizedTrailingToken =>
+      'Unrecognized token: "${warning.offendingToken}"',
+  };
 }

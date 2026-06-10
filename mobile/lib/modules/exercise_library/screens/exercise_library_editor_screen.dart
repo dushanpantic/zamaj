@@ -191,10 +191,7 @@ class _LoadingScaffold extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colors = Theme.of(context).appColors;
-    return Scaffold(
-      body: Center(child: CircularProgressIndicator(color: colors.primary)),
-    );
+    return Scaffold(appBar: AppBar(), body: const AppFormSkeleton());
   }
 }
 
@@ -258,6 +255,11 @@ class _EditorScaffold extends StatelessWidget {
           style: typography.title.copyWith(color: colors.onBackground),
         ),
         actions: [
+          if (isSaving)
+            const Padding(
+              padding: EdgeInsets.only(right: AppSpacing.sm),
+              child: Center(child: AppInlineSpinner()),
+            ),
           Padding(
             padding: const EdgeInsets.only(right: AppSpacing.sm),
             child: TextButton(
@@ -268,35 +270,29 @@ class _EditorScaffold extends StatelessWidget {
                 'Save',
                 style: typography.label.copyWith(
                   color: canSave ? colors.primary : colors.onSurfaceMuted,
-                  fontWeight: FontWeight.w600,
                 ),
               ),
             ),
           ),
         ],
       ),
-      body: Stack(
-        children: [
-          _EditorBody(
-            nameController: nameController,
-            videoUrlController: videoUrlController,
-            cuesController: cuesController,
-            draft: draft,
-            validation: validation,
-            isMeasurementTypeLocked: isMeasurementTypeLocked,
-            isArchived: isArchived,
-            isCreate: isCreate,
-            lastError: lastError,
-            onArchive: onArchive,
-          ),
-          if (isSaving)
-            ColoredBox(
-              color: colors.scrim,
-              child: Center(
-                child: CircularProgressIndicator(color: colors.primary),
-              ),
-            ),
-        ],
+      // While saving, disable the form (inline app-bar spinner only — no
+      // scrim). On failure the bloc returns to editing with isSaving false,
+      // re-enabling the form with edits intact and surfacing lastError.
+      body: AbsorbPointer(
+        absorbing: isSaving,
+        child: _EditorBody(
+          nameController: nameController,
+          videoUrlController: videoUrlController,
+          cuesController: cuesController,
+          draft: draft,
+          validation: validation,
+          isMeasurementTypeLocked: isMeasurementTypeLocked,
+          isArchived: isArchived,
+          isCreate: isCreate,
+          lastError: lastError,
+          onArchive: onArchive,
+        ),
       ),
     );
   }

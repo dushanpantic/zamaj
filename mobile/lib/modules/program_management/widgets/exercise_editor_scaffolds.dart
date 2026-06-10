@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:zamaj/building_blocks/building_blocks.dart';
 import 'package:zamaj/core/app_icon.dart';
 import 'package:zamaj/core/app_spacing.dart';
 import 'package:zamaj/core/app_theme.dart';
@@ -16,10 +17,7 @@ class ExerciseEditorLoadingScaffold extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colors = Theme.of(context).appColors;
-    return Scaffold(
-      body: Center(child: CircularProgressIndicator(color: colors.primary)),
-    );
+    return Scaffold(appBar: AppBar(), body: const AppFormSkeleton());
   }
 }
 
@@ -101,6 +99,11 @@ class ExerciseEditorScaffold extends StatelessWidget {
           style: typography.title.copyWith(color: colors.onBackground),
         ),
         actions: [
+          if (isSaving)
+            const Padding(
+              padding: EdgeInsets.only(right: AppSpacing.sm),
+              child: Center(child: AppInlineSpinner()),
+            ),
           Padding(
             padding: const EdgeInsets.only(right: AppSpacing.sm),
             child: TextButton(
@@ -113,32 +116,27 @@ class ExerciseEditorScaffold extends StatelessWidget {
                   color: validation.canSave && !isSaving
                       ? colors.primary
                       : colors.onSurfaceMuted,
-                  fontWeight: FontWeight.w600,
                 ),
               ),
             ),
           ),
         ],
       ),
-      body: Stack(
-        children: [
-          ExerciseEditorForm(
-            nameController: nameController,
-            plannedRestController: plannedRestController,
-            notesController: notesController,
-            videoUrlController: videoUrlController,
-            draft: draft,
-            validation: validation,
-            lastSaveError: lastSaveError,
-          ),
-          if (isSaving)
-            ColoredBox(
-              color: colors.scrim,
-              child: Center(
-                child: CircularProgressIndicator(color: colors.primary),
-              ),
-            ),
-        ],
+      // While saving, disable the form (the inline app-bar spinner is the only
+      // progress chrome — no scrim). On failure the bloc returns to the editing
+      // state with isSaving false, re-enabling the form with edits intact and
+      // surfacing lastSaveError via the form's AppNoticeBanner.
+      body: AbsorbPointer(
+        absorbing: isSaving,
+        child: ExerciseEditorForm(
+          nameController: nameController,
+          plannedRestController: plannedRestController,
+          notesController: notesController,
+          videoUrlController: videoUrlController,
+          draft: draft,
+          validation: validation,
+          lastSaveError: lastSaveError,
+        ),
       ),
     );
   }
