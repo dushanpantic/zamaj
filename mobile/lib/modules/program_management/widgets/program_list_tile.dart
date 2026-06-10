@@ -92,14 +92,7 @@ class ProgramListTile extends StatelessWidget {
           ),
           const SizedBox(width: AppSpacing.md),
           if (isDeleting)
-            SizedBox(
-              width: AppSpacing.xl,
-              height: AppSpacing.xl,
-              child: CircularProgressIndicator(
-                strokeWidth: AppStroke.indicator,
-                color: colors.primary,
-              ),
-            )
+            const AppInlineSpinner(size: AppInlineSpinnerSize.lg)
           else
             PopupMenuButton<_TileAction>(
               tooltip: 'More actions',
@@ -135,7 +128,8 @@ class ProgramListTile extends StatelessWidget {
         ? Stack(children: [body, const InProgressAccentBar()])
         : body;
 
-    final tile = Material(
+    // Delete is menu-guarded only (kebab → confirm); no swipe-to-delete here.
+    return Material(
       color: Colors.transparent,
       borderRadius: BorderRadius.circular(AppRadius.md),
       child: InkWell(
@@ -143,27 +137,6 @@ class ProgramListTile extends StatelessWidget {
         borderRadius: BorderRadius.circular(AppRadius.md),
         child: content,
       ),
-    );
-
-    if (isDeleting) return tile;
-
-    return Dismissible(
-      key: ValueKey(program.id),
-      direction: DismissDirection.endToStart,
-      confirmDismiss: (_) async {
-        onDeleteRequested();
-        return false;
-      },
-      background: Container(
-        alignment: Alignment.centerRight,
-        padding: const EdgeInsets.only(right: AppSpacing.lg),
-        decoration: BoxDecoration(
-          color: colors.error,
-          borderRadius: BorderRadius.circular(AppRadius.md),
-        ),
-        child: Icon(Icons.delete_outline, color: colors.onPrimary),
-      ),
-      child: tile,
     );
   }
 

@@ -77,14 +77,7 @@ class LibraryEntryTile extends StatelessWidget {
                 ),
               ),
               if (isMutating)
-                SizedBox(
-                  width: AppSpacing.xl,
-                  height: AppSpacing.xl,
-                  child: CircularProgressIndicator(
-                    strokeWidth: AppStroke.indicator,
-                    color: colors.primary,
-                  ),
-                )
+                const AppInlineSpinner(size: AppInlineSpinnerSize.lg)
               else
                 PopupMenuButton<_TileAction>(
                   tooltip: 'More actions',
