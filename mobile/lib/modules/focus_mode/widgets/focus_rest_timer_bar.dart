@@ -5,9 +5,11 @@ import 'package:zamaj/core/app_theme.dart';
 import 'package:zamaj/core/app_typography.dart';
 import 'package:zamaj/modules/focus_mode/models/rest_timer_view_model.dart';
 
-/// Slim rest-timer bar. A thin progress line shrinks left-to-right as the
-/// rest depletes; mm:ss remaining sits on the left, a SKIP affordance on
-/// the right. The bloc auto-dismisses the timer when it reaches zero, so
+/// Compact rest-timer strip, all on one row: a small mm:ss readout, a thin
+/// progress line that depletes left-to-right between them, and a small SKIP on
+/// the right. Remaining time is read primarily off the bar, so the readout and
+/// SKIP are intentionally minimal — a deliberate exception to the in-session
+/// 56 dp sizing (see CLAUDE.md). The bloc auto-dismisses the timer at zero, so
 /// there is no overtime state to render.
 class FocusRestTimerBar extends StatelessWidget {
   const FocusRestTimerBar({
@@ -29,54 +31,47 @@ class FocusRestTimerBar extends StatelessWidget {
 
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: AppSpacing.xs),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        mainAxisSize: MainAxisSize.min,
+      child: Row(
         children: [
-          ClipRRect(
-            borderRadius: BorderRadius.circular(_barHeight / 2),
-            child: SizedBox(
-              height: _barHeight,
-              child: LinearProgressIndicator(
-                value: timer.remainingFraction,
-                backgroundColor: tint.withValues(alpha: AppOpacity.recede1),
-                valueColor: AlwaysStoppedAnimation<Color>(tint),
-                minHeight: _barHeight,
+          // Small tabular glance; the bar is the primary remaining-time signal.
+          Text(
+            _formatMmss(timer.remainingSeconds),
+            style: typography.numericXs.copyWith(color: tint),
+          ),
+          const SizedBox(width: AppSpacing.sm),
+          Expanded(
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(_barHeight / 2),
+              child: SizedBox(
+                height: _barHeight,
+                child: LinearProgressIndicator(
+                  value: timer.remainingFraction,
+                  backgroundColor: tint.withValues(alpha: AppOpacity.recede1),
+                  valueColor: AlwaysStoppedAnimation<Color>(tint),
+                  minHeight: _barHeight,
+                ),
               ),
             ),
           ),
-          const SizedBox(height: AppSpacing.xs),
-          Row(
-            children: [
-              Text(
-                _formatMmss(timer.remainingSeconds),
-                style: typography.numericMd.copyWith(color: tint),
+          const SizedBox(width: AppSpacing.sm),
+          // Deliberate exception to the in-session 56 dp floor: time is read
+          // off the bar and SKIP is rarely tapped, so keep it as small as
+          // possible while staying tappable at arm's length.
+          InkWell(
+            onTap: onSkip,
+            borderRadius: BorderRadius.circular(AppRadius.sm),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(
+                horizontal: AppSpacing.sm,
+                vertical: AppSpacing.xs,
               ),
-              const Spacer(),
-              InkWell(
-                onTap: onSkip,
-                borderRadius: BorderRadius.circular(AppRadius.sm),
-                child: ConstrainedBox(
-                  constraints: const BoxConstraints(
-                    minHeight: AppInSessionSize.controlMin,
-                    minWidth: AppInSessionSize.controlMin,
-                  ),
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: AppSpacing.sm,
-                    ),
-                    child: Center(
-                      child: Text(
-                        'SKIP',
-                        style: typography.actionLabel.copyWith(
-                          color: colors.onSurfaceMuted,
-                        ),
-                      ),
-                    ),
-                  ),
+              child: Text(
+                'SKIP',
+                style: typography.labelSmall.copyWith(
+                  color: colors.onSurfaceMuted,
                 ),
               ),
-            ],
+            ),
           ),
         ],
       ),

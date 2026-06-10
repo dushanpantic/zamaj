@@ -77,8 +77,9 @@ These two modules are used live in the gym with wet hands — `touchMin` (48 dp)
 
 - Step / counter buttons: **64×64 dp** minimum, label at `AppTypography.standard.actionLabel` (18 px, w700).
 - Numeric value inputs (the value the user is logging): **`numericLarge`** (36 px).
-- Primary action buttons (LOG SET, SAVE, FOCUS, rest-timer controls): **≥ 56 dp tall**, `actionLabel` text style.
+- Primary action buttons (LOG SET, SAVE, FOCUS): **≥ 56 dp tall**, `actionLabel` text style.
 - When two counters would otherwise share a row, **stack vertically** rather than crushing tap targets below ~56 dp wide.
+- **Exception — the focus rest-timer strip** (`focus_rest_timer_bar.dart`): its mm:ss readout and SKIP are deliberately *compact* (small tabular `numericXs` / `labelSmall`, a sub-`touchMin` tap target), **not** 56 dp. Remaining time is read off the depleting progress bar, and SKIP is rarely used; keep this strip minimal so it doesn't crowd the post-log bottom region. Do not "fix" it back up to the 56 dp floor.
 
 Outside these two modules (program management, day picker, settings), the normal `touchMin` (48 dp) is fine — this rule is specifically about the live-session surface.
 
