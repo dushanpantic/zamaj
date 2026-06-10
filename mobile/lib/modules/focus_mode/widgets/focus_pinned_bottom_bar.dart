@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:zamaj/building_blocks/building_blocks.dart';
+import 'package:zamaj/core/app_icon.dart';
 import 'package:zamaj/core/app_spacing.dart';
 import 'package:zamaj/core/app_theme.dart';
 import 'package:zamaj/modules/focus_mode/bloc/bloc.dart';
@@ -34,6 +35,11 @@ class FocusPinnedBottomBar extends StatelessWidget {
       return const SizedBox.shrink();
     }
 
+    // The undo / rest-timer strip above LOG SET is deliberately compact; pull
+    // the top inset in with it so the whole post-log region stays short.
+    final hasCompactStrip = state.undoable != null || isResting;
+    final topPadding = hasCompactStrip ? AppSpacing.xs : AppSpacing.md;
+
     // Clamp text scaling on this in-session control bar so the LOG SET button,
     // rest-timer readout, and undo label stay laid out at large font sizes.
     return MediaQuery.withClampedTextScaling(
@@ -43,9 +49,9 @@ class FocusPinnedBottomBar extends StatelessWidget {
           color: colors.background,
           border: Border(top: BorderSide(color: colors.outline)),
         ),
-        padding: const EdgeInsets.fromLTRB(
+        padding: EdgeInsets.fromLTRB(
           AppSpacing.lg,
-          AppSpacing.md,
+          topPadding,
           AppSpacing.lg,
           AppSpacing.md,
         ),
@@ -55,7 +61,7 @@ class FocusPinnedBottomBar extends StatelessWidget {
           children: [
             if (state.undoable != null) ...[
               _UndoLastSetButton(undoable: state.undoable!, enabled: canMutate),
-              const SizedBox(height: AppSpacing.xs),
+              const SizedBox(height: AppSpacing.xxs),
             ],
             if (isResting) ...[
               FocusRestTimerBar(
@@ -91,6 +97,10 @@ class _UndoLastSetButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colors = Theme.of(context).appColors;
+    // Deliberately sub-touchMin, like the rest-timer SKIP (see CLAUDE.md
+    // exception): undo is a rarely-used corrective affordance, and keeping it
+    // at compactAction height stops the post-log region from growing tall.
+    // Do not "fix" it back up to the in-session floor.
     return Align(
       alignment: Alignment.centerLeft,
       child: TextButton.icon(
@@ -99,11 +109,12 @@ class _UndoLastSetButton extends StatelessWidget {
                 const FocusModeUndoRequested(),
               )
             : null,
-        icon: const Icon(Icons.undo),
+        icon: const AppIcon(Icons.undo, size: AppIconSize.sm),
         label: Text('Undo last set on ${undoable.exerciseDisplayName}'),
         style: TextButton.styleFrom(
           foregroundColor: colors.onSurfaceMuted,
-          minimumSize: const Size(0, AppSpacing.touchMin),
+          minimumSize: const Size(0, AppSpacing.compactAction),
+          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
           padding: const EdgeInsets.symmetric(horizontal: AppSpacing.sm),
         ),
       ),
