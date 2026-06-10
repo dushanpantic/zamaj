@@ -11,7 +11,7 @@ import 'package:zamaj/modules/workout_overview/models/exercise_view_model.dart';
 import 'package:zamaj/modules/workout_overview/models/superset_group_view_model.dart';
 import 'package:zamaj/modules/workout_overview/widgets/group_with_picker_dialog.dart';
 import 'package:zamaj/modules/workout_overview/widgets/replace_exercise_dialog.dart';
-import 'package:zamaj/modules/workout_overview/widgets/text_entry_dialog.dart';
+import 'package:zamaj/modules/workout_overview/widgets/text_entry_sheet.dart';
 import 'package:zamaj/modules/workout_overview/widgets/workout_overview_app_bar_title.dart';
 import 'package:zamaj/modules/workout_overview/widgets/workout_overview_bottom_bar.dart';
 import 'package:zamaj/modules/workout_overview/widgets/workout_overview_error_view.dart';
@@ -131,7 +131,7 @@ class _WorkoutOverviewScreenState extends State<WorkoutOverviewScreen> {
   }
 
   Future<void> _handleAddNote() async {
-    final body = await TextEntryDialog.show(
+    final body = await TextEntrySheet.show(
       context: context,
       title: 'Add note',
       hint: 'e.g. left shoulder pain',
@@ -145,7 +145,7 @@ class _WorkoutOverviewScreenState extends State<WorkoutOverviewScreen> {
   }
 
   Future<void> _handleAddExtraWork() async {
-    final body = await TextEntryDialog.show(
+    final body = await TextEntrySheet.show(
       context: context,
       title: 'Add extra work',
       hint: 'e.g. 3 calf sets',
