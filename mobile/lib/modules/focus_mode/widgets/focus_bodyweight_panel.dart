@@ -1,9 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:zamaj/core/app_spacing.dart';
-import 'package:zamaj/core/app_theme.dart';
-import 'package:zamaj/core/app_typography.dart';
 import 'package:zamaj/core/increment_rules.dart';
+import 'package:zamaj/modules/focus_mode/widgets/focus_numeric_field.dart';
 
 /// Big editable panel for the current bodyweight set: reps only, with
 /// bump buttons. Mirrors [FocusRepBasedPanel] but drops the weight column.
@@ -69,7 +67,7 @@ class _FocusBodyweightPanelState extends State<FocusBodyweightPanel> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        _BigNumericField(
+        FocusBigNumericField(
           controller: _reps,
           focusNode: _repsFocus,
           label: 'reps',
@@ -80,103 +78,12 @@ class _FocusBodyweightPanelState extends State<FocusBodyweightPanel> {
           },
         ),
         const SizedBox(height: AppSpacing.md),
-        _BumpRow(
-          steps: IncrementRules.repSteps,
+        FocusBumpRow(
+          steps: IncrementRules.repStepsDouble,
           enabled: widget.enabled,
-          onTap: widget.onRepsBump,
+          onTap: (delta) => widget.onRepsBump(delta.round()),
+          formatter: (v) => v.toInt().toString(),
         ),
-      ],
-    );
-  }
-}
-
-class _BigNumericField extends StatelessWidget {
-  const _BigNumericField({
-    required this.controller,
-    required this.focusNode,
-    required this.label,
-    required this.enabled,
-    required this.onSubmitted,
-  });
-
-  final TextEditingController controller;
-  final FocusNode focusNode;
-  final String label;
-  final bool enabled;
-  final ValueChanged<String> onSubmitted;
-
-  @override
-  Widget build(BuildContext context) {
-    final colors = Theme.of(context).appColors;
-    const typography = AppTypography.standard;
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        TextField(
-          controller: controller,
-          focusNode: focusNode,
-          enabled: enabled,
-          textAlign: TextAlign.center,
-          keyboardType: const TextInputType.numberWithOptions(decimal: false),
-          inputFormatters: [
-            FilteringTextInputFormatter.allow(RegExp(r'[0-9]')),
-          ],
-          onSubmitted: onSubmitted,
-          style: typography.numericHero.copyWith(color: colors.onSurface),
-        ),
-        const SizedBox(height: AppSpacing.xs),
-        Center(
-          child: Text(
-            label,
-            style: typography.caption.copyWith(color: colors.onSurfaceMuted),
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-class _BumpRow extends StatelessWidget {
-  const _BumpRow({
-    required this.steps,
-    required this.enabled,
-    required this.onTap,
-  });
-
-  final List<int> steps;
-  final bool enabled;
-  final void Function(int delta) onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    final colors = Theme.of(context).appColors;
-    return Row(
-      children: [
-        for (var i = 0; i < steps.length; i++) ...[
-          if (i > 0) const SizedBox(width: AppSpacing.sm),
-          Expanded(
-            child: SizedBox(
-              height: AppInSessionSize.stepButton,
-              child: OutlinedButton(
-                onPressed: enabled ? () => onTap(steps[i]) : null,
-                style: OutlinedButton.styleFrom(
-                  foregroundColor: steps[i] < 0 ? colors.onSurfaceMuted : null,
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: AppSpacing.xs,
-                  ),
-                  textStyle: AppTypography.standard.actionLabel,
-                ),
-                child: FittedBox(
-                  fit: BoxFit.scaleDown,
-                  child: Text(
-                    steps[i] > 0 ? '+${steps[i]}' : '${steps[i]}',
-                    maxLines: 1,
-                  ),
-                ),
-              ),
-            ),
-          ),
-        ],
       ],
     );
   }

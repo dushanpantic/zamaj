@@ -4,6 +4,7 @@ import 'package:zamaj/core/app_spacing.dart';
 import 'package:zamaj/core/app_theme.dart';
 import 'package:zamaj/core/app_typography.dart';
 import 'package:zamaj/modules/focus_mode/models/rest_timer_view_model.dart';
+import 'package:zamaj/modules/focus_mode/widgets/mmss_formatter.dart';
 
 /// Compact rest-timer strip, all on one row: a small mm:ss readout, a thin
 /// progress line that depletes left-to-right between them, and a small SKIP on
@@ -35,7 +36,7 @@ class FocusRestTimerBar extends StatelessWidget {
         children: [
           // Small tabular glance; the bar is the primary remaining-time signal.
           Text(
-            _formatMmss(timer.remainingSeconds),
+            MmssFormatter.format(timer.remainingSeconds),
             style: typography.numericXs.copyWith(color: tint),
           ),
           const SizedBox(width: AppSpacing.sm),
@@ -76,12 +77,5 @@ class FocusRestTimerBar extends StatelessWidget {
         ],
       ),
     );
-  }
-
-  String _formatMmss(int totalSeconds) {
-    final s = totalSeconds < 0 ? 0 : totalSeconds;
-    final m = s ~/ 60;
-    final r = s % 60;
-    return '${m.toString().padLeft(2, '0')}:${r.toString().padLeft(2, '0')}';
   }
 }

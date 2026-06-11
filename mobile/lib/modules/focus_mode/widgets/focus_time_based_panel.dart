@@ -7,6 +7,7 @@ import 'package:zamaj/core/app_typography.dart';
 import 'package:zamaj/core/increment_rules.dart';
 import 'package:zamaj/core/weight_formatter.dart';
 import 'package:zamaj/modules/focus_mode/models/stopwatch_view_model.dart';
+import 'package:zamaj/modules/focus_mode/widgets/mmss_formatter.dart';
 
 /// Big editable panel for the current time-based set: stopwatch with
 /// START/STOP, with a fallback numeric field + ±5 bumps so users can also
@@ -161,7 +162,9 @@ class _FocusTimeBasedPanelState extends State<FocusTimeBasedPanel>
     final weightSteps = IncrementRules.weightSteps(widget.weightKg ?? 0);
 
     final hero = Text(
-      _formatMmss(isCountingDown ? remainingSeconds : widget.durationSeconds),
+      MmssFormatter.format(
+        isCountingDown ? remainingSeconds : widget.durationSeconds,
+      ),
       style: typography.numericHero.copyWith(
         color: isCountingDown ? colors.primary : colors.onSurface,
       ),
@@ -396,12 +399,5 @@ class _FocusTimeBasedPanelState extends State<FocusTimeBasedPanel>
     final whole = magnitude.toInt();
     final text = magnitude == whole ? '$whole' : magnitude.toStringAsFixed(1);
     return value < 0 ? '-$text' : '+$text';
-  }
-
-  String _formatMmss(int totalSeconds) {
-    final s = totalSeconds < 0 ? 0 : totalSeconds;
-    final m = s ~/ 60;
-    final r = s % 60;
-    return '${m.toString().padLeft(2, '0')}:${r.toString().padLeft(2, '0')}';
   }
 }
