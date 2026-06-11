@@ -495,8 +495,8 @@ parallelization). No blockers; warnings and observations below.
 - [x] Slice 8: Superset grouping unification + planned-summary dedup (11, 19c)
   - [x] Step 8.1: Extract a shared contiguity-based grouping helper
   - [x] Step 8.2: Reuse `PlannedSummaryFormatter` in the focus assembler
-- [ ] Slice 9: SessionElapsedLabel uses the injected Clock (23)
-  - [ ] Step 9.1: Read `context.read<Clock>()` instead of `DateTime.now()`
+- [x] Slice 9: SessionElapsedLabel uses the injected Clock (23)
+  - [x] Step 9.1: Read `context.read<Clock>()` instead of `DateTime.now()`
 
 #### Wave 2
 - [ ] Slice 6: SetRow tap-to-collapse trap + adopt roundHalfKg (18, 19d-setrow)
@@ -519,7 +519,7 @@ parallelization). No blockers; warnings and observations below.
 - [x] (20) One shared drag-registration mixin
 - [x] (21) `focus_video_button` AppIconSize; `superset_card` AppStroke border
 - [ ] (22) Shared services in `building_blocks/`, imported via barrels
-- [ ] (23) `SessionElapsedLabel` reads the injected `Clock`
+- [x] (23) `SessionElapsedLabel` reads the injected `Clock`
 - [ ] (25) Stopwatch start gated on mutation/loggable
 - [x] (26) Single numeric commit per edit
 - [x] (11) One shared contiguity-based superset grouping helper
