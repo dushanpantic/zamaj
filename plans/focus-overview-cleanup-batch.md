@@ -501,8 +501,8 @@ parallelization). No blockers; warnings and observations below.
 #### Wave 2
 - [x] Slice 6: SetRow tap-to-collapse trap + adopt roundHalfKg (18, 19d-setrow)
   - [x] Step 6.1: Restrict the collapse `InkWell` to the summary; swap the rounding literal
-- [ ] Slice 7: Focus stopwatch-start guard + adopt roundHalfKg (25, 19d-bloc)
-  - [ ] Step 7.1: Gate `_onStopwatchStarted`; route weight rounding through the helper
+- [x] Slice 7: Focus stopwatch-start guard + adopt roundHalfKg (25, 19d-bloc)
+  - [x] Step 7.1: Gate `_onStopwatchStarted`; route weight rounding through the helper
 - [ ] Slice 10: Relocate shared cross-module services (22)
   - [ ] Step 10.1: Move the two services into `building_blocks/` and repoint all importers
 
@@ -515,11 +515,11 @@ parallelization). No blockers; warnings and observations below.
 - [x] (19a) One shared mm:ss formatter
 - [x] (19b) One shared big-numeric field + bump row
 - [x] (19c) Focus assembler uses `PlannedSummaryFormatter`
-- [ ] (19d) One `IncrementRules.roundHalfKg` at every call site
+- [x] (19d) One `IncrementRules.roundHalfKg` at every call site
 - [x] (20) One shared drag-registration mixin
 - [x] (21) `focus_video_button` AppIconSize; `superset_card` AppStroke border
 - [ ] (22) Shared services in `building_blocks/`, imported via barrels
 - [x] (23) `SessionElapsedLabel` reads the injected `Clock`
-- [ ] (25) Stopwatch start gated on mutation/loggable
+- [x] (25) Stopwatch start gated on mutation/loggable
 - [x] (26) Single numeric commit per edit
 - [x] (11) One shared contiguity-based superset grouping helper

@@ -300,7 +300,7 @@ class FocusModeBloc extends Bloc<FocusModeEvent, FocusModeState> {
     final draft = current.draftFor(event.sessionExerciseId);
     if (draft == null) return;
     final raw = event.weightKg;
-    final rounded = raw == null ? null : (raw * 2).round() / 2;
+    final rounded = raw == null ? null : IncrementRules.roundHalfKg(raw);
     final clamped = rounded == null ? null : (rounded < 0 ? 0.0 : rounded);
     final next = switch (draft) {
       ActualRepBased() => ActualSetValues.repBased(
@@ -371,8 +371,11 @@ class FocusModeBloc extends Bloc<FocusModeEvent, FocusModeState> {
   ) async {
     final current = state;
     if (current is! FocusModeReady) return;
+    // Gate the countdown like every other interaction: never start one while a
+    // mutation is in flight, nor on a panel that has nothing left to log.
+    if (current.mutationInFlight) return;
     final panel = _findPanel(current, event.sessionExerciseId);
-    if (panel == null) return;
+    if (panel == null || !panel.isLoggable) return;
     if (panel.effectiveMeasurementType is! TimeBasedMeasurement) return;
     _stopRestTicker();
     _stopStopwatchFlashTimer();

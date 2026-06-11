@@ -963,4 +963,115 @@ void main() {
       },
     );
   });
+
+  group('stopwatch start guards', () {
+    test('does not start a countdown while a mutation is in flight', () {
+      fakeAsync((async) {
+        final repo = _GatedCompleteSetRepo(clock: fakeClock);
+        final engine = SessionFlowEngine(repository: repo);
+        final bloc = FocusModeBloc(sessionFlowEngine: engine);
+        repo.seedWorkoutDay(buildTimeSupersetDay());
+
+        late String benchId;
+        late String plankId;
+        late String sessionId;
+        repo.startSession(workoutDayId: 'wd-tss').then((session) {
+          sessionId = session.id;
+          benchId = session.sessionExercises
+              .firstWhere((e) => e.plannedExerciseIdInSnapshot == 'ex-bench')
+              .id;
+          plankId = session.sessionExercises
+              .firstWhere((e) => e.plannedExerciseIdInSnapshot == 'ex-plank')
+              .id;
+        });
+        async.flushMicrotasks();
+
+        bloc.add(
+          FocusModeOpened(
+            sessionId: sessionId,
+            anchorSessionExerciseId: benchId,
+          ),
+        );
+        async.flushMicrotasks();
+        expect(bloc.state, isA<FocusModeReady>());
+
+        // Hold a mutation in flight on the bench panel via the gated repo.
+        repo.completeSetGate = Completer<void>();
+        bloc.add(FocusModeSetCompleted(benchId));
+        async.flushMicrotasks();
+        expect((bloc.state as FocusModeReady).mutationInFlight, isTrue);
+
+        // Attempt to start the plank countdown mid-mutation.
+        bloc.add(FocusModeStopwatchStarted(plankId));
+        async.flushMicrotasks();
+
+        final blocked = bloc.state as FocusModeReady;
+        expect(blocked.stopwatch.isRunning, isFalse);
+        expect(blocked.activeStopwatchExerciseId, isNull);
+        expect(async.periodicTimerCount, 0);
+
+        // Release the gate and settle, then clean up.
+        repo.completeSetGate!.complete();
+        async.flushMicrotasks();
+        bloc.close();
+        async.flushMicrotasks();
+      });
+    });
+
+    test('does not start a countdown on a non-loggable panel', () {
+      fakeAsync((async) {
+        final repo = FakeSessionRepository(clock: fakeClock);
+        final engine = SessionFlowEngine(repository: repo);
+        final bloc = FocusModeBloc(sessionFlowEngine: engine);
+        repo.seedWorkoutDay(buildTimeSupersetDay());
+
+        late String benchId;
+        late String plankId;
+        late String sessionId;
+        repo.startSession(workoutDayId: 'wd-tss').then((session) {
+          sessionId = session.id;
+          benchId = session.sessionExercises
+              .firstWhere((e) => e.plannedExerciseIdInSnapshot == 'ex-bench')
+              .id;
+          plankId = session.sessionExercises
+              .firstWhere((e) => e.plannedExerciseIdInSnapshot == 'ex-plank')
+              .id;
+        });
+        async.flushMicrotasks();
+
+        bloc.add(
+          FocusModeOpened(
+            sessionId: sessionId,
+            anchorSessionExerciseId: benchId,
+          ),
+        );
+        async.flushMicrotasks();
+
+        // Fill the plank's set quota so its panel is no longer loggable, while
+        // the bench keeps the group active.
+        bloc.add(FocusModeSetCompleted(plankId));
+        async.flushMicrotasks();
+        bloc.add(FocusModeSetCompleted(plankId));
+        async.flushMicrotasks();
+
+        final ready = bloc.state as FocusModeReady;
+        final plankPanel = ready.groupViewModel.panels.firstWhere(
+          (p) => p.sessionExerciseId == plankId,
+        );
+        expect(plankPanel.isLoggable, isFalse);
+
+        // Attempt to start the (now non-loggable) plank countdown.
+        bloc.add(FocusModeStopwatchStarted(plankId));
+        async.flushMicrotasks();
+
+        final after = bloc.state as FocusModeReady;
+        expect(after.stopwatch.isRunning, isFalse);
+        expect(after.activeStopwatchExerciseId, isNull);
+        expect(async.periodicTimerCount, 0);
+
+        bloc.close();
+        async.flushMicrotasks();
+      });
+    });
+  });
 }
