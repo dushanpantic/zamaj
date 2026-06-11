@@ -79,8 +79,9 @@ abstract final class DropResolver {
   ///   exercise to that existing group (P2.3). The whole existing group must
   ///   still be unfinished — the engine re-asserts.
   /// - any other shape (target locked, dragged already grouped, drop on
-  ///   self) → noop. Drag-to-ungroup remains the supported flow for leaving
-  ///   a superset.
+  ///   self) → noop. There is no drag-to-ungroup: a drop whose dragged
+  ///   exercise already carries a `supersetTag` is rejected here, and the
+  ///   header ungroup button is the only affordance for leaving a superset.
   static DropIntent _resolveOnto({
     required String sessionId,
     required Map<String, ExerciseViewModel> byId,
