@@ -30,6 +30,32 @@ void main() {
     });
   });
 
+  group('IncrementRules.roundHalfKg', () {
+    test('snaps up to the nearest half-kg', () {
+      expect(IncrementRules.roundHalfKg(2.26), 2.5);
+    });
+
+    test('snaps down to the nearest half-kg', () {
+      expect(IncrementRules.roundHalfKg(2.24), 2.0);
+    });
+
+    test('rounds the midpoint away from zero, matching bumpWeight', () {
+      expect(IncrementRules.roundHalfKg(2.25), 2.5);
+      // Same rule bumpWeight relies on, so the two can never diverge.
+      expect(
+        IncrementRules.roundHalfKg(2.7 + 1),
+        IncrementRules.bumpWeight(2.7, 1),
+      );
+    });
+
+    test(
+      'passes negatives through unclamped (clamping is bumpWeight\'s job)',
+      () {
+        expect(IncrementRules.roundHalfKg(-2.26), -2.5);
+      },
+    );
+  });
+
   group('IncrementRules.bumpReps', () {
     test('clamps to zero', () {
       expect(IncrementRules.bumpReps(0, -1), 0);
