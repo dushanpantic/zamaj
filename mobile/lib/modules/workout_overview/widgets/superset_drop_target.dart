@@ -10,6 +10,7 @@ import 'package:zamaj/core/haptics.dart';
 import 'package:zamaj/modules/workout_overview/bloc/bloc.dart';
 import 'package:zamaj/modules/workout_overview/models/drop_intent.dart';
 import 'package:zamaj/modules/workout_overview/services/drag_session.dart';
+import 'package:zamaj/modules/workout_overview/widgets/drag_hover_registration.dart';
 import 'package:zamaj/modules/workout_overview/widgets/exercise_card.dart';
 
 /// Wraps a whole [SupersetCard] in a DragTarget so an *outside* exercise
@@ -54,28 +55,10 @@ class SupersetDropTarget extends StatefulWidget {
   State<SupersetDropTarget> createState() => _SupersetDropTargetState();
 }
 
-class _SupersetDropTargetState extends State<SupersetDropTarget> {
-  bool _registered = false;
-
-  void _setRegistered(bool value) {
-    if (_registered == value) return;
-    _registered = value;
-    if (value) {
-      Haptics.selectionChange();
-      widget.dragSession.hoverEntered();
-    } else {
-      widget.dragSession.hoverLeft();
-    }
-  }
-
+class _SupersetDropTargetState extends State<SupersetDropTarget>
+    with DragHoverRegistration<SupersetDropTarget> {
   @override
-  void dispose() {
-    if (_registered) {
-      _registered = false;
-      widget.dragSession.hoverLeft();
-    }
-    super.dispose();
-  }
+  DragSession get dragSession => widget.dragSession;
 
   @override
   Widget build(BuildContext context) {
@@ -91,9 +74,9 @@ class _SupersetDropTargetState extends State<SupersetDropTarget> {
         if (details.data.supersetTag != null) return false;
         return true;
       },
-      onLeave: (_) => _setRegistered(false),
+      onLeave: (_) => clearHoverRegistration(),
       onAcceptWithDetails: (details) {
-        _setRegistered(false);
+        clearHoverRegistration();
         Haptics.tap();
         context.read<WorkoutOverviewBloc>().add(
           WorkoutOverviewDropResolved(
@@ -104,12 +87,7 @@ class _SupersetDropTargetState extends State<SupersetDropTarget> {
       },
       builder: (context, candidate, _) {
         final highlight = candidate.isNotEmpty;
-        if (highlight != _registered) {
-          WidgetsBinding.instance.addPostFrameCallback((_) {
-            if (!mounted) return;
-            _setRegistered(highlight);
-          });
-        }
+        syncHoverRegistration(highlight);
         return AnimatedScale(
           duration: AppDuration.fast,
           scale: highlight ? 0.98 : 1,

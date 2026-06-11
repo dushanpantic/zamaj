@@ -2,9 +2,10 @@ import 'package:equatable/equatable.dart';
 
 /// Marker for the most-recently-completed set in this focus session.
 ///
-/// Surfaces in [FocusModeReady.undoable] for one transient window so the
-/// UI can render a SnackBar with an Undo action. Cleared after the snackbar
-/// dismisses, after another mutation lands, or after Undo is pressed.
+/// Surfaces in [FocusModeReady.undoable] as a persistent row in the focus
+/// bottom bar carrying an Undo action. The row is not a transient SnackBar:
+/// it stays put until the next mutation lands, the active group switches, or
+/// Undo is pressed.
 class UndoableSet extends Equatable {
   const UndoableSet({
     required this.executedSetId,

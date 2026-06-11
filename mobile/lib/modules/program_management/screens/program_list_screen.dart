@@ -9,7 +9,6 @@ import 'package:zamaj/modules/program_management/bloc/program_list/program_list_
 import 'package:zamaj/modules/program_management/bloc/program_list/program_list_event.dart';
 import 'package:zamaj/modules/program_management/bloc/program_list/program_list_state.dart';
 import 'package:zamaj/modules/program_management/navigation/program_management_routes.dart';
-import 'package:zamaj/modules/program_management/services/domain_error_presenter.dart';
 import 'package:zamaj/modules/program_management/widgets/program_list_tile.dart';
 import 'package:zamaj/modules/workout_day_picker/models/workout_day_picker_args.dart';
 import 'package:zamaj/modules/workout_day_picker/navigation/workout_day_picker_routes.dart';

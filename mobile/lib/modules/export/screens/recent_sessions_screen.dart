@@ -11,7 +11,6 @@ import 'package:zamaj/modules/export/models/session_history_item.dart';
 import 'package:zamaj/modules/export/navigation/export_routes.dart';
 import 'package:zamaj/modules/export/widgets/export_preview_sheet.dart';
 import 'package:zamaj/modules/export/widgets/session_history_tile.dart';
-import 'package:zamaj/modules/program_management/services/domain_error_presenter.dart';
 
 /// Recent-sessions list screen. Hosts every completed session for the
 /// current program, bucketed into "This week" and "Earlier", and offers a

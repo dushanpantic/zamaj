@@ -14,5 +14,4 @@ export 'models/workout_overview_args.dart';
 export 'screens/workout_overview_screen.dart';
 export 'services/drop_resolver.dart';
 export 'services/exercise_view_model_assembler.dart';
-export 'services/planned_summary_formatter.dart';
 export 'services/set_value_input_mapper.dart';

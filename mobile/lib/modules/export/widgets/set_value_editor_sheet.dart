@@ -217,7 +217,9 @@ class _StepperFieldState extends State<_StepperField> {
     final current = double.tryParse(widget.controller.text.trim()) ?? 0;
     final next = (current + delta).clamp(0, double.maxFinite).toDouble();
     if (widget.allowDecimal) {
-      widget.controller.text = WeightFormatter.formatKg((next * 2).round() / 2);
+      widget.controller.text = WeightFormatter.formatKg(
+        IncrementRules.roundHalfKg(next),
+      );
     } else {
       widget.controller.text = next.round().toString();
     }

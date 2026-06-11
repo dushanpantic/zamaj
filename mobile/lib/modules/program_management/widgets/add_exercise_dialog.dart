@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:zamaj/core/app_theme.dart';
-import 'package:zamaj/modules/exercise_library/widgets/library_picker_sheet.dart';
+import 'package:zamaj/modules/exercise_library/exercise_library.dart';
 import 'package:zamaj/modules/program_management/bloc/workout_day_editor/workout_day_editor_bloc.dart';
 import 'package:zamaj/modules/program_management/bloc/workout_day_editor/workout_day_editor_event.dart';
 

@@ -9,7 +9,6 @@ import 'package:zamaj/modules/domain/domain.dart';
 import 'package:zamaj/modules/exercise_library/bloc/link_suggestion/bloc.dart';
 import 'package:zamaj/modules/exercise_library/models/link_suggestion_cluster.dart';
 import 'package:zamaj/modules/exercise_library/widgets/measurement_type_chip.dart';
-import 'package:zamaj/modules/program_management/services/domain_error_presenter.dart';
 
 class LinkSuggestionScreen extends StatefulWidget {
   const LinkSuggestionScreen({super.key});

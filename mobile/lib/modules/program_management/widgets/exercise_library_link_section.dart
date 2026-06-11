@@ -3,7 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:zamaj/core/app_spacing.dart';
 import 'package:zamaj/core/app_theme.dart';
 import 'package:zamaj/modules/domain/domain.dart';
-import 'package:zamaj/modules/exercise_library/widgets/library_picker_sheet.dart';
+import 'package:zamaj/modules/exercise_library/exercise_library.dart';
 import 'package:zamaj/modules/program_management/bloc/exercise_editor/exercise_editor_bloc.dart';
 import 'package:zamaj/modules/program_management/bloc/exercise_editor/exercise_editor_event.dart';
 import 'package:zamaj/modules/program_management/models/program_editor_draft.dart';

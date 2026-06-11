@@ -17,10 +17,6 @@ class MoveTargets {
   /// no-op (already at the bottom of its reorder scope).
   final DropTarget? down;
 
-  /// True when at least one direction can actually move the exercise — i.e.
-  /// the kebab Move up/down pair is worth showing at all.
-  bool get hasAny => up != null || down != null;
-
   static const MoveTargets none = MoveTargets();
 }
 

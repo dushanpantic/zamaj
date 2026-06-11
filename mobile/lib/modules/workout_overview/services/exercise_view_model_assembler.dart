@@ -1,8 +1,8 @@
+import 'package:zamaj/core/planned_summary_formatter.dart';
 import 'package:zamaj/modules/domain/domain.dart';
 import 'package:zamaj/modules/workout_overview/models/exercise_view_model.dart';
 import 'package:zamaj/modules/workout_overview/models/set_row_view_model.dart';
 import 'package:zamaj/modules/workout_overview/models/superset_group_view_model.dart';
-import 'package:zamaj/modules/workout_overview/services/planned_summary_formatter.dart';
 
 abstract final class ExerciseViewModelAssembler {
   /// Builds fully read-only view models for a finished [session]: with no open
@@ -78,36 +78,27 @@ abstract final class ExerciseViewModelAssembler {
     );
   }
 
+  /// Wraps the shared contiguity-based grouping ([groupBySupersetRun]) into the
+  /// overview's view models: a lone or null-tagged run renders as a `.single`,
+  /// a multi-member tagged run as a `.superset`.
   static List<SupersetGroupViewModel> _groupByAdjacentSupersetTag(
     List<ExerciseViewModel> viewModels,
     List<SessionExercise> sortedSessionExercises,
   ) {
+    final vmById = <String, ExerciseViewModel>{
+      for (final vm in viewModels) vm.sessionExercise.id: vm,
+    };
     final groups = <SupersetGroupViewModel>[];
-    var i = 0;
-    while (i < viewModels.length) {
-      final ex = sortedSessionExercises[i];
-      final tag = ex.supersetTag;
-      if (tag == null) {
-        groups.add(SupersetGroupViewModel.single(exercise: viewModels[i]));
-        i++;
-        continue;
-      }
-      var j = i + 1;
-      while (j < viewModels.length &&
-          sortedSessionExercises[j].supersetTag == tag) {
-        j++;
-      }
-      if (j - i == 1) {
-        groups.add(SupersetGroupViewModel.single(exercise: viewModels[i]));
+    for (final run in groupBySupersetRun(sortedSessionExercises)) {
+      final runVms = [for (final ex in run) vmById[ex.id]!];
+      final tag = run.first.supersetTag;
+      if (tag == null || runVms.length == 1) {
+        groups.add(SupersetGroupViewModel.single(exercise: runVms.single));
       } else {
         groups.add(
-          SupersetGroupViewModel.superset(
-            tag: tag,
-            exercises: viewModels.sublist(i, j),
-          ),
+          SupersetGroupViewModel.superset(tag: tag, exercises: runVms),
         );
       }
-      i = j;
     }
     return groups;
   }
