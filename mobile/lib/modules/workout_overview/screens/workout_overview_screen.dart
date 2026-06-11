@@ -4,7 +4,6 @@ import 'package:zamaj/building_blocks/building_blocks.dart';
 import 'package:zamaj/core/app_theme.dart';
 import 'package:zamaj/modules/domain/domain.dart';
 import 'package:zamaj/modules/focus_mode/models/focus_mode_args.dart';
-import 'package:zamaj/modules/program_management/services/external_link_launcher.dart';
 import 'package:zamaj/modules/workout_overview/bloc/bloc.dart';
 import 'package:zamaj/modules/workout_overview/models/drop_intent.dart';
 import 'package:zamaj/modules/workout_overview/models/exercise_view_model.dart';

@@ -11,7 +11,6 @@ import 'package:zamaj/modules/exercise_library/bloc/exercise_library_list/bloc.d
 import 'package:zamaj/modules/exercise_library/models/exercise_library_args.dart';
 import 'package:zamaj/modules/exercise_library/navigation/exercise_library_routes.dart';
 import 'package:zamaj/modules/exercise_library/widgets/library_entry_tile.dart';
-import 'package:zamaj/modules/program_management/services/domain_error_presenter.dart';
 
 class ExerciseLibraryListScreen extends StatefulWidget {
   const ExerciseLibraryListScreen({super.key});

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:zamaj/building_blocks/building_blocks.dart';
 import 'package:zamaj/modules/domain/domain.dart';
 import 'package:zamaj/modules/program_management/bloc/exercise_editor/exercise_editor_bloc.dart';
 import 'package:zamaj/modules/program_management/bloc/plan_import/plan_import_bloc.dart';
@@ -15,7 +16,6 @@ import 'package:zamaj/modules/program_management/screens/program_editor_screen.d
 import 'package:zamaj/modules/program_management/screens/program_list_screen.dart';
 import 'package:zamaj/modules/program_management/screens/workout_day_editor_screen.dart';
 import 'package:zamaj/modules/program_management/services/aggregate_saver.dart';
-import 'package:zamaj/modules/program_management/services/external_link_launcher.dart';
 
 abstract final class ProgramManagementRouter {
   static Route<dynamic>? onGenerateRoute(RouteSettings settings) {

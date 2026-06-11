@@ -1,8 +1,8 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:uuid/uuid.dart';
+import 'package:zamaj/building_blocks/building_blocks.dart';
 import 'package:zamaj/modules/domain/domain.dart';
 import 'package:zamaj/modules/program_management/models/program_editor_draft.dart';
-import 'package:zamaj/modules/program_management/services/external_link_launcher.dart';
 import 'package:zamaj/modules/program_management/services/program_validation.dart';
 
 import 'exercise_editor_event.dart';

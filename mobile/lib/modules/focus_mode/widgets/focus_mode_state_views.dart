@@ -3,7 +3,6 @@ import 'package:zamaj/building_blocks/building_blocks.dart';
 import 'package:zamaj/core/app_spacing.dart';
 import 'package:zamaj/core/app_theme.dart';
 import 'package:zamaj/modules/domain/domain.dart';
-import 'package:zamaj/modules/program_management/services/domain_error_presenter.dart';
 
 class FocusLoadingView extends StatelessWidget {
   const FocusLoadingView({super.key});

@@ -8,7 +8,6 @@ import 'package:zamaj/core/app_theme.dart';
 import 'package:zamaj/modules/export/models/recent_sessions_args.dart';
 import 'package:zamaj/modules/export/navigation/export_routes.dart';
 import 'package:zamaj/modules/program_management/navigation/program_management_routes.dart';
-import 'package:zamaj/modules/program_management/services/domain_error_presenter.dart';
 import 'package:zamaj/modules/workout_day_picker/bloc/bloc.dart';
 import 'package:zamaj/modules/workout_day_picker/widgets/day_tile.dart';
 import 'package:zamaj/modules/workout_day_picker/widgets/workout_day_picker_empty_view.dart';
