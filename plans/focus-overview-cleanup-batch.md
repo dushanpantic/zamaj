@@ -499,8 +499,8 @@ parallelization). No blockers; warnings and observations below.
   - [x] Step 9.1: Read `context.read<Clock>()` instead of `DateTime.now()`
 
 #### Wave 2
-- [ ] Slice 6: SetRow tap-to-collapse trap + adopt roundHalfKg (18, 19d-setrow)
-  - [ ] Step 6.1: Restrict the collapse `InkWell` to the summary; swap the rounding literal
+- [x] Slice 6: SetRow tap-to-collapse trap + adopt roundHalfKg (18, 19d-setrow)
+  - [x] Step 6.1: Restrict the collapse `InkWell` to the summary; swap the rounding literal
 - [ ] Slice 7: Focus stopwatch-start guard + adopt roundHalfKg (25, 19d-bloc)
   - [ ] Step 7.1: Gate `_onStopwatchStarted`; route weight rounding through the helper
 - [ ] Slice 10: Relocate shared cross-module services (22)
@@ -511,7 +511,7 @@ parallelization). No blockers; warnings and observations below.
 - [x] (15) Stale drag-to-ungroup comments corrected in `drop_resolver` + `draggable_exercise`
 - [x] (16) `UndoableSet` doc describes the persistent row, not a SnackBar
 - [x] (17) `FocusModeColors`, `MoveTargets.hasAny`, dead `isDropTarget` removed
-- [ ] (18) Open `SetRow` editor no longer collapses on a stray tap
+- [x] (18) Open `SetRow` editor no longer collapses on a stray tap
 - [x] (19a) One shared mm:ss formatter
 - [x] (19b) One shared big-numeric field + bump row
 - [x] (19c) Focus assembler uses `PlannedSummaryFormatter`

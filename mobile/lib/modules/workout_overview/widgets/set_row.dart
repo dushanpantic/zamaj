@@ -232,6 +232,30 @@ class _SetRowState extends State<SetRow> {
       });
     }
 
+    // Only the summary header carries the collapse tap. Wrapping the whole
+    // row (header + open editor) in one InkWell let a stray tap on the
+    // editor's padding/gaps collapse it mid-edit (finding 18); the editor
+    // now sits outside the tappable area, and the open row collapses only via
+    // the header tap or its explicit collapse chevron.
+    final header = Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: canTapHeader ? toggleEditor : null,
+        borderRadius: BorderRadius.circular(AppRadius.sm),
+        child: _Header(
+          viewModel: widget.viewModel,
+          mode: mode,
+          measurementType: widget.measurementType,
+          typography: typography,
+          colors: colors,
+          editorOpen: _editorOpen,
+          suggestedActual: suggested,
+          onQuickLog: widget.canLog ? _quickLog : null,
+          onToggleEditor: toggleEditor,
+        ),
+      ),
+    );
+
     final content = Padding(
       padding: const EdgeInsets.symmetric(
         horizontal: AppSpacing.md,
@@ -240,17 +264,7 @@ class _SetRowState extends State<SetRow> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          _Header(
-            viewModel: widget.viewModel,
-            mode: mode,
-            measurementType: widget.measurementType,
-            typography: typography,
-            colors: colors,
-            editorOpen: _editorOpen,
-            suggestedActual: suggested,
-            onQuickLog: widget.canLog ? _quickLog : null,
-            onToggleEditor: toggleEditor,
-          ),
+          header,
           if (showEditor) ...[
             const SizedBox(height: AppSpacing.sm),
             _Editor(
@@ -269,7 +283,7 @@ class _SetRowState extends State<SetRow> {
       ),
     );
 
-    final decorated = isHighlighted
+    return isHighlighted
         ? Container(
             decoration: BoxDecoration(
               color: colors.loggableHint.withValues(
@@ -285,15 +299,6 @@ class _SetRowState extends State<SetRow> {
             child: content,
           )
         : content;
-
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: canTapHeader ? toggleEditor : null,
-        borderRadius: BorderRadius.circular(AppRadius.sm),
-        child: decorated,
-      ),
-    );
   }
 }
 
@@ -715,7 +720,7 @@ class _NumericFieldState extends State<_NumericField> {
     final current = double.tryParse(widget.controller.text.trim()) ?? 0;
     final next = (current + delta).clamp(0, double.maxFinite).toDouble();
     if (widget.allowDecimal) {
-      final rounded = (next * 2).round() / 2;
+      final rounded = IncrementRules.roundHalfKg(next);
       widget.controller.text = WeightFormatter.formatKg(rounded);
     } else {
       widget.controller.text = next.round().toString();
