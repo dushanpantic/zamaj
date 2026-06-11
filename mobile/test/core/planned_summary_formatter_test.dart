@@ -1,8 +1,8 @@
 // Validates: Requirements R13 AC1
 
 import 'package:flutter_test/flutter_test.dart';
+import 'package:zamaj/core/planned_summary_formatter.dart';
 import 'package:zamaj/modules/domain/domain.dart';
-import 'package:zamaj/modules/workout_overview/services/planned_summary_formatter.dart';
 
 void main() {
   group('PlannedSummaryFormatter.summarize', () {

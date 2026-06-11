@@ -1,3 +1,4 @@
+import 'package:zamaj/core/planned_summary_formatter.dart';
 import 'package:zamaj/core/rep_target_formatter.dart';
 import 'package:zamaj/core/weight_formatter.dart';
 import 'package:zamaj/modules/domain/domain.dart';
@@ -21,7 +22,7 @@ abstract final class FocusModeAssembler {
     final sorted = List<SessionExercise>.of(session.sessionExercises)
       ..sort((a, b) => a.position.compareTo(b.position));
 
-    final groups = _computeGroups(sorted);
+    final groups = groupBySupersetRun(sorted);
     final groupIndex = groups.indexWhere(
       (g) => g.any((e) => e.id == anchorSessionExerciseId),
     );
@@ -154,7 +155,7 @@ abstract final class FocusModeAssembler {
     final session = state.session;
     final sorted = List<SessionExercise>.of(session.sessionExercises)
       ..sort((a, b) => a.position.compareTo(b.position));
-    final groups = _computeGroups(sorted);
+    final groups = groupBySupersetRun(sorted);
 
     final options = <FocusModeSwitchOption>[];
     for (final group in groups) {
@@ -190,7 +191,7 @@ abstract final class FocusModeAssembler {
     final session = state.session;
     final sorted = List<SessionExercise>.of(session.sessionExercises)
       ..sort((a, b) => a.position.compareTo(b.position));
-    final groups = _computeGroups(sorted);
+    final groups = groupBySupersetRun(sorted);
 
     final currentIndex = groups.indexWhere(
       (g) => g.any((e) => e.id == completedAnchorId),
@@ -233,29 +234,6 @@ abstract final class FocusModeAssembler {
   }
 
   // -------------------------------------------------------------------------
-
-  static List<List<SessionExercise>> _computeGroups(
-    List<SessionExercise> sortedExercises,
-  ) {
-    final groups = <List<SessionExercise>>[];
-    var i = 0;
-    while (i < sortedExercises.length) {
-      final tag = sortedExercises[i].supersetTag;
-      if (tag == null) {
-        groups.add([sortedExercises[i]]);
-        i++;
-        continue;
-      }
-      var j = i + 1;
-      while (j < sortedExercises.length &&
-          sortedExercises[j].supersetTag == tag) {
-        j++;
-      }
-      groups.add(sortedExercises.sublist(i, j));
-      i = j;
-    }
-    return groups;
-  }
 
   static ({String label, String anchorId})? _findNextGroup(
     List<List<SessionExercise>> groups, {
@@ -367,7 +345,7 @@ abstract final class FocusModeAssembler {
         return (
           currentPlanned?.plannedValues,
           currentPlanned?.id,
-          _summarizePlanned(planned),
+          PlannedSummaryFormatter.summarize(planned),
         );
       }(),
     };
@@ -421,27 +399,5 @@ abstract final class FocusModeAssembler {
       entityType: 'Exercise',
       id: sessionExercise.plannedExerciseIdInSnapshot,
     );
-  }
-
-  static String _summarizePlanned(Exercise plannedExercise) {
-    final sets = List<WorkoutSet>.of(plannedExercise.sets)
-      ..sort((a, b) => a.position.compareTo(b.position));
-    if (sets.isEmpty) return '0 sets';
-
-    final first = sets.first.plannedValues;
-    final allSame = sets.every((s) => s.plannedValues == first);
-    if (!allSame) return '${sets.length} sets';
-
-    return switch (first) {
-      PlannedRepBased(:final weightKg, :final repTarget) =>
-        '${WeightFormatter.formatKg(weightKg)}kg ${sets.length}×${RepTargetFormatter.format(repTarget)}',
-      PlannedTimeBased(:final durationSeconds, :final weightKg) =>
-        weightKg == null
-            ? '${sets.length}×${durationSeconds}s'
-            : '${WeightFormatter.formatKg(weightKg)}kg '
-                  '${sets.length}×${durationSeconds}s',
-      PlannedBodyweight(:final repTarget) =>
-        '${sets.length}×${RepTargetFormatter.format(repTarget)}',
-    };
   }
 }

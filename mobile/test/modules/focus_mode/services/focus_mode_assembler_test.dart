@@ -1,5 +1,6 @@
 import 'package:clock/clock.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:zamaj/core/planned_summary_formatter.dart';
 import 'package:zamaj/modules/domain/domain.dart';
 import 'package:zamaj/modules/focus_mode/services/focus_mode_assembler.dart';
 
@@ -266,6 +267,28 @@ void main() {
       expect(panel.isReplaced, isFalse);
       expect(panel.isLoggable, isTrue);
       expect(group.upNextGroupLabel, 'Row');
+    });
+
+    test('planned summary delegates to PlannedSummaryFormatter', () async {
+      final s = setup();
+      s.repo.seedWorkoutDay(buildDay());
+      final state = await s.engine.startSession(workoutDayId: 'wd-1');
+      final benchId = state.session.sessionExercises
+          .firstWhere((e) => e.plannedExerciseIdInSnapshot == 'ex-bench')
+          .id;
+      final plannedBench = state.session.snapshot.workoutDay.exerciseGroups
+          .expand((g) => g.exercises)
+          .firstWhere((e) => e.id == 'ex-bench');
+
+      final group = FocusModeAssembler.assemble(
+        state,
+        anchorSessionExerciseId: benchId,
+      )!;
+
+      expect(
+        group.panels.single.plannedSummary,
+        PlannedSummaryFormatter.summarize(plannedBench),
+      );
     });
 
     test('after logging one set, lastExecutedValues populated', () async {

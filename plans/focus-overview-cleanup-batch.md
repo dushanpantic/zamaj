@@ -492,9 +492,9 @@ parallelization). No blockers; warnings and observations below.
   - [x] Step 4.2: De-duplicate the numeric commit and tokenize the icon size
 - [x] Slice 5: Drag-registration mixin + stale comment (20, 15-draggable)
   - [x] Step 5.1: Extract the `_registered`/`_setRegistered` mixin and fix the comment
-- [ ] Slice 8: Superset grouping unification + planned-summary dedup (11, 19c)
-  - [ ] Step 8.1: Extract a shared contiguity-based grouping helper
-  - [ ] Step 8.2: Reuse `PlannedSummaryFormatter` in the focus assembler
+- [x] Slice 8: Superset grouping unification + planned-summary dedup (11, 19c)
+  - [x] Step 8.1: Extract a shared contiguity-based grouping helper
+  - [x] Step 8.2: Reuse `PlannedSummaryFormatter` in the focus assembler
 - [ ] Slice 9: SessionElapsedLabel uses the injected Clock (23)
   - [ ] Step 9.1: Read `context.read<Clock>()` instead of `DateTime.now()`
 
@@ -514,7 +514,7 @@ parallelization). No blockers; warnings and observations below.
 - [ ] (18) Open `SetRow` editor no longer collapses on a stray tap
 - [x] (19a) One shared mm:ss formatter
 - [x] (19b) One shared big-numeric field + bump row
-- [ ] (19c) Focus assembler uses `PlannedSummaryFormatter`
+- [x] (19c) Focus assembler uses `PlannedSummaryFormatter`
 - [ ] (19d) One `IncrementRules.roundHalfKg` at every call site
 - [x] (20) One shared drag-registration mixin
 - [x] (21) `focus_video_button` AppIconSize; `superset_card` AppStroke border
@@ -522,4 +522,4 @@ parallelization). No blockers; warnings and observations below.
 - [ ] (23) `SessionElapsedLabel` reads the injected `Clock`
 - [ ] (25) Stopwatch start gated on mutation/loggable
 - [x] (26) Single numeric commit per edit
-- [ ] (11) One shared contiguity-based superset grouping helper
+- [x] (11) One shared contiguity-based superset grouping helper
