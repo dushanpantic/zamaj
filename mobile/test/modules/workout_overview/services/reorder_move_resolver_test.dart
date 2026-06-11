@@ -76,7 +76,6 @@ void main() {
       final targets = _targets(specs, 'b');
       expect(targets.up, isNull);
       expect(targets.down, isNull);
-      expect(targets.hasAny, isFalse);
     });
 
     test('finished exercises have no move targets', () {
@@ -84,7 +83,9 @@ void main() {
         _spec('a', state: const ExerciseState.completed()),
         _spec('b', state: const ExerciseState.unfinished()),
       ];
-      expect(_targets(specs, 'a').hasAny, isFalse);
+      final targets = _targets(specs, 'a');
+      expect(targets.up, isNull);
+      expect(targets.down, isNull);
     });
   });
 

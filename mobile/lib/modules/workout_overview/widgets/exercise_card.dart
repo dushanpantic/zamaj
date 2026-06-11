@@ -61,7 +61,6 @@ class ExerciseCard extends StatelessWidget {
     this.isCurrent = false,
     this.isLastTouched = false,
     this.dragHandle,
-    this.isDropTarget = false,
   });
 
   final ExerciseViewModel viewModel;
@@ -103,7 +102,6 @@ class ExerciseCard extends StatelessWidget {
   /// drag-to-reorder gesture is scoped to the handle only and doesn't fight
   /// taps on LOG SET / kebab / etc. elsewhere on the card.
   final Widget? dragHandle;
-  final bool isDropTarget;
 
   @override
   Widget build(BuildContext context) {
@@ -113,14 +111,9 @@ class ExerciseCard extends StatelessWidget {
     final state = sessionExercise.state;
     final hasExecutedSet = sessionExercise.executedSets.isNotEmpty;
 
-    // Drop-target highlight wins over current — they share the primary
-    // border but a drop-target accent should never be hidden by it.
-    final borderColor = isDropTarget || isCurrent
-        ? colors.primary
-        : colors.outline;
-    final borderWidth = isDropTarget || isCurrent
-        ? AppStroke.emphasis
-        : AppStroke.hairline;
+    // The accent border is the card's sole "current exercise" signal.
+    final borderColor = isCurrent ? colors.primary : colors.outline;
+    final borderWidth = isCurrent ? AppStroke.emphasis : AppStroke.hairline;
     // Screen-reader equivalents of the ⋮ Move up/down entries: AT users get a
     // reorder path that never depends on a precise drag gesture.
     final moveActions = <CustomSemanticsAction, VoidCallback>{

@@ -485,8 +485,8 @@ parallelization). No blockers; warnings and observations below.
   - [x] Step 1.1: Rewrite the two stale doc comments
 - [x] Slice 2: Centralize half-kg rounding (19d helper + non-conflicting call sites)
   - [x] Step 2.1: Add `IncrementRules.roundHalfKg` and route call sites through it
-- [ ] Slice 3: Remove dead code & superset border token (17, 21-border)
-  - [ ] Step 3.1: Delete `isDropTarget`, `MoveTargets.hasAny`; tokenize superset border
+- [x] Slice 3: Remove dead code & superset border token (17, 21-border)
+  - [x] Step 3.1: Delete `isDropTarget`, `MoveTargets.hasAny`; tokenize superset border
 - [ ] Slice 4: Focus panel widget consolidation (17-color, 19a, 19b, 26, 21-iconSize)
   - [ ] Step 4.1: Extract shared mm:ss formatter and big-numeric field
   - [ ] Step 4.2: De-duplicate the numeric commit and tokenize the icon size
