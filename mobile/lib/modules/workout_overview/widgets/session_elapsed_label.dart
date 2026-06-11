@@ -1,6 +1,8 @@
 import 'dart:async';
 
+import 'package:clock/clock.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:zamaj/core/app_theme.dart';
 import 'package:zamaj/core/app_typography.dart';
 
@@ -57,7 +59,7 @@ class _SessionElapsedLabelState extends State<SessionElapsedLabel> {
   Widget build(BuildContext context) {
     final colors = Theme.of(context).appColors;
     const typography = AppTypography.standard;
-    final end = widget.endedAt ?? DateTime.now().toUtc();
+    final end = widget.endedAt ?? context.read<Clock>().now().toUtc();
     final seconds = end.difference(widget.startedAt).inSeconds;
     return Text(
       _formatElapsed(seconds < 0 ? 0 : seconds),

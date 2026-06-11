@@ -107,10 +107,18 @@ class _FocusModeScreenState extends State<FocusModeScreen> {
         onRetry: () =>
             context.read<FocusModeBloc>().add(const FocusModeRetried()),
       ),
-      FocusModeWorkoutComplete(:final sessionState) => FocusWorkoutCompleteView(
-        workoutDayName: sessionState.session.snapshot.workoutDay.name,
-        onBackToOverview: () => Navigator.of(context).maybePop(),
-      ),
+      FocusModeWorkoutComplete(
+        :final sessionState,
+        :final lastTransientError,
+      ) =>
+        FocusWorkoutCompleteView(
+          workoutDayName: sessionState.session.snapshot.workoutDay.name,
+          onBackToOverview: () => Navigator.of(context).maybePop(),
+          transientError: lastTransientError,
+          onDismissError: () => context.read<FocusModeBloc>().add(
+            const FocusModeErrorDismissed(),
+          ),
+        ),
       FocusModeReady() => FocusReadyBody(state: state),
     };
   }

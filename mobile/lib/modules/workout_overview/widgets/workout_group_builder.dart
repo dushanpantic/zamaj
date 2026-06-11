@@ -26,7 +26,6 @@ class WorkoutGroupBuilder extends StatelessWidget {
     required this.group,
     required this.state,
     required this.currentSessionExerciseIds,
-    required this.onReplace,
     required this.onSkip,
     required this.onMarkDone,
     required this.onUngroup,
@@ -40,7 +39,6 @@ class WorkoutGroupBuilder extends StatelessWidget {
   final SupersetGroupViewModel group;
   final WorkoutOverviewLoaded state;
   final Set<String> currentSessionExerciseIds;
-  final void Function(ExerciseViewModel) onReplace;
   final void Function(ExerciseViewModel) onSkip;
   final void Function(ExerciseViewModel) onMarkDone;
   final void Function(String tag) onUngroup;
@@ -175,7 +173,6 @@ class WorkoutGroupBuilder extends StatelessWidget {
             ),
         onSkipPressed: () => onSkip(exercise),
         onMarkDonePressed: () => onMarkDone(exercise),
-        onReplacePressed: () => onReplace(exercise),
         onOpenVideo: onOpenVideo,
         onGroupIntoPressed: (candidates.isEmpty && eligibleGroups.isEmpty)
             ? null
@@ -342,8 +339,6 @@ class WorkoutGroupBuilder extends StatelessWidget {
           onSkip(exercises.firstWhere((e) => e.sessionExercise.id == id)),
       onMarkDonePressed: (id) =>
           onMarkDone(exercises.firstWhere((e) => e.sessionExercise.id == id)),
-      onReplacePressed: (id) =>
-          onReplace(exercises.firstWhere((e) => e.sessionExercise.id == id)),
       onOpenVideo: onOpenVideo,
       memberDragHandleBuilder: memberDragHandle,
       memberMoveBuilder: memberMove,

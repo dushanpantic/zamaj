@@ -4,13 +4,11 @@ import 'package:zamaj/building_blocks/building_blocks.dart';
 import 'package:zamaj/core/app_theme.dart';
 import 'package:zamaj/modules/domain/domain.dart';
 import 'package:zamaj/modules/focus_mode/models/focus_mode_args.dart';
-import 'package:zamaj/modules/program_management/services/external_link_launcher.dart';
 import 'package:zamaj/modules/workout_overview/bloc/bloc.dart';
 import 'package:zamaj/modules/workout_overview/models/drop_intent.dart';
 import 'package:zamaj/modules/workout_overview/models/exercise_view_model.dart';
 import 'package:zamaj/modules/workout_overview/models/superset_group_view_model.dart';
 import 'package:zamaj/modules/workout_overview/widgets/group_with_picker_dialog.dart';
-import 'package:zamaj/modules/workout_overview/widgets/replace_exercise_dialog.dart';
 import 'package:zamaj/modules/workout_overview/widgets/text_entry_sheet.dart';
 import 'package:zamaj/modules/workout_overview/widgets/workout_overview_app_bar_title.dart';
 import 'package:zamaj/modules/workout_overview/widgets/workout_overview_bottom_bar.dart';
@@ -41,35 +39,6 @@ class _WorkoutOverviewScreenState extends State<WorkoutOverviewScreen> {
         SnackBar(content: Text('Could not open video: ${result.reason}')),
       );
     }
-  }
-
-  Future<void> _handleReplace(ExerciseViewModel viewModel) async {
-    final state = context.read<WorkoutOverviewBloc>().state;
-    if (state is! WorkoutOverviewLoaded) return;
-    final defaults = resolveReplaceExerciseDefaults(
-      sessionExerciseId: viewModel.sessionExercise.id,
-      session: state.sessionState.session,
-    );
-    if (defaults == null) return;
-    final result = await presentReplaceFlow(
-      context: context,
-      plannedExerciseName: viewModel.plannedExerciseName,
-      defaultMeasurementType: viewModel.effectiveMeasurementType,
-      defaultPlannedValues: defaults.plannedValues,
-      defaultSetCount: defaults.setCount,
-    );
-    if (!mounted || result == null) return;
-    context.read<WorkoutOverviewBloc>().add(
-      WorkoutOverviewExerciseReplaced(
-        sessionExerciseId: viewModel.sessionExercise.id,
-        substituteName: result.name,
-        substituteMeasurementType: result.measurementType,
-        substitutePlannedValues: result.plannedValues,
-        substituteSetCount: result.setCount,
-        substituteMetadata: result.metadata,
-        substituteLibraryExerciseId: result.libraryExerciseId,
-      ),
-    );
   }
 
   Future<void> _handleSkip(ExerciseViewModel viewModel) async {
@@ -292,7 +261,6 @@ class _WorkoutOverviewScreenState extends State<WorkoutOverviewScreen> {
       WorkoutOverviewLoaded() => WorkoutOverviewLoadedBody(
         state: state,
         currentSessionExerciseIds: focus?.currentIds ?? const <String>{},
-        onReplace: _handleReplace,
         onSkip: _handleSkip,
         onMarkDone: _handleMarkDone,
         onUngroup: _handleUngroup,

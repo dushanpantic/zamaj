@@ -1,11 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
-import 'package:zamaj/core/app_colors.dart';
 import 'package:zamaj/core/app_spacing.dart';
 import 'package:zamaj/core/app_theme.dart';
 import 'package:zamaj/core/app_typography.dart';
 import 'package:zamaj/core/increment_rules.dart';
 import 'package:zamaj/core/weight_formatter.dart';
+import 'package:zamaj/modules/focus_mode/widgets/focus_numeric_field.dart';
 
 /// Big editable panel for the current rep-based set: weight + reps with
 /// bump buttons.
@@ -112,16 +111,12 @@ class _FocusRepBasedPanelState extends State<FocusRepBasedPanel> {
           crossAxisAlignment: CrossAxisAlignment.end,
           children: [
             Expanded(
-              child: _BigNumericField(
+              child: FocusBigNumericField(
                 controller: _weight,
                 focusNode: _weightFocus,
                 label: 'kg',
                 allowDecimal: true,
                 enabled: widget.enabled,
-                onSubmitted: (text) {
-                  final parsed = double.tryParse(text.trim());
-                  if (parsed != null) widget.onWeightCommitted(parsed);
-                },
               ),
             ),
             const SizedBox(width: AppSpacing.lg),
@@ -133,16 +128,12 @@ class _FocusRepBasedPanelState extends State<FocusRepBasedPanel> {
             ),
             const SizedBox(width: AppSpacing.lg),
             Expanded(
-              child: _BigNumericField(
+              child: FocusBigNumericField(
                 controller: _reps,
                 focusNode: _repsFocus,
                 label: 'reps',
                 allowDecimal: false,
                 enabled: widget.enabled,
-                onSubmitted: (text) {
-                  final parsed = int.tryParse(text.trim());
-                  if (parsed != null) widget.onRepsCommitted(parsed);
-                },
               ),
             ),
           ],
@@ -151,7 +142,7 @@ class _FocusRepBasedPanelState extends State<FocusRepBasedPanel> {
         Row(
           children: [
             Expanded(
-              child: _BumpRow(
+              child: FocusBumpRow(
                 steps: weightSteps,
                 enabled: widget.enabled,
                 onTap: widget.onWeightBump,
@@ -160,7 +151,7 @@ class _FocusRepBasedPanelState extends State<FocusRepBasedPanel> {
             ),
             const SizedBox(width: AppSpacing.lg),
             Expanded(
-              child: _BumpRow(
+              child: FocusBumpRow(
                 steps: IncrementRules.repStepsDouble,
                 enabled: widget.enabled,
                 onTap: (delta) => widget.onRepsBump(delta.round()),
@@ -177,110 +168,4 @@ class _FocusRepBasedPanelState extends State<FocusRepBasedPanel> {
     if (v == v.truncateToDouble()) return v.toInt().toString();
     return v.toStringAsFixed(1);
   }
-}
-
-class _BigNumericField extends StatelessWidget {
-  const _BigNumericField({
-    required this.controller,
-    required this.focusNode,
-    required this.label,
-    required this.allowDecimal,
-    required this.enabled,
-    required this.onSubmitted,
-  });
-
-  final TextEditingController controller;
-  final FocusNode focusNode;
-  final String label;
-  final bool allowDecimal;
-  final bool enabled;
-  final ValueChanged<String> onSubmitted;
-
-  @override
-  Widget build(BuildContext context) {
-    final colors = Theme.of(context).appColors;
-    const typography = AppTypography.standard;
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        TextField(
-          controller: controller,
-          focusNode: focusNode,
-          enabled: enabled,
-          textAlign: TextAlign.center,
-          keyboardType: TextInputType.numberWithOptions(decimal: allowDecimal),
-          inputFormatters: [
-            FilteringTextInputFormatter.allow(
-              allowDecimal ? RegExp(r'[0-9.]') : RegExp(r'[0-9]'),
-            ),
-          ],
-          onSubmitted: onSubmitted,
-          style: typography.numericHero.copyWith(color: colors.onSurface),
-        ),
-        const SizedBox(height: AppSpacing.xs),
-        Center(
-          child: Text(
-            label,
-            style: typography.caption.copyWith(color: colors.onSurfaceMuted),
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-class _BumpRow extends StatelessWidget {
-  const _BumpRow({
-    required this.steps,
-    required this.enabled,
-    required this.onTap,
-    required this.formatter,
-  });
-
-  final List<double> steps;
-  final bool enabled;
-  final void Function(double delta) onTap;
-  final String Function(double v) formatter;
-
-  @override
-  Widget build(BuildContext context) {
-    final colors = Theme.of(context).appColors;
-    return Row(
-      children: [
-        for (var i = 0; i < steps.length; i++) ...[
-          if (i > 0) const SizedBox(width: AppSpacing.sm),
-          Expanded(
-            child: SizedBox(
-              height: AppInSessionSize.stepButton,
-              child: OutlinedButton(
-                onPressed: enabled ? () => onTap(steps[i]) : null,
-                style: OutlinedButton.styleFrom(
-                  foregroundColor: steps[i] < 0 ? colors.onSurfaceMuted : null,
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: AppSpacing.xs,
-                  ),
-                  textStyle: AppTypography.standard.actionLabel,
-                ),
-                child: FittedBox(
-                  fit: BoxFit.scaleDown,
-                  child: Text(
-                    steps[i] > 0
-                        ? '+${formatter(steps[i])}'
-                        : formatter(steps[i]),
-                    maxLines: 1,
-                  ),
-                ),
-              ),
-            ),
-          ),
-        ],
-      ],
-    );
-  }
-}
-
-class FocusModeColors {
-  /// Convenience accessor used by panel-internal widgets so we don't pass
-  /// theme data through 4 levels of widget tree.
-  static AppColors of(BuildContext context) => Theme.of(context).appColors;
 }

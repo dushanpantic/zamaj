@@ -43,7 +43,8 @@ class SetRow extends StatefulWidget {
     required this.viewModel,
     required this.sessionExerciseId,
     required this.measurementType,
-    required this.canMutate,
+    required this.canLog,
+    required this.canEditExecuted,
     required this.onLogSet,
     required this.onEditSet,
     this.highlightLoggable = false,
@@ -52,7 +53,14 @@ class SetRow extends StatefulWidget {
   final SetRowViewModel viewModel;
   final String sessionExerciseId;
   final MeasurementType measurementType;
-  final bool canMutate;
+
+  /// Whether a new set may be logged on this row (the loggable circle and the
+  /// quick-log). False once the session has ended.
+  final bool canLog;
+
+  /// Whether an already-logged set on this row may be edited. Stays true after
+  /// the session ends so completed values remain correctable.
+  final bool canEditExecuted;
   final void Function(ActualSetValues values, String? plannedSetIdInSnapshot)
   onLogSet;
   final void Function(String executedSetId, ActualSetValues values) onEditSet;
@@ -202,14 +210,14 @@ class _SetRowState extends State<SetRow> {
     final showEditor = switch (mode) {
       SetRowMode.loggable => _editorOpen,
       SetRowMode.completed ||
-      SetRowMode.trailing => widget.canMutate && _editingExisting,
+      SetRowMode.trailing => widget.canEditExecuted && _editingExisting,
       SetRowMode.future => false,
     };
-    final canTapHeader =
-        widget.canMutate &&
-        (mode == SetRowMode.loggable ||
-            mode == SetRowMode.completed ||
-            mode == SetRowMode.trailing);
+    final canTapHeader = switch (mode) {
+      SetRowMode.loggable => widget.canLog,
+      SetRowMode.completed || SetRowMode.trailing => widget.canEditExecuted,
+      SetRowMode.future => false,
+    };
     final isHighlighted =
         mode == SetRowMode.loggable && widget.highlightLoggable;
     final suggested = mode == SetRowMode.loggable ? _quickLogValues() : null;
@@ -224,6 +232,30 @@ class _SetRowState extends State<SetRow> {
       });
     }
 
+    // Only the summary header carries the collapse tap. Wrapping the whole
+    // row (header + open editor) in one InkWell let a stray tap on the
+    // editor's padding/gaps collapse it mid-edit (finding 18); the editor
+    // now sits outside the tappable area, and the open row collapses only via
+    // the header tap or its explicit collapse chevron.
+    final header = Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: canTapHeader ? toggleEditor : null,
+        borderRadius: BorderRadius.circular(AppRadius.sm),
+        child: _Header(
+          viewModel: widget.viewModel,
+          mode: mode,
+          measurementType: widget.measurementType,
+          typography: typography,
+          colors: colors,
+          editorOpen: _editorOpen,
+          suggestedActual: suggested,
+          onQuickLog: widget.canLog ? _quickLog : null,
+          onToggleEditor: toggleEditor,
+        ),
+      ),
+    );
+
     final content = Padding(
       padding: const EdgeInsets.symmetric(
         horizontal: AppSpacing.md,
@@ -232,17 +264,7 @@ class _SetRowState extends State<SetRow> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          _Header(
-            viewModel: widget.viewModel,
-            mode: mode,
-            measurementType: widget.measurementType,
-            typography: typography,
-            colors: colors,
-            editorOpen: _editorOpen,
-            suggestedActual: suggested,
-            onQuickLog: widget.canMutate ? _quickLog : null,
-            onToggleEditor: toggleEditor,
-          ),
+          header,
           if (showEditor) ...[
             const SizedBox(height: AppSpacing.sm),
             _Editor(
@@ -261,7 +283,7 @@ class _SetRowState extends State<SetRow> {
       ),
     );
 
-    final decorated = isHighlighted
+    return isHighlighted
         ? Container(
             decoration: BoxDecoration(
               color: colors.loggableHint.withValues(
@@ -277,15 +299,6 @@ class _SetRowState extends State<SetRow> {
             child: content,
           )
         : content;
-
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: canTapHeader ? toggleEditor : null,
-        borderRadius: BorderRadius.circular(AppRadius.sm),
-        child: decorated,
-      ),
-    );
   }
 }
 
@@ -707,7 +720,7 @@ class _NumericFieldState extends State<_NumericField> {
     final current = double.tryParse(widget.controller.text.trim()) ?? 0;
     final next = (current + delta).clamp(0, double.maxFinite).toDouble();
     if (widget.allowDecimal) {
-      final rounded = (next * 2).round() / 2;
+      final rounded = IncrementRules.roundHalfKg(next);
       widget.controller.text = WeightFormatter.formatKg(rounded);
     } else {
       widget.controller.text = next.round().toString();

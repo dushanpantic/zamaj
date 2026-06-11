@@ -28,13 +28,18 @@ abstract final class IncrementRules {
     return const [-2.5, 2.5];
   }
 
+  /// Snaps a weight to the half-kg resolution that domain validation requires
+  /// (`ExecutedSet.weightKg_half_kg_resolution`). The single rounding rule for
+  /// every weight input across the app; rounds the midpoint away from zero and
+  /// does not clamp (callers clamp where they need to).
+  static double roundHalfKg(double kg) => (kg * 2).round() / 2;
+
   /// Bumps a weight value by [delta], clamping to ≥ 0 and rounding to the
-  /// half-kg resolution that domain validation requires
-  /// (`ExecutedSet.weightKg_half_kg_resolution`).
+  /// half-kg resolution via [roundHalfKg].
   static double bumpWeight(double current, double delta) {
     final next = current + delta;
     if (next <= 0) return 0;
-    return (next * 2).round() / 2;
+    return roundHalfKg(next);
   }
 
   /// Bumps an integer rep count by [delta], clamping to ≥ 0.

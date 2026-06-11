@@ -1,3 +1,4 @@
+import 'package:zamaj/core/increment_rules.dart';
 import 'package:zamaj/core/weight_formatter.dart';
 import 'package:zamaj/modules/domain/domain.dart';
 
@@ -59,7 +60,7 @@ abstract final class SetValueInputMapper {
         if (weight == null || reps == null) return null;
         if (weight < 0 || reps < 0) return null;
         return ActualSetValues.repBased(
-          weightKg: _roundHalfKg(weight),
+          weightKg: IncrementRules.roundHalfKg(weight),
           reps: reps,
         );
       case TimeBasedMeasurement():
@@ -70,7 +71,7 @@ abstract final class SetValueInputMapper {
         if (raw.isNotEmpty) {
           final parsed = double.tryParse(raw);
           if (parsed == null || parsed < 0) return null;
-          weightKg = _roundHalfKg(parsed);
+          weightKg = IncrementRules.roundHalfKg(parsed);
         }
         return ActualSetValues.timeBased(
           durationSeconds: seconds,
@@ -82,6 +83,4 @@ abstract final class SetValueInputMapper {
         return ActualSetValues.bodyweight(reps: reps);
     }
   }
-
-  static double _roundHalfKg(double kg) => (kg * 2).round() / 2;
 }

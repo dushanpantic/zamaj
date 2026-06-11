@@ -11,7 +11,6 @@ import 'package:zamaj/modules/program_management/bloc/plan_preview/plan_preview_
 import 'package:zamaj/modules/program_management/bloc/plan_preview/plan_preview_state.dart';
 import 'package:zamaj/modules/program_management/models/program_editor_draft.dart';
 import 'package:zamaj/modules/program_management/navigation/program_management_routes.dart';
-import 'package:zamaj/modules/program_management/services/domain_error_presenter.dart';
 import 'package:zamaj/modules/program_management/services/text_plan/plan_parse_warning.dart';
 
 class PlanPreviewScreen extends StatefulWidget {

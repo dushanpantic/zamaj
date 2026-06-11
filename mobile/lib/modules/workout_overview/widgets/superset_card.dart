@@ -24,11 +24,9 @@ class SupersetCard extends StatelessWidget {
     required this.onEditSet,
     required this.onSkipPressed,
     required this.onMarkDonePressed,
-    required this.onReplacePressed,
     required this.onOpenVideo,
     this.currentSessionExerciseIds = const <String>{},
     this.lastTouchedSessionExerciseId,
-    this.isDropTarget = false,
     this.memberDragHandleBuilder,
     this.memberMoveBuilder,
     this.gapBuilder,
@@ -49,7 +47,6 @@ class SupersetCard extends StatelessWidget {
   final void Function(String executedSetId, ActualSetValues values) onEditSet;
   final void Function(String sessionExerciseId) onSkipPressed;
   final void Function(String sessionExerciseId) onMarkDonePressed;
-  final void Function(String sessionExerciseId) onReplacePressed;
   final void Function(String videoUrl) onOpenVideo;
 
   /// Members that should render the CURRENT chip + accent border. Includes
@@ -57,7 +54,6 @@ class SupersetCard extends StatelessWidget {
   /// the set from `openTargets.first` and the assembled groups.
   final Set<String> currentSessionExerciseIds;
   final String? lastTouchedSessionExerciseId;
-  final bool isDropTarget;
 
   /// Optional per-member drag-handle builder. When non-null and the returned
   /// widget is non-null, the handle is rendered in the member card's leading
@@ -99,10 +95,7 @@ class SupersetCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: colors.surfaceVariant,
         borderRadius: BorderRadius.circular(AppRadius.lg),
-        border: Border.all(
-          color: isDropTarget ? colors.primary : colors.outline,
-          width: isDropTarget ? 2 : 1,
-        ),
+        border: Border.all(color: colors.outline, width: AppStroke.hairline),
       ),
       padding: const EdgeInsets.all(AppSpacing.sm),
       child: Column(
@@ -165,7 +158,6 @@ class SupersetCard extends StatelessWidget {
                     onEditSet: onEditSet,
                     onSkipPressed: () => onSkipPressed(memberId),
                     onMarkDonePressed: () => onMarkDonePressed(memberId),
-                    onReplacePressed: () => onReplacePressed(memberId),
                     onOpenVideo: onOpenVideo,
                     onMoveUp: move?.up,
                     onMoveDown: move?.down,

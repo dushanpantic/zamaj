@@ -21,7 +21,6 @@ class WorkoutOverviewBloc
     on<WorkoutOverviewSetEdited>(_onSetEdited);
     on<WorkoutOverviewExerciseSkipped>(_onExerciseSkipped);
     on<WorkoutOverviewExerciseMarkedDone>(_onExerciseMarkedDone);
-    on<WorkoutOverviewExerciseReplaced>(_onExerciseReplaced);
     on<WorkoutOverviewDropResolved>(_onDropResolved);
     on<WorkoutOverviewSupersetUngrouped>(_onSupersetUngrouped);
     on<WorkoutOverviewSessionNoteAdded>(_onSessionNoteAdded);
@@ -192,22 +191,6 @@ class WorkoutOverviewBloc
   ) => _runMutation(
     emit,
     () => _engine.markExerciseDone(sessionExerciseId: event.sessionExerciseId),
-  );
-
-  Future<void> _onExerciseReplaced(
-    WorkoutOverviewExerciseReplaced event,
-    Emitter<WorkoutOverviewState> emit,
-  ) => _runMutation(
-    emit,
-    () => _engine.replaceExercise(
-      sessionExerciseId: event.sessionExerciseId,
-      substituteName: event.substituteName,
-      substituteMeasurementType: event.substituteMeasurementType,
-      substitutePlannedValues: event.substitutePlannedValues,
-      substituteSetCount: event.substituteSetCount,
-      substituteMetadata: event.substituteMetadata,
-      substituteLibraryExerciseId: event.substituteLibraryExerciseId,
-    ),
   );
 
   Future<void> _onDropResolved(
@@ -433,22 +416,23 @@ class WorkoutOverviewBloc
   }
 
   /// Loggable members of the active group. For a standalone exercise that's the
-  /// lone open target; for a superset it's every member that still has a
-  /// remaining planned set, so the whole round expands together.
+  /// lone open target; for a superset it's every member of the same contiguous
+  /// run that still has a remaining planned set, so the whole round expands
+  /// together. Uses the shared [groupBySupersetRun] so the bloc, the overview
+  /// assembler, and the focus assembler all agree on what "the group" is.
   Set<String> _activeGroupLoggableIds(SessionState state) {
     if (state.openTargets.isEmpty) return <String>{};
     final loggableIds = <String>{
       for (final t in state.openTargets) t.sessionExerciseId,
     };
     final anchorId = state.openTargets.first.sessionExerciseId;
-    final anchor = state.session.sessionExercises
-        .where((e) => e.id == anchorId)
-        .firstOrNull;
-    final tag = anchor?.supersetTag;
-    if (tag == null) return <String>{anchorId};
+    final group = groupBySupersetRun(state.session.sessionExercises).firstWhere(
+      (run) => run.any((e) => e.id == anchorId),
+      orElse: () => const <SessionExercise>[],
+    );
     return <String>{
-      for (final e in state.session.sessionExercises)
-        if (e.supersetTag == tag && loggableIds.contains(e.id)) e.id,
+      for (final e in group)
+        if (loggableIds.contains(e.id)) e.id,
     };
   }
 

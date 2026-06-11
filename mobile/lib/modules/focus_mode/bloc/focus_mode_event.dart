@@ -202,37 +202,6 @@ final class FocusModeExerciseMarkedDone extends FocusModeEvent {
   List<Object?> get props => [sessionExerciseId];
 }
 
-final class FocusModeExerciseReplaced extends FocusModeEvent {
-  const FocusModeExerciseReplaced({
-    required this.sessionExerciseId,
-    required this.substituteName,
-    required this.substituteMeasurementType,
-    required this.substitutePlannedValues,
-    required this.substituteSetCount,
-    this.substituteMetadata,
-    this.substituteLibraryExerciseId,
-  });
-
-  final String sessionExerciseId;
-  final String substituteName;
-  final MeasurementType substituteMeasurementType;
-  final PlannedSetValues substitutePlannedValues;
-  final int substituteSetCount;
-  final ExerciseMetadata? substituteMetadata;
-  final String? substituteLibraryExerciseId;
-
-  @override
-  List<Object?> get props => [
-    sessionExerciseId,
-    substituteName,
-    substituteMeasurementType,
-    substitutePlannedValues,
-    substituteSetCount,
-    substituteMetadata,
-    substituteLibraryExerciseId,
-  ];
-}
-
 // Rest timer ----------------------------------------------------------------
 
 final class FocusModeRestTicked extends FocusModeEvent {

@@ -85,6 +85,16 @@ final class WorkoutOverviewLoaded extends WorkoutOverviewState {
 
   bool get isEnded => sessionState.session.endedAt != null;
 
+  /// Whether the user may log new sets and make structural changes (reorder,
+  /// skip, mark-done, group-into, notes). False once the session has ended.
+  bool get canLog => !isEnded;
+
+  /// Whether already-logged sets may still be edited. Always true: completed
+  /// sets stay correctable even after the session ends — the engine permits
+  /// `updateExecutedSet` on an ended session while blocking new logs. [canLog]
+  /// gates everything else.
+  bool get canEditExecuted => true;
+
   WorkoutOverviewLoaded copyWith({
     SessionState? sessionState,
     List<SupersetGroupViewModel>? groups,

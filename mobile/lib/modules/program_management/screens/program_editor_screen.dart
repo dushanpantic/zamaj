@@ -8,7 +8,6 @@ import 'package:zamaj/modules/program_management/bloc/program_editor/program_edi
 import 'package:zamaj/modules/program_management/bloc/program_editor/program_editor_state.dart';
 import 'package:zamaj/modules/program_management/models/workout_day_summary.dart';
 import 'package:zamaj/modules/program_management/navigation/program_management_routes.dart';
-import 'package:zamaj/modules/program_management/services/domain_error_presenter.dart';
 import 'package:zamaj/modules/program_management/widgets/add_workout_day_sheet.dart';
 import 'package:zamaj/modules/program_management/widgets/program_editor_app_bar.dart';
 import 'package:zamaj/modules/program_management/widgets/program_editor_day_list.dart';

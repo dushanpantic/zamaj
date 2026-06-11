@@ -5,7 +5,6 @@ import 'package:zamaj/core/app_spacing.dart';
 import 'package:zamaj/core/app_theme.dart';
 import 'package:zamaj/core/app_typography.dart';
 import 'package:zamaj/modules/domain/domain.dart';
-import 'package:zamaj/modules/program_management/services/domain_error_presenter.dart';
 import 'package:zamaj/modules/workout_day_picker/models/day_view_model.dart';
 import 'package:zamaj/modules/workout_day_picker/widgets/day_tile_history_labels.dart';
 import 'package:zamaj/modules/workout_day_picker/widgets/start_resume_action_button.dart';
