@@ -1,9 +1,51 @@
+import 'dart:async';
+
 import 'package:clock/clock.dart';
+import 'package:fake_async/fake_async.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:zamaj/modules/domain/domain.dart';
 import 'package:zamaj/modules/focus_mode/bloc/bloc.dart';
 
 import '../../../support/fake_session_repository.dart';
+
+/// Repo whose [completeSet] blocks on a test-controlled gate so a test can
+/// interleave another event (a concurrent draft edit) while the mutation is
+/// in flight.
+class _GatedCompleteSetRepo extends FakeSessionRepository {
+  _GatedCompleteSetRepo({required super.clock});
+
+  Completer<void>? completeSetGate;
+
+  @override
+  Future<Session> completeSet({
+    required String sessionExerciseId,
+    required ActualSetValues actualValues,
+    String? plannedSetIdInSnapshot,
+  }) async {
+    final gate = completeSetGate;
+    if (gate != null) await gate.future;
+    return super.completeSet(
+      sessionExerciseId: sessionExerciseId,
+      actualValues: actualValues,
+      plannedSetIdInSnapshot: plannedSetIdInSnapshot,
+    );
+  }
+}
+
+/// Repo whose [deleteExecutedSet] always fails with a transient domain error,
+/// so a test can exercise the failed-undo path.
+class _ThrowingDeleteRepo extends FakeSessionRepository {
+  _ThrowingDeleteRepo({required super.clock});
+
+  @override
+  Future<Session> deleteExecutedSet({required String executedSetId}) async {
+    throw const ValidationError(
+      entityId: 'x',
+      invariant: 'transient',
+      message: 'transient failure',
+    );
+  }
+}
 
 void main() {
   final fixedTime = DateTime.utc(2024, 6, 1, 12);
@@ -130,6 +172,90 @@ void main() {
                     plannedValues: PlannedSetValues.repBased(
                       weightKg: 70,
                       repTarget: RepTarget.fixed(reps: 10),
+                    ),
+                    createdAt: t,
+                    updatedAt: t,
+                    schemaVersion: 1,
+                  ),
+              ],
+              createdAt: t,
+              updatedAt: t,
+              schemaVersion: 1,
+            ),
+          ],
+          createdAt: t,
+          updatedAt: t,
+          schemaVersion: 1,
+        ),
+      ],
+      createdAt: t,
+      updatedAt: t,
+      schemaVersion: 1,
+    );
+  }
+
+  /// Superset of a rep-based Bench (no planned rest) and a time-based Plank,
+  /// so a countdown can run on one member while a set is logged on the other.
+  /// Bench has no planned rest so logging it starts no rest ticker — the only
+  /// periodic timer in play is the stopwatch ticker under test.
+  WorkoutDay buildTimeSupersetDay() {
+    final t = DateTime.utc(2024);
+    return WorkoutDay(
+      id: 'wd-tss',
+      programId: 'p-1',
+      name: 'Mixed',
+      exerciseGroups: [
+        ExerciseGroup(
+          id: 'g-tss',
+          workoutDayId: 'wd-tss',
+          position: 0,
+          kind: const ExerciseGroupKind.superset(),
+          exercises: [
+            Exercise(
+              id: 'ex-bench',
+              exerciseGroupId: 'g-tss',
+              position: 0,
+              name: 'Bench',
+              measurementType: const MeasurementType.repBased(),
+              metadata: ExerciseMetadata.empty,
+              plannedRestSeconds: null,
+              sets: [
+                for (var i = 0; i < 2; i++)
+                  WorkoutSet(
+                    id: 'ws-b-$i',
+                    exerciseId: 'ex-bench',
+                    position: i,
+                    measurementType: const MeasurementType.repBased(),
+                    plannedValues: PlannedSetValues.repBased(
+                      weightKg: 100,
+                      repTarget: RepTarget.fixed(reps: 8),
+                    ),
+                    createdAt: t,
+                    updatedAt: t,
+                    schemaVersion: 1,
+                  ),
+              ],
+              createdAt: t,
+              updatedAt: t,
+              schemaVersion: 1,
+            ),
+            Exercise(
+              id: 'ex-plank',
+              exerciseGroupId: 'g-tss',
+              position: 1,
+              name: 'Plank',
+              measurementType: const MeasurementType.timeBased(),
+              metadata: ExerciseMetadata.empty,
+              plannedRestSeconds: null,
+              sets: [
+                for (var i = 0; i < 2; i++)
+                  WorkoutSet(
+                    id: 'ws-p-$i',
+                    exerciseId: 'ex-plank',
+                    position: i,
+                    measurementType: const MeasurementType.timeBased(),
+                    plannedValues: const PlannedSetValues.timeBased(
+                      durationSeconds: 60,
                     ),
                     createdAt: t,
                     updatedAt: t,
@@ -683,5 +809,158 @@ void main() {
       );
       expect(after.restTimer, isNull);
     });
+  });
+
+  group('mutation correctness', () {
+    test('a concurrent draft edit survives a mutation landing', () async {
+      final repo = _GatedCompleteSetRepo(clock: fakeClock);
+      final engine = SessionFlowEngine(repository: repo);
+      final bloc = FocusModeBloc(sessionFlowEngine: engine);
+      addTearDown(bloc.close);
+      repo.seedWorkoutDay(buildSupersetDay());
+      final session = await repo.startSession(workoutDayId: 'wd-ss');
+      final benchId = session.sessionExercises
+          .firstWhere((e) => e.plannedExerciseIdInSnapshot == 'ex-bench')
+          .id;
+      final latId = session.sessionExercises
+          .firstWhere((e) => e.plannedExerciseIdInSnapshot == 'ex-lat')
+          .id;
+
+      bloc.add(
+        FocusModeOpened(
+          sessionId: session.id,
+          anchorSessionExerciseId: benchId,
+        ),
+      );
+      await waitFor<FocusModeReady>(bloc, (st) => st is FocusModeReady);
+
+      // Hold bench's completeSet so the lat draft edit lands while bench's
+      // mutation is still in flight.
+      final gate = Completer<void>();
+      repo.completeSetGate = gate;
+
+      bloc.add(FocusModeSetCompleted(benchId));
+      await waitFor<FocusModeReady>(
+        bloc,
+        (st) => st is FocusModeReady && st.mutationInFlight,
+      );
+
+      // Concurrent edit on the OTHER panel while bench's set is in flight.
+      bloc.add(FocusModeWeightEdited(sessionExerciseId: latId, weightKg: 72.5));
+      await waitFor<FocusModeReady>(
+        bloc,
+        (st) =>
+            st is FocusModeReady &&
+            (st.draftFor(latId) as ActualRepBased).weightKg == 72.5,
+      );
+
+      // Let bench's mutation land; lat's concurrent edit must not be reverted.
+      gate.complete();
+      final settled = await waitFor<FocusModeReady>(
+        bloc,
+        (st) =>
+            st is FocusModeReady &&
+            !st.mutationInFlight &&
+            st.groupViewModel.panels
+                    .firstWhere((p) => p.sessionExerciseId == benchId)
+                    .completedSetsCount ==
+                1,
+      );
+      expect((settled.draftFor(latId)! as ActualRepBased).weightKg, 72.5);
+    });
+
+    test('logging a set cancels a countdown ticker on another panel', () {
+      fakeAsync((async) {
+        final repo = FakeSessionRepository(clock: fakeClock);
+        final engine = SessionFlowEngine(repository: repo);
+        final bloc = FocusModeBloc(sessionFlowEngine: engine);
+        repo.seedWorkoutDay(buildTimeSupersetDay());
+
+        late String benchId;
+        late String plankId;
+        late String sessionId;
+        repo.startSession(workoutDayId: 'wd-tss').then((session) {
+          sessionId = session.id;
+          benchId = session.sessionExercises
+              .firstWhere((e) => e.plannedExerciseIdInSnapshot == 'ex-bench')
+              .id;
+          plankId = session.sessionExercises
+              .firstWhere((e) => e.plannedExerciseIdInSnapshot == 'ex-plank')
+              .id;
+        });
+        async.flushMicrotasks();
+
+        bloc.add(
+          FocusModeOpened(
+            sessionId: sessionId,
+            anchorSessionExerciseId: benchId,
+          ),
+        );
+        async.flushMicrotasks();
+        expect(bloc.state, isA<FocusModeReady>());
+
+        // Start a countdown on the plank panel and let it tick once.
+        bloc.add(FocusModeStopwatchStarted(plankId));
+        async.flushMicrotasks();
+        bloc.add(const FocusModeStopwatchTicked());
+        async.flushMicrotasks();
+        final running = bloc.state as FocusModeReady;
+        expect(running.stopwatch.isRunning, isTrue);
+        expect(running.activeStopwatchExerciseId, plankId);
+        expect(async.periodicTimerCount, 1);
+
+        // Log a set on the OTHER (bench) panel.
+        bloc.add(FocusModeSetCompleted(benchId));
+        async.flushMicrotasks();
+
+        final after = bloc.state as FocusModeReady;
+        expect(after.stopwatch.isRunning, isFalse);
+        expect(after.activeStopwatchExerciseId, isNull);
+        // The orphaned countdown ticker must be cancelled: ticker runs iff the
+        // emitted stopwatch is running.
+        expect(async.periodicTimerCount, 0);
+
+        bloc.close();
+        async.flushMicrotasks();
+      });
+    });
+
+    test(
+      'a failed undo keeps the undo affordance and surfaces the error',
+      () async {
+        final repo = _ThrowingDeleteRepo(clock: fakeClock);
+        final engine = SessionFlowEngine(repository: repo);
+        final bloc = FocusModeBloc(sessionFlowEngine: engine);
+        addTearDown(bloc.close);
+        repo.seedWorkoutDay(buildDay(benchSets: 2, plannedRestSeconds: null));
+        final session = await repo.startSession(workoutDayId: 'wd-1');
+        final anchor = session.sessionExercises.first.id;
+
+        bloc.add(
+          FocusModeOpened(
+            sessionId: session.id,
+            anchorSessionExerciseId: anchor,
+          ),
+        );
+        await waitFor<FocusModeReady>(bloc, (st) => st is FocusModeReady);
+
+        bloc.add(FocusModeSetCompleted(anchor));
+        await waitFor<FocusModeReady>(
+          bloc,
+          (st) => st is FocusModeReady && st.undoable != null,
+        );
+
+        bloc.add(const FocusModeUndoRequested());
+        final after = await waitFor<FocusModeReady>(
+          bloc,
+          (st) =>
+              st is FocusModeReady &&
+              !st.mutationInFlight &&
+              st.lastTransientError != null,
+        );
+        expect(after.undoable, isNotNull);
+        expect(after.lastTransientError, isNotNull);
+      },
+    );
   });
 }

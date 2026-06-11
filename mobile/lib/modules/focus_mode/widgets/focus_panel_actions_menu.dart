@@ -5,7 +5,6 @@ import 'package:zamaj/core/app_theme.dart';
 import 'package:zamaj/modules/focus_mode/bloc/bloc.dart';
 import 'package:zamaj/modules/focus_mode/models/focus_mode_view_model.dart';
 import 'package:zamaj/modules/focus_mode/widgets/focus_video_button.dart';
-import 'package:zamaj/modules/workout_overview/widgets/replace_exercise_dialog.dart';
 
 class FocusPanelActionsMenu extends StatelessWidget {
   const FocusPanelActionsMenu({
@@ -33,8 +32,6 @@ class FocusPanelActionsMenu extends StatelessWidget {
       icon: Icon(Icons.more_vert, color: colors.onSurface),
       onSelected: (action) {
         switch (action) {
-          case _PanelMenuAction.replace:
-            _handleReplace(context);
           case _PanelMenuAction.skip:
             _handleSkip(context);
           case _PanelMenuAction.markDone:
@@ -44,15 +41,6 @@ class FocusPanelActionsMenu extends StatelessWidget {
         }
       },
       itemBuilder: (context) => [
-        const PopupMenuItem(
-          value: _PanelMenuAction.replace,
-          child: ListTile(
-            leading: Icon(Icons.swap_horiz),
-            title: Text('Replace exercise'),
-            contentPadding: EdgeInsets.zero,
-            dense: true,
-          ),
-        ),
         if (canMarkDone)
           const PopupMenuItem(
             value: _PanelMenuAction.markDone,
@@ -86,34 +74,6 @@ class FocusPanelActionsMenu extends StatelessWidget {
     );
   }
 
-  Future<void> _handleReplace(BuildContext context) async {
-    final bloc = context.read<FocusModeBloc>();
-    final defaults = resolveReplaceExerciseDefaults(
-      sessionExerciseId: panel.sessionExerciseId,
-      session: state.sessionState.session,
-    );
-    if (defaults == null) return;
-    final result = await presentReplaceFlow(
-      context: context,
-      plannedExerciseName: panel.plannedExerciseName,
-      defaultMeasurementType: panel.effectiveMeasurementType,
-      defaultPlannedValues: defaults.plannedValues,
-      defaultSetCount: defaults.setCount,
-    );
-    if (result == null) return;
-    bloc.add(
-      FocusModeExerciseReplaced(
-        sessionExerciseId: panel.sessionExerciseId,
-        substituteName: result.name,
-        substituteMeasurementType: result.measurementType,
-        substitutePlannedValues: result.plannedValues,
-        substituteSetCount: result.setCount,
-        substituteMetadata: result.metadata,
-        substituteLibraryExerciseId: result.libraryExerciseId,
-      ),
-    );
-  }
-
   Future<void> _handleSkip(BuildContext context) async {
     final bloc = context.read<FocusModeBloc>();
     final confirmed = await AppConfirmDialog.show(
@@ -144,4 +104,4 @@ class FocusPanelActionsMenu extends StatelessWidget {
   }
 }
 
-enum _PanelMenuAction { replace, skip, markDone, openVideo }
+enum _PanelMenuAction { skip, markDone, openVideo }

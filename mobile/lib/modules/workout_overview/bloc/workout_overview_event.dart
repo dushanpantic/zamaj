@@ -90,37 +90,6 @@ final class WorkoutOverviewExerciseMarkedDone extends WorkoutOverviewEvent {
   List<Object?> get props => [sessionExerciseId];
 }
 
-final class WorkoutOverviewExerciseReplaced extends WorkoutOverviewEvent {
-  const WorkoutOverviewExerciseReplaced({
-    required this.sessionExerciseId,
-    required this.substituteName,
-    required this.substituteMeasurementType,
-    required this.substitutePlannedValues,
-    required this.substituteSetCount,
-    this.substituteMetadata,
-    this.substituteLibraryExerciseId,
-  });
-
-  final String sessionExerciseId;
-  final String substituteName;
-  final MeasurementType substituteMeasurementType;
-  final PlannedSetValues substitutePlannedValues;
-  final int substituteSetCount;
-  final ExerciseMetadata? substituteMetadata;
-  final String? substituteLibraryExerciseId;
-
-  @override
-  List<Object?> get props => [
-    sessionExerciseId,
-    substituteName,
-    substituteMeasurementType,
-    substitutePlannedValues,
-    substituteSetCount,
-    substituteMetadata,
-    substituteLibraryExerciseId,
-  ];
-}
-
 /// Resolves a drag-and-drop interaction in the assembled view-model space
 /// into a [DropIntent] and dispatches the matching engine mutation.
 final class WorkoutOverviewDropResolved extends WorkoutOverviewEvent {

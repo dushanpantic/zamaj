@@ -43,7 +43,8 @@ class SetRow extends StatefulWidget {
     required this.viewModel,
     required this.sessionExerciseId,
     required this.measurementType,
-    required this.canMutate,
+    required this.canLog,
+    required this.canEditExecuted,
     required this.onLogSet,
     required this.onEditSet,
     this.highlightLoggable = false,
@@ -52,7 +53,14 @@ class SetRow extends StatefulWidget {
   final SetRowViewModel viewModel;
   final String sessionExerciseId;
   final MeasurementType measurementType;
-  final bool canMutate;
+
+  /// Whether a new set may be logged on this row (the loggable circle and the
+  /// quick-log). False once the session has ended.
+  final bool canLog;
+
+  /// Whether an already-logged set on this row may be edited. Stays true after
+  /// the session ends so completed values remain correctable.
+  final bool canEditExecuted;
   final void Function(ActualSetValues values, String? plannedSetIdInSnapshot)
   onLogSet;
   final void Function(String executedSetId, ActualSetValues values) onEditSet;
@@ -202,14 +210,14 @@ class _SetRowState extends State<SetRow> {
     final showEditor = switch (mode) {
       SetRowMode.loggable => _editorOpen,
       SetRowMode.completed ||
-      SetRowMode.trailing => widget.canMutate && _editingExisting,
+      SetRowMode.trailing => widget.canEditExecuted && _editingExisting,
       SetRowMode.future => false,
     };
-    final canTapHeader =
-        widget.canMutate &&
-        (mode == SetRowMode.loggable ||
-            mode == SetRowMode.completed ||
-            mode == SetRowMode.trailing);
+    final canTapHeader = switch (mode) {
+      SetRowMode.loggable => widget.canLog,
+      SetRowMode.completed || SetRowMode.trailing => widget.canEditExecuted,
+      SetRowMode.future => false,
+    };
     final isHighlighted =
         mode == SetRowMode.loggable && widget.highlightLoggable;
     final suggested = mode == SetRowMode.loggable ? _quickLogValues() : null;
@@ -240,7 +248,7 @@ class _SetRowState extends State<SetRow> {
             colors: colors,
             editorOpen: _editorOpen,
             suggestedActual: suggested,
-            onQuickLog: widget.canMutate ? _quickLog : null,
+            onQuickLog: widget.canLog ? _quickLog : null,
             onToggleEditor: toggleEditor,
           ),
           if (showEditor) ...[

@@ -22,7 +22,7 @@ import 'package:zamaj/modules/focus_mode/services/focus_mode_assembler.dart';
 ///     (an internal-only signal — tests can drive the same ticks by
 ///     adding `FocusModeRestTicked` / `FocusModeStopwatchTicked` directly)
 ///   - Dispatch engine mutations (completeSet / deleteExecutedSet / skip /
-///     markDone / replace) targeted at a specific panel
+///     markDone) targeted at a specific panel
 class FocusModeBloc extends Bloc<FocusModeEvent, FocusModeState> {
   FocusModeBloc({required SessionFlowEngine sessionFlowEngine})
     : _engine = sessionFlowEngine,
@@ -53,7 +53,6 @@ class FocusModeBloc extends Bloc<FocusModeEvent, FocusModeState> {
 
     on<FocusModeExerciseSkipped>(_onExerciseSkipped);
     on<FocusModeExerciseMarkedDone>(_onExerciseMarkedDone);
-    on<FocusModeExerciseReplaced>(_onExerciseReplaced);
 
     on<FocusModeRestTicked>(_onRestTicked);
     on<FocusModeRestSkipped>(_onRestSkipped);
@@ -478,10 +477,10 @@ class FocusModeBloc extends Bloc<FocusModeEvent, FocusModeState> {
     if (panel == null || !panel.isLoggable) return;
     final draft = current.draftFor(event.sessionExerciseId);
     if (draft == null) return;
-    if (current.activeStopwatchExerciseId == event.sessionExerciseId) {
-      _stopStopwatchTicker();
-      _stopStopwatchFlashTimer();
-    }
+    // A logged set means the user moved on from any running countdown —
+    // including one on another panel — so stop its ticker unconditionally; no
+    // orphaned timer may outlive the emitted (idle) stopwatch.
+    _cancelStopwatchTimers();
 
     emit(current.copyWith(mutationInFlight: true));
     try {
@@ -503,7 +502,7 @@ class FocusModeBloc extends Bloc<FocusModeEvent, FocusModeState> {
             );
       final reassembled = _assembleAfterMutation(
         next,
-        priorDrafts: current.drafts,
+        priorDrafts: _draftsAfterAwait(current.drafts),
         completedExerciseId: event.sessionExerciseId,
         undoable: undoable,
         restTimer: _restTimerFromPanel(panel),
@@ -534,6 +533,7 @@ class FocusModeBloc extends Bloc<FocusModeEvent, FocusModeState> {
     if (undoable == null) return;
     if (current is FocusModeReady && current.mutationInFlight) return;
 
+    _cancelStopwatchTimers();
     if (current is FocusModeReady) {
       emit(current.copyWith(mutationInFlight: true, undoable: () => null));
     }
@@ -545,7 +545,11 @@ class FocusModeBloc extends Bloc<FocusModeEvent, FocusModeState> {
       emit(
         _assembleAfterMutation(
           next,
-          priorDrafts: current is FocusModeReady ? current.drafts : const {},
+          priorDrafts: _draftsAfterAwait(
+            current is FocusModeReady
+                ? current.drafts
+                : const <String, ActualSetValues>{},
+          ),
           completedExerciseId: undoable.sessionExerciseId,
           undoable: null,
           restTimer: null,
@@ -554,8 +558,14 @@ class FocusModeBloc extends Bloc<FocusModeEvent, FocusModeState> {
     } on DomainError catch (e) {
       final latest = state;
       if (latest is FocusModeReady) {
+        // Restore the undo affordance so the user can retry; the set was not
+        // deleted, so undo is still available.
         emit(
-          latest.copyWith(mutationInFlight: false, lastTransientError: () => e),
+          latest.copyWith(
+            mutationInFlight: false,
+            undoable: () => undoable,
+            lastTransientError: () => e,
+          ),
         );
       }
     }
@@ -570,6 +580,7 @@ class FocusModeBloc extends Bloc<FocusModeEvent, FocusModeState> {
     final current = state;
     if (current is! FocusModeReady) return;
     if (current.mutationInFlight) return;
+    _cancelStopwatchTimers();
     emit(current.copyWith(mutationInFlight: true, undoable: () => null));
     try {
       final next = await _engine.skipExercise(
@@ -579,7 +590,7 @@ class FocusModeBloc extends Bloc<FocusModeEvent, FocusModeState> {
       emit(
         _assembleAfterMutation(
           next,
-          priorDrafts: current.drafts,
+          priorDrafts: _draftsAfterAwait(current.drafts),
           completedExerciseId: event.sessionExerciseId,
           undoable: null,
           restTimer: null,
@@ -602,6 +613,7 @@ class FocusModeBloc extends Bloc<FocusModeEvent, FocusModeState> {
     final current = state;
     if (current is! FocusModeReady) return;
     if (current.mutationInFlight) return;
+    _cancelStopwatchTimers();
     emit(current.copyWith(mutationInFlight: true, undoable: () => null));
     try {
       final next = await _engine.markExerciseDone(
@@ -611,50 +623,7 @@ class FocusModeBloc extends Bloc<FocusModeEvent, FocusModeState> {
       emit(
         _assembleAfterMutation(
           next,
-          priorDrafts: current.drafts,
-          completedExerciseId: event.sessionExerciseId,
-          undoable: null,
-          restTimer: null,
-        ),
-      );
-    } on DomainError catch (e) {
-      final latest = state;
-      if (latest is FocusModeReady) {
-        emit(
-          latest.copyWith(mutationInFlight: false, lastTransientError: () => e),
-        );
-      }
-    }
-  }
-
-  Future<void> _onExerciseReplaced(
-    FocusModeExerciseReplaced event,
-    Emitter<FocusModeState> emit,
-  ) async {
-    final current = state;
-    if (current is! FocusModeReady) return;
-    if (current.mutationInFlight) return;
-    emit(current.copyWith(mutationInFlight: true, undoable: () => null));
-    try {
-      final next = await _engine.replaceExercise(
-        sessionExerciseId: event.sessionExerciseId,
-        substituteName: event.substituteName,
-        substituteMeasurementType: event.substituteMeasurementType,
-        substitutePlannedValues: event.substitutePlannedValues,
-        substituteSetCount: event.substituteSetCount,
-        substituteMetadata: event.substituteMetadata,
-        substituteLibraryExerciseId: event.substituteLibraryExerciseId,
-      );
-      _stopRestTicker();
-      // Drop the prior draft for the replaced exercise — its measurement
-      // type may have flipped, so the seed needs to come from the engine
-      // suggestion.
-      final priorDrafts = Map<String, ActualSetValues>.of(current.drafts)
-        ..remove(event.sessionExerciseId);
-      emit(
-        _assembleAfterMutation(
-          next,
-          priorDrafts: priorDrafts,
+          priorDrafts: _draftsAfterAwait(current.drafts),
           completedExerciseId: event.sessionExerciseId,
           undoable: null,
           restTimer: null,
@@ -715,6 +684,10 @@ class FocusModeBloc extends Bloc<FocusModeEvent, FocusModeState> {
     required Map<String, ActualSetValues> priorDrafts,
     String? userPinnedPanelId,
   }) {
+    // This path always emits an idle stopwatch (a fresh group, a group switch,
+    // or a refresh whose anchor group vanished). Cancel any live ticker so it
+    // never outlives the emitted idle state.
+    _cancelStopwatchTimers();
     if (sessionState.isComplete) {
       return FocusModeWorkoutComplete(sessionState: sessionState);
     }
@@ -955,6 +928,25 @@ class FocusModeBloc extends Bloc<FocusModeEvent, FocusModeState> {
     ActualSetValues next,
   ) {
     return Map<String, ActualSetValues>.of(drafts)..[sessionExerciseId] = next;
+  }
+
+  /// Drafts to carry into a post-mutation reassembly. Re-reads [state] *after*
+  /// the engine await so a concurrent draft edit on another panel, applied
+  /// while the mutation was in flight, is not reverted; falls back to
+  /// [fallback] when state is no longer Ready (mirrors `workout_overview_bloc`).
+  Map<String, ActualSetValues> _draftsAfterAwait(
+    Map<String, ActualSetValues> fallback,
+  ) {
+    final latest = state;
+    return latest is FocusModeReady ? latest.drafts : fallback;
+  }
+
+  /// Cancels the stopwatch ticker and its finish-flash timer together. Invoked
+  /// by every path that emits a non-running stopwatch, upholding the invariant
+  /// that the ticker runs iff the emitted [StopwatchViewModel.isRunning].
+  void _cancelStopwatchTimers() {
+    _stopStopwatchTicker();
+    _stopStopwatchFlashTimer();
   }
 
   String? _newestExecutedSetId({

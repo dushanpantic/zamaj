@@ -25,7 +25,6 @@ class WorkoutOverviewLoadedBody extends StatefulWidget {
     super.key,
     required this.state,
     required this.currentSessionExerciseIds,
-    required this.onReplace,
     required this.onSkip,
     required this.onMarkDone,
     required this.onUngroup,
@@ -37,7 +36,6 @@ class WorkoutOverviewLoadedBody extends StatefulWidget {
 
   final WorkoutOverviewLoaded state;
   final Set<String> currentSessionExerciseIds;
-  final void Function(ExerciseViewModel) onReplace;
   final void Function(ExerciseViewModel) onSkip;
   final void Function(ExerciseViewModel) onMarkDone;
   final void Function(String tag) onUngroup;
@@ -152,14 +150,17 @@ class _WorkoutOverviewLoadedBodyState extends State<WorkoutOverviewLoadedBody>
     final state = widget.state;
     final bloc = context.read<WorkoutOverviewBloc>();
     final transient = state.lastTransientError;
-    // canMutate here means "session is still live". It deliberately ignores
-    // mutationInFlight: gating UI visibility on the in-flight flag made the
-    // Replace icon, kebab, and reorder gaps appear/disappear during the
-    // brief window between a tap and the engine's response, shifting layout
+    // canLog gates new logs and structural changes (reorder, skip, mark-done,
+    // group-into, notes) — i.e. "the session is still live". Editing an
+    // already-logged set is gated separately, per row, by canEditExecuted so
+    // completed values stay correctable after the session ends. canLog
+    // deliberately ignores mutationInFlight: gating UI visibility on the
+    // in-flight flag made the kebab and reorder gaps appear/disappear during
+    // the brief window between a tap and the engine's response, shifting layout
     // back-and-forth on every LOG SET. Race prevention against concurrent
-    // mutations is already handled in [WorkoutOverviewBloc._runMutation],
-    // which returns early when a mutation is already in flight.
-    final canMutate = !state.isEnded;
+    // mutations is already handled in [WorkoutOverviewBloc._runMutation], which
+    // returns early when a mutation is already in flight.
+    final canLog = state.canLog;
 
     return Stack(
       children: [
@@ -195,7 +196,7 @@ class _WorkoutOverviewLoadedBodyState extends State<WorkoutOverviewLoadedBody>
                         state.groups,
                         gapIndex,
                       ),
-                      enabled: canMutate,
+                      enabled: canLog,
                       dragSession: _dragSession,
                     );
                   }
@@ -207,13 +208,12 @@ class _WorkoutOverviewLoadedBodyState extends State<WorkoutOverviewLoadedBody>
                       state: state,
                       currentSessionExerciseIds:
                           widget.currentSessionExerciseIds,
-                      onReplace: widget.onReplace,
                       onSkip: widget.onSkip,
                       onMarkDone: widget.onMarkDone,
                       onUngroup: widget.onUngroup,
                       onGroupInto: widget.onGroupInto,
                       onOpenVideo: widget.onOpenVideo,
-                      canMutate: canMutate,
+                      canMutate: canLog,
                       autoScroller: _autoScroller,
                       dragSession: _dragSession,
                     ),
@@ -232,13 +232,13 @@ class _WorkoutOverviewLoadedBodyState extends State<WorkoutOverviewLoadedBody>
                 children: [
                   SessionNotesSection(
                     notes: state.sessionState.session.notes,
-                    canAdd: canMutate,
+                    canAdd: canLog,
                     onAddPressed: widget.onAddNote,
                   ),
                   const SizedBox(height: AppSpacing.md),
                   ExtraWorkSection(
                     extraWork: state.sessionState.session.extraWork,
-                    canAdd: canMutate,
+                    canAdd: canLog,
                     onAddPressed: widget.onAddExtraWork,
                   ),
                   const SizedBox(height: AppSpacing.xxl),

@@ -4,6 +4,7 @@ import 'package:zamaj/core/app_icon.dart';
 import 'package:zamaj/core/app_spacing.dart';
 import 'package:zamaj/core/app_theme.dart';
 import 'package:zamaj/core/app_typography.dart';
+import 'package:zamaj/core/increment_rules.dart';
 import 'package:zamaj/core/weight_formatter.dart';
 import 'package:zamaj/modules/focus_mode/models/stopwatch_view_model.dart';
 
@@ -153,6 +154,11 @@ class _FocusTimeBasedPanelState extends State<FocusTimeBasedPanel>
     // The hero counts down from the set duration; the input below stays put.
     final remainingSeconds =
         widget.durationSeconds - widget.stopwatch.elapsedSeconds;
+    // Step policy comes from the shared [IncrementRules] so the time-based
+    // panel can never drift from the rep panel or the set-row stepper:
+    // duration ±5 s, weight ±1 kg up to 10 kg and ±2.5 kg above it.
+    const durationSteps = IncrementRules.durationSteps;
+    final weightSteps = IncrementRules.weightSteps(widget.weightKg ?? 0);
 
     final hero = Text(
       _formatMmss(isCountingDown ? remainingSeconds : widget.durationSeconds),
@@ -209,7 +215,7 @@ class _FocusTimeBasedPanelState extends State<FocusTimeBasedPanel>
                 height: AppInSessionSize.stepButton,
                 child: OutlinedButton(
                   onPressed: widget.enabled && !isCountingDown
-                      ? () => widget.onDurationBump(-5)
+                      ? () => widget.onDurationBump(durationSteps[0])
                       : null,
                   style: OutlinedButton.styleFrom(
                     foregroundColor: colors.onSurfaceMuted,
@@ -218,9 +224,9 @@ class _FocusTimeBasedPanelState extends State<FocusTimeBasedPanel>
                     ),
                     textStyle: AppTypography.standard.actionLabel,
                   ),
-                  child: const FittedBox(
+                  child: FittedBox(
                     fit: BoxFit.scaleDown,
-                    child: Text('-5', maxLines: 1),
+                    child: Text(_stepLabel(durationSteps[0]), maxLines: 1),
                   ),
                 ),
               ),
@@ -248,7 +254,7 @@ class _FocusTimeBasedPanelState extends State<FocusTimeBasedPanel>
                 height: AppInSessionSize.stepButton,
                 child: OutlinedButton(
                   onPressed: widget.enabled && !isCountingDown
-                      ? () => widget.onDurationBump(5)
+                      ? () => widget.onDurationBump(durationSteps[1])
                       : null,
                   style: OutlinedButton.styleFrom(
                     padding: const EdgeInsets.symmetric(
@@ -256,9 +262,9 @@ class _FocusTimeBasedPanelState extends State<FocusTimeBasedPanel>
                     ),
                     textStyle: AppTypography.standard.actionLabel,
                   ),
-                  child: const FittedBox(
+                  child: FittedBox(
                     fit: BoxFit.scaleDown,
-                    child: Text('+5', maxLines: 1),
+                    child: Text(_stepLabel(durationSteps[1]), maxLines: 1),
                   ),
                 ),
               ),
@@ -300,7 +306,7 @@ class _FocusTimeBasedPanelState extends State<FocusTimeBasedPanel>
                   height: AppInSessionSize.stepButton,
                   child: OutlinedButton(
                     onPressed: widget.enabled
-                        ? () => widget.onWeightBump(-2.5)
+                        ? () => widget.onWeightBump(weightSteps[0])
                         : null,
                     style: OutlinedButton.styleFrom(
                       foregroundColor: colors.onSurfaceMuted,
@@ -309,9 +315,9 @@ class _FocusTimeBasedPanelState extends State<FocusTimeBasedPanel>
                       ),
                       textStyle: AppTypography.standard.actionLabel,
                     ),
-                    child: const FittedBox(
+                    child: FittedBox(
                       fit: BoxFit.scaleDown,
-                      child: Text('-2.5', maxLines: 1),
+                      child: Text(_stepLabel(weightSteps[0]), maxLines: 1),
                     ),
                   ),
                 ),
@@ -349,7 +355,7 @@ class _FocusTimeBasedPanelState extends State<FocusTimeBasedPanel>
                   height: AppInSessionSize.stepButton,
                   child: OutlinedButton(
                     onPressed: widget.enabled
-                        ? () => widget.onWeightBump(2.5)
+                        ? () => widget.onWeightBump(weightSteps[1])
                         : null,
                     style: OutlinedButton.styleFrom(
                       padding: const EdgeInsets.symmetric(
@@ -357,9 +363,9 @@ class _FocusTimeBasedPanelState extends State<FocusTimeBasedPanel>
                       ),
                       textStyle: AppTypography.standard.actionLabel,
                     ),
-                    child: const FittedBox(
+                    child: FittedBox(
                       fit: BoxFit.scaleDown,
-                      child: Text('+2.5', maxLines: 1),
+                      child: Text(_stepLabel(weightSteps[1]), maxLines: 1),
                     ),
                   ),
                 ),
@@ -381,6 +387,15 @@ class _FocusTimeBasedPanelState extends State<FocusTimeBasedPanel>
         ],
       ],
     );
+  }
+
+  /// Signed step label for a bump button, e.g. `-5`, `+1`, `+2.5`. Half-kg
+  /// steps render one decimal place; whole steps render as integers.
+  String _stepLabel(num value) {
+    final magnitude = value.abs();
+    final whole = magnitude.toInt();
+    final text = magnitude == whole ? '$whole' : magnitude.toStringAsFixed(1);
+    return value < 0 ? '-$text' : '+$text';
   }
 
   String _formatMmss(int totalSeconds) {

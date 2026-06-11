@@ -54,7 +54,6 @@ class ExerciseCard extends StatelessWidget {
     required this.onEditSet,
     required this.onSkipPressed,
     required this.onMarkDonePressed,
-    required this.onReplacePressed,
     required this.onOpenVideo,
     this.onGroupIntoPressed,
     this.onMoveUp,
@@ -74,7 +73,6 @@ class ExerciseCard extends StatelessWidget {
   final void Function(String executedSetId, ActualSetValues values) onEditSet;
   final VoidCallback onSkipPressed;
   final VoidCallback onMarkDonePressed;
-  final VoidCallback onReplacePressed;
   final void Function(String videoUrl) onOpenVideo;
 
   /// When non-null, the per-card ⋮ menu surfaces a "Group into superset…"
@@ -151,7 +149,6 @@ class ExerciseCard extends StatelessWidget {
               onTap: onToggleExpansion,
               onSkip: onSkipPressed,
               onMarkDone: onMarkDonePressed,
-              onReplace: onReplacePressed,
               onOpenVideo: onOpenVideo,
               onGroupInto: onGroupIntoPressed,
               onMoveUp: onMoveUp,
@@ -187,7 +184,6 @@ class _Header extends StatelessWidget {
     required this.onTap,
     required this.onSkip,
     required this.onMarkDone,
-    required this.onReplace,
     required this.onOpenVideo,
     required this.onGroupInto,
     required this.onMoveUp,
@@ -204,7 +200,6 @@ class _Header extends StatelessWidget {
   final VoidCallback onTap;
   final VoidCallback onSkip;
   final VoidCallback onMarkDone;
-  final VoidCallback onReplace;
   final void Function(String videoUrl) onOpenVideo;
   final VoidCallback? onGroupInto;
   final VoidCallback? onMoveUp;
@@ -315,7 +310,6 @@ class _Header extends StatelessWidget {
                 isExpanded: isExpanded,
                 onSkip: onSkip,
                 onMarkDone: onMarkDone,
-                onReplace: onReplace,
                 onOpenVideo: onOpenVideo,
                 onGroupInto: onGroupInto,
                 onMoveUp: onMoveUp,
@@ -512,7 +506,6 @@ class _Actions extends StatelessWidget {
     required this.isExpanded,
     required this.onSkip,
     required this.onMarkDone,
-    required this.onReplace,
     required this.onOpenVideo,
     required this.onGroupInto,
     required this.onMoveUp,
@@ -527,7 +520,6 @@ class _Actions extends StatelessWidget {
   final bool isExpanded;
   final VoidCallback onSkip;
   final VoidCallback onMarkDone;
-  final VoidCallback onReplace;
   final void Function(String videoUrl) onOpenVideo;
   final VoidCallback? onGroupInto;
   final VoidCallback? onMoveUp;
@@ -537,17 +529,15 @@ class _Actions extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final canGroupInto = canMutate && isUnfinished && onGroupInto != null;
-    final canReplace = canMutate && isUnfinished;
     // Tap-only reorder fallback. Shown whenever at least one direction can
     // actually move the exercise; the no-op direction at a sequence end is
     // rendered disabled so the menu layout stays stable.
     final canReorder = onMoveUp != null || onMoveDown != null;
-    // Every secondary action lives in the kebab: Move up/down / Replace /
+    // Every secondary action lives in the kebab: Move up/down /
     // Group into / Mark done / Skip / Open video. The card surface stays
     // reserved for the one direct control that matters in the gym, LOG SET.
     final hasMenu =
         canReorder ||
-        canReplace ||
         canGroupInto ||
         (videoUrl != null && videoUrl!.isNotEmpty);
     return Row(
@@ -573,8 +563,6 @@ class _Actions extends StatelessWidget {
                   onMoveUp?.call();
                 case _MenuAction.moveDown:
                   onMoveDown?.call();
-                case _MenuAction.replace:
-                  onReplace();
                 case _MenuAction.groupInto:
                   onGroupInto?.call();
                 case _MenuAction.skip:
@@ -607,14 +595,6 @@ class _Actions extends StatelessWidget {
                   ),
                 ),
               ],
-              if (canReplace)
-                const PopupMenuItem(
-                  value: _MenuAction.replace,
-                  child: AppMenuRow(
-                    icon: Icons.swap_horiz,
-                    label: 'Replace exercise',
-                  ),
-                ),
               if (canGroupInto)
                 const PopupMenuItem(
                   value: _MenuAction.groupInto,
@@ -653,15 +633,7 @@ class _Actions extends StatelessWidget {
   }
 }
 
-enum _MenuAction {
-  moveUp,
-  moveDown,
-  replace,
-  groupInto,
-  skip,
-  markDone,
-  openVideo,
-}
+enum _MenuAction { moveUp, moveDown, groupInto, skip, markDone, openVideo }
 
 class _ExpandedBody extends StatelessWidget {
   const _ExpandedBody({
@@ -729,7 +701,12 @@ class _ExpandedBody extends StatelessWidget {
             viewModel: row,
             sessionExerciseId: viewModel.sessionExercise.id,
             measurementType: viewModel.effectiveMeasurementType,
-            canMutate: canMutate && _exerciseAllowsMutation(state),
+            // Logging a new set needs a live session (canMutate) AND an
+            // exercise state that still accepts logs. Editing an already-logged
+            // set only needs the latter, so completed sets stay correctable
+            // after the session ends.
+            canLog: canMutate && _exerciseAllowsMutation(state),
+            canEditExecuted: _exerciseAllowsMutation(state),
             highlightLoggable: isLastTouched,
             onLogSet: onLogSet,
             onEditSet: onEditSet,

@@ -24,7 +24,6 @@ class SupersetCard extends StatelessWidget {
     required this.onEditSet,
     required this.onSkipPressed,
     required this.onMarkDonePressed,
-    required this.onReplacePressed,
     required this.onOpenVideo,
     this.currentSessionExerciseIds = const <String>{},
     this.lastTouchedSessionExerciseId,
@@ -49,7 +48,6 @@ class SupersetCard extends StatelessWidget {
   final void Function(String executedSetId, ActualSetValues values) onEditSet;
   final void Function(String sessionExerciseId) onSkipPressed;
   final void Function(String sessionExerciseId) onMarkDonePressed;
-  final void Function(String sessionExerciseId) onReplacePressed;
   final void Function(String videoUrl) onOpenVideo;
 
   /// Members that should render the CURRENT chip + accent border. Includes
@@ -165,7 +163,6 @@ class SupersetCard extends StatelessWidget {
                     onEditSet: onEditSet,
                     onSkipPressed: () => onSkipPressed(memberId),
                     onMarkDonePressed: () => onMarkDonePressed(memberId),
-                    onReplacePressed: () => onReplacePressed(memberId),
                     onOpenVideo: onOpenVideo,
                     onMoveUp: move?.up,
                     onMoveDown: move?.down,

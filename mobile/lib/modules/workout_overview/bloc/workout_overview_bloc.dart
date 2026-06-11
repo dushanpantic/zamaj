@@ -21,7 +21,6 @@ class WorkoutOverviewBloc
     on<WorkoutOverviewSetEdited>(_onSetEdited);
     on<WorkoutOverviewExerciseSkipped>(_onExerciseSkipped);
     on<WorkoutOverviewExerciseMarkedDone>(_onExerciseMarkedDone);
-    on<WorkoutOverviewExerciseReplaced>(_onExerciseReplaced);
     on<WorkoutOverviewDropResolved>(_onDropResolved);
     on<WorkoutOverviewSupersetUngrouped>(_onSupersetUngrouped);
     on<WorkoutOverviewSessionNoteAdded>(_onSessionNoteAdded);
@@ -192,22 +191,6 @@ class WorkoutOverviewBloc
   ) => _runMutation(
     emit,
     () => _engine.markExerciseDone(sessionExerciseId: event.sessionExerciseId),
-  );
-
-  Future<void> _onExerciseReplaced(
-    WorkoutOverviewExerciseReplaced event,
-    Emitter<WorkoutOverviewState> emit,
-  ) => _runMutation(
-    emit,
-    () => _engine.replaceExercise(
-      sessionExerciseId: event.sessionExerciseId,
-      substituteName: event.substituteName,
-      substituteMeasurementType: event.substituteMeasurementType,
-      substitutePlannedValues: event.substitutePlannedValues,
-      substituteSetCount: event.substituteSetCount,
-      substituteMetadata: event.substituteMetadata,
-      substituteLibraryExerciseId: event.substituteLibraryExerciseId,
-    ),
   );
 
   Future<void> _onDropResolved(
