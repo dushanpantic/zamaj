@@ -72,10 +72,6 @@ class _FocusBodyweightPanelState extends State<FocusBodyweightPanel> {
           focusNode: _repsFocus,
           label: 'reps',
           enabled: widget.enabled,
-          onSubmitted: (text) {
-            final parsed = int.tryParse(text.trim());
-            if (parsed != null) widget.onRepsCommitted(parsed);
-          },
         ),
         const SizedBox(height: AppSpacing.md),
         FocusBumpRow(

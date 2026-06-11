@@ -487,9 +487,9 @@ parallelization). No blockers; warnings and observations below.
   - [x] Step 2.1: Add `IncrementRules.roundHalfKg` and route call sites through it
 - [x] Slice 3: Remove dead code & superset border token (17, 21-border)
   - [x] Step 3.1: Delete `isDropTarget`, `MoveTargets.hasAny`; tokenize superset border
-- [ ] Slice 4: Focus panel widget consolidation (17-color, 19a, 19b, 26, 21-iconSize)
-  - [ ] Step 4.1: Extract shared mm:ss formatter and big-numeric field
-  - [ ] Step 4.2: De-duplicate the numeric commit and tokenize the icon size
+- [x] Slice 4: Focus panel widget consolidation (17-color, 19a, 19b, 26, 21-iconSize)
+  - [x] Step 4.1: Extract shared mm:ss formatter and big-numeric field
+  - [x] Step 4.2: De-duplicate the numeric commit and tokenize the icon size
 - [ ] Slice 5: Drag-registration mixin + stale comment (20, 15-draggable)
   - [ ] Step 5.1: Extract the `_registered`/`_setRegistered` mixin and fix the comment
 - [ ] Slice 8: Superset grouping unification + planned-summary dedup (11, 19c)
@@ -510,16 +510,16 @@ parallelization). No blockers; warnings and observations below.
 
 - [ ] (15) Stale drag-to-ungroup comments corrected in `drop_resolver` + `draggable_exercise`
 - [x] (16) `UndoableSet` doc describes the persistent row, not a SnackBar
-- [ ] (17) `FocusModeColors`, `MoveTargets.hasAny`, dead `isDropTarget` removed
+- [x] (17) `FocusModeColors`, `MoveTargets.hasAny`, dead `isDropTarget` removed
 - [ ] (18) Open `SetRow` editor no longer collapses on a stray tap
-- [ ] (19a) One shared mm:ss formatter
-- [ ] (19b) One shared big-numeric field + bump row
+- [x] (19a) One shared mm:ss formatter
+- [x] (19b) One shared big-numeric field + bump row
 - [ ] (19c) Focus assembler uses `PlannedSummaryFormatter`
 - [ ] (19d) One `IncrementRules.roundHalfKg` at every call site
 - [ ] (20) One shared drag-registration mixin
-- [ ] (21) `focus_video_button` AppIconSize; `superset_card` AppStroke border
+- [x] (21) `focus_video_button` AppIconSize; `superset_card` AppStroke border
 - [ ] (22) Shared services in `building_blocks/`, imported via barrels
 - [ ] (23) `SessionElapsedLabel` reads the injected `Clock`
 - [ ] (25) Stopwatch start gated on mutation/loggable
-- [ ] (26) Single numeric commit per edit
+- [x] (26) Single numeric commit per edit
 - [ ] (11) One shared contiguity-based superset grouping helper

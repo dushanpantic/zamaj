@@ -117,10 +117,6 @@ class _FocusRepBasedPanelState extends State<FocusRepBasedPanel> {
                 label: 'kg',
                 allowDecimal: true,
                 enabled: widget.enabled,
-                onSubmitted: (text) {
-                  final parsed = double.tryParse(text.trim());
-                  if (parsed != null) widget.onWeightCommitted(parsed);
-                },
               ),
             ),
             const SizedBox(width: AppSpacing.lg),
@@ -138,10 +134,6 @@ class _FocusRepBasedPanelState extends State<FocusRepBasedPanel> {
                 label: 'reps',
                 allowDecimal: false,
                 enabled: widget.enabled,
-                onSubmitted: (text) {
-                  final parsed = int.tryParse(text.trim());
-                  if (parsed != null) widget.onRepsCommitted(parsed);
-                },
               ),
             ),
           ],

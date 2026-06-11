@@ -244,10 +244,9 @@ class _FocusTimeBasedPanelState extends State<FocusTimeBasedPanel>
                 textAlign: TextAlign.center,
                 keyboardType: TextInputType.number,
                 inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-                onSubmitted: (text) {
-                  final parsed = int.tryParse(text.trim());
-                  if (parsed != null) widget.onDurationCommitted(parsed);
-                },
+                // "done" blurs the field; _commitOnBlur is the single commit
+                // path, so it commits exactly once.
+                onSubmitted: (_) => _secondsFocus.unfocus(),
                 style: typography.numeric.copyWith(color: colors.onSurface),
               ),
             ),
@@ -339,15 +338,10 @@ class _FocusTimeBasedPanelState extends State<FocusTimeBasedPanel>
                   inputFormatters: [
                     FilteringTextInputFormatter.allow(RegExp(r'[0-9.]')),
                   ],
-                  onSubmitted: (text) {
-                    final raw = text.trim();
-                    if (raw.isEmpty) {
-                      widget.onWeightCleared();
-                      return;
-                    }
-                    final parsed = double.tryParse(raw);
-                    if (parsed != null) widget.onWeightCommitted(parsed);
-                  },
+                  // "done" blurs the field; _commitWeightOnBlur is the single
+                  // commit path (handling empty→clear and parse), so a done
+                  // press commits exactly once.
+                  onSubmitted: (_) => _weightFocus.unfocus(),
                   decoration: const InputDecoration(suffixText: 'kg'),
                   style: typography.numeric.copyWith(color: colors.onSurface),
                 ),

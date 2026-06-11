@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:zamaj/core/app_icon.dart';
 import 'package:zamaj/core/app_theme.dart';
 import 'package:zamaj/modules/program_management/services/external_link_launcher.dart';
 
@@ -31,7 +32,7 @@ class FocusVideoButton extends StatelessWidget {
     return IconButton(
       onPressed: () => openExerciseVideo(context, videoUrl),
       icon: const Icon(Icons.play_circle_outline),
-      iconSize: 28,
+      iconSize: AppIconSize.xl,
       color: colors.loggableHint,
       tooltip: 'Watch video',
     );

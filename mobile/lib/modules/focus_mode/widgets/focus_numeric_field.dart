@@ -15,7 +15,6 @@ class FocusBigNumericField extends StatelessWidget {
     required this.focusNode,
     required this.label,
     required this.enabled,
-    required this.onSubmitted,
     this.allowDecimal = false,
   });
 
@@ -23,7 +22,6 @@ class FocusBigNumericField extends StatelessWidget {
   final FocusNode focusNode;
   final String label;
   final bool enabled;
-  final ValueChanged<String> onSubmitted;
   final bool allowDecimal;
 
   @override
@@ -44,7 +42,10 @@ class FocusBigNumericField extends StatelessWidget {
               allowDecimal ? RegExp(r'[0-9.]') : RegExp(r'[0-9]'),
             ),
           ],
-          onSubmitted: onSubmitted,
+          // A keyboard "done" just blurs the field; the owning panel's focus
+          // listener is the single commit path, so done commits exactly once
+          // (no duplicate emit from a separate onSubmitted commit).
+          onSubmitted: (_) => focusNode.unfocus(),
           style: typography.numericHero.copyWith(color: colors.onSurface),
         ),
         const SizedBox(height: AppSpacing.xs),
