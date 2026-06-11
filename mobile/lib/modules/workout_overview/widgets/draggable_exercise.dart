@@ -12,6 +12,7 @@ import 'package:zamaj/modules/workout_overview/bloc/bloc.dart';
 import 'package:zamaj/modules/workout_overview/models/drop_intent.dart';
 import 'package:zamaj/modules/workout_overview/models/exercise_view_model.dart';
 import 'package:zamaj/modules/workout_overview/services/drag_session.dart';
+import 'package:zamaj/modules/workout_overview/widgets/drag_hover_registration.dart';
 import 'package:zamaj/modules/workout_overview/widgets/exercise_card.dart';
 
 /// Wraps an exercise card with a DragTarget so the whole card body accepts
@@ -37,28 +38,10 @@ class DraggableExercise extends StatefulWidget {
   State<DraggableExercise> createState() => _DraggableExerciseState();
 }
 
-class _DraggableExerciseState extends State<DraggableExercise> {
-  bool _registered = false;
-
-  void _setRegistered(bool value) {
-    if (_registered == value) return;
-    _registered = value;
-    if (value) {
-      Haptics.selectionChange();
-      widget.dragSession.hoverEntered();
-    } else {
-      widget.dragSession.hoverLeft();
-    }
-  }
-
+class _DraggableExerciseState extends State<DraggableExercise>
+    with DragHoverRegistration<DraggableExercise> {
   @override
-  void dispose() {
-    if (_registered) {
-      _registered = false;
-      widget.dragSession.hoverLeft();
-    }
-    super.dispose();
-  }
+  DragSession get dragSession => widget.dragSession;
 
   @override
   Widget build(BuildContext context) {
@@ -74,17 +57,17 @@ class _DraggableExerciseState extends State<DraggableExercise> {
         }
         if (!isUnfinished) return false;
         if (widget.exercise.sessionExercise.supersetTag != null) return false;
-        // A dragged exercise that is itself part of a superset cannot
-        // create or append to a new superset by being dropped onto a
-        // standalone card. Drag-to-ungroup remains the supported flow
-        // for leaving a superset; the within-superset reorder gaps
-        // handle in-place moves.
+        // A dragged exercise that is itself part of a superset cannot create
+        // or append to a new superset by being dropped onto a standalone card,
+        // so such a drop is rejected here. Leaving a superset is done via the
+        // header ungroup button, and the within-superset reorder gaps handle
+        // in-place moves.
         if (details.data.supersetTag != null) return false;
         return true;
       },
-      onLeave: (_) => _setRegistered(false),
+      onLeave: (_) => clearHoverRegistration(),
       onAcceptWithDetails: (details) {
-        _setRegistered(false);
+        clearHoverRegistration();
         Haptics.tap();
         context.read<WorkoutOverviewBloc>().add(
           WorkoutOverviewDropResolved(
@@ -95,14 +78,7 @@ class _DraggableExerciseState extends State<DraggableExercise> {
       },
       builder: (context, candidate, _) {
         final highlight = candidate.isNotEmpty;
-        if (highlight != _registered) {
-          // candidate count changed via builder rebuild; sync our flag in a
-          // post-frame callback so the haptic fires on the enter transition.
-          WidgetsBinding.instance.addPostFrameCallback((_) {
-            if (!mounted) return;
-            _setRegistered(highlight);
-          });
-        }
+        syncHoverRegistration(highlight);
         return AnimatedScale(
           duration: AppDuration.fast,
           scale: highlight ? 0.98 : 1,

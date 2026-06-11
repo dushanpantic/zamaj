@@ -490,8 +490,8 @@ parallelization). No blockers; warnings and observations below.
 - [x] Slice 4: Focus panel widget consolidation (17-color, 19a, 19b, 26, 21-iconSize)
   - [x] Step 4.1: Extract shared mm:ss formatter and big-numeric field
   - [x] Step 4.2: De-duplicate the numeric commit and tokenize the icon size
-- [ ] Slice 5: Drag-registration mixin + stale comment (20, 15-draggable)
-  - [ ] Step 5.1: Extract the `_registered`/`_setRegistered` mixin and fix the comment
+- [x] Slice 5: Drag-registration mixin + stale comment (20, 15-draggable)
+  - [x] Step 5.1: Extract the `_registered`/`_setRegistered` mixin and fix the comment
 - [ ] Slice 8: Superset grouping unification + planned-summary dedup (11, 19c)
   - [ ] Step 8.1: Extract a shared contiguity-based grouping helper
   - [ ] Step 8.2: Reuse `PlannedSummaryFormatter` in the focus assembler
@@ -508,7 +508,7 @@ parallelization). No blockers; warnings and observations below.
 
 ### Acceptance Criteria
 
-- [ ] (15) Stale drag-to-ungroup comments corrected in `drop_resolver` + `draggable_exercise`
+- [x] (15) Stale drag-to-ungroup comments corrected in `drop_resolver` + `draggable_exercise`
 - [x] (16) `UndoableSet` doc describes the persistent row, not a SnackBar
 - [x] (17) `FocusModeColors`, `MoveTargets.hasAny`, dead `isDropTarget` removed
 - [ ] (18) Open `SetRow` editor no longer collapses on a stray tap
@@ -516,7 +516,7 @@ parallelization). No blockers; warnings and observations below.
 - [x] (19b) One shared big-numeric field + bump row
 - [ ] (19c) Focus assembler uses `PlannedSummaryFormatter`
 - [ ] (19d) One `IncrementRules.roundHalfKg` at every call site
-- [ ] (20) One shared drag-registration mixin
+- [x] (20) One shared drag-registration mixin
 - [x] (21) `focus_video_button` AppIconSize; `superset_card` AppStroke border
 - [ ] (22) Shared services in `building_blocks/`, imported via barrels
 - [ ] (23) `SessionElapsedLabel` reads the injected `Clock`

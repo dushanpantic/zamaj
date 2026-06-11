@@ -8,6 +8,7 @@ import 'package:zamaj/core/haptics.dart';
 import 'package:zamaj/modules/workout_overview/bloc/bloc.dart';
 import 'package:zamaj/modules/workout_overview/models/drop_intent.dart';
 import 'package:zamaj/modules/workout_overview/services/drag_session.dart';
+import 'package:zamaj/modules/workout_overview/widgets/drag_hover_registration.dart';
 import 'package:zamaj/modules/workout_overview/widgets/exercise_card.dart';
 
 /// Drop zone between two members of the same superset (or at the top/bottom
@@ -36,32 +37,14 @@ class SupersetReorderGap extends StatefulWidget {
   State<SupersetReorderGap> createState() => _SupersetReorderGapState();
 }
 
-class _SupersetReorderGapState extends State<SupersetReorderGap> {
+class _SupersetReorderGapState extends State<SupersetReorderGap>
+    with DragHoverRegistration<SupersetReorderGap> {
   static const double _restHitHeight = 8;
   static const double _activeHitHeight = 24;
   static const double _hoverHitHeight = 32;
 
-  bool _registered = false;
-
-  void _setRegistered(bool value) {
-    if (_registered == value) return;
-    _registered = value;
-    if (value) {
-      Haptics.selectionChange();
-      widget.dragSession.hoverEntered();
-    } else {
-      widget.dragSession.hoverLeft();
-    }
-  }
-
   @override
-  void dispose() {
-    if (_registered) {
-      _registered = false;
-      widget.dragSession.hoverLeft();
-    }
-    super.dispose();
-  }
+  DragSession get dragSession => widget.dragSession;
 
   @override
   Widget build(BuildContext context) {
@@ -74,9 +57,9 @@ class _SupersetReorderGapState extends State<SupersetReorderGap> {
           onWillAcceptWithDetails: (details) {
             return details.data.supersetTag == widget.supersetTag;
           },
-          onLeave: (_) => _setRegistered(false),
+          onLeave: (_) => clearHoverRegistration(),
           onAcceptWithDetails: (details) {
-            _setRegistered(false);
+            clearHoverRegistration();
             Haptics.tap();
             context.read<WorkoutOverviewBloc>().add(
               WorkoutOverviewDropResolved(
@@ -87,12 +70,7 @@ class _SupersetReorderGapState extends State<SupersetReorderGap> {
           },
           builder: (context, candidate, _) {
             final hovering = candidate.isNotEmpty;
-            if (hovering != _registered) {
-              WidgetsBinding.instance.addPostFrameCallback((_) {
-                if (!mounted) return;
-                _setRegistered(hovering);
-              });
-            }
+            syncHoverRegistration(hovering);
             final height = hovering
                 ? _hoverHitHeight
                 : dragActive

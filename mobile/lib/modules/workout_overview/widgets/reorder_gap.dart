@@ -9,6 +9,7 @@ import 'package:zamaj/core/haptics.dart';
 import 'package:zamaj/modules/workout_overview/bloc/bloc.dart';
 import 'package:zamaj/modules/workout_overview/models/drop_intent.dart';
 import 'package:zamaj/modules/workout_overview/services/drag_session.dart';
+import 'package:zamaj/modules/workout_overview/widgets/drag_hover_registration.dart';
 import 'package:zamaj/modules/workout_overview/widgets/exercise_card.dart';
 
 /// Drop zone between two exercise groups. The hit area is always
@@ -34,32 +35,14 @@ class ReorderGap extends StatefulWidget {
   State<ReorderGap> createState() => _ReorderGapState();
 }
 
-class _ReorderGapState extends State<ReorderGap> {
+class _ReorderGapState extends State<ReorderGap>
+    with DragHoverRegistration<ReorderGap> {
   static const double _restHitHeight = 32;
   static const double _activeHitHeight = 40;
   static const double _hoverHitHeight = 48;
 
-  bool _registered = false;
-
-  void _setRegistered(bool value) {
-    if (_registered == value) return;
-    _registered = value;
-    if (value) {
-      Haptics.selectionChange();
-      widget.dragSession.hoverEntered();
-    } else {
-      widget.dragSession.hoverLeft();
-    }
-  }
-
   @override
-  void dispose() {
-    if (_registered) {
-      _registered = false;
-      widget.dragSession.hoverLeft();
-    }
-    super.dispose();
-  }
+  DragSession get dragSession => widget.dragSession;
 
   @override
   Widget build(BuildContext context) {
@@ -78,9 +61,9 @@ class _ReorderGapState extends State<ReorderGap> {
             if (details.data.supersetTag != null) return false;
             return true;
           },
-          onLeave: (_) => _setRegistered(false),
+          onLeave: (_) => clearHoverRegistration(),
           onAcceptWithDetails: (details) {
-            _setRegistered(false);
+            clearHoverRegistration();
             Haptics.tap();
             context.read<WorkoutOverviewBloc>().add(
               WorkoutOverviewDropResolved(
@@ -91,12 +74,7 @@ class _ReorderGapState extends State<ReorderGap> {
           },
           builder: (context, candidate, _) {
             final hovering = candidate.isNotEmpty && widget.enabled;
-            if (hovering != _registered) {
-              WidgetsBinding.instance.addPostFrameCallback((_) {
-                if (!mounted) return;
-                _setRegistered(hovering);
-              });
-            }
+            syncHoverRegistration(hovering);
             final height = hovering
                 ? _hoverHitHeight
                 : dragActive
