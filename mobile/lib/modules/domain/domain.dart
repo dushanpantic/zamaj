@@ -37,6 +37,7 @@ export 'services/active_session_policy.dart';
 export 'services/canonical_library_seeder.dart';
 export 'services/canonical_seed_catalog.dart';
 export 'services/effective_exercises.dart';
+export 'services/exercise_outcome.dart';
 export 'services/exercise_state_transitions.dart';
 export 'services/link_suggester.dart';
 export 'services/log_target.dart';
