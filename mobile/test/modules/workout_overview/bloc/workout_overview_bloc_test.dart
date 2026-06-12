@@ -35,7 +35,9 @@ Exercise _exercise(String id, {int sets = 1}) => Exercise(
   schemaVersion: 1,
 );
 
-WorkoutDay _validDay() => WorkoutDay(
+WorkoutDay _validDay() => _dayWithSets(1);
+
+WorkoutDay _dayWithSets(int sets) => WorkoutDay(
   id: 'wd-valid',
   programId: 'p',
   name: 'D',
@@ -45,7 +47,7 @@ WorkoutDay _validDay() => WorkoutDay(
       workoutDayId: 'wd-valid',
       position: 0,
       kind: const ExerciseGroupKind.single(),
-      exercises: [_exercise('planned-real')],
+      exercises: [_exercise('planned-real', sets: sets)],
       createdAt: _t,
       updatedAt: _t,
       schemaVersion: 1,
@@ -122,6 +124,66 @@ void main() {
     final bloc = WorkoutOverviewBloc(sessionFlowEngine: engine);
     return (repo: repo, bloc: bloc);
   }
+
+  group('WorkoutOverviewBloc single adaptive end/skip action', () {
+    test('ending an exercise with logged sets (skip event) keeps the sets, '
+        'lands terminal, and lets the session complete', () async {
+      final s = setup();
+      addTearDown(s.bloc.close);
+      s.repo.seedWorkoutDay(_dayWithSets(4));
+      final session = await s.repo.startSession(workoutDayId: 'wd-valid');
+      final seId = session.sessionExercises.single.id;
+
+      s.bloc.add(WorkoutOverviewOpened(session.id));
+      await s.bloc.stream.firstWhere((st) => st is WorkoutOverviewLoaded);
+
+      // Log 2 of 4 planned sets.
+      for (var logged = 1; logged <= 2; logged++) {
+        s.bloc.add(
+          WorkoutOverviewSetLogged(
+            sessionExerciseId: seId,
+            actualValues: const ActualSetValues.repBased(
+              weightKg: 100,
+              reps: 5,
+            ),
+          ),
+        );
+        await s.bloc.stream.firstWhere(
+          (st) =>
+              st is WorkoutOverviewLoaded &&
+              st.sessionState.session.sessionExercises.single.executedSets
+                      .length ==
+                  logged,
+        );
+      }
+
+      // The single adaptive action ("End exercise" with sets logged) reuses
+      // the skip event — it must keep the logged work and reach a terminal,
+      // completable state.
+      s.bloc.add(WorkoutOverviewExerciseSkipped(seId));
+      final after =
+          await s.bloc.stream.firstWhere(
+                (st) =>
+                    st is WorkoutOverviewLoaded &&
+                    st.sessionState.session.sessionExercises.single.state
+                        is SkippedState,
+              )
+              as WorkoutOverviewLoaded;
+
+      final ex = after.sessionState.session.sessionExercises.single;
+      expect(
+        ex.executedSets.length,
+        2,
+        reason: 'logged sets are kept when ending early',
+      );
+      expect(ex.state, isA<SkippedState>());
+      expect(
+        after.sessionState.isComplete,
+        isTrue,
+        reason: 'session completes without the remaining planned sets',
+      );
+    });
+  });
 
   group('WorkoutOverviewBloc corrupt-snapshot crash safety', () {
     test('a corrupt snapshot on the load path surfaces LoadFailure, '

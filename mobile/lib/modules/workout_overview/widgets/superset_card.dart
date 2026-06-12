@@ -22,8 +22,7 @@ class SupersetCard extends StatelessWidget {
     required this.onToggleExpansion,
     required this.onLogSet,
     required this.onEditSet,
-    required this.onSkipPressed,
-    required this.onMarkDonePressed,
+    required this.onEndOrSkipPressed,
     required this.onOpenVideo,
     this.currentSessionExerciseIds = const <String>{},
     this.lastTouchedSessionExerciseId,
@@ -45,8 +44,10 @@ class SupersetCard extends StatelessWidget {
   )
   onLogSet;
   final void Function(String executedSetId, ActualSetValues values) onEditSet;
-  final void Function(String sessionExerciseId) onSkipPressed;
-  final void Function(String sessionExerciseId) onMarkDonePressed;
+
+  /// The single adaptive terminal action (Skip exercise / End exercise) for a
+  /// member, keyed by its session-exercise id.
+  final void Function(String sessionExerciseId) onEndOrSkipPressed;
   final void Function(String videoUrl) onOpenVideo;
 
   /// Members that should render the CURRENT chip + accent border. Includes
@@ -156,8 +157,7 @@ class SupersetCard extends StatelessWidget {
                     onLogSet: (values, plannedId) =>
                         onLogSet(memberId, values, plannedId),
                     onEditSet: onEditSet,
-                    onSkipPressed: () => onSkipPressed(memberId),
-                    onMarkDonePressed: () => onMarkDonePressed(memberId),
+                    onEndOrSkipPressed: () => onEndOrSkipPressed(memberId),
                     onOpenVideo: onOpenVideo,
                     onMoveUp: move?.up,
                     onMoveDown: move?.down,

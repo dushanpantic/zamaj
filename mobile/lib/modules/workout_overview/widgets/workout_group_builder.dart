@@ -26,8 +26,7 @@ class WorkoutGroupBuilder extends StatelessWidget {
     required this.group,
     required this.state,
     required this.currentSessionExerciseIds,
-    required this.onSkip,
-    required this.onMarkDone,
+    required this.onEndOrSkip,
     required this.onUngroup,
     required this.onGroupInto,
     required this.onOpenVideo,
@@ -39,8 +38,9 @@ class WorkoutGroupBuilder extends StatelessWidget {
   final SupersetGroupViewModel group;
   final WorkoutOverviewLoaded state;
   final Set<String> currentSessionExerciseIds;
-  final void Function(ExerciseViewModel) onSkip;
-  final void Function(ExerciseViewModel) onMarkDone;
+
+  /// The single adaptive terminal action (Skip exercise / End exercise).
+  final void Function(ExerciseViewModel) onEndOrSkip;
   final void Function(String tag) onUngroup;
   final void Function(
     ExerciseViewModel,
@@ -171,8 +171,7 @@ class WorkoutGroupBuilder extends StatelessWidget {
                 actualValues: values,
               ),
             ),
-        onSkipPressed: () => onSkip(exercise),
-        onMarkDonePressed: () => onMarkDone(exercise),
+        onEndOrSkipPressed: () => onEndOrSkip(exercise),
         onOpenVideo: onOpenVideo,
         onGroupIntoPressed: (candidates.isEmpty && eligibleGroups.isEmpty)
             ? null
@@ -335,10 +334,8 @@ class WorkoutGroupBuilder extends StatelessWidget {
               actualValues: values,
             ),
           ),
-      onSkipPressed: (id) =>
-          onSkip(exercises.firstWhere((e) => e.sessionExercise.id == id)),
-      onMarkDonePressed: (id) =>
-          onMarkDone(exercises.firstWhere((e) => e.sessionExercise.id == id)),
+      onEndOrSkipPressed: (id) =>
+          onEndOrSkip(exercises.firstWhere((e) => e.sessionExercise.id == id)),
       onOpenVideo: onOpenVideo,
       memberDragHandleBuilder: memberDragHandle,
       memberMoveBuilder: memberMove,

@@ -52,8 +52,7 @@ class ExerciseCard extends StatelessWidget {
     required this.onToggleExpansion,
     required this.onLogSet,
     required this.onEditSet,
-    required this.onSkipPressed,
-    required this.onMarkDonePressed,
+    required this.onEndOrSkipPressed,
     required this.onOpenVideo,
     this.onGroupIntoPressed,
     this.onMoveUp,
@@ -70,8 +69,12 @@ class ExerciseCard extends StatelessWidget {
   final void Function(ActualSetValues values, String? plannedSetIdInSnapshot)
   onLogSet;
   final void Function(String executedSetId, ActualSetValues values) onEditSet;
-  final VoidCallback onSkipPressed;
-  final VoidCallback onMarkDonePressed;
+
+  /// The single adaptive terminal action. Offered only while the exercise is
+  /// unfinished; the menu label adapts to whether any sets are logged ("Skip
+  /// exercise" with none, "End exercise" with some). Both fire the same
+  /// terminal mutation — read surfaces derive skipped-vs-partial from counts.
+  final VoidCallback onEndOrSkipPressed;
   final void Function(String videoUrl) onOpenVideo;
 
   /// When non-null, the per-card ⋮ menu surfaces a "Group into superset…"
@@ -137,11 +140,10 @@ class ExerciseCard extends StatelessWidget {
               viewModel: viewModel,
               isExpanded: isExpanded,
               canMutate: canMutate,
-              canMarkDone: state is UnfinishedState && hasExecutedSet,
+              hasExecutedSet: hasExecutedSet,
               dragHandle: state is UnfinishedState ? dragHandle : null,
               onTap: onToggleExpansion,
-              onSkip: onSkipPressed,
-              onMarkDone: onMarkDonePressed,
+              onEndOrSkip: onEndOrSkipPressed,
               onOpenVideo: onOpenVideo,
               onGroupInto: onGroupIntoPressed,
               onMoveUp: onMoveUp,
@@ -172,11 +174,10 @@ class _Header extends StatelessWidget {
     required this.viewModel,
     required this.isExpanded,
     required this.canMutate,
-    required this.canMarkDone,
+    required this.hasExecutedSet,
     required this.dragHandle,
     required this.onTap,
-    required this.onSkip,
-    required this.onMarkDone,
+    required this.onEndOrSkip,
     required this.onOpenVideo,
     required this.onGroupInto,
     required this.onMoveUp,
@@ -188,11 +189,10 @@ class _Header extends StatelessWidget {
   final ExerciseViewModel viewModel;
   final bool isExpanded;
   final bool canMutate;
-  final bool canMarkDone;
+  final bool hasExecutedSet;
   final Widget? dragHandle;
   final VoidCallback onTap;
-  final VoidCallback onSkip;
-  final VoidCallback onMarkDone;
+  final VoidCallback onEndOrSkip;
   final void Function(String videoUrl) onOpenVideo;
   final VoidCallback? onGroupInto;
   final VoidCallback? onMoveUp;
@@ -214,6 +214,15 @@ class _Header extends StatelessWidget {
     final totalPlanned = viewModel.setRows
         .where((r) => r.plannedValues != null)
         .length;
+    // The terminal-state badge/accent is derived from the logged-set record,
+    // not the stored discriminator: an exercise ended early lands on `skipped`
+    // but reads as the honest "n/m sets" partial, never as "Skipped" or a
+    // completion check.
+    final outcome = ExerciseOutcomes.of(
+      state: state,
+      executedSetCount: completedCount,
+      plannedSetCount: totalPlanned,
+    );
     final videoUrl = switch (state) {
       ReplacedState(:final substitute) => substitute.metadata?.videoUrl,
       _ => viewModel.plannedMetadata.videoUrl,
@@ -236,7 +245,9 @@ class _Header extends StatelessWidget {
             children: [
               AnimatedSwitcher(
                 duration: resolveDuration(context, AppDuration.base),
-                child: dragHandle ?? _LeadingStateTile(state: state),
+                child:
+                    dragHandle ??
+                    _LeadingStateTile(state: state, outcome: outcome),
               ),
               // Breathing room between the (now tinted) leading slot and the
               // title. Outside the handle/placeholder branch so the title's
@@ -290,6 +301,7 @@ class _Header extends StatelessWidget {
                 isWarmup:
                     viewModel.plannedGroupRole == ExerciseGroupRole.warmup,
                 state: state,
+                outcome: outcome,
                 completedCount: completedCount,
                 totalPlanned: totalPlanned,
                 typography: typography,
@@ -298,11 +310,10 @@ class _Header extends StatelessWidget {
               _Actions(
                 isUnfinished: isUnfinished,
                 canMutate: canMutate,
-                canMarkDone: canMutate && canMarkDone,
+                hasExecutedSet: hasExecutedSet,
                 videoUrl: videoUrl,
                 isExpanded: isExpanded,
-                onSkip: onSkip,
-                onMarkDone: onMarkDone,
+                onEndOrSkip: onEndOrSkip,
                 onOpenVideo: onOpenVideo,
                 onGroupInto: onGroupInto,
                 onMoveUp: onMoveUp,
@@ -325,28 +336,51 @@ class _Header extends StatelessWidget {
 /// Finished states get their semantic color as a tint fill + glyph; an
 /// unfinished exercise in an ended session keeps the handle's neutral fill
 /// with a muted hollow circle — an unchecked checkbox, "never completed".
+///
+/// The terminal glyph/accent is driven by the derived [ExerciseOutcome], not
+/// the raw discriminator, so an exercise ended early (stored `skipped`, some
+/// sets logged) shows the amber partial mark rather than the grey skip glyph.
 class _LeadingStateTile extends StatelessWidget {
-  const _LeadingStateTile({required this.state});
+  const _LeadingStateTile({required this.state, required this.outcome});
 
   final ExerciseState state;
+  final ExerciseOutcome outcome;
 
   @override
   Widget build(BuildContext context) {
     final colors = Theme.of(context).appColors;
-    // Skipped / Replaced pass a null label: their trailing pill already
-    // announces the state, and a second identical announcement from the tile
-    // would just be screen-reader noise. Done and Not-completed have no other
-    // announcer, so the tile carries their label.
-    final (Color accent, IconData icon, String? label) = switch (state) {
-      CompletedState() => (colors.exerciseCompleted, Icons.check, 'Done'),
-      SkippedState() => (colors.exerciseSkipped, Icons.skip_next, null),
-      ReplacedState() => (colors.exerciseReplaced, Icons.swap_horiz, null),
-      UnfinishedState() => (
-        colors.onSurfaceMuted,
-        Icons.radio_button_unchecked,
-        'Not completed',
-      ),
-    };
+    // Partial / Skipped / Replaced pass a null label: their trailing pill
+    // already announces the state, and a second identical announcement from the
+    // tile would just be screen-reader noise. Done and Not-completed have no
+    // other announcer, so the tile carries their label.
+    //
+    // UnfinishedState is special-cased: in an ended session an untouched
+    // exercise keeps the "Not completed" hollow circle rather than deriving a
+    // skipped/partial outcome from its (zero/partial) set count.
+    final (Color accent, IconData icon, String? label) = state is UnfinishedState
+        ? (colors.onSurfaceMuted, Icons.radio_button_unchecked, 'Not completed')
+        : switch (outcome) {
+            ExerciseOutcome.completed => (
+              colors.exerciseCompleted,
+              Icons.check,
+              'Done',
+            ),
+            ExerciseOutcome.partial => (
+              colors.exercisePartial,
+              Icons.timelapse,
+              null,
+            ),
+            ExerciseOutcome.skipped => (
+              colors.exerciseSkipped,
+              Icons.skip_next,
+              null,
+            ),
+            ExerciseOutcome.replaced => (
+              colors.exerciseReplaced,
+              Icons.swap_horiz,
+              null,
+            ),
+          };
     return Container(
       width: kExerciseLeadingSlotWidth,
       height: kExerciseLeadingSlotWidth,
@@ -408,6 +442,7 @@ class _TrailingMeta extends StatelessWidget {
   const _TrailingMeta({
     required this.isWarmup,
     required this.state,
+    required this.outcome,
     required this.completedCount,
     required this.totalPlanned,
     required this.typography,
@@ -416,6 +451,7 @@ class _TrailingMeta extends StatelessWidget {
 
   final bool isWarmup;
   final ExerciseState state;
+  final ExerciseOutcome outcome;
   final int completedCount;
   final int totalPlanned;
   final AppTypography typography;
@@ -423,9 +459,15 @@ class _TrailingMeta extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Done lives in the leading state tile now; only the rarer exception
-    // states (Skipped / Replaced) keep a labelled pill on the right.
-    final showStatePill = state is SkippedState || state is ReplacedState;
+    // Done lives in the leading state tile now; only the rarer terminal
+    // outcomes (Partial / Skipped / Replaced) keep a labelled pill on the
+    // right. An unfinished exercise never shows a pill — its (derived) outcome
+    // is provisional, not a terminal verdict.
+    final showStatePill =
+        state is! UnfinishedState &&
+        (outcome == ExerciseOutcome.partial ||
+            outcome == ExerciseOutcome.skipped ||
+            outcome == ExerciseOutcome.replaced);
     final hasBadges = isWarmup || showStatePill;
     return Column(
       mainAxisSize: MainAxisSize.min,
@@ -443,7 +485,13 @@ class _TrailingMeta extends StatelessWidget {
                 ),
               if (isWarmup && showStatePill)
                 const SizedBox(width: AppSpacing.sm),
-              if (showStatePill) _StateBadge(state: state, colors: colors),
+              if (showStatePill)
+                _StateBadge(
+                  outcome: outcome,
+                  completedCount: completedCount,
+                  totalPlanned: totalPlanned,
+                  colors: colors,
+                ),
             ],
           ),
         if (hasBadges && totalPlanned > 0)
@@ -465,27 +513,39 @@ class _TrailingMeta extends StatelessWidget {
 }
 
 class _StateBadge extends StatelessWidget {
-  const _StateBadge({required this.state, required this.colors});
+  const _StateBadge({
+    required this.outcome,
+    required this.completedCount,
+    required this.totalPlanned,
+    required this.colors,
+  });
 
-  final ExerciseState state;
+  final ExerciseOutcome outcome;
+  final int completedCount;
+  final int totalPlanned;
   final AppColors colors;
 
   @override
   Widget build(BuildContext context) {
-    // Only the exception states render here: Done is signalled by the leading
-    // [_LeadingStateTile], and the active exercise carries no badge — the
-    // card's 2dp primary border is the "current" signal on its own.
-    return switch (state) {
-      CompletedState() => const SizedBox.shrink(),
-      SkippedState() => StatusBadge.pill(
+    // Only the terminal exception outcomes render here: Done is signalled by the
+    // leading [_LeadingStateTile], and the active exercise carries no badge —
+    // the card's 2dp primary border is the "current" signal on its own. An
+    // ended-early exercise shows its honest "n/m sets" partial pill, not
+    // "Skipped".
+    return switch (outcome) {
+      ExerciseOutcome.completed => const SizedBox.shrink(),
+      ExerciseOutcome.partial => StatusBadge.pill(
+        label: '$completedCount/$totalPlanned sets',
+        color: colors.exercisePartial,
+      ),
+      ExerciseOutcome.skipped => StatusBadge.pill(
         label: 'Skipped',
         color: colors.exerciseSkipped,
       ),
-      ReplacedState() => StatusBadge.pill(
+      ExerciseOutcome.replaced => StatusBadge.pill(
         label: 'Replaced',
         color: colors.exerciseReplaced,
       ),
-      UnfinishedState() => const SizedBox.shrink(),
     };
   }
 }
@@ -494,11 +554,10 @@ class _Actions extends StatelessWidget {
   const _Actions({
     required this.isUnfinished,
     required this.canMutate,
-    required this.canMarkDone,
+    required this.hasExecutedSet,
     required this.videoUrl,
     required this.isExpanded,
-    required this.onSkip,
-    required this.onMarkDone,
+    required this.onEndOrSkip,
     required this.onOpenVideo,
     required this.onGroupInto,
     required this.onMoveUp,
@@ -508,11 +567,10 @@ class _Actions extends StatelessWidget {
 
   final bool isUnfinished;
   final bool canMutate;
-  final bool canMarkDone;
+  final bool hasExecutedSet;
   final String? videoUrl;
   final bool isExpanded;
-  final VoidCallback onSkip;
-  final VoidCallback onMarkDone;
+  final VoidCallback onEndOrSkip;
   final void Function(String videoUrl) onOpenVideo;
   final VoidCallback? onGroupInto;
   final VoidCallback? onMoveUp;
@@ -526,12 +584,17 @@ class _Actions extends StatelessWidget {
     // actually move the exercise; the no-op direction at a sequence end is
     // rendered disabled so the menu layout stays stable.
     final canReorder = onMoveUp != null || onMoveDown != null;
-    // Every secondary action lives in the kebab: Move up/down /
-    // Group into / Mark done / Skip / Open video. The card surface stays
-    // reserved for the one direct control that matters in the gym, LOG SET.
+    // The single adaptive terminal action is offered only while the exercise is
+    // still unfinished; terminal exercises (ended, skipped, auto-completed,
+    // replaced) keep only their non-terminal menu items (e.g. Open video).
+    final canEndOrSkip = canMutate && isUnfinished;
+    // Every secondary action lives in the kebab: Move up/down / Group into /
+    // End or Skip / Open video. The card surface stays reserved for the one
+    // direct control that matters in the gym, LOG SET.
     final hasMenu =
         canReorder ||
         canGroupInto ||
+        canEndOrSkip ||
         (videoUrl != null && videoUrl!.isNotEmpty);
     return Row(
       mainAxisSize: MainAxisSize.min,
@@ -558,10 +621,8 @@ class _Actions extends StatelessWidget {
                   onMoveDown?.call();
                 case _MenuAction.groupInto:
                   onGroupInto?.call();
-                case _MenuAction.skip:
-                  onSkip();
-                case _MenuAction.markDone:
-                  onMarkDone();
+                case _MenuAction.endOrSkip:
+                  onEndOrSkip();
                 case _MenuAction.openVideo:
                   final url = videoUrl;
                   if (url != null && url.isNotEmpty) onOpenVideo(url);
@@ -596,18 +657,13 @@ class _Actions extends StatelessWidget {
                     label: 'Group into superset…',
                   ),
                 ),
-              if (canMarkDone)
-                const PopupMenuItem(
-                  value: _MenuAction.markDone,
+              if (canEndOrSkip)
+                PopupMenuItem(
+                  value: _MenuAction.endOrSkip,
                   child: AppMenuRow(
-                    icon: Icons.check_circle_outline,
-                    label: 'Mark done',
+                    icon: hasExecutedSet ? Icons.flag_outlined : Icons.skip_next,
+                    label: hasExecutedSet ? 'End exercise' : 'Skip exercise',
                   ),
-                ),
-              if (canMutate && isUnfinished)
-                const PopupMenuItem(
-                  value: _MenuAction.skip,
-                  child: AppMenuRow(icon: Icons.skip_next, label: 'Skip'),
                 ),
               if (videoUrl != null && videoUrl!.isNotEmpty)
                 const PopupMenuItem(
@@ -626,7 +682,7 @@ class _Actions extends StatelessWidget {
   }
 }
 
-enum _MenuAction { moveUp, moveDown, groupInto, skip, markDone, openVideo }
+enum _MenuAction { moveUp, moveDown, groupInto, endOrSkip, openVideo }
 
 class _ExpandedBody extends StatelessWidget {
   const _ExpandedBody({

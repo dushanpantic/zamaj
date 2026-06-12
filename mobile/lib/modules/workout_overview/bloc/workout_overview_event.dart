@@ -72,17 +72,14 @@ final class WorkoutOverviewSetEdited extends WorkoutOverviewEvent {
   List<Object?> get props => [executedSetId, actualValues];
 }
 
+/// The single terminal action for a live exercise. Despite the name it now
+/// covers both user intents — "Skip exercise" (no sets logged) and "End
+/// exercise" (some sets logged) — because both record the exercise as terminal
+/// with whatever sets it already has. The name is kept to avoid churn; read
+/// surfaces derive the honest outcome (skipped vs partial) from the set counts
+/// via `ExerciseOutcomes.of`.
 final class WorkoutOverviewExerciseSkipped extends WorkoutOverviewEvent {
   const WorkoutOverviewExerciseSkipped(this.sessionExerciseId);
-
-  final String sessionExerciseId;
-
-  @override
-  List<Object?> get props => [sessionExerciseId];
-}
-
-final class WorkoutOverviewExerciseMarkedDone extends WorkoutOverviewEvent {
-  const WorkoutOverviewExerciseMarkedDone(this.sessionExerciseId);
 
   final String sessionExerciseId;
 

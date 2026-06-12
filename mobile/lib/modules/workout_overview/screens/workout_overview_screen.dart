@@ -41,35 +41,33 @@ class _WorkoutOverviewScreenState extends State<WorkoutOverviewScreen> {
     }
   }
 
-  Future<void> _handleSkip(ExerciseViewModel viewModel) async {
+  /// The single terminal action per live exercise. Its copy adapts to whether
+  /// any sets are logged: with none it reads as a destructive "Skip exercise";
+  /// with some it reads as "End exercise" and spells out the consequence with
+  /// counts. Both confirm paths fire the same [WorkoutOverviewExerciseSkipped]
+  /// event — read surfaces derive the honest outcome (skipped vs partial) from
+  /// the set counts.
+  Future<void> _handleEndOrSkip(ExerciseViewModel viewModel) async {
+    final loggedCount = viewModel.sessionExercise.executedSets.length;
+    final plannedCount = viewModel.setRows
+        .where((r) => r.plannedValues != null)
+        .length;
+    final hasSets = loggedCount > 0;
+    final name = viewModel.plannedExerciseName;
     final confirmed = await AppConfirmDialog.show(
       context: context,
-      title: 'Skip exercise?',
-      body:
-          'Marks "${viewModel.plannedExerciseName}" not done and moves on. '
-          'This session only.',
-      confirmLabel: 'Skip',
-      isDestructive: true,
+      title: hasSets ? 'End exercise?' : 'Skip exercise?',
+      body: hasSets
+          ? 'You\'ve logged $loggedCount of $plannedCount sets for "$name". '
+                'You won\'t be able to log the remaining sets — logged values '
+                'stay editable.'
+          : 'Marks "$name" skipped and moves on. This session only.',
+      confirmLabel: hasSets ? 'End exercise' : 'Skip',
+      isDestructive: !hasSets,
     );
     if (!mounted || confirmed != true) return;
     context.read<WorkoutOverviewBloc>().add(
       WorkoutOverviewExerciseSkipped(viewModel.sessionExercise.id),
-    );
-  }
-
-  Future<void> _handleMarkDone(ExerciseViewModel viewModel) async {
-    final confirmed = await AppConfirmDialog.show(
-      context: context,
-      title: 'Mark done?',
-      body:
-          'Locks "${viewModel.plannedExerciseName}" with the sets you\'ve '
-          'logged so far. You can still edit them.',
-      confirmLabel: 'Mark done',
-      isDestructive: false,
-    );
-    if (!mounted || confirmed != true) return;
-    context.read<WorkoutOverviewBloc>().add(
-      WorkoutOverviewExerciseMarkedDone(viewModel.sessionExercise.id),
     );
   }
 
@@ -261,8 +259,7 @@ class _WorkoutOverviewScreenState extends State<WorkoutOverviewScreen> {
       WorkoutOverviewLoaded() => WorkoutOverviewLoadedBody(
         state: state,
         currentSessionExerciseIds: focus?.currentIds ?? const <String>{},
-        onSkip: _handleSkip,
-        onMarkDone: _handleMarkDone,
+        onEndOrSkip: _handleEndOrSkip,
         onUngroup: _handleUngroup,
         onGroupInto: _handleGroupInto,
         onOpenVideo: _openVideo,

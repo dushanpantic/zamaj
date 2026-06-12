@@ -25,8 +25,7 @@ class WorkoutOverviewLoadedBody extends StatefulWidget {
     super.key,
     required this.state,
     required this.currentSessionExerciseIds,
-    required this.onSkip,
-    required this.onMarkDone,
+    required this.onEndOrSkip,
     required this.onUngroup,
     required this.onGroupInto,
     required this.onOpenVideo,
@@ -36,8 +35,9 @@ class WorkoutOverviewLoadedBody extends StatefulWidget {
 
   final WorkoutOverviewLoaded state;
   final Set<String> currentSessionExerciseIds;
-  final void Function(ExerciseViewModel) onSkip;
-  final void Function(ExerciseViewModel) onMarkDone;
+
+  /// The single adaptive terminal action (Skip exercise / End exercise).
+  final void Function(ExerciseViewModel) onEndOrSkip;
   final void Function(String tag) onUngroup;
   final void Function(
     ExerciseViewModel,
@@ -208,8 +208,7 @@ class _WorkoutOverviewLoadedBodyState extends State<WorkoutOverviewLoadedBody>
                       state: state,
                       currentSessionExerciseIds:
                           widget.currentSessionExerciseIds,
-                      onSkip: widget.onSkip,
-                      onMarkDone: widget.onMarkDone,
+                      onEndOrSkip: widget.onEndOrSkip,
                       onUngroup: widget.onUngroup,
                       onGroupInto: widget.onGroupInto,
                       onOpenVideo: widget.onOpenVideo,

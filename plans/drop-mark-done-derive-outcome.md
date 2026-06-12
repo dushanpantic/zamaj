@@ -383,7 +383,7 @@ This section is the machine-parseable recovery handle. `/build` updates checkbox
 
 #### Wave 2
 - [ ] Slice 2: Single adaptive end/skip action in live session
-  - [ ] Step 2.1: Workout overview — adaptive action, derived live pill
+  - [x] Step 2.1: Workout overview — adaptive action, derived live pill
   - [ ] Step 2.2: Focus mode — adaptive action
 - [ ] Slice 3: Derived display in review, history, and export
   - [ ] Step 3.1: Derived completed-exercise count for history

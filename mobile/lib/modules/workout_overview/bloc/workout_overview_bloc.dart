@@ -20,7 +20,6 @@ class WorkoutOverviewBloc
     on<WorkoutOverviewSetLogged>(_onSetLogged);
     on<WorkoutOverviewSetEdited>(_onSetEdited);
     on<WorkoutOverviewExerciseSkipped>(_onExerciseSkipped);
-    on<WorkoutOverviewExerciseMarkedDone>(_onExerciseMarkedDone);
     on<WorkoutOverviewDropResolved>(_onDropResolved);
     on<WorkoutOverviewSupersetUngrouped>(_onSupersetUngrouped);
     on<WorkoutOverviewSessionNoteAdded>(_onSessionNoteAdded);
@@ -192,14 +191,6 @@ class WorkoutOverviewBloc
   ) => _runMutation(
     emit,
     () => _engine.skipExercise(sessionExerciseId: event.sessionExerciseId),
-  );
-
-  Future<void> _onExerciseMarkedDone(
-    WorkoutOverviewExerciseMarkedDone event,
-    Emitter<WorkoutOverviewState> emit,
-  ) => _runMutation(
-    emit,
-    () => _engine.markExerciseDone(sessionExerciseId: event.sessionExerciseId),
   );
 
   Future<void> _onDropResolved(
