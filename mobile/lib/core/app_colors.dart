@@ -23,6 +23,7 @@ class AppColors {
     required this.planned,
     required this.actual,
     required this.exerciseCompleted,
+    required this.exercisePartial,
     required this.exerciseSkipped,
     required this.exerciseReplaced,
     required this.warmup,
@@ -59,6 +60,13 @@ class AppColors {
   final Color actual;
 
   final Color exerciseCompleted;
+
+  /// Accent for an exercise ended with some-but-not-all planned sets logged
+  /// (the derived "partial" outcome, shown as an "n/m sets" pill). An amber
+  /// family deliberately reads as "in between" — distinct from
+  /// [exerciseCompleted] (green), [exerciseSkipped] (grey), and [restTimer].
+  final Color exercisePartial;
+
   final Color exerciseSkipped;
   final Color exerciseReplaced;
 
@@ -101,6 +109,7 @@ class AppColors {
     planned: Color(0xFFA39E96),
     actual: Color(0xFFF4EFE8),
     exerciseCompleted: Color(0xFF22C55E),
+    exercisePartial: Color(0xFFF59E0B),
     exerciseSkipped: Color(0xFF78716C),
     exerciseReplaced: Color(0xFFC084FC),
     warmup: Color(0xFF38BDF8),
@@ -130,6 +139,7 @@ class AppColors {
     planned: Color(0xFF76706A),
     actual: Color(0xFF1C1A17),
     exerciseCompleted: Color(0xFF16A34A),
+    exercisePartial: Color(0xFFB45309),
     exerciseSkipped: Color(0xFFA8A29E),
     exerciseReplaced: Color(0xFF9333EA),
     warmup: Color(0xFF0284C7),

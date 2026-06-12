@@ -377,9 +377,9 @@ This section is the machine-parseable recovery handle. `/build` updates checkbox
 ### Slices (grouped by wave)
 
 #### Wave 1
-- [ ] Slice 1: Outcome derivation foundation
+- [x] Slice 1: Outcome derivation foundation
   - [x] Step 1.1: `ExerciseOutcome` domain derivation
-  - [ ] Step 1.2: `exercisePartial` semantic color
+  - [x] Step 1.2: `exercisePartial` semantic color
 
 #### Wave 2
 - [ ] Slice 2: Single adaptive end/skip action in live session
