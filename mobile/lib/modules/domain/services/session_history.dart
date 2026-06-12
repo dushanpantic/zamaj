@@ -1,6 +1,7 @@
-import 'package:zamaj/modules/domain/models/exercise_state.dart';
 import 'package:zamaj/modules/domain/models/session.dart';
 import 'package:zamaj/modules/domain/models/training_week.dart';
+import 'package:zamaj/modules/domain/services/effective_exercises.dart';
+import 'package:zamaj/modules/domain/services/exercise_outcome.dart';
 
 /// Pure derivations over a flat list of [Session]s for the session-history
 /// surfaces (the day-picker summary and the recent-sessions list).
@@ -19,11 +20,23 @@ abstract final class SessionHistory {
     });
   }
 
-  /// Number of exercises in [session] that reached the completed state.
+  /// Number of exercises in [session] whose logged sets meet the planned quota,
+  /// derived via [ExerciseOutcomes.of] rather than the stored discriminator.
+  ///
+  /// A legacy marked-done-early row (stored `completed` but short of its quota)
+  /// and a skipped-with-sets row both read as partial and are excluded; a
+  /// replaced exercise reads as replaced and is excluded, matching prior
+  /// behavior.
   static int completedExerciseCount(Session session) {
+    final effective = EffectiveExercises.of(session);
     var count = 0;
     for (final ex in session.sessionExercises) {
-      if (ex.state is CompletedState) count++;
+      final outcome = ExerciseOutcomes.of(
+        state: ex.state,
+        executedSetCount: ex.executedSets.length,
+        plannedSetCount: effective.forSessionExercise(ex).plannedSetCount,
+      );
+      if (outcome == ExerciseOutcome.completed) count++;
     }
     return count;
   }

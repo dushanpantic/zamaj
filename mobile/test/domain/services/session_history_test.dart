@@ -39,25 +39,51 @@ void main() {
   });
 
   group('SessionHistory.completedExerciseCount', () {
-    test('counts only exercises in the completed state', () {
-      final session = _sessionWithStates(
+    test('counts only exercises whose logged sets meet the planned quota', () {
+      // 4 of 6 met their planned sets; 1 was ended at 2 of 4; 1 was skipped
+      // with no sets — derived count is 4, regardless of stored discriminators.
+      final session = _sessionWithExerciseSpecs(
         id: 's1',
         endedAt: DateTime.utc(2026, 5, 12, 18),
-        states: const [
-          ExerciseState.completed(),
-          ExerciseState.completed(),
-          ExerciseState.skipped(),
-          ExerciseState.unfinished(),
+        specs: const [
+          (state: ExerciseState.completed(), executed: 4, planned: 4),
+          (state: ExerciseState.completed(), executed: 4, planned: 4),
+          (state: ExerciseState.completed(), executed: 4, planned: 4),
+          (state: ExerciseState.completed(), executed: 4, planned: 4),
+          (state: ExerciseState.skipped(), executed: 2, planned: 4),
+          (state: ExerciseState.skipped(), executed: 0, planned: 4),
         ],
       );
-      expect(SessionHistory.completedExerciseCount(session), 2);
+      expect(SessionHistory.completedExerciseCount(session), 4);
     });
 
-    test('is zero when no exercises are completed', () {
-      final session = _sessionWithStates(
+    test('legacy marked-done-early and skipped-with-sets rows do not count', () {
+      final session = _sessionWithExerciseSpecs(
         id: 's1',
         endedAt: DateTime.utc(2026, 5, 12, 18),
-        states: const [ExerciseState.skipped(), ExerciseState.unfinished()],
+        specs: const [
+          // Quota met → counted.
+          (state: ExerciseState.completed(), executed: 4, planned: 4),
+          // Legacy "mark done" shape: stored completed but only 2/4 logged →
+          // derives to partial, not counted.
+          (state: ExerciseState.completed(), executed: 2, planned: 4),
+          // Skipped but with sets → partial, not counted.
+          (state: ExerciseState.skipped(), executed: 2, planned: 4),
+          // Zero-set skip → skipped, not counted.
+          (state: ExerciseState.skipped(), executed: 0, planned: 4),
+        ],
+      );
+      expect(SessionHistory.completedExerciseCount(session), 1);
+    });
+
+    test('is zero when no exercise meets its planned quota', () {
+      final session = _sessionWithExerciseSpecs(
+        id: 's1',
+        endedAt: DateTime.utc(2026, 5, 12, 18),
+        specs: const [
+          (state: ExerciseState.skipped(), executed: 0, planned: 4),
+          (state: ExerciseState.unfinished(), executed: 1, planned: 4),
+        ],
       );
       expect(SessionHistory.completedExerciseCount(session), 0);
     });
@@ -116,6 +142,120 @@ void main() {
 
 Session _session({required String id, required DateTime? endedAt}) {
   return _sessionWithStates(id: id, endedAt: endedAt, states: const []);
+}
+
+/// Builds an ended session whose snapshot carries a real planned exercise per
+/// spec (rep-based, [_ExSpec.planned] sets) and whose session exercise logs
+/// [_ExSpec.executed] sets — so derived-outcome counting has the planned counts
+/// it needs.
+typedef _ExSpec = ({ExerciseState state, int executed, int planned});
+
+Session _sessionWithExerciseSpecs({
+  required String id,
+  required DateTime? endedAt,
+  required List<_ExSpec> specs,
+}) {
+  final t = DateTime.utc(2026, 5, 12);
+  const mt = MeasurementType.repBased();
+  final plannedValues = PlannedSetValues.repBased(
+    weightKg: 100,
+    repTarget: RepTarget.fixed(reps: 5),
+  );
+  const actualValues = ActualSetValues.repBased(weightKg: 100, reps: 5);
+
+  final groups = <ExerciseGroup>[
+    for (var i = 0; i < specs.length; i++)
+      ExerciseGroup(
+        id: 'g-$id-$i',
+        workoutDayId: 'wd-$id',
+        position: i,
+        kind: const ExerciseGroupKind.single(),
+        exercises: [
+          Exercise(
+            id: 'ex-$i',
+            exerciseGroupId: 'g-$id-$i',
+            position: 0,
+            name: 'Ex $i',
+            measurementType: mt,
+            metadata: ExerciseMetadata.empty,
+            sets: [
+              for (var j = 0; j < specs[i].planned; j++)
+                WorkoutSet(
+                  id: 'ws-$id-$i-$j',
+                  exerciseId: 'ex-$i',
+                  position: j,
+                  measurementType: mt,
+                  plannedValues: plannedValues,
+                  createdAt: t,
+                  updatedAt: t,
+                  schemaVersion: 1,
+                ),
+            ],
+            createdAt: t,
+            updatedAt: t,
+            schemaVersion: 1,
+          ),
+        ],
+        createdAt: t,
+        updatedAt: t,
+        schemaVersion: 1,
+      ),
+  ];
+
+  final workoutDay = WorkoutDay(
+    id: 'wd-$id',
+    programId: 'p-1',
+    name: 'Upper A',
+    exerciseGroups: groups,
+    createdAt: t,
+    updatedAt: t,
+    schemaVersion: 1,
+  );
+
+  return Session(
+    id: id,
+    workoutDayId: workoutDay.id,
+    snapshot: SessionSnapshot.capture(
+      workoutDay: workoutDay,
+      capturedAt: t,
+      schemaVersion: 1,
+    ),
+    sessionExercises: [
+      for (var i = 0; i < specs.length; i++)
+        SessionExercise(
+          id: 'sx-$id-$i',
+          sessionId: id,
+          position: i,
+          plannedExerciseIdInSnapshot: 'ex-$i',
+          state: specs[i].state,
+          executedSets: [
+            for (var j = 0; j < specs[i].executed; j++)
+              ExecutedSet(
+                id: 'es-$id-$i-$j',
+                sessionExerciseId: 'sx-$id-$i',
+                position: j,
+                measurementType: mt,
+                actualValues: actualValues,
+                plannedSetIdInSnapshot: null,
+                completedAt: t,
+                createdAt: t,
+                updatedAt: t,
+                schemaVersion: 1,
+              ),
+          ],
+          createdAt: t,
+          updatedAt: t,
+          schemaVersion: 1,
+        ),
+    ],
+    notes: const [],
+    extraWork: const [],
+    startedAt: t,
+    endedAt: endedAt,
+    createdAt: t,
+    updatedAt: t,
+    schemaVersion: 1,
+  );
 }
 
 Session _sessionWithStates({
