@@ -159,7 +159,14 @@ class DriftSessionRepository implements SessionRepository {
     final row =
         await (_db.select(_db.sessions)
               ..where((t) => t.endedAtMs.isNull())
-              ..orderBy([(t) => OrderingTerm.desc(t.startedAtMs)])
+              // Mirrors domain ActiveSessionPolicy: most recently worked-on
+              // wins (updatedAt desc), then startedAt desc, then id desc as a
+              // deterministic tie-break.
+              ..orderBy([
+                (t) => OrderingTerm.desc(t.updatedAtMs),
+                (t) => OrderingTerm.desc(t.startedAtMs),
+                (t) => OrderingTerm.desc(t.id),
+              ])
               ..limit(1))
             .getSingleOrNull();
     if (row == null) return null;

@@ -623,9 +623,9 @@ This section is the machine-parseable recovery handle. `/build` updates these ch
   - [x] Step 6.3: Move LinkSuggester to domain (cluster model moved too — see note)
 
 #### Wave 3
-- [ ] Slice 3: Active-session policy
-  - [ ] Step 3.1: ActiveSessionPolicy.select
-  - [ ] Step 3.2: Summarizer + repo adopt the policy
+- [x] Slice 3: Active-session policy
+  - [x] Step 3.1: ActiveSessionPolicy.select
+  - [x] Step 3.2: Summarizer + repo adopt the policy
 
 #### Wave 4
 - [ ] Slice 4: TrainingWeek cluster
@@ -641,7 +641,7 @@ This section is the machine-parseable recovery handle. `/build` updates these ch
 - [x] AC2b: That NotFoundError is handled as a load-failure state on every consuming surface — no crash (pinned by bloc unit tests)
 - [x] AC3: Auto-complete/revert is a pure domain function; repo delegates in-transaction
 - [x] AC4: Superset ordering + session seeding are pure domain functions
-- [ ] AC5: One ActiveSessionPolicy governs summarizer and repo
+- [x] AC5: One ActiveSessionPolicy governs summarizer and repo
 - [ ] AC6: TrainingWeek + SessionEditability + SessionHistory in domain; cross-feature import removed
 - [x] AC7: ProgramRules at the write path; program-name limit 100 everywhere; RepTarget.parse in domain
 - [x] AC8: LinkSuggester in domain; substitute-summary duplication gone; forMemberCount states the rule once

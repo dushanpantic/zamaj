@@ -10,16 +10,10 @@ abstract final class SessionHistorySummarizer {
     DateTime? lastCompleted;
     var totalCompletedCount = 0;
     var thisWeekCount = 0;
-    Session? bestActive;
 
     for (final s in sessions) {
       final endedAt = s.endedAt;
-      if (endedAt == null) {
-        if (bestActive == null || _beats(s, bestActive)) {
-          bestActive = s;
-        }
-        continue;
-      }
+      if (endedAt == null) continue;
       totalCompletedCount += 1;
       if (lastCompleted == null || endedAt.isAfter(lastCompleted)) {
         lastCompleted = endedAt;
@@ -33,15 +27,7 @@ abstract final class SessionHistorySummarizer {
       lastCompleted: lastCompleted,
       totalCompletedCount: totalCompletedCount,
       thisWeekCount: thisWeekCount,
-      activeSessionId: bestActive?.id,
+      activeSessionId: ActiveSessionPolicy.select(sessions)?.id,
     );
-  }
-
-  static bool _beats(Session candidate, Session current) {
-    final byUpdated = candidate.updatedAt.compareTo(current.updatedAt);
-    if (byUpdated != 0) return byUpdated > 0;
-    final byStarted = candidate.startedAt.compareTo(current.startedAt);
-    if (byStarted != 0) return byStarted > 0;
-    return candidate.id.compareTo(current.id) > 0;
   }
 }
