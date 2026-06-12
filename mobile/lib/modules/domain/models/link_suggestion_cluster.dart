@@ -1,5 +1,5 @@
 import 'package:equatable/equatable.dart';
-import 'package:zamaj/modules/domain/domain.dart';
+import 'package:zamaj/modules/domain/models/measurement_type.dart';
 
 /// A reference back to a single template [Exercise] inside a [ProgramAggregate],
 /// used to show the user where a cluster's occurrences come from.

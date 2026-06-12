@@ -15,4 +15,12 @@ sealed class ExerciseGroupKind with _$ExerciseGroupKind {
         json,
         'ExerciseGroupKind',
       );
+
+  /// The kind implied by a group's member [count]: exactly one member is a
+  /// single group, two or more form a superset. This is the one place the
+  /// group-kind rule is stated — derivation ([ExerciseGroupDraft.kind]) and
+  /// validation (ExerciseGroupInvariants) both go through it.
+  static ExerciseGroupKind forMemberCount(int count) => count == 1
+      ? const ExerciseGroupKind.single()
+      : const ExerciseGroupKind.superset();
 }

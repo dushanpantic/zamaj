@@ -1,6 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:zamaj/modules/domain/domain.dart';
-import 'package:zamaj/modules/exercise_library/services/link_suggester.dart';
 
 void main() {
   group('LinkSuggester', () {

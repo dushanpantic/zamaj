@@ -162,9 +162,8 @@ abstract class ExerciseGroupDraft with _$ExerciseGroupDraft {
   factory ExerciseGroupDraft.fromJson(Map<String, dynamic> json) =>
       _$ExerciseGroupDraftFromJson(json);
 
-  ExerciseGroupKind kind() => exercises.length == 1
-      ? const ExerciseGroupKind.single()
-      : const ExerciseGroupKind.superset();
+  ExerciseGroupKind kind() =>
+      ExerciseGroupKind.forMemberCount(exercises.length);
 }
 
 @freezed

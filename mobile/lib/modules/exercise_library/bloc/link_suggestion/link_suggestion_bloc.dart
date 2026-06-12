@@ -1,7 +1,5 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:zamaj/modules/domain/domain.dart';
-import 'package:zamaj/modules/exercise_library/models/link_suggestion_cluster.dart';
-import 'package:zamaj/modules/exercise_library/services/link_suggester.dart';
 
 import 'link_suggestion_event.dart';
 import 'link_suggestion_state.dart';

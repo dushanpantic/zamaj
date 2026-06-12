@@ -1,6 +1,5 @@
 import 'package:equatable/equatable.dart';
 import 'package:zamaj/modules/domain/domain.dart';
-import 'package:zamaj/modules/exercise_library/models/link_suggestion_cluster.dart';
 
 sealed class LinkSuggestionState extends Equatable {
   const LinkSuggestionState();

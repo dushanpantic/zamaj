@@ -1,6 +1,4 @@
 import 'package:zamaj/core/planned_summary_formatter.dart';
-import 'package:zamaj/core/rep_target_formatter.dart';
-import 'package:zamaj/core/weight_formatter.dart';
 import 'package:zamaj/modules/domain/domain.dart';
 import 'package:zamaj/modules/focus_mode/models/focus_mode_group_view_model.dart';
 import 'package:zamaj/modules/focus_mode/models/focus_mode_view_model.dart';
@@ -328,7 +326,10 @@ abstract final class FocusModeAssembler {
       ReplacedState(:final substitute) => (
         currentSetIndex < substitute.setCount ? substitute.plannedValues : null,
         null,
-        _summarizeSubstitute(substitute),
+        PlannedSummaryFormatter.summarizeValues(
+          substitute.plannedValues,
+          substitute.setCount,
+        ),
       ),
       _ => () {
         final sortedPlanned = List<WorkoutSet>.of(planned.sets)
@@ -362,19 +363,5 @@ abstract final class FocusModeAssembler {
       isLoggable: isLoggable,
       plannedGroupRole: plannedGroupRole,
     );
-  }
-
-  static String _summarizeSubstitute(SubstituteExercise substitute) {
-    return switch (substitute.plannedValues) {
-      PlannedRepBased(:final weightKg, :final repTarget) =>
-        '${WeightFormatter.formatKg(weightKg)}kg ${substitute.setCount}×${RepTargetFormatter.format(repTarget)}',
-      PlannedTimeBased(:final durationSeconds, :final weightKg) =>
-        weightKg == null
-            ? '${substitute.setCount}×${durationSeconds}s'
-            : '${WeightFormatter.formatKg(weightKg)}kg '
-                  '${substitute.setCount}×${durationSeconds}s',
-      PlannedBodyweight(:final repTarget) =>
-        '${substitute.setCount}×${RepTargetFormatter.format(repTarget)}',
-    };
   }
 }

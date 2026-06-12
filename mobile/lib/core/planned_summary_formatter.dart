@@ -17,16 +17,25 @@ abstract final class PlannedSummaryFormatter {
 
     if (!allSame) return '${sets.length} sets';
 
-    return switch (first) {
+    return summarizeValues(first, sets.length);
+  }
+
+  /// Formats [setCount] identical planned [values] into the same one-line
+  /// summary [summarize] produces for an equivalent uniform exercise. Used for
+  /// in-session substitutes, whose every set shares one planned value.
+  static String summarizeValues(PlannedSetValues values, int setCount) {
+    if (setCount == 0) return '0 sets';
+
+    return switch (values) {
       PlannedRepBased(:final weightKg, :final repTarget) =>
-        '${WeightFormatter.formatKg(weightKg)}kg ${sets.length}×${RepTargetFormatter.format(repTarget)}',
+        '${WeightFormatter.formatKg(weightKg)}kg $setCount×${RepTargetFormatter.format(repTarget)}',
       PlannedTimeBased(:final durationSeconds, :final weightKg) =>
         weightKg == null
-            ? '${sets.length}×${durationSeconds}s'
+            ? '$setCount×${durationSeconds}s'
             : '${WeightFormatter.formatKg(weightKg)}kg '
-                  '${sets.length}×${durationSeconds}s',
+                  '$setCount×${durationSeconds}s',
       PlannedBodyweight(:final repTarget) =>
-        '${sets.length}×${RepTargetFormatter.format(repTarget)}',
+        '$setCount×${RepTargetFormatter.format(repTarget)}',
     };
   }
 }

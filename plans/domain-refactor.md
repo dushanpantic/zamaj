@@ -610,17 +610,17 @@ This section is the machine-parseable recovery handle. `/build` updates these ch
   - [x] Step 5.4: UI delegates; unify name limit; use RepTarget.parse
 
 #### Wave 2
-- [ ] Slice 2: Transitions, ordering & seeding out of the repo
-  - [ ] Step 2.1: ExerciseStateTransitions
-  - [ ] Step 2.2: Repo completeSet/deleteExecutedSet delegate
-  - [ ] Step 2.3: SupersetOrdering
-  - [ ] Step 2.4: Repo createSuperset/addToSuperset consume ordering
-  - [ ] Step 2.5: SessionSeed.fromWorkoutDay
-  - [ ] Step 2.6: Repo startSession consumes the seed
-- [ ] Slice 6: Small moves
-  - [ ] Step 6.1: ExerciseGroupKind.forMemberCount(int)
-  - [ ] Step 6.2: PlannedSummaryFormatter overload; delete the copy
-  - [ ] Step 6.3: Move LinkSuggester to domain
+- [x] Slice 2: Transitions, ordering & seeding out of the repo
+  - [x] Step 2.1: ExerciseStateTransitions
+  - [x] Step 2.2: Repo completeSet/deleteExecutedSet delegate
+  - [x] Step 2.3: SupersetOrdering
+  - [x] Step 2.4: Repo createSuperset/addToSuperset consume ordering
+  - [x] Step 2.5: SessionSeed.fromWorkoutDay
+  - [x] Step 2.6: Repo startSession consumes the seed
+- [x] Slice 6: Small moves
+  - [x] Step 6.1: ExerciseGroupKind.forMemberCount(int)
+  - [x] Step 6.2: PlannedSummaryFormatter overload; delete the copy
+  - [x] Step 6.3: Move LinkSuggester to domain (cluster model moved too — see note)
 
 #### Wave 3
 - [ ] Slice 3: Active-session policy
@@ -639,13 +639,23 @@ This section is the machine-parseable recovery handle. `/build` updates these ch
 - [x] AC1: Effective-exercise projection unified in domain; five copies deleted
 - [x] AC2: Missing snapshot planned exercise always throws NotFoundError (pinned)
 - [x] AC2b: That NotFoundError is handled as a load-failure state on every consuming surface — no crash (pinned by bloc unit tests)
-- [ ] AC3: Auto-complete/revert is a pure domain function; repo delegates in-transaction
-- [ ] AC4: Superset ordering + session seeding are pure domain functions
+- [x] AC3: Auto-complete/revert is a pure domain function; repo delegates in-transaction
+- [x] AC4: Superset ordering + session seeding are pure domain functions
 - [ ] AC5: One ActiveSessionPolicy governs summarizer and repo
 - [ ] AC6: TrainingWeek + SessionEditability + SessionHistory in domain; cross-feature import removed
 - [x] AC7: ProgramRules at the write path; program-name limit 100 everywhere; RepTarget.parse in domain
-- [ ] AC8: LinkSuggester in domain; substitute-summary duplication gone; forMemberCount states the rule once
+- [x] AC8: LinkSuggester in domain; substitute-summary duplication gone; forMemberCount states the rule once
 - [ ] AC9: tool/ci.sh green at every step boundary; no bloc_test/widget tests; codegen via --force-jit
+
+### Build notes
+
+- **Step 6.3 scope (user-approved 2026-06-12):** `LinkSuggester.suggest()` returns
+  `LinkSuggestionCluster`, which lived in `exercise_library/models/`. Moving only the
+  service into `domain/` would have made `domain` import a feature module (a backwards
+  dependency / library import cycle). With user approval, `link_suggestion_cluster.dart`
+  (`LinkSuggestionCluster` + `ExerciseReference`) was also moved to `domain/models/` and
+  is re-exported from the `exercise_library` barrel so UI consumers keep their import
+  path. Domain stays self-contained and pure.
 
 ## Plan Review Summary
 

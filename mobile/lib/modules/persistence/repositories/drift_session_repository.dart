@@ -8,7 +8,6 @@ import 'package:zamaj/core/canonical_json.dart';
 import 'package:zamaj/core/schema_versions.dart';
 import 'package:zamaj/modules/domain/errors.dart';
 import 'package:zamaj/modules/domain/models/actual_set_values.dart';
-import 'package:zamaj/modules/domain/models/exercise_group_kind.dart';
 import 'package:zamaj/modules/domain/models/exercise_metadata.dart';
 import 'package:zamaj/modules/domain/models/exercise_state.dart' as domain;
 import 'package:zamaj/modules/domain/models/measurement_type.dart';
@@ -21,6 +20,10 @@ import 'package:zamaj/modules/domain/repositories/program_repository.dart';
 import 'package:zamaj/modules/domain/repositories/session_repository.dart';
 import 'package:zamaj/modules/domain/services/effective_exercises.dart'
     as domain;
+import 'package:zamaj/modules/domain/services/exercise_state_transitions.dart'
+    as domain;
+import 'package:zamaj/modules/domain/services/session_seed.dart' as domain;
+import 'package:zamaj/modules/domain/services/superset_ordering.dart' as domain;
 import 'package:zamaj/modules/persistence/database/app_database.dart';
 import 'package:zamaj/modules/persistence/database/datetime_utils.dart';
 import 'package:zamaj/modules/persistence/database/timestamp_oracle.dart';
@@ -75,29 +78,25 @@ class DriftSessionRepository implements SessionRepository {
             ),
           );
 
-      var position = 0;
-      for (final group in workoutDay.exerciseGroups) {
-        final supersetTag = group.kind is SupersetKind ? group.id : null;
-        for (final exercise in group.exercises) {
-          final exerciseId = _uuid.v4();
-          await _db
-              .into(_db.sessionExercises)
-              .insert(
-                SessionExercisesCompanion.insert(
-                  id: exerciseId,
-                  sessionId: sessionId,
-                  position: position * _gap,
-                  plannedExerciseIdInSnapshot: exercise.id,
-                  stateDiscriminator: 'unfinished',
-                  substitutePayloadJson: const Value(null),
-                  supersetTag: Value(supersetTag),
-                  createdAtMs: nowMs,
-                  updatedAtMs: nowMs,
-                  schemaVersion: SchemaVersions.domain,
-                ),
-              );
-          position++;
-        }
+      final seed = domain.SessionSeed.fromWorkoutDay(workoutDay);
+      for (var position = 0; position < seed.length; position++) {
+        final entry = seed[position];
+        await _db
+            .into(_db.sessionExercises)
+            .insert(
+              SessionExercisesCompanion.insert(
+                id: _uuid.v4(),
+                sessionId: sessionId,
+                position: position * _gap,
+                plannedExerciseIdInSnapshot: entry.plannedExerciseIdInSnapshot,
+                stateDiscriminator: 'unfinished',
+                substitutePayloadJson: const Value(null),
+                supersetTag: Value(entry.supersetTag),
+                createdAtMs: nowMs,
+                updatedAtMs: nowMs,
+                schemaVersion: SchemaVersions.domain,
+              ),
+            );
       }
 
       return _loadSession(sessionId);
@@ -386,7 +385,6 @@ class DriftSessionRepository implements SessionRepository {
             ),
           );
 
-      final plannedSetCount = effective.plannedSetCount;
       final completedSetCount = existingSets.length + 1;
 
       final exerciseUpdatedAt = _timestamps.nextUpdatedAt(
@@ -394,17 +392,17 @@ class DriftSessionRepository implements SessionRepository {
         createdAt: msToUtc(exerciseRow.createdAtMs),
       );
 
-      final autoComplete =
-          completedSetCount >= plannedSetCount &&
-          exerciseRow.stateDiscriminator == 'unfinished';
+      final nextState = domain.ExerciseStateTransitions.afterSetLogged(
+        effective.sessionExercise.state,
+        executedSetCount: completedSetCount,
+        plannedSetCount: effective.plannedSetCount,
+      );
 
       await (_db.update(
         _db.sessionExercises,
       )..where((t) => t.id.equals(sessionExerciseId))).write(
         SessionExercisesCompanion(
-          stateDiscriminator: autoComplete
-              ? const Value('completed')
-              : const Value.absent(),
+          stateDiscriminator: _stateWriteFor(nextState, exerciseRow),
           updatedAtMs: Value(utcToMs(exerciseUpdatedAt)),
         ),
       );
@@ -536,27 +534,24 @@ class DriftSessionRepository implements SessionRepository {
               ..where((t) => t.id.equals(remaining[i].id)))
             .write(ExecutedSetsCompanion(position: Value(i)));
       }
-      final plannedSetCount = _effectiveForRow(
-        exerciseRow,
-        sessionRow,
-      ).plannedSetCount;
+      final effective = _effectiveForRow(exerciseRow, sessionRow);
 
       final exerciseUpdatedAt = _timestamps.nextUpdatedAt(
         previousUpdatedAt: msToUtc(exerciseRow.updatedAtMs),
         createdAt: msToUtc(exerciseRow.createdAtMs),
       );
 
-      final revertToUnfinished =
-          exerciseRow.stateDiscriminator == 'completed' &&
-          remaining.length < plannedSetCount;
+      final nextState = domain.ExerciseStateTransitions.afterSetDeleted(
+        effective.sessionExercise.state,
+        executedSetCount: remaining.length,
+        plannedSetCount: effective.plannedSetCount,
+      );
 
       await (_db.update(
         _db.sessionExercises,
       )..where((t) => t.id.equals(exerciseRow.id))).write(
         SessionExercisesCompanion(
-          stateDiscriminator: revertToUnfinished
-              ? const Value('unfinished')
-              : const Value.absent(),
+          stateDiscriminator: _stateWriteFor(nextState, exerciseRow),
           updatedAtMs: Value(utcToMs(exerciseUpdatedAt)),
         ),
       );
@@ -867,15 +862,10 @@ class DriftSessionRepository implements SessionRepository {
       // affordance. Positions are permuted across the full ordering via the
       // same two-phase write reorderUnfinished uses, since SQLite has no
       // deferred UNIQUE constraints.
-      final chosen = sessionExerciseIds.toSet();
-      final orderedIds = allExercises.map((e) => e.id).toList();
-      final anchorIndex = orderedIds.indexWhere(chosen.contains);
-      final remaining = orderedIds.where((id) => !chosen.contains(id)).toList();
-      final newOrder = <String>[
-        ...remaining.take(anchorIndex),
-        ...sessionExerciseIds,
-        ...remaining.skip(anchorIndex),
-      ];
+      final newOrder = domain.SupersetOrdering.blockedOrderForCreate(
+        allIds: allExercises.map((e) => e.id).toList(),
+        chosenIds: sessionExerciseIds,
+      );
 
       final slots = allExercises.map((e) => e.position).toList()..sort();
       final movers = <({String id, int newPosition, SessionExercise row})>[];
@@ -1005,11 +995,11 @@ class DriftSessionRepository implements SessionRepository {
       final unfinished = allExercises
           .where((e) => e.stateDiscriminator == 'unfinished')
           .toList();
-      final unfinishedIds = unfinished.map((e) => e.id).toList();
-      unfinishedIds.remove(sessionExerciseId);
-      final lastMemberId = members.last.id;
-      final insertAfter = unfinishedIds.indexOf(lastMemberId);
-      unfinishedIds.insert(insertAfter + 1, sessionExerciseId);
+      final unfinishedIds = domain.SupersetOrdering.orderForAppend(
+        unfinishedIds: unfinished.map((e) => e.id).toList(),
+        memberIds: members.map((e) => e.id).toList(),
+        draggedId: sessionExerciseId,
+      );
 
       final unfinishedById = {for (final e in unfinished) e.id: e};
       final slots = unfinished.map((e) => e.position).toList()..sort();
@@ -1264,6 +1254,20 @@ class DriftSessionRepository implements SessionRepository {
     return domain.EffectiveExercises.fromWorkoutDay(
       workoutDay,
     ).forSessionExercise(sessionExercise);
+  }
+
+  /// Maps a domain transition result onto a column write. Leaves the
+  /// `stateDiscriminator` column untouched ([Value.absent]) when the next state
+  /// equals the row's current state, preserving the previous "only write on a
+  /// real transition" behaviour.
+  Value<String> _stateWriteFor(
+    domain.ExerciseState nextState,
+    SessionExercise exerciseRow,
+  ) {
+    final next = nextState.discriminator;
+    return next == exerciseRow.stateDiscriminator
+        ? const Value.absent()
+        : Value(next);
   }
 
   domain.ExerciseState _stateForRow(SessionExercise exerciseRow) {

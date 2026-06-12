@@ -116,6 +116,63 @@ void main() {
       expect(PlannedSummaryFormatter.summarize(exercise), '100kg 3×8');
     });
   });
+
+  group('PlannedSummaryFormatter.summarizeValues', () {
+    test('rep-based values match the equivalent Exercise output', () {
+      final values = PlannedSetValues.repBased(
+        weightKg: 100,
+        repTarget: RepTarget.fixed(reps: 8),
+      );
+      expect(PlannedSummaryFormatter.summarizeValues(values, 3), '100kg 3×8');
+      expect(
+        PlannedSummaryFormatter.summarizeValues(values, 3),
+        PlannedSummaryFormatter.summarize(
+          _exercise(
+            measurementType: const MeasurementType.repBased(),
+            sets: [
+              _repSet(0, weightKg: 100, reps: 8),
+              _repSet(1, weightKg: 100, reps: 8),
+              _repSet(2, weightKg: 100, reps: 8),
+            ],
+          ),
+        ),
+      );
+    });
+
+    test('time-based values without weight match the Exercise output', () {
+      const values = PlannedSetValues.timeBased(durationSeconds: 30);
+      expect(PlannedSummaryFormatter.summarizeValues(values, 4), '4×30s');
+      expect(
+        PlannedSummaryFormatter.summarizeValues(values, 4),
+        PlannedSummaryFormatter.summarize(
+          _exercise(
+            measurementType: const MeasurementType.timeBased(),
+            sets: [
+              _timeSet(0, durationSeconds: 30),
+              _timeSet(1, durationSeconds: 30),
+              _timeSet(2, durationSeconds: 30),
+              _timeSet(3, durationSeconds: 30),
+            ],
+          ),
+        ),
+      );
+    });
+
+    test('time-based values with weight keep the kg prefix', () {
+      const values = PlannedSetValues.timeBased(
+        durationSeconds: 45,
+        weightKg: 20,
+      );
+      expect(PlannedSummaryFormatter.summarizeValues(values, 2), '20kg 2×45s');
+    });
+
+    test('bodyweight values match the rep-target format', () {
+      final values = PlannedSetValues.bodyweight(
+        repTarget: RepTarget.fixed(reps: 12),
+      );
+      expect(PlannedSummaryFormatter.summarizeValues(values, 3), '3×12');
+    });
+  });
 }
 
 Exercise _exercise({

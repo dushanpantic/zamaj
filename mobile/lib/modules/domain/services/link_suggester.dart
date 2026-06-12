@@ -1,5 +1,6 @@
-import 'package:zamaj/modules/domain/domain.dart';
-import 'package:zamaj/modules/exercise_library/models/link_suggestion_cluster.dart';
+import 'package:zamaj/modules/domain/models/link_suggestion_cluster.dart';
+import 'package:zamaj/modules/domain/models/measurement_type.dart';
+import 'package:zamaj/modules/domain/models/program_aggregate.dart';
 
 /// Pure-Dart service that groups unlinked template exercises across all
 /// programs into clusters that could share a single [LibraryExercise].
