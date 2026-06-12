@@ -4,7 +4,7 @@ import 'dart:math';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:zamaj/modules/domain/models/session.dart';
-import 'package:zamaj/modules/workout_day_picker/services/current_week_window.dart';
+import 'package:zamaj/modules/domain/models/training_week.dart';
 import 'package:zamaj/modules/workout_day_picker/services/session_history_summarizer.dart';
 
 import '../../../support/generators.dart';
@@ -19,7 +19,7 @@ void main() {
       final sessions = List<Session>.generate(count, (_) => anySession(rng));
       final dayOffset = rng.nextInt(2 * 365);
       final anchor = DateTime(2025).add(Duration(days: dayOffset));
-      final window = CurrentWeekWindow.compute(anchor);
+      final window = TrainingWeek.compute(anchor);
 
       final original = SessionHistorySummarizer.summarize(sessions, window);
       final shuffled = [...sessions]..shuffle(rng);

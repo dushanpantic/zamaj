@@ -1,7 +1,6 @@
 import 'package:equatable/equatable.dart';
 import 'package:zamaj/modules/domain/domain.dart';
 import 'package:zamaj/modules/export/models/session_history_item.dart';
-import 'package:zamaj/modules/workout_day_picker/services/current_week_window.dart';
 
 sealed class RecentSessionsState extends Equatable {
   const RecentSessionsState();
@@ -69,7 +68,7 @@ final class RecentSessionsLoaded extends RecentSessionsState {
   /// w.r.t. ordering.
   final List<Session> weekSessions;
 
-  final CurrentWeekWindow window;
+  final TrainingWeek window;
   final DateTime referenceNow;
 
   bool get hasWeekSessions => weekSessions.isNotEmpty;

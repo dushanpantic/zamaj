@@ -4,7 +4,7 @@ import 'dart:math';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:zamaj/modules/domain/models/session.dart';
-import 'package:zamaj/modules/workout_day_picker/services/current_week_window.dart';
+import 'package:zamaj/modules/domain/models/training_week.dart';
 import 'package:zamaj/modules/workout_day_picker/services/session_history_summarizer.dart';
 
 import '../../../support/generators.dart';
@@ -51,7 +51,7 @@ void main() {
     'activeSessionId is the (updatedAt, startedAt, id) lex max over actives',
     () {
       final rng = Random(123);
-      final window = CurrentWeekWindow.compute(DateTime(2025, 4, 14));
+      final window = TrainingWeek.compute(DateTime(2025, 4, 14));
       final base = DateTime(2025, 1, 1);
 
       for (var i = 0; i < iterations; i++) {

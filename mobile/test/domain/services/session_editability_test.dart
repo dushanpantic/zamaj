@@ -1,26 +1,24 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:zamaj/modules/domain/domain.dart';
-import 'package:zamaj/modules/export/services/session_editability.dart';
-import 'package:zamaj/modules/workout_day_picker/services/current_week_window.dart';
 
 void main() {
   group('SessionEditability.canEditValues', () {
     final referenceNow = DateTime.utc(2026, 5, 15, 12);
-    final window = CurrentWeekWindow.compute(referenceNow);
+    final week = TrainingWeek.compute(referenceNow);
 
     test('is true for a session that ended inside the current week', () {
       final session = _session(endedAt: DateTime.utc(2026, 5, 13, 18));
-      expect(SessionEditability.canEditValues(session, window), isTrue);
+      expect(SessionEditability.canEditValues(session, week), isTrue);
     });
 
     test('is false for a session that ended in a previous week', () {
       final session = _session(endedAt: DateTime.utc(2026, 4, 20, 18));
-      expect(SessionEditability.canEditValues(session, window), isFalse);
+      expect(SessionEditability.canEditValues(session, week), isFalse);
     });
 
     test('is false for an in-progress session (null endedAt)', () {
       final session = _session(endedAt: null);
-      expect(SessionEditability.canEditValues(session, window), isFalse);
+      expect(SessionEditability.canEditValues(session, week), isFalse);
     });
   });
 }

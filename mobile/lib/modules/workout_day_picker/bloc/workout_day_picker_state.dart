@@ -1,7 +1,6 @@
 import 'package:equatable/equatable.dart';
 import 'package:zamaj/modules/domain/domain.dart';
 import 'package:zamaj/modules/workout_day_picker/models/day_view_model.dart';
-import 'package:zamaj/modules/workout_day_picker/services/current_week_window.dart';
 
 sealed class WorkoutDayPickerState extends Equatable {
   const WorkoutDayPickerState();
@@ -70,7 +69,7 @@ final class WorkoutDayPickerLoaded extends WorkoutDayPickerState {
   final Program program;
   final List<DayViewModel> dayViewModels;
   final DateTime referenceNow;
-  final CurrentWeekWindow window;
+  final TrainingWeek window;
 
   /// The single in-flight session anywhere in the app (its `endedAt` is null),
   /// or null when nothing is in progress. While this is non-null, starting a
@@ -85,7 +84,7 @@ final class WorkoutDayPickerLoaded extends WorkoutDayPickerState {
     Program? program,
     List<DayViewModel>? dayViewModels,
     DateTime? referenceNow,
-    CurrentWeekWindow? window,
+    TrainingWeek? window,
     Session? Function()? activeSession,
     String? Function()? launchInFlightWorkoutDayId,
     DomainError? Function()? lastTransientError,

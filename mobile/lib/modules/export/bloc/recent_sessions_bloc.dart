@@ -4,7 +4,6 @@ import 'package:zamaj/modules/domain/domain.dart';
 import 'package:zamaj/modules/export/bloc/recent_sessions_event.dart';
 import 'package:zamaj/modules/export/bloc/recent_sessions_state.dart';
 import 'package:zamaj/modules/export/services/session_history_assembler.dart';
-import 'package:zamaj/modules/workout_day_picker/services/current_week_window.dart';
 
 class RecentSessionsBloc
     extends Bloc<RecentSessionsEvent, RecentSessionsState> {
@@ -126,7 +125,7 @@ class RecentSessionsBloc
     }
 
     final now = _clock.now();
-    final window = CurrentWeekWindow.compute(now);
+    final window = TrainingWeek.compute(now);
     final items = SessionHistoryAssembler.assemble(
       sessions: allSessions,
       window: window,

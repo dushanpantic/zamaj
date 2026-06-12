@@ -5,8 +5,6 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:zamaj/modules/domain/domain.dart';
 import 'package:zamaj/modules/export/bloc/session_detail_event.dart';
 import 'package:zamaj/modules/export/bloc/session_detail_state.dart';
-import 'package:zamaj/modules/export/services/session_editability.dart';
-import 'package:zamaj/modules/workout_day_picker/services/current_week_window.dart';
 import 'package:zamaj/modules/workout_overview/workout_overview.dart';
 
 /// Drives the post-session review screen.
@@ -31,7 +29,7 @@ class SessionDetailBloc extends Bloc<SessionDetailEvent, SessionDetailState> {
            groups: ExerciseViewModelAssembler.assembleReadOnly(session),
            canEdit: SessionEditability.canEditValues(
              session,
-             CurrentWeekWindow.compute(clock.now()),
+             TrainingWeek.compute(clock.now()),
            ),
          ),
        ) {

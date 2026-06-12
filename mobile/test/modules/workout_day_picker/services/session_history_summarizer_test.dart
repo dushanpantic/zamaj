@@ -2,7 +2,7 @@ import 'dart:math';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:zamaj/modules/domain/models/session.dart';
-import 'package:zamaj/modules/workout_day_picker/services/current_week_window.dart';
+import 'package:zamaj/modules/domain/models/training_week.dart';
 import 'package:zamaj/modules/workout_day_picker/services/session_history_summarizer.dart';
 
 import '../../../support/generators.dart';
@@ -28,7 +28,7 @@ Session _session({
 void main() {
   group('SessionHistorySummarizer.summarize', () {
     final monday = DateTime(2025, 4, 14);
-    final window = CurrentWeekWindow(start: monday, end: DateTime(2025, 4, 21));
+    final window = TrainingWeek(start: monday, end: DateTime(2025, 4, 21));
 
     test('empty list → zero counts and null timestamps/active id', () {
       final summary = SessionHistorySummarizer.summarize([], window);

@@ -1,12 +1,11 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:zamaj/modules/domain/domain.dart';
 import 'package:zamaj/modules/export/services/session_history_assembler.dart';
-import 'package:zamaj/modules/workout_day_picker/services/current_week_window.dart';
 
 void main() {
   group('SessionHistoryAssembler.assemble', () {
     final referenceNow = DateTime.utc(2026, 5, 15, 12);
-    final window = CurrentWeekWindow.compute(referenceNow);
+    final window = TrainingWeek.compute(referenceNow);
 
     test('filters out in-progress sessions', () {
       final items = SessionHistoryAssembler.assemble(

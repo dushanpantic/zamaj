@@ -7,7 +7,6 @@ import 'package:zamaj/modules/workout_day_picker/bloc/workout_day_picker_event.d
 import 'package:zamaj/modules/workout_day_picker/bloc/workout_day_picker_state.dart';
 import 'package:zamaj/modules/workout_day_picker/models/day_history_summary.dart';
 import 'package:zamaj/modules/workout_day_picker/models/day_view_model.dart';
-import 'package:zamaj/modules/workout_day_picker/services/current_week_window.dart';
 import 'package:zamaj/modules/workout_day_picker/services/session_history_summarizer.dart';
 
 class WorkoutDayPickerBloc
@@ -310,7 +309,7 @@ class WorkoutDayPickerBloc
     }
 
     final now = _clock.now();
-    final window = CurrentWeekWindow.compute(now);
+    final window = TrainingWeek.compute(now);
 
     final tileStatuses = await Future.wait(
       workoutDays.map(
@@ -336,7 +335,7 @@ class WorkoutDayPickerBloc
 
   Future<DayTileStatus> _loadTileStatus({
     required String workoutDayId,
-    required CurrentWeekWindow window,
+    required TrainingWeek window,
   }) async {
     try {
       final sessions = await _sessionRepository.listSessionsForWorkoutDay(

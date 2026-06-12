@@ -628,11 +628,11 @@ This section is the machine-parseable recovery handle. `/build` updates these ch
   - [x] Step 3.2: Summarizer + repo adopt the policy
 
 #### Wave 4
-- [ ] Slice 4: TrainingWeek cluster
-  - [ ] Step 4.1: Move CurrentWeekWindow → domain TrainingWeek
-  - [ ] Step 4.2: Move SessionEditability to domain
-  - [ ] Step 4.3: SessionHistory domain service
-  - [ ] Step 4.4: Repoint consumers; remove cross-feature import
+- [x] Slice 4: TrainingWeek cluster
+  - [x] Step 4.1: Move CurrentWeekWindow → domain TrainingWeek
+  - [x] Step 4.2: Move SessionEditability to domain
+  - [x] Step 4.3: SessionHistory domain service
+  - [x] Step 4.4: Repoint consumers; remove cross-feature import
 
 ### Acceptance Criteria
 
@@ -642,10 +642,10 @@ This section is the machine-parseable recovery handle. `/build` updates these ch
 - [x] AC3: Auto-complete/revert is a pure domain function; repo delegates in-transaction
 - [x] AC4: Superset ordering + session seeding are pure domain functions
 - [x] AC5: One ActiveSessionPolicy governs summarizer and repo
-- [ ] AC6: TrainingWeek + SessionEditability + SessionHistory in domain; cross-feature import removed
+- [x] AC6: TrainingWeek + SessionEditability + SessionHistory in domain; cross-feature import removed
 - [x] AC7: ProgramRules at the write path; program-name limit 100 everywhere; RepTarget.parse in domain
 - [x] AC8: LinkSuggester in domain; substitute-summary duplication gone; forMemberCount states the rule once
-- [ ] AC9: tool/ci.sh green at every step boundary; no bloc_test/widget tests; codegen via --force-jit
+- [x] AC9: tool/ci.sh green at every step boundary; no bloc_test/widget tests; codegen via --force-jit
 
 ### Build notes
 
