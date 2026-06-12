@@ -651,9 +651,10 @@ void main() {
     });
   });
 
-  group('markExerciseDone', () {
+  group('single adaptive end/skip action', () {
     test(
-      'locks the exercise as completed and removes its panel from group',
+      'ending the focused exercise with logged sets keeps the sets, lands '
+      'terminal, and advances focus to the next unfinished exercise',
       () async {
         final s = setup();
         addTearDown(s.bloc.close);
@@ -674,8 +675,8 @@ void main() {
         );
         await waitFor<FocusModeReady>(s.bloc, (st) => st is FocusModeReady);
 
-        // Log 1 of 2 bench sets, then markDone — leaves bench as completed
-        // with one set logged.
+        // Log 1 of 2 bench sets, then "End exercise" — the single adaptive
+        // action fires the skip event and must keep the logged set.
         s.bloc.add(FocusModeSetCompleted(benchId));
         await waitFor<FocusModeReady>(
           s.bloc,
@@ -686,27 +687,27 @@ void main() {
                       .completedSetsCount ==
                   1,
         );
-        s.bloc.add(FocusModeExerciseMarkedDone(benchId));
+        s.bloc.add(FocusModeExerciseSkipped(benchId));
         final after = await waitFor<FocusModeReady>(
           s.bloc,
           (st) =>
               st is FocusModeReady &&
               st.groupViewModel.panels.every(
-                (p) => p.sessionExerciseId != benchId || !p.isLoggable,
+                (p) => p.sessionExerciseId != benchId,
               ),
         );
-        final benchPanel = after.groupViewModel.panels.firstWhere(
-          (p) => p.sessionExerciseId == benchId,
+        // The stored bench record is terminal but keeps its one logged set —
+        // its derived outcome is "partial", not a discarded skip.
+        final benchEx = after.sessionState.session.sessionExercises.firstWhere(
+          (e) => e.id == benchId,
         );
-        expect(benchPanel.isLoggable, isFalse);
-        expect(benchPanel.completedSetsCount, 1);
-        // Lat panel is still loggable.
-        expect(
-          after.groupViewModel.panels
-              .firstWhere((p) => p.sessionExerciseId == latId)
-              .isLoggable,
-          isTrue,
+        expect(benchEx.state, isA<SkippedState>());
+        expect(benchEx.executedSets.length, 1);
+        // Focus advances to the next unfinished exercise.
+        final latPanel = after.groupViewModel.panels.firstWhere(
+          (p) => p.sessionExerciseId == latId,
         );
+        expect(latPanel.isLoggable, isTrue);
       },
     );
   });

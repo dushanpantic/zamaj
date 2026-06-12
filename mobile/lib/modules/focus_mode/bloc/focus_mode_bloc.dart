@@ -21,8 +21,8 @@ import 'package:zamaj/modules/focus_mode/services/focus_mode_assembler.dart';
 ///   - Run the rest timer and per-set stopwatch as Timer.periodic streams
 ///     (an internal-only signal — tests can drive the same ticks by
 ///     adding `FocusModeRestTicked` / `FocusModeStopwatchTicked` directly)
-///   - Dispatch engine mutations (completeSet / deleteExecutedSet / skip /
-///     markDone) targeted at a specific panel
+///   - Dispatch engine mutations (completeSet / deleteExecutedSet / end-or-
+///     skip) targeted at a specific panel
 class FocusModeBloc extends Bloc<FocusModeEvent, FocusModeState> {
   FocusModeBloc({required SessionFlowEngine sessionFlowEngine})
     : _engine = sessionFlowEngine,
@@ -52,7 +52,6 @@ class FocusModeBloc extends Bloc<FocusModeEvent, FocusModeState> {
     on<FocusModeUndoRequested>(_onUndoRequested);
 
     on<FocusModeExerciseSkipped>(_onExerciseSkipped);
-    on<FocusModeExerciseMarkedDone>(_onExerciseMarkedDone);
 
     on<FocusModeRestTicked>(_onRestTicked);
     on<FocusModeRestSkipped>(_onRestSkipped);
@@ -596,39 +595,6 @@ class FocusModeBloc extends Bloc<FocusModeEvent, FocusModeState> {
     emit(current.copyWith(mutationInFlight: true, undoable: () => null));
     try {
       final next = await _engine.skipExercise(
-        sessionExerciseId: event.sessionExerciseId,
-      );
-      _stopRestTicker();
-      emit(
-        _assembleAfterMutation(
-          next,
-          priorDrafts: _draftsAfterAwait(current.drafts),
-          completedExerciseId: event.sessionExerciseId,
-          undoable: null,
-          restTimer: null,
-        ),
-      );
-    } on DomainError catch (e) {
-      final latest = state;
-      if (latest is FocusModeReady) {
-        emit(
-          latest.copyWith(mutationInFlight: false, lastTransientError: () => e),
-        );
-      }
-    }
-  }
-
-  Future<void> _onExerciseMarkedDone(
-    FocusModeExerciseMarkedDone event,
-    Emitter<FocusModeState> emit,
-  ) async {
-    final current = state;
-    if (current is! FocusModeReady) return;
-    if (current.mutationInFlight) return;
-    _cancelStopwatchTimers();
-    emit(current.copyWith(mutationInFlight: true, undoable: () => null));
-    try {
-      final next = await _engine.markExerciseDone(
         sessionExerciseId: event.sessionExerciseId,
       );
       _stopRestTicker();

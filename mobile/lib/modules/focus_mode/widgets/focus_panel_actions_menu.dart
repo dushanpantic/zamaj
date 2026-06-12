@@ -26,40 +26,32 @@ class FocusPanelActionsMenu extends StatelessWidget {
     final colors = Theme.of(context).appColors;
     final videoUrl = panel.displayMetadata?.videoUrl;
     final hasVideo = showVideoItem && videoUrl != null && videoUrl.isNotEmpty;
-    final canMarkDone =
-        panel.completedSetsCount > 0 && panel.isLoggable && !panel.isReplaced;
+    // The single adaptive terminal action is offered only while the exercise is
+    // still unfinished (`isLoggable && !isReplaced`); a replaced or already-
+    // terminal panel offers no terminal action, only its non-terminal items.
+    final canEndOrSkip = panel.isLoggable && !panel.isReplaced;
+    final hasSets = panel.completedSetsCount > 0;
     return PopupMenuButton<_PanelMenuAction>(
       icon: Icon(Icons.more_vert, color: colors.onSurface),
       onSelected: (action) {
         switch (action) {
-          case _PanelMenuAction.skip:
-            _handleSkip(context);
-          case _PanelMenuAction.markDone:
-            _handleMarkDone(context);
+          case _PanelMenuAction.endOrSkip:
+            _handleEndOrSkip(context);
           case _PanelMenuAction.openVideo:
             if (hasVideo) openExerciseVideo(context, videoUrl);
         }
       },
       itemBuilder: (context) => [
-        if (canMarkDone)
-          const PopupMenuItem(
-            value: _PanelMenuAction.markDone,
+        if (canEndOrSkip)
+          PopupMenuItem(
+            value: _PanelMenuAction.endOrSkip,
             child: ListTile(
-              leading: Icon(Icons.task_alt),
-              title: Text('Mark done'),
+              leading: Icon(hasSets ? Icons.flag_outlined : Icons.skip_next),
+              title: Text(hasSets ? 'End exercise' : 'Skip exercise'),
               contentPadding: EdgeInsets.zero,
               dense: true,
             ),
           ),
-        const PopupMenuItem(
-          value: _PanelMenuAction.skip,
-          child: ListTile(
-            leading: Icon(Icons.skip_next),
-            title: Text('Skip exercise'),
-            contentPadding: EdgeInsets.zero,
-            dense: true,
-          ),
-        ),
         if (hasVideo)
           const PopupMenuItem(
             value: _PanelMenuAction.openVideo,
@@ -74,34 +66,27 @@ class FocusPanelActionsMenu extends StatelessWidget {
     );
   }
 
-  Future<void> _handleSkip(BuildContext context) async {
+  /// The single adaptive terminal action. With no sets logged it reads as a
+  /// destructive "Skip exercise"; with some sets it reads as "End exercise" and
+  /// states the consequence with counts. Both fire [FocusModeExerciseSkipped].
+  Future<void> _handleEndOrSkip(BuildContext context) async {
     final bloc = context.read<FocusModeBloc>();
+    final hasSets = panel.completedSetsCount > 0;
+    final name = panel.displayExerciseName;
     final confirmed = await AppConfirmDialog.show(
       context: context,
-      title: 'Skip exercise?',
-      body:
-          'Marks "${panel.displayExerciseName}" not done and moves on. '
-          'This session only.',
-      confirmLabel: 'Skip',
-      isDestructive: true,
+      title: hasSets ? 'End exercise?' : 'Skip exercise?',
+      body: hasSets
+          ? 'You\'ve logged ${panel.completedSetsCount} of '
+                '${panel.totalPlannedSets} sets for "$name". You won\'t be able '
+                'to log the remaining sets — logged values stay editable.'
+          : 'Marks "$name" skipped and moves on. This session only.',
+      confirmLabel: hasSets ? 'End exercise' : 'Skip',
+      isDestructive: !hasSets,
     );
     if (confirmed != true) return;
     bloc.add(FocusModeExerciseSkipped(panel.sessionExerciseId));
   }
-
-  Future<void> _handleMarkDone(BuildContext context) async {
-    final bloc = context.read<FocusModeBloc>();
-    final confirmed = await AppConfirmDialog.show(
-      context: context,
-      title: 'Mark done?',
-      body:
-          'Locks "${panel.displayExerciseName}" with the sets so far '
-          '(${panel.completedSetsCount} of ${panel.totalPlannedSets}).',
-      confirmLabel: 'Mark done',
-    );
-    if (confirmed != true) return;
-    bloc.add(FocusModeExerciseMarkedDone(panel.sessionExerciseId));
-  }
 }
 
-enum _PanelMenuAction { skip, markDone, openVideo }
+enum _PanelMenuAction { endOrSkip, openVideo }

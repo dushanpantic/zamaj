@@ -188,15 +188,12 @@ final class FocusModeUndoRequested extends FocusModeEvent {
 
 // Per-exercise actions accessible from the focus AppBar / panel menu -------
 
+/// The single terminal action for a focused exercise. Covers both "Skip
+/// exercise" (no sets logged) and "End exercise" (some sets logged): both
+/// record the exercise as terminal with whatever sets it has. Read surfaces
+/// derive the honest outcome (skipped vs partial) from the set counts.
 final class FocusModeExerciseSkipped extends FocusModeEvent {
   const FocusModeExerciseSkipped(this.sessionExerciseId);
-  final String sessionExerciseId;
-  @override
-  List<Object?> get props => [sessionExerciseId];
-}
-
-final class FocusModeExerciseMarkedDone extends FocusModeEvent {
-  const FocusModeExerciseMarkedDone(this.sessionExerciseId);
   final String sessionExerciseId;
   @override
   List<Object?> get props => [sessionExerciseId];
