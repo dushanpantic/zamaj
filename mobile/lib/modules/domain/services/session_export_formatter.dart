@@ -12,6 +12,7 @@ import 'package:zamaj/modules/domain/models/session_exercise.dart';
 import 'package:zamaj/modules/domain/models/substitute_exercise.dart';
 import 'package:zamaj/modules/domain/models/workout_day.dart';
 import 'package:zamaj/modules/domain/models/workout_set.dart';
+import 'package:zamaj/modules/domain/services/exercise_outcome.dart';
 
 /// Renders a [Session] to plain text suitable for sharing to a coach via
 /// WhatsApp / SMS / email.
@@ -170,13 +171,32 @@ abstract final class SessionExportFormatter {
     final planned = plannedById[sx.plannedExerciseIdInSnapshot];
     final state = sx.state;
 
-    // Header line: name (+ status tag)
-    final headerName = _displayName(sx, plannedById);
-    final headerSuffix = switch (state) {
-      SkippedState() => '  (skipped)',
-      ReplacedState() => '  (replaced)',
-      _ => '',
+    // Outcome is derived from the logged-set record, not the stored
+    // discriminator: an exercise ended early lands on `skipped` but reads as
+    // partial, and a legacy marked-done-early row stored as `completed` reads
+    // as partial too. An unfinished exercise (only seen in an in-progress
+    // export) carries no verdict suffix.
+    final executedCount = sx.executedSets.length;
+    final plannedCount = switch (state) {
+      ReplacedState(:final substitute) => substitute.setCount,
+      _ => planned?.sets.length ?? 0,
     };
+    final outcome = ExerciseOutcomes.of(
+      state: state,
+      executedSetCount: executedCount,
+      plannedSetCount: plannedCount,
+    );
+
+    // Header line: name (+ derived status tag)
+    final headerName = _displayName(sx, plannedById);
+    final headerSuffix = state is UnfinishedState
+        ? ''
+        : switch (outcome) {
+            ExerciseOutcome.completed => '',
+            ExerciseOutcome.partial => '  ($executedCount/$plannedCount sets)',
+            ExerciseOutcome.skipped => '  (skipped)',
+            ExerciseOutcome.replaced => '  (replaced)',
+          };
     buf.writeln('$indent$headerName$headerSuffix');
 
     // Plan line — always show coach's planned values from snapshot.
@@ -194,8 +214,9 @@ abstract final class SessionExportFormatter {
     final sets = [...sx.executedSets]
       ..sort((a, b) => a.position.compareTo(b.position));
 
-    if (state is SkippedState && sets.isEmpty) {
-      // No "Done:" body — header already says "(skipped)".
+    if (state is! UnfinishedState && outcome == ExerciseOutcome.skipped) {
+      // No "Done:" body — header already says "(skipped)". Unfinished is
+      // excluded so an in-progress, untouched exercise still renders "Done: —".
       return;
     }
 

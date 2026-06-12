@@ -387,7 +387,7 @@ This section is the machine-parseable recovery handle. `/build` updates checkbox
   - [x] Step 2.2: Focus mode — adaptive action
 - [ ] Slice 3: Derived display in review, history, and export
   - [x] Step 3.1: Derived completed-exercise count for history
-  - [ ] Step 3.2: Derived suffixes in plain-text export
+  - [x] Step 3.2: Derived suffixes in plain-text export
   - [ ] Step 3.3: Derived badges in session review
 
 #### Wave 3
