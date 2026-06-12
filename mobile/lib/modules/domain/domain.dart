@@ -32,6 +32,7 @@ export 'models/workout_set.dart';
 export 'repositories/exercise_library_repository.dart';
 export 'repositories/program_repository.dart';
 export 'repositories/session_repository.dart';
+export 'services/active_session_policy.dart';
 export 'services/canonical_library_seeder.dart';
 export 'services/canonical_seed_catalog.dart';
 export 'services/effective_exercises.dart';
