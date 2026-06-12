@@ -109,6 +109,21 @@ class _Exercise extends StatelessWidget {
     final colors = Theme.of(context).appColors;
     const typography = AppTypography.standard;
     final state = viewModel.sessionExercise.state;
+    // The badge derives from the logged-set record, not the stored
+    // discriminator: an exercise ended early (or a legacy marked-done-early
+    // row) reads as the honest "n/m sets" partial, a zero-set record reads as
+    // skipped, and a fully logged one as Done.
+    final executedCount = viewModel.setRows
+        .where((r) => r.executedSet != null)
+        .length;
+    final plannedCount = viewModel.setRows
+        .where((r) => r.plannedValues != null)
+        .length;
+    final outcome = ExerciseOutcomes.of(
+      state: state,
+      executedSetCount: executedCount,
+      plannedSetCount: plannedCount,
+    );
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -131,7 +146,12 @@ class _Exercise extends StatelessWidget {
               ),
             ],
             const SizedBox(width: AppSpacing.sm),
-            _StateBadge(state: state, colors: colors),
+            _StateBadge(
+              outcome: outcome,
+              completedCount: executedCount,
+              totalPlanned: plannedCount,
+              colors: colors,
+            ),
           ],
         ),
         const SizedBox(height: AppSpacing.xs),
@@ -296,28 +316,38 @@ class _SetLine extends StatelessWidget {
 }
 
 class _StateBadge extends StatelessWidget {
-  const _StateBadge({required this.state, required this.colors});
+  const _StateBadge({
+    required this.outcome,
+    required this.completedCount,
+    required this.totalPlanned,
+    required this.colors,
+  });
 
-  final ExerciseState state;
+  final ExerciseOutcome outcome;
+  final int completedCount;
+  final int totalPlanned;
   final AppColors colors;
 
   @override
   Widget build(BuildContext context) {
-    return switch (state) {
-      CompletedState() => StatusBadge.icon(
+    return switch (outcome) {
+      ExerciseOutcome.completed => StatusBadge.icon(
         icon: Icons.check_circle,
         color: colors.exerciseCompleted,
         label: 'Done',
       ),
-      SkippedState() => StatusBadge.pill(
+      ExerciseOutcome.partial => StatusBadge.pill(
+        label: '$completedCount/$totalPlanned sets',
+        color: colors.exercisePartial,
+      ),
+      ExerciseOutcome.skipped => StatusBadge.pill(
         label: 'Skipped',
         color: colors.exerciseSkipped,
       ),
-      ReplacedState() => StatusBadge.pill(
+      ExerciseOutcome.replaced => StatusBadge.pill(
         label: 'Replaced',
         color: colors.exerciseReplaced,
       ),
-      UnfinishedState() => const SizedBox.shrink(),
     };
   }
 }
