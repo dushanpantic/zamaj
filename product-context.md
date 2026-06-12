@@ -17,6 +17,11 @@ A solo lifter following a structured strength program — squats, bench, accesso
 
 Starting a session takes a **snapshot** of the planned workout day at that moment. The program template can keep evolving afterwards, but this session's plan is frozen at start. Completed sessions are meant to read as a faithful record of "the plan I was on, and what I did against it". A deliberate, narrow softening of strict immutability lets you correct a mis-logged **actual** value on a session from the current week — values only, never adding or removing sets, and never touching the frozen plan snapshot.
 
+## Two words worth pinning down
+
+- **Superset** lives in two places by design. You build one in the day editor (movements done back-to-back), and you then run it in a session as a group focus mode steps through as partner cards. Each is independent: editing the plan's grouping never rewrites a session already underway, because the session carries its own grouping frozen in the snapshot.
+- **Completed** (for an exercise) is reached two ways: it **auto-completes** once you've logged its planned number of sets, or you **mark it done** early to lock it in with fewer. Both read simply as "completed" in the live session and the review — the record doesn't currently distinguish the two.
+
 ## Features by screen
 
 ### Program management — [program_management/](mobile/lib/modules/program_management/)
