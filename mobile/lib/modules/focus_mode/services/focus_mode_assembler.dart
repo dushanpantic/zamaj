@@ -19,6 +19,10 @@ abstract final class FocusModeAssembler {
     String? userPinnedPanelId,
   }) {
     final session = state.session;
+    final effective = EffectiveExercises.of(session);
+    final loggableIds = <String>{
+      for (final t in state.openTargets) t.sessionExerciseId,
+    };
     final sorted = List<SessionExercise>.of(session.sessionExercises)
       ..sort((a, b) => a.position.compareTo(b.position));
 
@@ -32,7 +36,12 @@ abstract final class FocusModeAssembler {
     final panels = <FocusModeViewModel>[
       for (final exercise in group)
         if (exercise.state is! SkippedState)
-          _buildPanel(exercise, session, _resolveGroupRole(exercise, session)),
+          _buildPanel(
+            exercise,
+            effective,
+            _resolveGroupRole(exercise, effective),
+            isLoggable: loggableIds.contains(exercise.id),
+          ),
     ];
     if (panels.isEmpty) return null;
 
@@ -43,7 +52,7 @@ abstract final class FocusModeAssembler {
     final upNext = _findNextGroup(
       groups,
       startingAfter: groupIndex,
-      session: session,
+      effective: effective,
     );
 
     final activePick = _pickActivePanelId(
@@ -153,6 +162,7 @@ abstract final class FocusModeAssembler {
     required String currentAnchorId,
   }) {
     final session = state.session;
+    final effective = EffectiveExercises.of(session);
     final sorted = List<SessionExercise>.of(session.sessionExercises)
       ..sort((a, b) => a.position.compareTo(b.position));
     final groups = groupBySupersetRun(sorted);
@@ -163,7 +173,7 @@ abstract final class FocusModeAssembler {
           .where((e) => e.state is! SkippedState)
           .toList(growable: false);
       if (visible.isEmpty) continue;
-      final label = _groupLabel(visible, session);
+      final label = _groupLabel(visible, effective);
       final isSuperset =
           visible.length > 1 && visible.first.supersetTag != null;
       final anchor = visible.first.id;
@@ -238,7 +248,7 @@ abstract final class FocusModeAssembler {
   static ({String label, String anchorId})? _findNextGroup(
     List<List<SessionExercise>> groups, {
     required int startingAfter,
-    required Session session,
+    required EffectiveExercises effective,
   }) {
     for (var i = startingAfter + 1; i < groups.length; i++) {
       final visible = groups[i]
@@ -255,75 +265,59 @@ abstract final class FocusModeAssembler {
           .toList(growable: false);
       if (actionable.isEmpty) continue;
       return (
-        label: _groupLabel(visible, session),
+        label: _groupLabel(visible, effective),
         anchorId: actionable.first.id,
       );
     }
     return null;
   }
 
-  static String _groupLabel(List<SessionExercise> visible, Session session) {
+  static String _groupLabel(
+    List<SessionExercise> visible,
+    EffectiveExercises effective,
+  ) {
     if (visible.length == 1) {
-      return _displayName(visible.first, session);
+      return _displayName(visible.first, effective);
     }
-    return visible.map((e) => _displayName(e, session)).join(' + ');
+    return visible.map((e) => _displayName(e, effective)).join(' + ');
   }
 
-  static String _displayName(SessionExercise exercise, Session session) {
-    return switch (exercise.state) {
-      ReplacedState(:final substitute) => substitute.name,
-      _ => _lookupPlanned(sessionExercise: exercise, session: session).name,
-    };
+  static String _displayName(
+    SessionExercise exercise,
+    EffectiveExercises effective,
+  ) {
+    return effective.forSessionExercise(exercise).displayName;
   }
 
   static ExerciseGroupRole _resolveGroupRole(
     SessionExercise sessionExercise,
-    Session session,
+    EffectiveExercises effective,
   ) {
-    for (final group in session.snapshot.workoutDay.exerciseGroups) {
-      for (final ex in group.exercises) {
-        if (ex.id == sessionExercise.plannedExerciseIdInSnapshot) {
-          return group.role;
-        }
-      }
-    }
-    return ExerciseGroupRole.main;
+    return effective.forSessionExercise(sessionExercise).plannedGroupRole;
   }
 
   static FocusModeViewModel _buildPanel(
     SessionExercise exercise,
-    Session session,
-    ExerciseGroupRole plannedGroupRole,
-  ) {
-    final planned = _lookupPlanned(sessionExercise: exercise, session: session);
-    final effectiveMt = switch (exercise.state) {
-      ReplacedState(:final substitute) => substitute.measurementType,
-      _ => planned.measurementType,
-    };
+    EffectiveExercises effective,
+    ExerciseGroupRole plannedGroupRole, {
+    required bool isLoggable,
+  }) {
+    final eff = effective.forSessionExercise(exercise);
+    final planned = eff.plannedExercise;
+    final effectiveMt = eff.effectiveMeasurementType;
     final isReplaced = exercise.state is ReplacedState;
-    final displayName = switch (exercise.state) {
-      ReplacedState(:final substitute) => substitute.name,
-      _ => planned.name,
-    };
+    final displayName = eff.displayName;
     final displayMetadata = switch (exercise.state) {
       ReplacedState(:final substitute) => substitute.metadata,
       _ => planned.metadata,
     };
 
-    final totalPlannedSets = switch (exercise.state) {
-      ReplacedState(:final substitute) => substitute.setCount,
-      _ => planned.sets.length,
-    };
+    final totalPlannedSets = eff.plannedSetCount;
 
     final sortedExecuted = List<ExecutedSet>.of(exercise.executedSets)
       ..sort((a, b) => a.position.compareTo(b.position));
     final lastExecuted = sortedExecuted.isEmpty ? null : sortedExecuted.last;
 
-    final isLoggable = switch (exercise.state) {
-      UnfinishedState() ||
-      ReplacedState() => sortedExecuted.length < totalPlannedSets,
-      _ => false,
-    };
     final currentSetIndex = sortedExecuted.length;
 
     final (
@@ -382,22 +376,5 @@ abstract final class FocusModeAssembler {
       PlannedBodyweight(:final repTarget) =>
         '${substitute.setCount}×${RepTargetFormatter.format(repTarget)}',
     };
-  }
-
-  static Exercise _lookupPlanned({
-    required SessionExercise sessionExercise,
-    required Session session,
-  }) {
-    for (final group in session.snapshot.workoutDay.exerciseGroups) {
-      for (final ex in group.exercises) {
-        if (ex.id == sessionExercise.plannedExerciseIdInSnapshot) {
-          return ex;
-        }
-      }
-    }
-    throw NotFoundError(
-      entityType: 'Exercise',
-      id: sessionExercise.plannedExerciseIdInSnapshot,
-    );
   }
 }

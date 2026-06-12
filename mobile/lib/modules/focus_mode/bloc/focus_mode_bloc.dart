@@ -169,7 +169,16 @@ class FocusModeBloc extends Bloc<FocusModeEvent, FocusModeState> {
     InternalFocusSessionPushed event,
     Emitter<FocusModeState> emit,
   ) async {
-    emit(_reassembleAfterRefresh(event.sessionState));
+    try {
+      emit(_reassembleAfterRefresh(event.sessionState));
+    } on DomainError catch (e) {
+      // A corrupt snapshot (a planned exercise missing from the immutable
+      // snapshot) makes the synchronous assemble throw. The watch stream's
+      // engine projection only resolves unfinished/replaced exercises, so a
+      // terminal corrupt exercise slips through to here. Route it through the
+      // existing failure path rather than letting it escape and crash.
+      add(InternalFocusSessionFailed(e, event.sessionState.session.id));
+    }
   }
 
   Future<void> _onSessionMissing(
@@ -861,7 +870,7 @@ class FocusModeBloc extends Bloc<FocusModeEvent, FocusModeState> {
     for (final panel in group.panels) {
       if (!panel.isLoggable) continue;
       final prior = priorDrafts[panel.sessionExerciseId];
-      if (prior != null && _matches(prior, panel.effectiveMeasurementType)) {
+      if (prior != null && prior.matches(panel.effectiveMeasurementType)) {
         next[panel.sessionExerciseId] = prior;
         continue;
       }
@@ -882,7 +891,7 @@ class FocusModeBloc extends Bloc<FocusModeEvent, FocusModeState> {
         session: sessionState.session,
         sessionExerciseId: panel.sessionExerciseId,
       );
-      if (_matches(suggested, panel.effectiveMeasurementType)) {
+      if (suggested.matches(panel.effectiveMeasurementType)) {
         return suggested;
       }
     } on NotFoundError {
@@ -897,15 +906,6 @@ class FocusModeBloc extends Bloc<FocusModeEvent, FocusModeState> {
         durationSeconds: 0,
       ),
       BodyweightMeasurement() => const ActualSetValues.bodyweight(reps: 0),
-    };
-  }
-
-  bool _matches(ActualSetValues values, MeasurementType measurementType) {
-    return switch ((measurementType, values)) {
-      (RepBasedMeasurement(), ActualRepBased()) => true,
-      (TimeBasedMeasurement(), ActualTimeBased()) => true,
-      (BodyweightMeasurement(), ActualBodyweight()) => true,
-      _ => false,
     };
   }
 

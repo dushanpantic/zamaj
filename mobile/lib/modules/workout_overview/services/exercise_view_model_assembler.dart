@@ -21,14 +21,7 @@ abstract final class ExerciseViewModelAssembler {
         t.sessionExerciseId: t.plannedSetIndex,
     };
 
-    final plannedById = <String, Exercise>{
-      for (final group in session.snapshot.workoutDay.exerciseGroups)
-        for (final exercise in group.exercises) exercise.id: exercise,
-    };
-    final groupRoleByExerciseId = <String, ExerciseGroupRole>{
-      for (final group in session.snapshot.workoutDay.exerciseGroups)
-        for (final exercise in group.exercises) exercise.id: group.role,
-    };
+    final effective = EffectiveExercises.of(session);
 
     final sorted = List<SessionExercise>.of(session.sessionExercises)
       ..sort((a, b) => a.position.compareTo(b.position));
@@ -37,10 +30,8 @@ abstract final class ExerciseViewModelAssembler {
       for (final ex in sorted)
         _buildViewModel(
           ex,
-          plannedById,
+          effective.forSessionExercise(ex),
           loggableSetIndexByExerciseId[ex.id],
-          groupRoleByExerciseId[ex.plannedExerciseIdInSnapshot] ??
-              ExerciseGroupRole.main,
         ),
     ];
 
@@ -49,21 +40,10 @@ abstract final class ExerciseViewModelAssembler {
 
   static ExerciseViewModel _buildViewModel(
     SessionExercise sessionExercise,
-    Map<String, Exercise> plannedById,
+    EffectiveExercise effective,
     int? loggableSetIndex,
-    ExerciseGroupRole plannedGroupRole,
   ) {
-    final planned = plannedById[sessionExercise.plannedExerciseIdInSnapshot];
-    if (planned == null) {
-      throw NotFoundError(
-        entityType: 'Exercise',
-        id: sessionExercise.plannedExerciseIdInSnapshot,
-      );
-    }
-    final effectiveMt = switch (sessionExercise.state) {
-      ReplacedState(:final substitute) => substitute.measurementType,
-      _ => planned.measurementType,
-    };
+    final planned = effective.plannedExercise;
     return ExerciseViewModel(
       sessionExercise: sessionExercise,
       plannedSummary: PlannedSummaryFormatter.summarize(planned),
@@ -73,8 +53,8 @@ abstract final class ExerciseViewModelAssembler {
       plannedExerciseName: planned.name,
       setRows: _buildSetRows(sessionExercise, planned, loggableSetIndex),
       isLoggable: loggableSetIndex != null,
-      effectiveMeasurementType: effectiveMt,
-      plannedGroupRole: plannedGroupRole,
+      effectiveMeasurementType: effective.effectiveMeasurementType,
+      plannedGroupRole: effective.plannedGroupRole,
     );
   }
 

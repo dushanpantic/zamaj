@@ -823,6 +823,40 @@ void main() {
       );
     });
   });
+
+  group('corrupt snapshot', () {
+    test('computeOpenTargets throws NotFoundError when an unfinished exercise '
+        'references a planned id absent from the snapshot', () async {
+      final s = setup();
+      final workoutDay = _buildWorkoutDay(
+        id: 'wd-corrupt',
+        exerciseSpecs: [
+          _ExerciseSpec(
+            name: 'Bench',
+            measurementType: const MeasurementType.repBased(),
+            setCount: 2,
+          ),
+        ],
+      );
+      s.repo.seedWorkoutDay(workoutDay);
+      final started = await s.engine.startSession(workoutDayId: workoutDay.id);
+
+      // Re-point the unfinished exercise at a planned id that is not in the
+      // immutable snapshot. There is no silent fallback — the projection must
+      // surface this as NotFoundError.
+      final corrupt = started.session.copyWith(
+        sessionExercises: [
+          for (final e in started.session.sessionExercises)
+            e.copyWith(plannedExerciseIdInSnapshot: 'ghost'),
+        ],
+      );
+
+      expect(
+        () => s.engine.computeOpenTargets(corrupt),
+        throwsA(isA<NotFoundError>().having((e) => e.id, 'id', 'ghost')),
+      );
+    });
+  });
 }
 
 class _ExerciseSpec {

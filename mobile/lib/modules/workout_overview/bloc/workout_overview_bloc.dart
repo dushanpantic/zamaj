@@ -89,20 +89,29 @@ class WorkoutOverviewBloc
   ) async {
     final current = state;
     final next = event.sessionState;
-    if (current is WorkoutOverviewLoaded) {
-      emit(
-        current.copyWith(
-          sessionState: next,
-          groups: ExerciseViewModelAssembler.assemble(next),
-          expandedExerciseIds: _expansionForOpenTargets(
-            current.expandedExerciseIds,
-            current.sessionState,
-            next,
+    try {
+      if (current is WorkoutOverviewLoaded) {
+        emit(
+          current.copyWith(
+            sessionState: next,
+            groups: ExerciseViewModelAssembler.assemble(next),
+            expandedExerciseIds: _expansionForOpenTargets(
+              current.expandedExerciseIds,
+              current.sessionState,
+              next,
+            ),
           ),
-        ),
-      );
-    } else {
-      emit(_assemble(next, _initialExpansionFor(next)));
+        );
+      } else {
+        emit(_assemble(next, _initialExpansionFor(next)));
+      }
+    } on DomainError catch (e) {
+      // A corrupt snapshot (a planned exercise missing from the immutable
+      // snapshot) makes the synchronous assemble throw. The watch stream's
+      // engine projection only resolves unfinished/replaced exercises, so a
+      // terminal corrupt exercise slips through to here. Route it through the
+      // existing failure path rather than letting it escape and crash.
+      add(InternalSessionFailed(e, next.session.id));
     }
   }
 

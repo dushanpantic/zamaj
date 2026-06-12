@@ -1,6 +1,5 @@
 import 'package:zamaj/modules/domain/errors.dart';
 import 'package:zamaj/modules/domain/models/actual_set_values.dart';
-import 'package:zamaj/modules/domain/models/exercise.dart';
 import 'package:zamaj/modules/domain/models/exercise_metadata.dart';
 import 'package:zamaj/modules/domain/models/exercise_state.dart';
 import 'package:zamaj/modules/domain/models/measurement_type.dart';
@@ -8,8 +7,8 @@ import 'package:zamaj/modules/domain/models/planned_set_values.dart';
 import 'package:zamaj/modules/domain/models/rep_target.dart';
 import 'package:zamaj/modules/domain/models/session.dart';
 import 'package:zamaj/modules/domain/models/session_exercise.dart';
-import 'package:zamaj/modules/domain/models/workout_set.dart';
 import 'package:zamaj/modules/domain/repositories/session_repository.dart';
+import 'package:zamaj/modules/domain/services/effective_exercises.dart';
 import 'package:zamaj/modules/domain/services/log_target.dart';
 import 'package:zamaj/modules/domain/services/session_state.dart';
 
@@ -186,6 +185,7 @@ class SessionFlowEngine {
   /// to a completed exercise is allowed by [completeSet] but is an explicit
   /// UI-driven affordance, not a default suggestion.
   List<LogTarget> computeOpenTargets(Session session) {
+    final effective = EffectiveExercises.of(session);
     final sorted = List<SessionExercise>.of(session.sessionExercises)
       ..sort((a, b) => a.position.compareTo(b.position));
 
@@ -194,7 +194,9 @@ class SessionFlowEngine {
       switch (exercise.state) {
         case UnfinishedState():
         case ReplacedState():
-          final plannedSetCount = _lookupPlannedSetCount(exercise, session);
+          final plannedSetCount = effective
+              .forSessionExercise(exercise)
+              .plannedSetCount;
           if (exercise.executedSets.length < plannedSetCount) {
             targets.add(
               LogTarget(
@@ -233,11 +235,9 @@ class SessionFlowEngine {
       return exercise.executedSets.last.actualValues;
     }
 
-    final plannedValues = _lookupPlannedValuesAtPosition(
-      exercise,
+    final plannedValues = EffectiveExercises.of(
       session,
-      position: 0,
-    );
+    ).forSessionExercise(exercise).plannedValuesAt(0);
     return _convertPlannedToActual(plannedValues);
   }
 
@@ -324,13 +324,12 @@ class SessionFlowEngine {
       );
     }
 
-    final effectiveMeasurementType = _effectiveMeasurementType(
-      exercise,
+    final effective = EffectiveExercises.of(
       session,
-    );
+    ).forSessionExercise(exercise);
     _validateMeasurementTypeMatch(
       actualValues: actualValues,
-      measurementType: effectiveMeasurementType,
+      measurementType: effective.effectiveMeasurementType,
       entityId: sessionExerciseId,
     );
 
@@ -356,13 +355,12 @@ class SessionFlowEngine {
           throw NotFoundError(entityType: 'ExecutedSet', id: executedSetId),
     );
 
-    final effectiveMeasurementType = _effectiveMeasurementType(
-      exercise,
+    final effective = EffectiveExercises.of(
       session,
-    );
+    ).forSessionExercise(exercise);
     _validateMeasurementTypeMatch(
       actualValues: actualValues,
-      measurementType: effectiveMeasurementType,
+      measurementType: effective.effectiveMeasurementType,
       entityId: executedSetId,
     );
 
@@ -570,13 +568,16 @@ class SessionFlowEngine {
   /// Returns `true` when every exercise is in a terminal state with all
   /// planned sets fulfilled.
   bool isSessionComplete(Session session) {
+    final effective = EffectiveExercises.of(session);
     for (final exercise in session.sessionExercises) {
       switch (exercise.state) {
         case CompletedState():
         case SkippedState():
           continue;
         case ReplacedState():
-          final plannedSetCount = _lookupPlannedSetCount(exercise, session);
+          final plannedSetCount = effective
+              .forSessionExercise(exercise)
+              .plannedSetCount;
           if (exercise.executedSets.length < plannedSetCount) {
             return false;
           }
@@ -593,66 +594,6 @@ class SessionFlowEngine {
       openTargets: computeOpenTargets(session),
       isComplete: isSessionComplete(session),
     );
-  }
-
-  Exercise _lookupPlannedExercise(
-    SessionExercise sessionExercise,
-    Session session,
-  ) {
-    final workoutDay = session.snapshot.workoutDay;
-    for (final group in workoutDay.exerciseGroups) {
-      for (final exercise in group.exercises) {
-        if (exercise.id == sessionExercise.plannedExerciseIdInSnapshot) {
-          return exercise;
-        }
-      }
-    }
-    throw NotFoundError(
-      entityType: 'Exercise',
-      id: sessionExercise.plannedExerciseIdInSnapshot,
-    );
-  }
-
-  int _lookupPlannedSetCount(SessionExercise sessionExercise, Session session) {
-    final state = sessionExercise.state;
-    if (state is ReplacedState) {
-      return state.substitute.setCount;
-    }
-    final exercise = _lookupPlannedExercise(sessionExercise, session);
-    return exercise.sets.length;
-  }
-
-  PlannedSetValues _lookupPlannedValuesAtPosition(
-    SessionExercise sessionExercise,
-    Session session, {
-    required int position,
-  }) {
-    final state = sessionExercise.state;
-    if (state is ReplacedState) {
-      return state.substitute.plannedValues;
-    }
-    return _lookupPlannedSet(
-      sessionExercise,
-      session,
-      position: position,
-    ).plannedValues;
-  }
-
-  WorkoutSet _lookupPlannedSet(
-    SessionExercise sessionExercise,
-    Session session, {
-    required int position,
-  }) {
-    final exercise = _lookupPlannedExercise(sessionExercise, session);
-    final sorted = List<WorkoutSet>.of(exercise.sets)
-      ..sort((a, b) => a.position.compareTo(b.position));
-    if (position >= sorted.length) {
-      throw NotFoundError(
-        entityType: 'WorkoutSet',
-        id: '${exercise.id}[position=$position]',
-      );
-    }
-    return sorted[position];
   }
 
   ActualSetValues _convertPlannedToActual(PlannedSetValues planned) {
@@ -681,28 +622,12 @@ class SessionFlowEngine {
     };
   }
 
-  MeasurementType _effectiveMeasurementType(
-    SessionExercise exercise,
-    Session session,
-  ) {
-    return switch (exercise.state) {
-      ReplacedState(:final substitute) => substitute.measurementType,
-      _ => _lookupPlannedExercise(exercise, session).measurementType,
-    };
-  }
-
   void _validateMeasurementTypeMatch({
     required ActualSetValues actualValues,
     required MeasurementType measurementType,
     required String entityId,
   }) {
-    final isValid = switch ((measurementType, actualValues)) {
-      (RepBasedMeasurement(), ActualRepBased()) => true,
-      (TimeBasedMeasurement(), ActualTimeBased()) => true,
-      (BodyweightMeasurement(), ActualBodyweight()) => true,
-      _ => false,
-    };
-    if (!isValid) {
+    if (!actualValues.matches(measurementType)) {
       throw ValidationError(
         entityId: entityId,
         invariant: 'measurementType_actualValues_mismatch',

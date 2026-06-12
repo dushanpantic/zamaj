@@ -1074,4 +1074,121 @@ void main() {
       });
     });
   });
+
+  group('FocusModeBloc corrupt-snapshot crash safety', () {
+    test('a corrupt snapshot on the load path surfaces LoadFailure, '
+        'not an unhandled crash', () async {
+      final s = setup();
+      addTearDown(s.bloc.close);
+
+      final t = DateTime.utc(2024);
+      WorkoutSet ws(String id) => WorkoutSet(
+        id: 'ws-$id',
+        exerciseId: id,
+        position: 0,
+        measurementType: const MeasurementType.repBased(),
+        plannedValues: PlannedSetValues.repBased(
+          weightKg: 100,
+          repTarget: RepTarget.fixed(reps: 5),
+        ),
+        createdAt: t,
+        updatedAt: t,
+        schemaVersion: 1,
+      );
+      Exercise ex(String id) => Exercise(
+        id: id,
+        exerciseGroupId: 'g',
+        position: 0,
+        name: 'Ex $id',
+        measurementType: const MeasurementType.repBased(),
+        metadata: ExerciseMetadata.empty,
+        sets: [ws(id)],
+        createdAt: t,
+        updatedAt: t,
+        schemaVersion: 1,
+      );
+      // Superset snapshot with two real exercises; the session references the
+      // first correctly (unfinished) but points its second, *completed* member
+      // at a missing id. The engine resolves only unfinished/replaced
+      // exercises, so it emits a state; the focus assembler builds a panel for
+      // every non-skipped member of the anchor group, so it throws on the
+      // corrupt completed member — the gap Step 1.6 wraps.
+      final workoutDay = WorkoutDay(
+        id: 'wd',
+        programId: 'p',
+        name: 'D',
+        exerciseGroups: [
+          ExerciseGroup(
+            id: 'g',
+            workoutDayId: 'wd',
+            position: 0,
+            kind: const ExerciseGroupKind.superset(),
+            exercises: [ex('planned-a'), ex('planned-b')],
+            createdAt: t,
+            updatedAt: t,
+            schemaVersion: 1,
+          ),
+        ],
+        createdAt: t,
+        updatedAt: t,
+        schemaVersion: 1,
+      );
+      final snapshot = SessionSnapshot.capture(
+        workoutDay: workoutDay,
+        capturedAt: t,
+        schemaVersion: 1,
+      );
+      SessionExercise se(
+        String id,
+        String plannedId,
+        ExerciseState st,
+        int p,
+      ) => SessionExercise(
+        id: id,
+        sessionId: 's-corrupt',
+        position: p,
+        plannedExerciseIdInSnapshot: plannedId,
+        state: st,
+        executedSets: const [],
+        supersetTag: 'g',
+        createdAt: t,
+        updatedAt: t,
+        schemaVersion: 1,
+      );
+      s.repo.seedSession(
+        Session(
+          id: 's-corrupt',
+          workoutDayId: 'wd',
+          snapshot: snapshot,
+          sessionExercises: [
+            se('se-a', 'planned-a', const ExerciseState.unfinished(), 0),
+            se('se-b', 'ghost-missing', const ExerciseState.completed(), 1),
+          ],
+          notes: const [],
+          extraWork: const [],
+          startedAt: t,
+          createdAt: t,
+          updatedAt: t,
+          schemaVersion: 1,
+        ),
+      );
+
+      s.bloc.add(
+        const FocusModeOpened(
+          sessionId: 's-corrupt',
+          anchorSessionExerciseId: 'se-a',
+        ),
+      );
+
+      final terminal = await waitFor<FocusModeState>(
+        s.bloc,
+        (st) =>
+            st is FocusModeLoadFailure ||
+            st is FocusModeReady ||
+            st is FocusModeWorkoutComplete,
+      );
+      expect(terminal, isA<FocusModeLoadFailure>());
+      expect((terminal as FocusModeLoadFailure).error, isA<NotFoundError>());
+    });
+  });
 }

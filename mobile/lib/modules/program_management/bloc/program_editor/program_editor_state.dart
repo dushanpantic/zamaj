@@ -15,8 +15,11 @@ final class ProgramDraftValidation extends Equatable {
     required bool isCreateMode,
   }) {
     final trimmed = name.trim();
-    final maxLength = isCreateMode ? 120 : 100;
-    final isNameValid = trimmed.isNotEmpty && trimmed.length <= maxLength;
+    // Program-name limit is a uniform 100 chars on both create and edit; the
+    // former 120-on-create cap is gone (single bound in domain ProgramRules).
+    final isNameValid =
+        trimmed.isNotEmpty &&
+        trimmed.length <= ProgramRules.programNameMaxLength;
     return ProgramDraftValidation(isNameValid: isNameValid);
   }
 

@@ -10,13 +10,17 @@ import 'package:zamaj/modules/domain/errors.dart';
 import 'package:zamaj/modules/domain/models/actual_set_values.dart';
 import 'package:zamaj/modules/domain/models/exercise_group_kind.dart';
 import 'package:zamaj/modules/domain/models/exercise_metadata.dart';
+import 'package:zamaj/modules/domain/models/exercise_state.dart' as domain;
 import 'package:zamaj/modules/domain/models/measurement_type.dart';
 import 'package:zamaj/modules/domain/models/planned_set_values.dart';
 import 'package:zamaj/modules/domain/models/session.dart' as domain;
+import 'package:zamaj/modules/domain/models/session_exercise.dart' as domain;
 import 'package:zamaj/modules/domain/models/substitute_exercise.dart';
 import 'package:zamaj/modules/domain/models/workout_day.dart' as domain;
 import 'package:zamaj/modules/domain/repositories/program_repository.dart';
 import 'package:zamaj/modules/domain/repositories/session_repository.dart';
+import 'package:zamaj/modules/domain/services/effective_exercises.dart'
+    as domain;
 import 'package:zamaj/modules/persistence/database/app_database.dart';
 import 'package:zamaj/modules/persistence/database/datetime_utils.dart';
 import 'package:zamaj/modules/persistence/database/timestamp_oracle.dart';
@@ -337,10 +341,8 @@ class DriftSessionRepository implements SessionRepository {
       final exerciseRow = await _requireSessionExerciseRow(sessionExerciseId);
       final sessionRow = await _requireSessionRow(exerciseRow.sessionId);
 
-      final measurementType = _measurementTypeForExercise(
-        exerciseRow,
-        sessionRow,
-      );
+      final effective = _effectiveForRow(exerciseRow, sessionRow);
+      final measurementType = effective.effectiveMeasurementType;
       _validateActualValues(
         actualValues: actualValues,
         measurementType: measurementType,
@@ -384,10 +386,7 @@ class DriftSessionRepository implements SessionRepository {
             ),
           );
 
-      final plannedSetCount = _plannedSetCountForExercise(
-        exerciseRow,
-        sessionRow,
-      );
+      final plannedSetCount = effective.plannedSetCount;
       final completedSetCount = existingSets.length + 1;
 
       final exerciseUpdatedAt = _timestamps.nextUpdatedAt(
@@ -442,10 +441,10 @@ class DriftSessionRepository implements SessionRepository {
       );
       final sessionRow = await _requireSessionRow(exerciseRow.sessionId);
 
-      final measurementType = _measurementTypeForExercise(
+      final measurementType = _effectiveForRow(
         exerciseRow,
         sessionRow,
-      );
+      ).effectiveMeasurementType;
       _validateActualValues(
         actualValues: actualValues,
         measurementType: measurementType,
@@ -537,10 +536,10 @@ class DriftSessionRepository implements SessionRepository {
               ..where((t) => t.id.equals(remaining[i].id)))
             .write(ExecutedSetsCompanion(position: Value(i)));
       }
-      final plannedSetCount = _plannedSetCountForExercise(
+      final plannedSetCount = _effectiveForRow(
         exerciseRow,
         sessionRow,
-      );
+      ).plannedSetCount;
 
       final exerciseUpdatedAt = _timestamps.nextUpdatedAt(
         previousUpdatedAt: msToUtc(exerciseRow.updatedAtMs),
@@ -1242,49 +1241,48 @@ class DriftSessionRepository implements SessionRepository {
     );
   }
 
-  MeasurementType _measurementTypeForExercise(
+  /// Resolves a session-exercise row against its session's snapshot via the
+  /// shared domain projection. A planned exercise absent from the snapshot
+  /// raises [NotFoundError] — there is no silent set-count-0 degradation.
+  domain.EffectiveExercise _effectiveForRow(
     SessionExercise exerciseRow,
     Session sessionRow,
   ) {
-    if (exerciseRow.stateDiscriminator == 'replaced' &&
-        exerciseRow.substitutePayloadJson != null) {
-      return SubstituteExercise.fromJson(
-        jsonDecode(exerciseRow.substitutePayloadJson!) as Map<String, dynamic>,
-      ).measurementType;
-    }
     final workoutDay = _parseSnapshotWorkoutDay(sessionRow);
-    for (final group in workoutDay.exerciseGroups) {
-      for (final exercise in group.exercises) {
-        if (exercise.id == exerciseRow.plannedExerciseIdInSnapshot) {
-          return exercise.measurementType;
-        }
-      }
-    }
-    throw NotFoundError(
-      entityType: 'Exercise in snapshot',
-      id: exerciseRow.plannedExerciseIdInSnapshot,
+    final sessionExercise = domain.SessionExercise(
+      id: exerciseRow.id,
+      sessionId: exerciseRow.sessionId,
+      position: exerciseRow.position,
+      plannedExerciseIdInSnapshot: exerciseRow.plannedExerciseIdInSnapshot,
+      state: _stateForRow(exerciseRow),
+      executedSets: const [],
+      supersetTag: exerciseRow.supersetTag,
+      createdAt: msToUtc(exerciseRow.createdAtMs),
+      updatedAt: msToUtc(exerciseRow.updatedAtMs),
+      schemaVersion: exerciseRow.schemaVersion,
     );
+    return domain.EffectiveExercises.fromWorkoutDay(
+      workoutDay,
+    ).forSessionExercise(sessionExercise);
   }
 
-  int _plannedSetCountForExercise(
-    SessionExercise exerciseRow,
-    Session sessionRow,
-  ) {
-    if (exerciseRow.stateDiscriminator == 'replaced' &&
-        exerciseRow.substitutePayloadJson != null) {
-      return SubstituteExercise.fromJson(
-        jsonDecode(exerciseRow.substitutePayloadJson!) as Map<String, dynamic>,
-      ).setCount;
-    }
-    final workoutDay = _parseSnapshotWorkoutDay(sessionRow);
-    for (final group in workoutDay.exerciseGroups) {
-      for (final exercise in group.exercises) {
-        if (exercise.id == exerciseRow.plannedExerciseIdInSnapshot) {
-          return exercise.sets.length;
-        }
-      }
-    }
-    return 0;
+  domain.ExerciseState _stateForRow(SessionExercise exerciseRow) {
+    return switch (exerciseRow.stateDiscriminator) {
+      'unfinished' => const domain.ExerciseState.unfinished(),
+      'completed' => const domain.ExerciseState.completed(),
+      'skipped' => const domain.ExerciseState.skipped(),
+      'replaced' => domain.ExerciseState.replaced(
+        substitute: SubstituteExercise.fromJson(
+          jsonDecode(exerciseRow.substitutePayloadJson!)
+              as Map<String, dynamic>,
+        ),
+      ),
+      final d => throw DeserializationError(
+        field: 'stateDiscriminator',
+        discriminator: d,
+        message: 'Unknown stateDiscriminator: $d',
+      ),
+    };
   }
 
   void _validateActualValues({
@@ -1292,13 +1290,7 @@ class DriftSessionRepository implements SessionRepository {
     required MeasurementType measurementType,
     required String entityId,
   }) {
-    final isValid = switch ((measurementType, actualValues)) {
-      (RepBasedMeasurement(), ActualRepBased()) => true,
-      (TimeBasedMeasurement(), ActualTimeBased()) => true,
-      (BodyweightMeasurement(), ActualBodyweight()) => true,
-      _ => false,
-    };
-    if (!isValid) {
+    if (!actualValues.matches(measurementType)) {
       throw ValidationError(
         entityId: entityId,
         invariant: 'measurementType_actualValues_mismatch',

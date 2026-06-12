@@ -16,6 +16,7 @@ import 'package:zamaj/modules/domain/models/program_aggregate.dart';
 import 'package:zamaj/modules/domain/models/workout_day.dart' as domain;
 import 'package:zamaj/modules/domain/models/workout_set.dart' as domain;
 import 'package:zamaj/modules/domain/repositories/program_repository.dart';
+import 'package:zamaj/modules/domain/services/program_rules.dart';
 import 'package:zamaj/modules/persistence/database/app_database.dart';
 import 'package:zamaj/modules/persistence/database/datetime_utils.dart';
 import 'package:zamaj/modules/persistence/database/timestamp_oracle.dart';
@@ -979,6 +980,9 @@ class DriftProgramRepository implements ProgramRepository {
   Future<domain.Program> saveProgramAggregate(
     ProgramAggregate aggregate,
   ) async {
+    // Enforce program-authoring bounds at the write path only — reads stay
+    // unguarded so legacy out-of-range rows still load.
+    ProgramRules.validateAggregate(aggregate);
     return _db.transaction(() async {
       await _db
           .into(_db.programs)
