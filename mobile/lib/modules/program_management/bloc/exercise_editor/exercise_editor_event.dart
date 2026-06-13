@@ -130,6 +130,92 @@ final class PlannedSetDurationChanged extends ExerciseEditorEvent {
   List<Object?> get props => [setDraftId, rawInput];
 }
 
+/// Sets the weight input on **every** set at once (uniform editing). Sets whose
+/// measurement shape has no weight field are left untouched.
+final class AllSetsWeightChanged extends ExerciseEditorEvent {
+  const AllSetsWeightChanged({required this.rawInput});
+
+  final String rawInput;
+
+  @override
+  List<Object?> get props => [rawInput];
+}
+
+/// Sets the reps input on **every** set at once. Sets whose measurement shape
+/// has no reps field are left untouched.
+final class AllSetsRepsChanged extends ExerciseEditorEvent {
+  const AllSetsRepsChanged({required this.rawInput});
+
+  final String rawInput;
+
+  @override
+  List<Object?> get props => [rawInput];
+}
+
+/// Sets the duration input on **every** set at once. Sets whose measurement
+/// shape has no duration field are left untouched.
+final class AllSetsDurationChanged extends ExerciseEditorEvent {
+  const AllSetsDurationChanged({required this.rawInput});
+
+  final String rawInput;
+
+  @override
+  List<Object?> get props => [rawInput];
+}
+
+/// Sets the number of planned sets to [count] (clamped 1–20). Growing appends
+/// sets that inherit the current uniform (last) value; shrinking drops sets from
+/// the end.
+final class PlannedSetCountChanged extends ExerciseEditorEvent {
+  const PlannedSetCountChanged({required this.count});
+
+  final int count;
+
+  @override
+  List<Object?> get props => [count];
+}
+
+/// Collapses varied sets back to uniform by setting every set to the first
+/// set's values. No-op in effect when already uniform or there is one set.
+final class AllSetsFlattenedToFirst extends ExerciseEditorEvent {
+  const AllSetsFlattenedToFirst();
+
+  @override
+  List<Object?> get props => [];
+}
+
+/// Bumps the weight on **every** set by [delta] kg (half-kg snapped, clamped
+/// ≥0). Sets with no weight field, or a blank/non-numeric weight, are untouched.
+final class AllSetsWeightBumped extends ExerciseEditorEvent {
+  const AllSetsWeightBumped({required this.delta});
+
+  final double delta;
+
+  @override
+  List<Object?> get props => [delta];
+}
+
+/// Bumps the reps on **every** set by [delta], preserving range shape (`6-8` →
+/// `7-9`) and clamping at zero. Blank/non-numeric reps are untouched.
+final class AllSetsRepsBumped extends ExerciseEditorEvent {
+  const AllSetsRepsBumped({required this.delta});
+
+  final int delta;
+
+  @override
+  List<Object?> get props => [delta];
+}
+
+/// Bumps the duration (seconds) on **every** set by [delta], clamped ≥0.
+final class AllSetsDurationBumped extends ExerciseEditorEvent {
+  const AllSetsDurationBumped({required this.delta});
+
+  final int delta;
+
+  @override
+  List<Object?> get props => [delta];
+}
+
 final class ExerciseSavePressed extends ExerciseEditorEvent {
   const ExerciseSavePressed();
 

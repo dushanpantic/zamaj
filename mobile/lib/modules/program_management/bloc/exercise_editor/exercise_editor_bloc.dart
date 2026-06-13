@@ -4,6 +4,7 @@ import 'package:zamaj/building_blocks/building_blocks.dart';
 import 'package:zamaj/modules/domain/domain.dart';
 import 'package:zamaj/modules/program_management/models/program_editor_draft.dart';
 import 'package:zamaj/modules/program_management/services/program_validation.dart';
+import 'package:zamaj/modules/program_management/services/set_input_adjustment.dart';
 
 import 'exercise_editor_event.dart';
 import 'exercise_editor_state.dart';
@@ -29,6 +30,14 @@ class ExerciseEditorBloc
     on<PlannedSetWeightChanged>(_onPlannedSetWeightChanged);
     on<PlannedSetRepsChanged>(_onPlannedSetRepsChanged);
     on<PlannedSetDurationChanged>(_onPlannedSetDurationChanged);
+    on<AllSetsWeightChanged>(_onAllSetsWeightChanged);
+    on<AllSetsRepsChanged>(_onAllSetsRepsChanged);
+    on<AllSetsDurationChanged>(_onAllSetsDurationChanged);
+    on<AllSetsWeightBumped>(_onAllSetsWeightBumped);
+    on<AllSetsRepsBumped>(_onAllSetsRepsBumped);
+    on<AllSetsDurationBumped>(_onAllSetsDurationBumped);
+    on<PlannedSetCountChanged>(_onPlannedSetCountChanged);
+    on<AllSetsFlattenedToFirst>(_onAllSetsFlattenedToFirst);
     on<ExerciseSavePressed>(_onSavePressed);
     on<ExerciseLibraryLinked>(_onLibraryLinked);
     on<ExerciseLibraryUnlinked>(_onLibraryUnlinked);
@@ -299,6 +308,176 @@ class ExerciseEditorBloc
     );
     final validation = _computeValidation(updated);
     emit(current.copyWith(draft: updated, validation: validation));
+  }
+
+  /// Maps [transform] over every set's values, recomputes validation, and
+  /// emits — the shared fan-out path for all uniform "all sets" edits.
+  void _mapAllSets(
+    Emitter<ExerciseEditorState> emit,
+    PlannedSetDraftValues Function(PlannedSetDraftValues values) transform,
+  ) {
+    final current = state;
+    if (current is! ExerciseEditorEditing) return;
+    final updated = current.draft.copyWith(
+      sets: current.draft.sets
+          .map((s) => s.copyWith(values: transform(s.values)))
+          .toList(),
+    );
+    final validation = _computeValidation(updated);
+    emit(current.copyWith(draft: updated, validation: validation));
+  }
+
+  Future<void> _onAllSetsWeightChanged(
+    AllSetsWeightChanged event,
+    Emitter<ExerciseEditorState> emit,
+  ) async {
+    _mapAllSets(
+      emit,
+      (values) => switch (values) {
+        final PlannedSetDraftRepBased rep => rep.copyWith(
+          weightInput: event.rawInput,
+        ),
+        final PlannedSetDraftTimeBased tb => tb.copyWith(
+          weightInput: event.rawInput,
+        ),
+        PlannedSetDraftBodyweight() => values,
+      },
+    );
+  }
+
+  Future<void> _onAllSetsRepsChanged(
+    AllSetsRepsChanged event,
+    Emitter<ExerciseEditorState> emit,
+  ) async {
+    _mapAllSets(
+      emit,
+      (values) => switch (values) {
+        final PlannedSetDraftRepBased rep => rep.copyWith(
+          repsInput: event.rawInput,
+        ),
+        final PlannedSetDraftBodyweight bw => bw.copyWith(
+          repsInput: event.rawInput,
+        ),
+        PlannedSetDraftTimeBased() => values,
+      },
+    );
+  }
+
+  Future<void> _onAllSetsDurationChanged(
+    AllSetsDurationChanged event,
+    Emitter<ExerciseEditorState> emit,
+  ) async {
+    _mapAllSets(
+      emit,
+      (values) => switch (values) {
+        final PlannedSetDraftTimeBased tb => tb.copyWith(
+          durationInput: event.rawInput,
+        ),
+        _ => values,
+      },
+    );
+  }
+
+  Future<void> _onAllSetsWeightBumped(
+    AllSetsWeightBumped event,
+    Emitter<ExerciseEditorState> emit,
+  ) async {
+    _mapAllSets(
+      emit,
+      (values) => switch (values) {
+        final PlannedSetDraftRepBased rep => rep.copyWith(
+          weightInput: SetInputAdjustment.bumpWeight(
+            rep.weightInput,
+            event.delta,
+          ),
+        ),
+        final PlannedSetDraftTimeBased tb => tb.copyWith(
+          weightInput: SetInputAdjustment.bumpWeight(
+            tb.weightInput,
+            event.delta,
+          ),
+        ),
+        PlannedSetDraftBodyweight() => values,
+      },
+    );
+  }
+
+  Future<void> _onAllSetsRepsBumped(
+    AllSetsRepsBumped event,
+    Emitter<ExerciseEditorState> emit,
+  ) async {
+    _mapAllSets(
+      emit,
+      (values) => switch (values) {
+        final PlannedSetDraftRepBased rep => rep.copyWith(
+          repsInput: SetInputAdjustment.bumpReps(rep.repsInput, event.delta),
+        ),
+        final PlannedSetDraftBodyweight bw => bw.copyWith(
+          repsInput: SetInputAdjustment.bumpReps(bw.repsInput, event.delta),
+        ),
+        PlannedSetDraftTimeBased() => values,
+      },
+    );
+  }
+
+  Future<void> _onAllSetsDurationBumped(
+    AllSetsDurationBumped event,
+    Emitter<ExerciseEditorState> emit,
+  ) async {
+    _mapAllSets(
+      emit,
+      (values) => switch (values) {
+        final PlannedSetDraftTimeBased tb => tb.copyWith(
+          durationInput: SetInputAdjustment.bumpDuration(
+            tb.durationInput,
+            event.delta,
+          ),
+        ),
+        _ => values,
+      },
+    );
+  }
+
+  Future<void> _onPlannedSetCountChanged(
+    PlannedSetCountChanged event,
+    Emitter<ExerciseEditorState> emit,
+  ) async {
+    final current = state;
+    if (current is! ExerciseEditorEditing) return;
+    final sets = current.draft.sets;
+    final target = event.count.clamp(1, 20);
+    if (target == sets.length) return;
+    final List<PlannedSetDraft> updatedSets;
+    if (target < sets.length) {
+      updatedSets = sets.sublist(0, target);
+    } else {
+      final template = sets.isEmpty
+          ? _emptySet(current.draft.measurementType)
+          : sets.last.values;
+      updatedSets = [
+        ...sets,
+        for (var i = sets.length; i < target; i++)
+          PlannedSetDraft(
+            draftId: _uuid.v4(),
+            persistedId: null,
+            values: template,
+          ),
+      ];
+    }
+    final updated = current.draft.copyWith(sets: updatedSets);
+    final validation = _computeValidation(updated);
+    emit(current.copyWith(draft: updated, validation: validation));
+  }
+
+  Future<void> _onAllSetsFlattenedToFirst(
+    AllSetsFlattenedToFirst event,
+    Emitter<ExerciseEditorState> emit,
+  ) async {
+    final current = state;
+    if (current is! ExerciseEditorEditing) return;
+    if (current.draft.sets.isEmpty) return;
+    final first = current.draft.sets.first.values;
+    _mapAllSets(emit, (_) => first);
   }
 
   Future<void> _onSavePressed(

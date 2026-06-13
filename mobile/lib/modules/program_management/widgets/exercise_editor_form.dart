@@ -10,9 +10,11 @@ import 'package:zamaj/modules/program_management/bloc/exercise_editor/exercise_e
 import 'package:zamaj/modules/program_management/bloc/exercise_editor/exercise_editor_event.dart';
 import 'package:zamaj/modules/program_management/bloc/exercise_editor/exercise_editor_state.dart';
 import 'package:zamaj/modules/program_management/models/program_editor_draft.dart';
+import 'package:zamaj/modules/program_management/services/set_input_adjustment.dart';
 import 'package:zamaj/modules/program_management/widgets/exercise_library_link_section.dart';
 import 'package:zamaj/modules/program_management/widgets/measurement_type_selector.dart';
 import 'package:zamaj/modules/program_management/widgets/planned_set_row.dart';
+import 'package:zamaj/modules/program_management/widgets/uniform_sets_editor.dart';
 
 class ExerciseEditorForm extends StatelessWidget {
   const ExerciseEditorForm({
@@ -87,56 +89,7 @@ class ExerciseEditorForm extends StatelessWidget {
                       bloc.add(ExerciseMeasurementTypeChanged(next: type)),
                 ),
                 const SizedBox(height: AppSpacing.lg),
-                const SectionHeader('Planned sets'),
-                const SizedBox(height: AppSpacing.sm),
-                ReorderableListView(
-                  shrinkWrap: true,
-                  physics: const NeverScrollableScrollPhysics(),
-                  onReorder: (oldIndex, newIndex) {
-                    final ids = draft.sets.map((s) => s.draftId).toList();
-                    if (newIndex > oldIndex) newIndex -= 1;
-                    final moved = ids.removeAt(oldIndex);
-                    ids.insert(newIndex, moved);
-                    bloc.add(PlannedSetReordered(orderedSetDraftIds: ids));
-                  },
-                  children: [
-                    for (var i = 0; i < draft.sets.length; i++)
-                      PlannedSetRow(
-                        key: ValueKey(draft.sets[i].draftId),
-                        setDraft: draft.sets[i],
-                        reorderIndex: i,
-                        onWeightChanged: (raw) => bloc.add(
-                          PlannedSetWeightChanged(
-                            setDraftId: draft.sets[i].draftId,
-                            rawInput: raw,
-                          ),
-                        ),
-                        onRepsChanged: (raw) => bloc.add(
-                          PlannedSetRepsChanged(
-                            setDraftId: draft.sets[i].draftId,
-                            rawInput: raw,
-                          ),
-                        ),
-                        onDurationChanged: (raw) => bloc.add(
-                          PlannedSetDurationChanged(
-                            setDraftId: draft.sets[i].draftId,
-                            rawInput: raw,
-                          ),
-                        ),
-                        onDelete: () => bloc.add(
-                          PlannedSetDeleted(setDraftId: draft.sets[i].draftId),
-                        ),
-                      ),
-                  ],
-                ),
-                const SizedBox(height: AppSpacing.sm),
-                OutlinedButton.icon(
-                  onPressed: draft.sets.length < 20
-                      ? () => bloc.add(const PlannedSetAdded())
-                      : null,
-                  icon: const AppIcon(Icons.add, size: AppIconSize.md),
-                  label: const Text('Add set'),
-                ),
+                _PlannedSetsSection(draft: draft),
                 const SizedBox(height: AppSpacing.lg),
                 TextField(
                   controller: plannedRestController,
@@ -220,5 +173,138 @@ class ExerciseEditorForm extends StatelessWidget {
         ),
       ],
     );
+  }
+}
+
+/// The planned-sets section of the exercise editor. Presents the sets as a
+/// single [UniformSetsEditor] when they all share the same values (the common
+/// straight-sets case), and the per-row list otherwise. Sets that already
+/// differ open expanded so variation is never hidden; collapsing varied sets
+/// back to uniform is gated behind a confirm before flattening.
+class _PlannedSetsSection extends StatefulWidget {
+  const _PlannedSetsSection({required this.draft});
+
+  final ExerciseDraft draft;
+
+  @override
+  State<_PlannedSetsSection> createState() => _PlannedSetsSectionState();
+}
+
+class _PlannedSetsSectionState extends State<_PlannedSetsSection> {
+  /// Whether the per-set rows are shown. Null until seeded on first build:
+  /// non-uniform sets open expanded, uniform sets open collapsed.
+  bool? _expanded;
+
+  bool get _uniform => SetInputAdjustment.areUniform(widget.draft.sets);
+
+  @override
+  Widget build(BuildContext context) {
+    _expanded ??= !_uniform;
+    final showUniform = !_expanded! && _uniform;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const SectionHeader('Planned sets'),
+        const SizedBox(height: AppSpacing.sm),
+        if (showUniform)
+          UniformSetsEditor(
+            draft: widget.draft,
+            onVaryBySet: () => setState(() => _expanded = true),
+          )
+        else
+          ..._buildPerRow(context),
+      ],
+    );
+  }
+
+  List<Widget> _buildPerRow(BuildContext context) {
+    final colors = Theme.of(context).appColors;
+    const typography = AppTypography.standard;
+    final bloc = context.read<ExerciseEditorBloc>();
+    final draft = widget.draft;
+
+    return [
+      if (!_uniform)
+        Padding(
+          padding: const EdgeInsets.only(bottom: AppSpacing.sm),
+          child: Text(
+            'Sets vary',
+            style: typography.caption.copyWith(color: colors.onSurfaceMuted),
+          ),
+        ),
+      ReorderableListView(
+        shrinkWrap: true,
+        physics: const NeverScrollableScrollPhysics(),
+        onReorder: (oldIndex, newIndex) {
+          final ids = draft.sets.map((s) => s.draftId).toList();
+          if (newIndex > oldIndex) newIndex -= 1;
+          final moved = ids.removeAt(oldIndex);
+          ids.insert(newIndex, moved);
+          bloc.add(PlannedSetReordered(orderedSetDraftIds: ids));
+        },
+        children: [
+          for (var i = 0; i < draft.sets.length; i++)
+            PlannedSetRow(
+              key: ValueKey(draft.sets[i].draftId),
+              setDraft: draft.sets[i],
+              reorderIndex: i,
+              onWeightChanged: (raw) => bloc.add(
+                PlannedSetWeightChanged(
+                  setDraftId: draft.sets[i].draftId,
+                  rawInput: raw,
+                ),
+              ),
+              onRepsChanged: (raw) => bloc.add(
+                PlannedSetRepsChanged(
+                  setDraftId: draft.sets[i].draftId,
+                  rawInput: raw,
+                ),
+              ),
+              onDurationChanged: (raw) => bloc.add(
+                PlannedSetDurationChanged(
+                  setDraftId: draft.sets[i].draftId,
+                  rawInput: raw,
+                ),
+              ),
+              onDelete: () => bloc.add(
+                PlannedSetDeleted(setDraftId: draft.sets[i].draftId),
+              ),
+            ),
+        ],
+      ),
+      const SizedBox(height: AppSpacing.sm),
+      Wrap(
+        spacing: AppSpacing.sm,
+        crossAxisAlignment: WrapCrossAlignment.center,
+        children: [
+          OutlinedButton.icon(
+            onPressed: draft.sets.length < 20
+                ? () => bloc.add(const PlannedSetAdded())
+                : null,
+            icon: const AppIcon(Icons.add, size: AppIconSize.md),
+            label: const Text('Add set'),
+          ),
+          TextButton(onPressed: _collapse, child: const Text('Use one value')),
+        ],
+      ),
+    ];
+  }
+
+  Future<void> _collapse() async {
+    if (!_uniform) {
+      final confirmed = await AppConfirmDialog.show(
+        context: context,
+        title: 'Use one value for all sets?',
+        body: "Every set will take the first set's weight and reps.",
+        confirmLabel: 'Make uniform',
+        cancelLabel: 'Keep varied',
+        isDestructive: true,
+      );
+      if (confirmed != true) return;
+      if (!mounted) return;
+      context.read<ExerciseEditorBloc>().add(const AllSetsFlattenedToFirst());
+    }
+    setState(() => _expanded = false);
   }
 }
