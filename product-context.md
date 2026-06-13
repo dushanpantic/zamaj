@@ -20,7 +20,7 @@ Starting a session takes a **snapshot** of the planned workout day at that momen
 ## Two words worth pinning down
 
 - **Superset** lives in two places by design. You build one in the day editor (movements done back-to-back), and you then run it in a session as a group focus mode steps through as partner cards. Each is independent: editing the plan's grouping never rewrites a session already underway, because the session carries its own grouping frozen in the snapshot.
-- **Completed** (for an exercise) is reached one way: it **auto-completes** once you've logged its planned number of sets. There's no "mark it done early". To stop an exercise short you use a single adaptive action — **Skip exercise** when nothing's logged, **End exercise** when some sets are — which keeps whatever you logged. An ended-early exercise reads as **partial** ("2/4 sets"), not completed and not skipped. Every read surface (live card, session review, history tile, plain-text export) **derives** completed / partial / skipped from the logged-vs-planned set counts rather than from a declared badge, so a ✓ never editorializes over partial work.
+- **Completed** (for an exercise) is *derived from what you logged, never declared* — there's no "mark it done" button. An exercise **auto-completes** once you've logged its planned number of sets. Stop it short with the single adaptive action — **End exercise** once some sets are in (keeping what you logged), **Skip exercise** with none — and it reads as **partial** ("2/4 sets") or **skipped** respectively. Every read surface (live card, session review, history tile, plain-text export) computes completed / partial / skipped from the logged-vs-planned set counts, so a ✓ never editorializes over partial work.
 
 ## Features by screen
 
