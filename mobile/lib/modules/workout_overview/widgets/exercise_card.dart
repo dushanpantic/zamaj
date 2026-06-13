@@ -291,17 +291,14 @@ class _Header extends StatelessWidget {
                 ),
               ),
               const SizedBox(width: AppSpacing.sm),
-              // Badges and the set counter share one trailing block with a
-              // flush right edge. With a badge above (warmup flame, Done…)
-              // the counter keeps its stacked two-line look; without one —
-              // the common unfinished case — the lone counter centers
-              // vertically against the title/summary lines instead of
-              // dangling at the second line under empty space.
+              // The warmup flame and the set counter share one trailing block
+              // with a flush right edge. With the flame above, the counter
+              // keeps its stacked two-line look; without one — the common case
+              // — the lone counter centers vertically against the title/summary
+              // lines instead of dangling at the second line under empty space.
               _TrailingMeta(
                 isWarmup:
                     viewModel.plannedGroupRole == ExerciseGroupRole.warmup,
-                state: state,
-                outcome: outcome,
                 completedCount: completedCount,
                 totalPlanned: totalPlanned,
                 typography: typography,
@@ -349,19 +346,14 @@ class _LeadingStateTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colors = Theme.of(context).appColors;
-    // Partial / Skipped / Replaced pass a null label: their trailing pill
-    // already announces the state, and a second identical announcement from the
-    // tile would just be screen-reader noise. Done and Not-completed have no
-    // other announcer, so the tile carries their label.
+    // The tile is the sole announcer of the outcome category now that the
+    // trailing pill is gone: every terminal state carries its own label, paired
+    // with the trailing counter's separate "n of m sets done" announcement.
     //
     // UnfinishedState is special-cased: in an ended session an untouched
     // exercise keeps the "Not completed" hollow circle rather than deriving a
     // skipped/partial outcome from its (zero/partial) set count.
-    final (
-      Color accent,
-      IconData icon,
-      String? label,
-    ) = state is UnfinishedState
+    final (Color accent, IconData icon, String label) = state is UnfinishedState
         ? (colors.onSurfaceMuted, Icons.radio_button_unchecked, 'Not completed')
         : switch (outcome) {
             ExerciseOutcome.completed => (
@@ -372,17 +364,17 @@ class _LeadingStateTile extends StatelessWidget {
             ExerciseOutcome.partial => (
               colors.exercisePartial,
               Icons.timelapse,
-              null,
+              'Partial',
             ),
             ExerciseOutcome.skipped => (
               colors.exerciseSkipped,
               Icons.skip_next,
-              null,
+              'Skipped',
             ),
             ExerciseOutcome.replaced => (
               colors.exerciseReplaced,
               Icons.swap_horiz,
-              null,
+              'Replaced',
             ),
           };
     return Container(
@@ -436,17 +428,16 @@ class _RestIndicator extends StatelessWidget {
   }
 }
 
-/// Right-edge meta block of the card header: status badges (warmup flame,
-/// Skipped / Replaced pills) on the first line, the `completed / planned`
-/// set counter below them. Keeping them in one column guarantees a shared
+/// Right-edge meta block of the card header: the warmup flame badge (when
+/// present) on the first line, the `completed / planned` set counter below it.
+/// The counter stays neutral grey in every state — the outcome color lives on
+/// the leading tile, not here. Keeping them in one column guarantees a shared
 /// flush right edge, and when no badge renders the lone counter is centered
-/// vertically by the header row instead of sitting on the second text line
-/// with nothing above it.
+/// vertically by the header row instead of sitting on the second text line with
+/// nothing above it.
 class _TrailingMeta extends StatelessWidget {
   const _TrailingMeta({
     required this.isWarmup,
-    required this.state,
-    required this.outcome,
     required this.completedCount,
     required this.totalPlanned,
     required this.typography,
@@ -454,8 +445,6 @@ class _TrailingMeta extends StatelessWidget {
   });
 
   final bool isWarmup;
-  final ExerciseState state;
-  final ExerciseOutcome outcome;
   final int completedCount;
   final int totalPlanned;
   final AppTypography typography;
@@ -463,43 +452,17 @@ class _TrailingMeta extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Done lives in the leading state tile now; only the rarer terminal
-    // outcomes (Partial / Skipped / Replaced) keep a labelled pill on the
-    // right. An unfinished exercise never shows a pill — its (derived) outcome
-    // is provisional, not a terminal verdict.
-    final showStatePill =
-        state is! UnfinishedState &&
-        (outcome == ExerciseOutcome.partial ||
-            outcome == ExerciseOutcome.skipped ||
-            outcome == ExerciseOutcome.replaced);
-    final hasBadges = isWarmup || showStatePill;
     return Column(
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.end,
       children: [
-        if (hasBadges)
-          Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              if (isWarmup)
-                StatusBadge.icon(
-                  icon: Icons.local_fire_department,
-                  color: colors.warmup,
-                  label: 'Warmup',
-                ),
-              if (isWarmup && showStatePill)
-                const SizedBox(width: AppSpacing.sm),
-              if (showStatePill)
-                _StateBadge(
-                  outcome: outcome,
-                  completedCount: completedCount,
-                  totalPlanned: totalPlanned,
-                  colors: colors,
-                ),
-            ],
+        if (isWarmup)
+          StatusBadge.icon(
+            icon: Icons.local_fire_department,
+            color: colors.warmup,
+            label: 'Warmup',
           ),
-        if (hasBadges && totalPlanned > 0)
-          const SizedBox(height: AppSpacing.xs),
+        if (isWarmup && totalPlanned > 0) const SizedBox(height: AppSpacing.xs),
         if (totalPlanned > 0)
           Semantics(
             label: '$completedCount of $totalPlanned sets done',
@@ -513,44 +476,6 @@ class _TrailingMeta extends StatelessWidget {
           ),
       ],
     );
-  }
-}
-
-class _StateBadge extends StatelessWidget {
-  const _StateBadge({
-    required this.outcome,
-    required this.completedCount,
-    required this.totalPlanned,
-    required this.colors,
-  });
-
-  final ExerciseOutcome outcome;
-  final int completedCount;
-  final int totalPlanned;
-  final AppColors colors;
-
-  @override
-  Widget build(BuildContext context) {
-    // Only the terminal exception outcomes render here: Done is signalled by the
-    // leading [_LeadingStateTile], and the active exercise carries no badge —
-    // the card's 2dp primary border is the "current" signal on its own. An
-    // ended-early exercise shows its honest "n/m sets" partial pill, not
-    // "Skipped".
-    return switch (outcome) {
-      ExerciseOutcome.completed => const SizedBox.shrink(),
-      ExerciseOutcome.partial => StatusBadge.pill(
-        label: '$completedCount/$totalPlanned sets',
-        color: colors.exercisePartial,
-      ),
-      ExerciseOutcome.skipped => StatusBadge.pill(
-        label: 'Skipped',
-        color: colors.exerciseSkipped,
-      ),
-      ExerciseOutcome.replaced => StatusBadge.pill(
-        label: 'Replaced',
-        color: colors.exerciseReplaced,
-      ),
-    };
   }
 }
 
