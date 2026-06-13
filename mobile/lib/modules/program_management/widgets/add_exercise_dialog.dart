@@ -18,6 +18,9 @@ Future<void> startAddExercise(
         context: context,
         builder: (_) => _AddExerciseDialog(bloc: bloc),
       );
+    // Not reachable here: this picker is opened without allowAddToLibrary, so
+    // the footer never offers it. Handled for sealed-type exhaustiveness.
+    case LibraryPickerAddToLibrary():
     case null:
       return;
   }

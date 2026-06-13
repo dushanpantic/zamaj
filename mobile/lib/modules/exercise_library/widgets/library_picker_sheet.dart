@@ -29,12 +29,21 @@ final class LibraryPickerCreateOneOff extends LibraryPickerResult {
   const LibraryPickerCreateOneOff();
 }
 
+/// Sentinel returned when the user wants to create a brand-new library entry
+/// from the calling exercise (shown only when `allowAddToLibrary` is true).
+/// The picker has no exercise context of its own; the caller owns the
+/// create-and-link logic.
+final class LibraryPickerAddToLibrary extends LibraryPickerResult {
+  const LibraryPickerAddToLibrary();
+}
+
 class LibraryPickerSheet extends StatefulWidget {
   const LibraryPickerSheet({
     super.key,
     required this.repository,
     this.measurementType,
     this.allowCreateOneOff = true,
+    this.allowAddToLibrary = false,
     this.title = 'Pick from library',
   });
 
@@ -47,12 +56,18 @@ class LibraryPickerSheet extends StatefulWidget {
   /// When true, show a footer button that returns [LibraryPickerCreateOneOff].
   final bool allowCreateOneOff;
 
+  /// When true, show a footer button that returns [LibraryPickerAddToLibrary] —
+  /// used by the link flow so "no match? create a new entry" lives inside the
+  /// picker rather than behind a separate menu.
+  final bool allowAddToLibrary;
+
   final String title;
 
   static Future<LibraryPickerResult?> show(
     BuildContext context, {
     MeasurementType? measurementType,
     bool allowCreateOneOff = true,
+    bool allowAddToLibrary = false,
     String title = 'Pick from library',
   }) {
     final repository = context.read<ExerciseLibraryRepository>();
@@ -68,6 +83,7 @@ class LibraryPickerSheet extends StatefulWidget {
         repository: repository,
         measurementType: measurementType,
         allowCreateOneOff: allowCreateOneOff,
+        allowAddToLibrary: allowAddToLibrary,
         title: title,
       ),
     );
@@ -181,28 +197,51 @@ class _LibraryPickerSheetState extends State<LibraryPickerSheet> {
               ),
               const SizedBox(height: AppSpacing.sm),
               Flexible(child: _buildList(colors)),
-              if (widget.allowCreateOneOff)
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(
-                    AppSpacing.lg,
-                    AppSpacing.sm,
-                    AppSpacing.lg,
-                    AppSpacing.lg,
-                  ),
-                  child: SizedBox(
-                    width: double.infinity,
-                    child: OutlinedButton.icon(
-                      onPressed: () => Navigator.of(
-                        context,
-                      ).pop(const LibraryPickerCreateOneOff()),
-                      icon: const Icon(Icons.add),
-                      label: const Text('Create one-off (no library)'),
-                    ),
-                  ),
-                ),
+              if (widget.allowAddToLibrary || widget.allowCreateOneOff)
+                _buildFooter(),
             ],
           ),
         ),
+      ),
+    );
+  }
+
+  Widget _buildFooter() {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(
+        AppSpacing.lg,
+        AppSpacing.sm,
+        AppSpacing.lg,
+        AppSpacing.lg,
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          if (widget.allowAddToLibrary)
+            SizedBox(
+              width: double.infinity,
+              child: OutlinedButton.icon(
+                onPressed: () => Navigator.of(
+                  context,
+                ).pop(const LibraryPickerAddToLibrary()),
+                icon: const Icon(Icons.library_add_outlined),
+                label: const Text('Add to library'),
+              ),
+            ),
+          if (widget.allowAddToLibrary && widget.allowCreateOneOff)
+            const SizedBox(height: AppSpacing.sm),
+          if (widget.allowCreateOneOff)
+            SizedBox(
+              width: double.infinity,
+              child: OutlinedButton.icon(
+                onPressed: () => Navigator.of(
+                  context,
+                ).pop(const LibraryPickerCreateOneOff()),
+                icon: const Icon(Icons.add),
+                label: const Text('Create one-off (no library)'),
+              ),
+            ),
+        ],
       ),
     );
   }

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:zamaj/building_blocks/building_blocks.dart';
 import 'package:zamaj/core/app_spacing.dart';
 import 'package:zamaj/core/app_theme.dart';
 import 'package:zamaj/modules/domain/domain.dart';
@@ -9,7 +10,7 @@ import 'package:zamaj/modules/program_management/bloc/exercise_editor/exercise_e
 import 'package:zamaj/modules/program_management/models/program_editor_draft.dart';
 import 'package:zamaj/modules/program_management/widgets/library_link_chip.dart';
 
-class ExerciseLibraryLinkSection extends StatelessWidget {
+class ExerciseLibraryLinkSection extends StatefulWidget {
   const ExerciseLibraryLinkSection({
     super.key,
     required this.draft,
@@ -19,52 +20,59 @@ class ExerciseLibraryLinkSection extends StatelessWidget {
   final ExerciseDraft draft;
   final ExerciseEditorBloc bloc;
 
-  Future<void> _openActions(BuildContext context) async {
-    if (draft.libraryExerciseId == null) {
-      await _showUnlinkedActions(context);
-    } else {
-      await _showLinkedActions(context);
+  @override
+  State<ExerciseLibraryLinkSection> createState() =>
+      _ExerciseLibraryLinkSectionState();
+}
+
+class _ExerciseLibraryLinkSectionState
+    extends State<ExerciseLibraryLinkSection> {
+  /// The linked library entry's name, or null when unlinked or while the lookup
+  /// is in flight. Resolved from the repository rather than read off the draft:
+  /// the draft's own name is the row's (local) name, which the user can keep
+  /// distinct from the library entry's name when linking.
+  String? _libraryName;
+
+  /// The id [_libraryName] was resolved for. Guards against re-resolving on
+  /// every rebuild and against a stale async result landing after the link
+  /// changed again.
+  String? _resolvedForId;
+
+  @override
+  void initState() {
+    super.initState();
+    _resolveLibraryName();
+  }
+
+  @override
+  void didUpdateWidget(covariant ExerciseLibraryLinkSection oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.draft.libraryExerciseId != widget.draft.libraryExerciseId) {
+      _resolveLibraryName();
     }
   }
 
-  Future<void> _showUnlinkedActions(BuildContext context) async {
-    final colors = Theme.of(context).appColors;
-    final action = await showModalBottomSheet<_LibraryAction>(
-      context: context,
-      backgroundColor: colors.surfaceElevated,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(AppRadius.lg)),
-      ),
-      builder: (_) => SafeArea(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            ListTile(
-              leading: const Icon(Icons.library_add_outlined),
-              title: const Text('Add to library'),
-              subtitle: const Text('Create a library entry from this exercise'),
-              onTap: () =>
-                  Navigator.of(context).pop(_LibraryAction.addToLibrary),
-            ),
-            ListTile(
-              leading: const Icon(Icons.link),
-              title: const Text('Link to existing…'),
-              subtitle: const Text('Pick from your library'),
-              onTap: () =>
-                  Navigator.of(context).pop(_LibraryAction.linkExisting),
-            ),
-          ],
-        ),
-      ),
-    );
-    if (!context.mounted || action == null) return;
-    switch (action) {
-      case _LibraryAction.addToLibrary:
-        await _addToLibrary(context);
-      case _LibraryAction.linkExisting:
-        await _linkExisting(context);
-      case _LibraryAction.unlink:
-        break;
+  Future<void> _resolveLibraryName() async {
+    final id = widget.draft.libraryExerciseId;
+    _resolvedForId = id;
+    if (id == null) {
+      if (_libraryName != null) setState(() => _libraryName = null);
+      return;
+    }
+    final repo = context.read<ExerciseLibraryRepository>();
+    final entry = await repo.get(id);
+    if (!mounted || _resolvedForId != id) return;
+    setState(() => _libraryName = entry?.name);
+  }
+
+  Future<void> _openActions(BuildContext context) async {
+    if (widget.draft.libraryExerciseId == null) {
+      // First-time link: go straight to the picker. "Add to library" lives
+      // inside it as a footer action, so the common "link to existing" path
+      // costs one tap rather than two.
+      await _linkExisting(context);
+    } else {
+      await _showLinkedActions(context);
     }
   }
 
@@ -100,15 +108,13 @@ class ExerciseLibraryLinkSection extends StatelessWidget {
       case _LibraryAction.linkExisting:
         await _linkExisting(context);
       case _LibraryAction.unlink:
-        bloc.add(const ExerciseLibraryUnlinked());
-      case _LibraryAction.addToLibrary:
-        break;
+        widget.bloc.add(const ExerciseLibraryUnlinked());
     }
   }
 
   Future<void> _addToLibrary(BuildContext context) async {
     final repo = context.read<ExerciseLibraryRepository>();
-    final name = draft.name.trim();
+    final name = widget.draft.name.trim();
     if (name.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
@@ -130,15 +136,27 @@ class ExerciseLibraryLinkSection extends StatelessWidget {
         } else {
           entry = await repo.create(
             name: name,
-            measurementType: draft.measurementType,
-            videoUrl: draft.metadata.videoUrl,
+            measurementType: widget.draft.measurementType,
+            videoUrl: widget.draft.metadata.videoUrl,
           );
         }
       } else {
+        // Guard the one path that silently creates a brand-new global entry,
+        // so a stray tap on "Add to library" can't pollute the catalog. The
+        // existing-name branch above is already gated by _confirmExistingMatch.
+        final confirmed = await AppConfirmDialog.show(
+          context: context,
+          title: 'Add to library?',
+          body:
+              'Creates a new library entry "$name", available to all your '
+              'programs, and links this exercise to it.',
+          confirmLabel: 'Add',
+        );
+        if (!context.mounted || confirmed != true) return;
         entry = await repo.create(
           name: name,
-          measurementType: draft.measurementType,
-          videoUrl: draft.metadata.videoUrl,
+          measurementType: widget.draft.measurementType,
+          videoUrl: widget.draft.metadata.videoUrl,
         );
       }
     } on DomainError catch (e) {
@@ -149,7 +167,7 @@ class ExerciseLibraryLinkSection extends StatelessWidget {
       return;
     }
     if (!context.mounted) return;
-    bloc.add(
+    widget.bloc.add(
       ExerciseLibraryLinked(
         libraryExerciseId: entry.id,
         libraryName: entry.name,
@@ -190,21 +208,30 @@ class ExerciseLibraryLinkSection extends StatelessWidget {
   Future<void> _linkExisting(BuildContext context) async {
     final result = await LibraryPickerSheet.show(
       context,
-      measurementType: draft.measurementType,
+      measurementType: widget.draft.measurementType,
       allowCreateOneOff: false,
+      allowAddToLibrary: true,
       title: 'Link to library entry',
     );
-    if (!context.mounted || result is! LibraryPickerSelected) return;
-    final overwrite = await _askOverwriteRow(context);
-    if (!context.mounted || overwrite == null) return;
-    bloc.add(
-      ExerciseLibraryLinked(
-        libraryExerciseId: result.entry.id,
-        libraryName: result.entry.name,
-        libraryVideoUrl: result.entry.videoUrl,
-        overwriteNameAndVideo: overwrite,
-      ),
-    );
+    if (!context.mounted) return;
+    switch (result) {
+      case LibraryPickerSelected(:final entry):
+        final overwrite = await _askOverwriteRow(context);
+        if (!context.mounted || overwrite == null) return;
+        widget.bloc.add(
+          ExerciseLibraryLinked(
+            libraryExerciseId: entry.id,
+            libraryName: entry.name,
+            libraryVideoUrl: entry.videoUrl,
+            overwriteNameAndVideo: overwrite,
+          ),
+        );
+      case LibraryPickerAddToLibrary():
+        await _addToLibrary(context);
+      case LibraryPickerCreateOneOff():
+      case null:
+        return;
+    }
   }
 
   Future<bool?> _askOverwriteRow(BuildContext context) {
@@ -237,11 +264,12 @@ class ExerciseLibraryLinkSection extends StatelessWidget {
     return Align(
       alignment: Alignment.centerLeft,
       child: LibraryLinkChip(
-        linkedName: draft.libraryExerciseId == null ? null : draft.name,
+        isLinked: widget.draft.libraryExerciseId != null,
+        linkedName: _libraryName,
         onTap: () => _openActions(context),
       ),
     );
   }
 }
 
-enum _LibraryAction { addToLibrary, linkExisting, unlink }
+enum _LibraryAction { linkExisting, unlink }
