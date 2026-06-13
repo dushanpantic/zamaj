@@ -391,8 +391,8 @@ This section is the machine-parseable recovery handle. `/build` updates checkbox
   - [x] Step 3.3: Derived badges in session review
 
 #### Wave 3
-- [ ] Slice 4: Remove markExerciseDone from domain and persistence
-  - [ ] Step 4.1: Delete the early-completion mutation
+- [x] Slice 4: Remove markExerciseDone from domain and persistence
+  - [x] Step 4.1: Delete the early-completion mutation
 
 #### Wave 4
 - [ ] Slice 5: Documentation
@@ -402,7 +402,7 @@ This section is the machine-parseable recovery handle. `/build` updates checkbox
 
 - [ ] AC1: In-session menus offer exactly one adaptive terminal action; "Mark done" gone
 - [ ] AC2: End confirmation states counts; ending keeps sets, stops suggestions, allows session completion
-- [ ] AC3: `completed` only via auto-complete; `markExerciseDone` removed end to end
+- [x] AC3: `completed` only via auto-complete; `markExerciseDone` removed end to end
 - [ ] AC4: Review badges derived (Done / "n/m sets" partial / Skipped); legacy rows self-heal
 - [ ] AC5: Live card shows "n/m sets" partial pill for ended-early exercises
 - [ ] AC6: History tile counts derived full completions only

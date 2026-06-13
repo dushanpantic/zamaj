@@ -4,7 +4,7 @@
 ///
 /// After the set-order redesign, positions assigned at `startSession` are
 /// stable. State transitions (`completeSet`, `skipExercise`,
-/// `replaceExercise`, `deleteExecutedSet`, `markExerciseDone`) never modify
+/// `replaceExercise`, `deleteExecutedSet`) never modify
 /// any exercise's `position`. Only `reorderUnfinished` can change positions,
 /// and it can only permute slots already held by unfinished exercises.
 ///
@@ -392,110 +392,6 @@ void main() {
       },
     );
   });
-
-  group('markExerciseDone', () {
-    test(
-      'flips an unfinished exercise to completed without changing position',
-      () async {
-        final rng = Random(11);
-        final db = AppDatabase(NativeDatabase.memory());
-        try {
-          final programRepo = DriftProgramRepository(db: db);
-          final sessionRepo = DriftSessionRepository(
-            db: db,
-            programRepository: programRepo,
-          );
-
-          final session = await _seedSession(rng, programRepo, sessionRepo);
-          final target = session.sessionExercises.first;
-
-          final after = await sessionRepo.markExerciseDone(
-            sessionExerciseId: target.id,
-          );
-
-          final flipped = after.sessionExercises.firstWhere(
-            (e) => e.id == target.id,
-          );
-          expect(flipped.state, isA<CompletedState>());
-          expect(flipped.position, equals(target.position));
-          expect(flipped.executedSets, isEmpty);
-        } finally {
-          await db.close();
-        }
-      },
-    );
-
-    test(
-      'preserves previously logged sets when marking partially done',
-      () async {
-        final rng = Random(12);
-        final db = AppDatabase(NativeDatabase.memory());
-        try {
-          final programRepo = DriftProgramRepository(db: db);
-          final sessionRepo = DriftSessionRepository(
-            db: db,
-            programRepository: programRepo,
-          );
-
-          final session = await _seedSession(
-            rng,
-            programRepo,
-            sessionRepo,
-            setsPerExercise: 3,
-          );
-          final target = session.sessionExercises.first;
-          final plannedExercise = session.snapshot.workoutDay.exerciseGroups
-              .expand((g) => g.exercises)
-              .firstWhere((e) => e.id == target.plannedExerciseIdInSnapshot);
-          final measurementType = plannedExercise.measurementType;
-
-          await sessionRepo.completeSet(
-            sessionExerciseId: target.id,
-            actualValues: anyActualSetValuesForMeasurement(
-              rng,
-              measurementType,
-            ),
-          );
-
-          final after = await sessionRepo.markExerciseDone(
-            sessionExerciseId: target.id,
-          );
-
-          final flipped = after.sessionExercises.firstWhere(
-            (e) => e.id == target.id,
-          );
-          expect(flipped.state, isA<CompletedState>());
-          expect(flipped.executedSets, hasLength(1));
-        } finally {
-          await db.close();
-        }
-      },
-    );
-
-    test('throws OrderingError when the exercise is already locked', () async {
-      final rng = Random(13);
-      final db = AppDatabase(NativeDatabase.memory());
-      try {
-        final programRepo = DriftProgramRepository(db: db);
-        final sessionRepo = DriftSessionRepository(
-          db: db,
-          programRepository: programRepo,
-        );
-
-        final session = await _seedSession(rng, programRepo, sessionRepo);
-        final target = session.sessionExercises.first;
-
-        await sessionRepo.skipExercise(target.id);
-
-        await expectLater(
-          () => sessionRepo.markExerciseDone(sessionExerciseId: target.id),
-          throwsA(isA<OrderingError>()),
-        );
-      } finally {
-        await db.close();
-      }
-    });
-  });
 }
 
 bool _isLocked(domain.SessionExercise se) {
@@ -612,9 +508,6 @@ Future<domain.Session> _applySingleOp({
       plannedSetIdInSnapshot: op.plannedSetIdInSnapshot,
     ),
     SkipExerciseOp() => sessionRepo.skipExercise(seId),
-    MarkExerciseDoneOp() => sessionRepo.markExerciseDone(
-      sessionExerciseId: seId,
-    ),
     ReplaceExerciseOp() => sessionRepo.replaceExercise(
       sessionExerciseId: seId,
       substituteName: op.substituteName,

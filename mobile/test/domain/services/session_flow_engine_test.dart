@@ -13,6 +13,7 @@ import 'package:zamaj/modules/domain/models/rep_target.dart';
 import 'package:zamaj/modules/domain/models/session_exercise.dart';
 import 'package:zamaj/modules/domain/models/workout_day.dart';
 import 'package:zamaj/modules/domain/models/workout_set.dart';
+import 'package:zamaj/modules/domain/services/exercise_outcome.dart';
 import 'package:zamaj/modules/domain/services/log_target.dart';
 import 'package:zamaj/modules/domain/services/session_flow_engine.dart';
 
@@ -822,6 +823,56 @@ void main() {
         ),
       );
     });
+  });
+
+  group('ending an exercise early never records it as completed', () {
+    // Ending an exercise mid-quota routes through skipExercise (there is no
+    // markExerciseDone). The stored discriminator is `skipped`, but the read
+    // surfaces derive `partial` from the logged-set count, never `completed`.
+    test(
+      'ending an exercise with 2 of 4 sets logged lands on a non-completed '
+      'record whose derived outcome is partial, and the session completes',
+      () async {
+        final s = setup();
+        final workoutDay = _buildWorkoutDay(
+          id: 'wd-end-early',
+          exerciseSpecs: [
+            _ExerciseSpec(
+              name: 'Bench',
+              measurementType: const MeasurementType.repBased(),
+              setCount: 4,
+            ),
+          ],
+        );
+        s.repo.seedWorkoutDay(workoutDay);
+        final started = await s.engine.startSession(
+          workoutDayId: workoutDay.id,
+        );
+        final benchId = started.session.sessionExercises[0].id;
+
+        for (var i = 0; i < 2; i++) {
+          await s.engine.completeSet(
+            sessionExerciseId: benchId,
+            actualValues: const ActualSetValues.repBased(weightKg: 80, reps: 5),
+          );
+        }
+
+        final ended = await s.engine.skipExercise(sessionExerciseId: benchId);
+        final exercise = _findExercise(ended.session.sessionExercises, benchId);
+
+        expect(exercise.state, isNot(isA<CompletedState>()));
+        expect(exercise.executedSets, hasLength(2));
+        expect(
+          ExerciseOutcomes.of(
+            state: exercise.state,
+            executedSetCount: exercise.executedSets.length,
+            plannedSetCount: 4,
+          ),
+          equals(ExerciseOutcome.partial),
+        );
+        expect(ended.isComplete, isTrue);
+      },
+    );
   });
 
   group('corrupt snapshot', () {

@@ -72,11 +72,6 @@ abstract class SessionRepository {
 
   Future<Session> skipExercise(String sessionExerciseId);
 
-  /// Locks an `unfinished` exercise into `completed` state without requiring
-  /// the full planned-set count. Sets already logged remain attached. Throws
-  /// [OrderingError] when the exercise is not in `unfinished` state.
-  Future<Session> markExerciseDone({required String sessionExerciseId});
-
   Future<Session> replaceExercise({
     required String sessionExerciseId,
     required String substituteName,

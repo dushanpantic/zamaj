@@ -746,11 +746,6 @@ final class SkipExerciseOp extends SessionRepoOp {
   final String sessionExerciseId;
 }
 
-final class MarkExerciseDoneOp extends SessionRepoOp {
-  MarkExerciseDoneOp({required this.sessionExerciseId});
-  final String sessionExerciseId;
-}
-
 final class ReplaceExerciseOp extends SessionRepoOp {
   ReplaceExerciseOp({
     required this.sessionExerciseId,
@@ -815,10 +810,8 @@ List<SessionRepoOp> anySessionRepoOpSequence(Random rng) {
           plannedSetIdInSnapshot: rng.nextBool() ? anyUuidV4(rng) : null,
         ),
       );
-    } else if (roll < 5) {
+    } else if (roll < 6) {
       ops.add(SkipExerciseOp(sessionExerciseId: seId));
-    } else if (roll == 5) {
-      ops.add(MarkExerciseDoneOp(sessionExerciseId: seId));
     } else if (roll < 7) {
       final substituteMt = anyMeasurementType(rng);
       ops.add(

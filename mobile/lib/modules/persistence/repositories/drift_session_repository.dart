@@ -613,43 +613,6 @@ class DriftSessionRepository implements SessionRepository {
   }
 
   @override
-  Future<domain.Session> markExerciseDone({
-    required String sessionExerciseId,
-  }) async {
-    return _db.transaction(() async {
-      final exerciseRow = await _requireSessionExerciseRow(sessionExerciseId);
-      _requireUnfinished(exerciseRow);
-
-      final exerciseUpdatedAt = _timestamps.nextUpdatedAt(
-        previousUpdatedAt: msToUtc(exerciseRow.updatedAtMs),
-        createdAt: msToUtc(exerciseRow.createdAtMs),
-      );
-
-      await (_db.update(
-        _db.sessionExercises,
-      )..where((t) => t.id.equals(sessionExerciseId))).write(
-        SessionExercisesCompanion(
-          stateDiscriminator: const Value('completed'),
-          updatedAtMs: Value(utcToMs(exerciseUpdatedAt)),
-        ),
-      );
-
-      final sessionRow = await _requireSessionRow(exerciseRow.sessionId);
-      final sessionUpdatedAt = _timestamps.nextUpdatedAt(
-        previousUpdatedAt: msToUtc(sessionRow.updatedAtMs),
-        createdAt: msToUtc(sessionRow.createdAtMs),
-      );
-      await (_db.update(
-        _db.sessions,
-      )..where((t) => t.id.equals(exerciseRow.sessionId))).write(
-        SessionsCompanion(updatedAtMs: Value(utcToMs(sessionUpdatedAt))),
-      );
-
-      return _loadSession(exerciseRow.sessionId);
-    });
-  }
-
-  @override
   Future<domain.Session> replaceExercise({
     required String sessionExerciseId,
     required String substituteName,

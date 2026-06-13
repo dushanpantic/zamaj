@@ -77,24 +77,6 @@ class SessionFlowEngine {
     return _buildState(updatedSession);
   }
 
-  /// Locks an `unfinished` exercise into `completed` even when fewer than
-  /// the planned number of sets have been logged. Sets already logged
-  /// remain attached. Mirrors [skipExercise] semantically (terminal state)
-  /// but preserves the executed work.
-  Future<SessionState> markExerciseDone({
-    required String sessionExerciseId,
-  }) async {
-    final session = await _repository.getSessionByExerciseId(sessionExerciseId);
-    final exercise = session.sessionExercises.firstWhere(
-      (SessionExercise e) => e.id == sessionExerciseId,
-    );
-    _assertUnfinished(exercise);
-    final updatedSession = await _repository.markExerciseDone(
-      sessionExerciseId: sessionExerciseId,
-    );
-    return _buildState(updatedSession);
-  }
-
   /// Replaces an unfinished exercise with a substitute.
   Future<SessionState> replaceExercise({
     required String sessionExerciseId,
@@ -290,10 +272,12 @@ class SessionFlowEngine {
 
   /// Completes a set on [sessionExerciseId] with [actualValues].
   ///
-  /// Loggable states are `unfinished`, `replaced`, and `completed` (the last
-  /// covers the "extra set on a finished exercise" affordance). Logging on a
-  /// `skipped` exercise throws [OrderingError]. Cross-exercise ordering is
-  /// unrestricted — the caller picks which loggable exercise to append to.
+  /// Loggable states are `unfinished`, `replaced`, and `completed`. Completion
+  /// is reachable only by logging the full planned-set quota (auto-complete),
+  /// so the `completed` case here covers the "extra set on an auto-completed
+  /// exercise" affordance. Logging on a `skipped` exercise throws
+  /// [OrderingError]. Cross-exercise ordering is unrestricted — the caller
+  /// picks which loggable exercise to append to.
   Future<SessionState> completeSet({
     required String sessionExerciseId,
     required ActualSetValues actualValues,

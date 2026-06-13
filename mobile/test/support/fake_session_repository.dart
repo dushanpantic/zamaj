@@ -295,37 +295,6 @@ class FakeSessionRepository implements SessionRepository {
   }
 
   @override
-  Future<Session> markExerciseDone({required String sessionExerciseId}) async {
-    final session = await getSessionByExerciseId(sessionExerciseId);
-    final now = clock.now().toUtc();
-
-    final exercise = session.sessionExercises.firstWhere(
-      (e) => e.id == sessionExerciseId,
-    );
-    if (exercise.state is! UnfinishedState) {
-      throw OrderingError(
-        sessionExerciseId: sessionExerciseId,
-        currentState: exercise.state.discriminator,
-        message:
-            'SessionExercise $sessionExerciseId is already locked in state ${exercise.state.discriminator}',
-      );
-    }
-
-    final updatedExercises = session.sessionExercises.map((e) {
-      if (e.id != sessionExerciseId) return e;
-      return e.copyWith(state: const ExerciseState.completed(), updatedAt: now);
-    }).toList();
-
-    final updated = session.copyWith(
-      sessionExercises: updatedExercises,
-      updatedAt: now,
-    );
-    _sessions[session.id] = updated;
-    _notify(session.id);
-    return updated;
-  }
-
-  @override
   Future<Session> skipExercise(String sessionExerciseId) async {
     final session = await getSessionByExerciseId(sessionExerciseId);
     final now = clock.now().toUtc();
