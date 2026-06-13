@@ -859,14 +859,25 @@ void main() {
 
         final ended = await s.engine.skipExercise(sessionExerciseId: benchId);
         final exercise = _findExercise(ended.session.sessionExercises, benchId);
+        final plannedSetCount = started
+            .session
+            .snapshot
+            .workoutDay
+            .exerciseGroups
+            .expand((g) => g.exercises)
+            .firstWhere((e) => e.id == exercise.plannedExerciseIdInSnapshot)
+            .sets
+            .length;
 
-        expect(exercise.state, isNot(isA<CompletedState>()));
+        // Pins the stored discriminator: ending short lands on `skipped`,
+        // never `completed`.
+        expect(exercise.state, equals(const ExerciseState.skipped()));
         expect(exercise.executedSets, hasLength(2));
         expect(
           ExerciseOutcomes.of(
             state: exercise.state,
             executedSetCount: exercise.executedSets.length,
-            plannedSetCount: 4,
+            plannedSetCount: plannedSetCount,
           ),
           equals(ExerciseOutcome.partial),
         );
