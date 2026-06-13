@@ -177,7 +177,11 @@ class _WorkoutOverviewLoadedBodyState extends State<WorkoutOverviewLoadedBody>
                 ),
               ),
             if (state.isEnded)
-              const SliverToBoxAdapter(child: SessionEndedBanner()),
+              SliverToBoxAdapter(
+                child: SessionEndedBanner(
+                  session: state.sessionState.session,
+                ),
+              ),
             SliverPadding(
               padding: const EdgeInsets.fromLTRB(
                 AppSpacing.lg,

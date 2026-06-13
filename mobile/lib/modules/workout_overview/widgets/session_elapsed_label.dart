@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:zamaj/core/app_theme.dart';
 import 'package:zamaj/core/app_typography.dart';
+import 'package:zamaj/core/duration_format.dart';
 
 /// Ticking elapsed-time readout. Counts up from [startedAt] every second
 /// while the session is live; freezes at `endedAt - startedAt` once the
@@ -60,20 +61,9 @@ class _SessionElapsedLabelState extends State<SessionElapsedLabel> {
     final colors = Theme.of(context).appColors;
     const typography = AppTypography.standard;
     final end = widget.endedAt ?? context.read<Clock>().now().toUtc();
-    final seconds = end.difference(widget.startedAt).inSeconds;
     return Text(
-      _formatElapsed(seconds < 0 ? 0 : seconds),
+      formatElapsed(end.difference(widget.startedAt)),
       style: typography.numericSm.copyWith(color: colors.onSurfaceMuted),
     );
-  }
-
-  static String _formatElapsed(int totalSeconds) {
-    final h = totalSeconds ~/ 3600;
-    final m = (totalSeconds % 3600) ~/ 60;
-    final s = totalSeconds % 60;
-    final mm = m.toString().padLeft(2, '0');
-    final ss = s.toString().padLeft(2, '0');
-    if (h > 0) return '$h:$mm:$ss';
-    return '$mm:$ss';
   }
 }

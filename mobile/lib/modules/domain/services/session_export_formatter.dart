@@ -4,7 +4,6 @@ import 'package:zamaj/core/weight_formatter.dart';
 import 'package:zamaj/modules/domain/models/actual_set_values.dart';
 import 'package:zamaj/modules/domain/models/executed_set.dart';
 import 'package:zamaj/modules/domain/models/exercise.dart';
-import 'package:zamaj/modules/domain/models/exercise_group_role.dart';
 import 'package:zamaj/modules/domain/models/exercise_state.dart';
 import 'package:zamaj/modules/domain/models/planned_set_values.dart';
 import 'package:zamaj/modules/domain/models/session.dart';
@@ -13,6 +12,7 @@ import 'package:zamaj/modules/domain/models/substitute_exercise.dart';
 import 'package:zamaj/modules/domain/models/workout_day.dart';
 import 'package:zamaj/modules/domain/models/workout_set.dart';
 import 'package:zamaj/modules/domain/services/exercise_outcome.dart';
+import 'package:zamaj/modules/domain/services/warmup_exercises.dart';
 
 /// Renders a [Session] to plain text suitable for sharing to a coach via
 /// WhatsApp / SMS / email.
@@ -44,7 +44,7 @@ abstract final class SessionExportFormatter {
     }
 
     final plannedById = _plannedLookup(session.snapshot.workoutDay);
-    final warmupExerciseIds = _warmupExerciseIds(session.snapshot.workoutDay);
+    final warmupExerciseIds = warmupExerciseIdsIn(session.snapshot.workoutDay);
     final ordered = [...session.sessionExercises]
       ..sort((a, b) => a.position.compareTo(b.position));
     final filtered = includeWarmups
@@ -99,19 +99,6 @@ abstract final class SessionExportFormatter {
     if (hours == 0) return '${minutes}m';
     if (minutes == 0) return '${hours}h';
     return '${hours}h ${minutes}m';
-  }
-
-  // Exercises that belong to a warmup group in the snapshot. Replaced
-  // exercises inherit the slot, so substituting a warmup still excludes it.
-  static Set<String> _warmupExerciseIds(WorkoutDay day) {
-    final out = <String>{};
-    for (final g in day.exerciseGroups) {
-      if (!isWarmupGroup(g.role)) continue;
-      for (final e in g.exercises) {
-        out.add(e.id);
-      }
-    }
-    return out;
   }
 
   /// Groups consecutive exercises that share a non-null superset tag.

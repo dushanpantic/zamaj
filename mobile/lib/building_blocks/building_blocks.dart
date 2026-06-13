@@ -20,5 +20,6 @@ export 'package:zamaj/building_blocks/in_progress_accent_bar.dart';
 export 'package:zamaj/building_blocks/in_progress_label.dart';
 export 'package:zamaj/building_blocks/primary_action_button.dart';
 export 'package:zamaj/building_blocks/section_header.dart';
+export 'package:zamaj/building_blocks/session_summary_card.dart';
 export 'package:zamaj/building_blocks/status_badge.dart';
 export 'package:zamaj/building_blocks/url_launcher_external_link_launcher.dart';

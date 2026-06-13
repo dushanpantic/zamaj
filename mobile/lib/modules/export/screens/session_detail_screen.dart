@@ -113,6 +113,8 @@ class _SessionDetailScreenState extends State<SessionDetailScreen> {
               AppSpacing.xxxl + MediaQuery.viewPaddingOf(context).bottom,
             ),
             children: [
+              SessionSummaryCard(summary: SessionSummary.fromSession(session)),
+              const SizedBox(height: AppSpacing.lg),
               for (final group in groups) ...[
                 SessionDetailGroupCard(group: group, onEditSet: onEditSet),
                 const SizedBox(height: AppSpacing.sm),
