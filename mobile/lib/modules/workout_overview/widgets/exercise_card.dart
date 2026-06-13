@@ -357,7 +357,11 @@ class _LeadingStateTile extends StatelessWidget {
     // UnfinishedState is special-cased: in an ended session an untouched
     // exercise keeps the "Not completed" hollow circle rather than deriving a
     // skipped/partial outcome from its (zero/partial) set count.
-    final (Color accent, IconData icon, String? label) = state is UnfinishedState
+    final (
+      Color accent,
+      IconData icon,
+      String? label,
+    ) = state is UnfinishedState
         ? (colors.onSurfaceMuted, Icons.radio_button_unchecked, 'Not completed')
         : switch (outcome) {
             ExerciseOutcome.completed => (
@@ -661,7 +665,9 @@ class _Actions extends StatelessWidget {
                 PopupMenuItem(
                   value: _MenuAction.endOrSkip,
                   child: AppMenuRow(
-                    icon: hasExecutedSet ? Icons.flag_outlined : Icons.skip_next,
+                    icon: hasExecutedSet
+                        ? Icons.flag_outlined
+                        : Icons.skip_next,
                     label: hasExecutedSet ? 'End exercise' : 'Skip exercise',
                   ),
                 ),

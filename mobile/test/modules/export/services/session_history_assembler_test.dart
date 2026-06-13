@@ -87,8 +87,9 @@ void main() {
   group('session-review badge outcome (derived input shape)', () {
     // Verifies the outcome the review card feeds its badge for each record
     // shape, assembled through the very view model the card consumes.
-    ExerciseOutcome outcomeFor(({ExerciseState state, int executed, int planned})
-        spec) {
+    ExerciseOutcome outcomeFor(
+      ({ExerciseState state, int executed, int planned}) spec,
+    ) {
       final session = _sessionWithSpecs(
         id: 'rev',
         endedAt: DateTime.utc(2026, 5, 12, 18),
@@ -101,36 +102,44 @@ void main() {
 
     test('full quota → completed (✓ Done)', () {
       expect(
-        outcomeFor(
-          (state: const ExerciseState.completed(), executed: 4, planned: 4),
-        ),
+        outcomeFor((
+          state: const ExerciseState.completed(),
+          executed: 4,
+          planned: 4,
+        )),
         ExerciseOutcome.completed,
       );
     });
 
     test('legacy completed-at-2/4 → partial', () {
       expect(
-        outcomeFor(
-          (state: const ExerciseState.completed(), executed: 2, planned: 4),
-        ),
+        outcomeFor((
+          state: const ExerciseState.completed(),
+          executed: 2,
+          planned: 4,
+        )),
         ExerciseOutcome.partial,
       );
     });
 
     test('skipped-with-sets → partial', () {
       expect(
-        outcomeFor(
-          (state: const ExerciseState.skipped(), executed: 2, planned: 4),
-        ),
+        outcomeFor((
+          state: const ExerciseState.skipped(),
+          executed: 2,
+          planned: 4,
+        )),
         ExerciseOutcome.partial,
       );
     });
 
     test('zero-set skip → skipped', () {
       expect(
-        outcomeFor(
-          (state: const ExerciseState.skipped(), executed: 0, planned: 4),
-        ),
+        outcomeFor((
+          state: const ExerciseState.skipped(),
+          executed: 0,
+          planned: 4,
+        )),
         ExerciseOutcome.skipped,
       );
     });

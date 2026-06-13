@@ -57,24 +57,27 @@ void main() {
       expect(SessionHistory.completedExerciseCount(session), 4);
     });
 
-    test('legacy marked-done-early and skipped-with-sets rows do not count', () {
-      final session = _sessionWithExerciseSpecs(
-        id: 's1',
-        endedAt: DateTime.utc(2026, 5, 12, 18),
-        specs: const [
-          // Quota met → counted.
-          (state: ExerciseState.completed(), executed: 4, planned: 4),
-          // Legacy "mark done" shape: stored completed but only 2/4 logged →
-          // derives to partial, not counted.
-          (state: ExerciseState.completed(), executed: 2, planned: 4),
-          // Skipped but with sets → partial, not counted.
-          (state: ExerciseState.skipped(), executed: 2, planned: 4),
-          // Zero-set skip → skipped, not counted.
-          (state: ExerciseState.skipped(), executed: 0, planned: 4),
-        ],
-      );
-      expect(SessionHistory.completedExerciseCount(session), 1);
-    });
+    test(
+      'legacy marked-done-early and skipped-with-sets rows do not count',
+      () {
+        final session = _sessionWithExerciseSpecs(
+          id: 's1',
+          endedAt: DateTime.utc(2026, 5, 12, 18),
+          specs: const [
+            // Quota met → counted.
+            (state: ExerciseState.completed(), executed: 4, planned: 4),
+            // Legacy "mark done" shape: stored completed but only 2/4 logged →
+            // derives to partial, not counted.
+            (state: ExerciseState.completed(), executed: 2, planned: 4),
+            // Skipped but with sets → partial, not counted.
+            (state: ExerciseState.skipped(), executed: 2, planned: 4),
+            // Zero-set skip → skipped, not counted.
+            (state: ExerciseState.skipped(), executed: 0, planned: 4),
+          ],
+        );
+        expect(SessionHistory.completedExerciseCount(session), 1);
+      },
+    );
 
     test('is zero when no exercise meets its planned quota', () {
       final session = _sessionWithExerciseSpecs(

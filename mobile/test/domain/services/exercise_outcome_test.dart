@@ -54,16 +54,19 @@ void main() {
       );
     });
 
-    test('replaced exercise keeps its replaced outcome regardless of counts', () {
-      expect(
-        ExerciseOutcomes.of(
-          state: _replaced(),
-          executedSetCount: 1,
-          plannedSetCount: 4,
-        ),
-        ExerciseOutcome.replaced,
-      );
-    });
+    test(
+      'replaced exercise keeps its replaced outcome regardless of counts',
+      () {
+        expect(
+          ExerciseOutcomes.of(
+            state: _replaced(),
+            executedSetCount: 1,
+            plannedSetCount: 4,
+          ),
+          ExerciseOutcome.replaced,
+        );
+      },
+    );
 
     test('legacy early-marked-done record self-heals to partial', () {
       expect(

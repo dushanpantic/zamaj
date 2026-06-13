@@ -191,32 +191,35 @@ void main() {
       expect(out, isNot(contains('Done:')));
     });
 
-    test('exercise ended early derives a partial header and lists its sets', () {
-      // Ending early stores the `skipped` discriminator but keeps the logged
-      // sets — the header derives to "(2/4 sets)", not "(skipped)".
-      final session = _session(
-        workoutDayName: 'Upper A',
-        endedAt: DateTime.utc(2026, 5, 12),
-        exercises: [
-          _ExerciseSpec(
-            name: 'Curls',
-            measurementType: const MeasurementType.repBased(),
-            plannedRep: const [
-              (12.5, 12),
-              (12.5, 12),
-              (12.5, 12),
-              (12.5, 12),
-            ],
-            state: const ExerciseState.skipped(),
-            actualRep: const [(12.5, 12), (12.5, 12)],
-          ),
-        ],
-      );
-      final out = SessionExportFormatter.format(session);
-      expect(out, contains('Curls  (2/4 sets)'));
-      expect(out, isNot(contains('(skipped)')));
-      expect(out, contains('Done:'));
-    });
+    test(
+      'exercise ended early derives a partial header and lists its sets',
+      () {
+        // Ending early stores the `skipped` discriminator but keeps the logged
+        // sets — the header derives to "(2/4 sets)", not "(skipped)".
+        final session = _session(
+          workoutDayName: 'Upper A',
+          endedAt: DateTime.utc(2026, 5, 12),
+          exercises: [
+            _ExerciseSpec(
+              name: 'Curls',
+              measurementType: const MeasurementType.repBased(),
+              plannedRep: const [
+                (12.5, 12),
+                (12.5, 12),
+                (12.5, 12),
+                (12.5, 12),
+              ],
+              state: const ExerciseState.skipped(),
+              actualRep: const [(12.5, 12), (12.5, 12)],
+            ),
+          ],
+        );
+        final out = SessionExportFormatter.format(session);
+        expect(out, contains('Curls  (2/4 sets)'));
+        expect(out, isNot(contains('(skipped)')));
+        expect(out, contains('Done:'));
+      },
+    );
 
     test('legacy marked-done-early row derives a partial header', () {
       // Stored `completed` but only 2 of 4 logged (pre-change shape) → partial.
@@ -227,12 +230,7 @@ void main() {
           _ExerciseSpec(
             name: 'Curls',
             measurementType: const MeasurementType.repBased(),
-            plannedRep: const [
-              (12.5, 12),
-              (12.5, 12),
-              (12.5, 12),
-              (12.5, 12),
-            ],
+            plannedRep: const [(12.5, 12), (12.5, 12), (12.5, 12), (12.5, 12)],
             state: const ExerciseState.completed(),
             actualRep: const [(12.5, 12), (12.5, 12)],
           ),

@@ -151,7 +151,12 @@ void main() {
         await s.bloc.stream.firstWhere(
           (st) =>
               st is WorkoutOverviewLoaded &&
-              st.sessionState.session.sessionExercises.single.executedSets
+              st
+                      .sessionState
+                      .session
+                      .sessionExercises
+                      .single
+                      .executedSets
                       .length ==
                   logged,
         );
