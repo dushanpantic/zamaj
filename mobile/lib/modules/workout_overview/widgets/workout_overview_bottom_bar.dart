@@ -6,12 +6,14 @@ import 'package:zamaj/core/app_typography.dart';
 import 'package:zamaj/modules/workout_overview/bloc/bloc.dart';
 
 /// Pinned bottom action bar for a loaded session: two secondary icon
-/// buttons (note / extra work) and a primary `Focus: <name>` button.
+/// buttons (note / extra work) and a primary `Focus` button. The on-screen
+/// accent border marks which exercise(s) Focus will open, so the button
+/// stays a plain verb rather than naming a (possibly truncated, and for
+/// supersets incomplete) target.
 class WorkoutOverviewBottomBar extends StatelessWidget {
   const WorkoutOverviewBottomBar({
     super.key,
     required this.state,
-    required this.currentExerciseName,
     required this.onAddNote,
     required this.onAddExtraWork,
     required this.onFocusMode,
@@ -19,10 +21,6 @@ class WorkoutOverviewBottomBar extends StatelessWidget {
 
   final WorkoutOverviewLoaded state;
 
-  /// Display name of the exercise the Focus button will open, or null when
-  /// there's no open target. Shown as `Focus: <name>` so the user can
-  /// confirm the target before tapping.
-  final String? currentExerciseName;
   final VoidCallback onAddNote;
   final VoidCallback onAddExtraWork;
   final VoidCallback onFocusMode;
@@ -32,9 +30,6 @@ class WorkoutOverviewBottomBar extends StatelessWidget {
     final colors = Theme.of(context).appColors;
     final hasOpenTarget = state.sessionState.openTargets.isNotEmpty;
     final canMutate = !state.isEnded && !state.mutationInFlight;
-    final label = currentExerciseName == null
-        ? 'Focus'
-        : 'Focus: $currentExerciseName';
 
     // Clamp text scaling on this in-session control bar so the Focus label and
     // Note/Extra icons stay laid out at large accessibility font sizes.
@@ -80,11 +75,7 @@ class WorkoutOverviewBottomBar extends StatelessWidget {
                     Icons.center_focus_strong,
                     size: AppIconSize.lg,
                   ),
-                  label: Text(
-                    label,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
+                  label: const Text('Focus'),
                 ),
               ),
             ],

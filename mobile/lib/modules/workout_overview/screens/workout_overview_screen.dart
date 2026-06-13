@@ -158,8 +158,8 @@ class _WorkoutOverviewScreenState extends State<WorkoutOverviewScreen> {
 
     return BlocBuilder<WorkoutOverviewBloc, WorkoutOverviewState>(
       builder: (context, state) {
-        final focus = state is WorkoutOverviewLoaded
-            ? _resolveCurrent(state)
+        final currentIds = state is WorkoutOverviewLoaded
+            ? _resolveCurrentIds(state)
             : null;
         return Scaffold(
           backgroundColor: colors.background,
@@ -180,11 +180,10 @@ class _WorkoutOverviewScreenState extends State<WorkoutOverviewScreen> {
                   ]
                 : null,
           ),
-          body: _body(context, state, focus),
+          body: _body(context, state, currentIds),
           bottomNavigationBar: state is WorkoutOverviewLoaded
               ? WorkoutOverviewBottomBar(
                   state: state,
-                  currentExerciseName: focus?.currentExerciseName,
                   onAddNote: _handleAddNote,
                   onAddExtraWork: _handleAddExtraWork,
                   onFocusMode: () => _handleOpenFocusMode(state),
@@ -195,40 +194,25 @@ class _WorkoutOverviewScreenState extends State<WorkoutOverviewScreen> {
     );
   }
 
-  /// Resolves "what's current" for a loaded session: the set of session
-  /// exercise IDs that should get the CURRENT chip + accent (every
-  /// unfinished member of the active superset, or the lone single), and
-  /// the display name of the first open target for the bottom Focus
-  /// button label.
-  _CurrentFocus _resolveCurrent(WorkoutOverviewLoaded state) {
+  /// Resolves the set of session exercise IDs that should render as
+  /// "current" — every unfinished member of the active superset, or the
+  /// lone single open target. Empty when nothing is open.
+  Set<String> _resolveCurrentIds(WorkoutOverviewLoaded state) {
     final openTargets = state.sessionState.openTargets;
-    if (openTargets.isEmpty) {
-      return const _CurrentFocus(
-        currentIds: <String>{},
-        currentExerciseName: null,
-      );
-    }
+    if (openTargets.isEmpty) return const <String>{};
     final anchorId = openTargets.first.sessionExerciseId;
     for (final g in state.groups) {
-      ExerciseViewModel? anchor;
-      for (final ex in g.allExercises) {
-        if (ex.sessionExercise.id == anchorId) {
-          anchor = ex;
-          break;
-        }
-      }
-      if (anchor == null) continue;
-      final ids = <String>{
+      final inThisGroup = g.allExercises.any(
+        (ex) => ex.sessionExercise.id == anchorId,
+      );
+      if (!inThisGroup) continue;
+      return <String>{
         for (final ex in g.allExercises)
           if (ex.sessionExercise.state is UnfinishedState)
             ex.sessionExercise.id,
       }..add(anchorId);
-      return _CurrentFocus(
-        currentIds: ids,
-        currentExerciseName: anchor.displayName,
-      );
     }
-    return _CurrentFocus(currentIds: {anchorId}, currentExerciseName: null);
+    return {anchorId};
   }
 
   String _titleFor(WorkoutOverviewState state) {
@@ -244,7 +228,7 @@ class _WorkoutOverviewScreenState extends State<WorkoutOverviewScreen> {
   Widget _body(
     BuildContext context,
     WorkoutOverviewState state,
-    _CurrentFocus? focus,
+    Set<String>? currentIds,
   ) {
     return switch (state) {
       WorkoutOverviewInitial() ||
@@ -258,7 +242,7 @@ class _WorkoutOverviewScreenState extends State<WorkoutOverviewScreen> {
       ),
       WorkoutOverviewLoaded() => WorkoutOverviewLoadedBody(
         state: state,
-        currentSessionExerciseIds: focus?.currentIds ?? const <String>{},
+        currentSessionExerciseIds: currentIds ?? const <String>{},
         onEndOrSkip: _handleEndOrSkip,
         onUngroup: _handleUngroup,
         onGroupInto: _handleGroupInto,
@@ -268,23 +252,4 @@ class _WorkoutOverviewScreenState extends State<WorkoutOverviewScreen> {
       ),
     };
   }
-}
-
-/// Bundle of "what's current" the screen-level builder resolves once and
-/// passes to both the loaded body (for per-card chip + accent) and the
-/// bottom Focus button (for its `Focus: <name>` label).
-class _CurrentFocus {
-  const _CurrentFocus({
-    required this.currentIds,
-    required this.currentExerciseName,
-  });
-
-  /// IDs of every exercise that should render as "current". For singles,
-  /// just the lone open target; for supersets, every unfinished member of
-  /// the active group (since Focus mode pairs them).
-  final Set<String> currentIds;
-
-  /// Display name of the first open target for the bottom Focus button
-  /// label. Null when there's no open target.
-  final String? currentExerciseName;
 }
