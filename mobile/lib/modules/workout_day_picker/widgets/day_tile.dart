@@ -45,12 +45,14 @@ class DayTile extends StatelessWidget {
     final colors = Theme.of(context).appColors;
     const typography = AppTypography.standard;
     final day = viewModel.workoutDay;
-    final exerciseCount = day.exerciseGroups
-        .where((g) => g.role == ExerciseGroupRole.main)
-        .fold<int>(0, (sum, g) => sum + g.exercises.length);
-    final exerciseLabel = exerciseCount == 1
+    // Exercise and set counts come from one shared non-warmup filter so they
+    // never range over different populations.
+    final counts = nonWarmupCountsIn(day);
+    final exerciseLabel = counts.exercises == 1
         ? '1 exercise'
-        : '$exerciseCount exercises';
+        : '${counts.exercises} exercises';
+    final setLabel = counts.sets == 1 ? '1 set' : '${counts.sets} sets';
+    final summaryLabel = '$exerciseLabel · $setLabel';
 
     final activeSessionId = switch (viewModel.status) {
       DayTileLoaded(:final summary) => summary.activeSessionId,
@@ -104,7 +106,7 @@ class DayTile extends StatelessWidget {
                 ),
                 const SizedBox(height: AppSpacing.xs),
                 Text(
-                  exerciseLabel,
+                  summaryLabel,
                   style: typography.caption.copyWith(
                     color: colors.onSurfaceMuted,
                   ),
