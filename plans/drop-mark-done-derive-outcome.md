@@ -395,8 +395,8 @@ This section is the machine-parseable recovery handle. `/build` updates checkbox
   - [x] Step 4.1: Delete the early-completion mutation
 
 #### Wave 4
-- [ ] Slice 5: Documentation
-  - [ ] Step 5.1: Update product-context.md and CLAUDE.md
+- [x] Slice 5: Documentation
+  - [x] Step 5.1: Update product-context.md and CLAUDE.md
 
 ### Acceptance Criteria
 
@@ -408,7 +408,7 @@ This section is the machine-parseable recovery handle. `/build` updates checkbox
 - [ ] AC6: History tile counts derived full completions only
 - [ ] AC7: Export suffixes derived ("(skipped)" / "(n/m sets)" / none)
 - [ ] AC8: No schema bump or migration; `tool/ci.sh` green
-- [ ] AC9: product-context.md and CLAUDE.md updated
+- [x] AC9: product-context.md and CLAUDE.md updated
 
 ## Plan Review Summary
 
