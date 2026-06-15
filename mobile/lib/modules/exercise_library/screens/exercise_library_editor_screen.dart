@@ -7,6 +7,7 @@ import 'package:zamaj/core/app_typography.dart';
 import 'package:zamaj/modules/domain/domain.dart';
 import 'package:zamaj/modules/exercise_library/bloc/exercise_library_editor/bloc.dart';
 import 'package:zamaj/modules/exercise_library/models/exercise_library_args.dart';
+import 'package:zamaj/modules/exercise_progress/exercise_progress.dart';
 import 'package:zamaj/modules/program_management/widgets/measurement_type_selector.dart';
 
 class ExerciseLibraryEditorScreen extends StatefulWidget {
@@ -149,6 +150,7 @@ class _ExerciseLibraryEditorScreenState
             isArchived: false,
             isSaving: true,
             lastError: null,
+            libraryExerciseId: widget.args.libraryExerciseId,
             onArchive: () => _confirmArchive(context),
           ),
           ExerciseLibraryEditorEditing(
@@ -170,6 +172,7 @@ class _ExerciseLibraryEditorScreenState
               isArchived: isArchived,
               isSaving: false,
               lastError: lastError,
+              libraryExerciseId: widget.args.libraryExerciseId,
               onArchive: () => _confirmArchive(context),
             ),
           ExerciseLibraryEditorSaved() => const _LoadingScaffold(),
@@ -225,6 +228,7 @@ class _EditorScaffold extends StatelessWidget {
     required this.isArchived,
     required this.isSaving,
     required this.lastError,
+    required this.libraryExerciseId,
     required this.onArchive,
   });
 
@@ -238,6 +242,11 @@ class _EditorScaffold extends StatelessWidget {
   final bool isArchived;
   final bool isSaving;
   final DomainError? lastError;
+
+  /// Id of the persisted entry being edited; null while creating a new one,
+  /// where there is no history to show yet.
+  final String? libraryExerciseId;
+
   final VoidCallback onArchive;
 
   @override
@@ -246,6 +255,7 @@ class _EditorScaffold extends StatelessWidget {
     const typography = AppTypography.standard;
     final bloc = context.read<ExerciseLibraryEditorBloc>();
     final canSave = validation.canSave && !isSaving;
+    final entryId = libraryExerciseId;
 
     return Scaffold(
       appBar: AppBar(
@@ -254,6 +264,19 @@ class _EditorScaffold extends StatelessWidget {
           style: typography.title.copyWith(color: colors.onBackground),
         ),
         actions: [
+          if (!isCreate && entryId != null)
+            IconButton(
+              tooltip: 'Progress',
+              icon: const Icon(Icons.show_chart),
+              onPressed: () => Navigator.of(context).pushNamed(
+                ExerciseProgressRoutes.progress,
+                arguments: ExerciseProgressArgs(
+                  libraryExerciseId: entryId,
+                  measurementType: draft.measurementType,
+                  displayName: draft.name,
+                ),
+              ),
+            ),
           if (isSaving)
             const Padding(
               padding: EdgeInsets.only(right: AppSpacing.sm),

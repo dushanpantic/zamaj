@@ -10,7 +10,7 @@ A solo lifter following a structured strength program — squats, bench, accesso
 
 ## Two pillars
 
-1. **Planned vs. actual are first-class.** Every set carries its planned target (weight × reps, time, bodyweight reps, etc.) and a separately-tracked actual value. The UI never collapses one into the other. This is what enables honest retros, deload decisions, and the future progress charts.
+1. **Planned vs. actual are first-class.** Every set carries its planned target (weight × reps, time, bodyweight reps, etc.) and a separately-tracked actual value. The UI never collapses one into the other. This is what enables honest retros, deload decisions, and the per-exercise progress trend.
 2. **Sweaty-hands ergonomics in-session.** The two live-session surfaces ([workout_overview/](mobile/lib/modules/workout_overview/), [focus_mode/](mobile/lib/modules/focus_mode/)) are tuned for wet hands and quick taps between sets: 64 dp counter buttons, 36 px numeric readouts, ≥56 dp primary actions. Outside the gym (program editing, settings) the standard 48 dp tap target is fine.
 
 ## How a session works
@@ -48,7 +48,10 @@ Ships **pre-populated** with a curated canonical catalog (~80 common and special
 
 ### After a session — [export/](mobile/lib/modules/export/)
 - **Recent sessions** — [recent_sessions_screen.dart](mobile/lib/modules/export/screens/recent_sessions_screen.dart). Completed sessions bucketed into "This week" and "Earlier", with a one-tap "export this week" action. Tapping a session opens its review.
-- **Session detail (review)** — [session_detail_screen.dart](mobile/lib/modules/export/screens/session_detail_screen.dart). Review of a finished session: a summary card at the top (time, working sets done vs planned, total weighted volume), then the frozen plan beside what was actually logged, set by set, with each exercise marked completed / partial / skipped / replaced (derived from its logged sets), supersets grouped, and the session's notes and extra work. For a session from the current week, tapping a logged value opens an editor to correct a mis-logged actual (values only — the plan snapshot stays frozen); older sessions stay read-only. Per-session plain-text export lives here, behind the app-bar share icon.
+- **Session detail (review)** — [session_detail_screen.dart](mobile/lib/modules/export/screens/session_detail_screen.dart). Review of a finished session: a summary card at the top (time, working sets done vs planned, total weighted volume), then the frozen plan beside what was actually logged, set by set, with each exercise marked completed / partial / skipped / replaced (derived from its logged sets), supersets grouped, and the session's notes and extra work. For a session from the current week, tapping a logged value opens an editor to correct a mis-logged actual (values only — the plan snapshot stays frozen); older sessions stay read-only. Per-session plain-text export lives here, behind the app-bar share icon. Each exercise card also opens that exercise's progress trend.
+
+### Exercise progress — [exercise_progress/](mobile/lib/modules/exercise_progress/)
+- **Exercise progress (top-set trend)** — [exercise_progress_screen.dart](mobile/lib/modules/exercise_progress/screens/exercise_progress_screen.dart). A per-exercise line chart of the **top set** (heaviest weighted set) logged over time, aggregated across **every program** the exercise has appeared in, so one library movement reads as a single trend even as it moves between programs. Reachable from the Library editor and from a finished session's exercise card. Weighted (weight × reps) exercises only — time-based, bodyweight, and exercises not linked to a Library entry show an explanatory empty state instead. Exactly one logged session shows a single top-set stat; none shows a "no sessions yet" prompt. Tapping a point names the workout day it came from. Computed live from local session history, so a deleted session drops out of the trend.
 
 ## Explicit non-goals
 - **No social, streaks, badges, friends, or leaderboards.** This is a logbook, not a community app.

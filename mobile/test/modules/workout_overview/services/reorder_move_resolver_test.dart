@@ -186,6 +186,7 @@ List<SupersetGroupViewModel> _groups(List<_Spec> specs) {
       sessionExercise: ex,
       plannedExerciseName: planned.name,
       plannedSummary: '0 sets',
+      libraryExerciseId: planned.libraryExerciseId,
       plannedMeasurementType: planned.measurementType,
       plannedMetadata: planned.metadata,
       plannedRestSeconds: null,

@@ -21,6 +21,13 @@ abstract class SessionRepository {
   Future<Session> getSessionByExecutedSetId(String executedSetId);
   Future<List<Session>> listSessionsForWorkoutDay(String workoutDayId);
 
+  /// Returns every ended session (its `endedAt` is set), fully hydrated
+  /// (snapshot, exercises, executed sets, notes, extra work), in no particular
+  /// order. Feeds cross-program exercise-progress aggregation, which sorts and
+  /// filters in pure Dart. Recomputed from live rows on each call, so a deleted
+  /// session drops out automatically.
+  Future<List<Session>> listCompletedSessions();
+
   /// Returns the currently in-flight session (one whose `endedAt` is null), or
   /// null when no session is active. If — defensively — more than one row has
   /// `endedAt == null`, returns the most recently started one.

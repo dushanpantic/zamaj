@@ -6,6 +6,7 @@ import 'package:zamaj/core/app_spacing.dart';
 import 'package:zamaj/core/app_theme.dart';
 import 'package:zamaj/core/app_typography.dart';
 import 'package:zamaj/modules/domain/domain.dart';
+import 'package:zamaj/modules/exercise_progress/exercise_progress.dart';
 import 'package:zamaj/modules/workout_overview/workout_overview.dart';
 
 /// Opens the post-session set-value editor for one logged set, seeded with its
@@ -151,6 +152,22 @@ class _Exercise extends StatelessWidget {
               completedCount: executedCount,
               totalPlanned: plannedCount,
               colors: colors,
+            ),
+            IconButton(
+              tooltip: 'Progress',
+              icon: const Icon(Icons.show_chart),
+              // A finished-session card only: the live in-session surface
+              // (workout_overview) uses a different card, so this affordance
+              // never appears mid-session. A null libraryExerciseId routes to
+              // the progress view's "unlinked" guidance.
+              onPressed: () => Navigator.of(context).pushNamed(
+                ExerciseProgressRoutes.progress,
+                arguments: ExerciseProgressArgs(
+                  libraryExerciseId: viewModel.libraryExerciseId,
+                  measurementType: viewModel.plannedMeasurementType,
+                  displayName: viewModel.displayName,
+                ),
+              ),
             ),
           ],
         ),

@@ -51,6 +51,7 @@ abstract final class ExerciseViewModelAssembler {
       plannedMetadata: planned.metadata,
       plannedRestSeconds: planned.plannedRestSeconds,
       plannedExerciseName: planned.name,
+      libraryExerciseId: planned.libraryExerciseId,
       setRows: _buildSetRows(sessionExercise, planned, loggableSetIndex),
       isLoggable: loggableSetIndex != null,
       effectiveMeasurementType: effective.effectiveMeasurementType,

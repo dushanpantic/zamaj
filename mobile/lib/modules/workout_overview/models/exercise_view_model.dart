@@ -19,6 +19,11 @@ abstract class ExerciseViewModel with _$ExerciseViewModel {
     required SessionExercise sessionExercise,
     required String plannedExerciseName,
     required String plannedSummary,
+
+    /// The snapshot exercise's Library link, or null when it was never linked.
+    /// Carried so review surfaces can open the cross-session progress view for
+    /// the right Library entry (and show the "unlinked" state when null).
+    required String? libraryExerciseId,
     required MeasurementType plannedMeasurementType,
     required ExerciseMetadata plannedMetadata,
     required int? plannedRestSeconds,

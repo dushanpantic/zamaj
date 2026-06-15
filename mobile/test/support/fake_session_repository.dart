@@ -145,6 +145,11 @@ class FakeSessionRepository implements SessionRepository {
   }
 
   @override
+  Future<List<Session>> listCompletedSessions() async {
+    return _sessions.values.where((s) => s.endedAt != null).toList();
+  }
+
+  @override
   Future<Session?> getActiveSession() async {
     final active = _sessions.values.where((s) => s.endedAt == null).toList()
       ..sort((a, b) => b.startedAt.compareTo(a.startedAt));

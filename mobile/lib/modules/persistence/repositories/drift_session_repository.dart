@@ -240,6 +240,23 @@ class DriftSessionRepository implements SessionRepository {
     final sessionRows = await (_db.select(
       _db.sessions,
     )..where((t) => t.workoutDayId.equals(workoutDayId))).get();
+    return _hydrateSessions(sessionRows);
+  }
+
+  @override
+  Future<List<domain.Session>> listCompletedSessions() async {
+    final sessionRows = await (_db.select(
+      _db.sessions,
+    )..where((t) => t.endedAtMs.isNotNull())).get();
+    return _hydrateSessions(sessionRows);
+  }
+
+  /// Batched row→domain hydration for a set of session rows: one query per
+  /// related table (exercises, executed sets, notes, extra work), grouped in
+  /// memory. Shared by every multi-session read so none of them N+1.
+  Future<List<domain.Session>> _hydrateSessions(
+    List<Session> sessionRows,
+  ) async {
     if (sessionRows.isEmpty) return const [];
 
     final sessionIds = sessionRows.map((r) => r.id).toList();

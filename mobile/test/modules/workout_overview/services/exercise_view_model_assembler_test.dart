@@ -263,6 +263,24 @@ void main() {
       expect(groups[2], isA<SingleGroupViewModel>());
     });
 
+    test('carries the snapshot exercise libraryExerciseId through', () {
+      const libraryId = '11111111-1111-4111-8111-111111111111';
+      final session = _sessionFromGroups([
+        _standalone('a', plannedSetCount: 2, libraryExerciseId: libraryId),
+        _standalone('b', plannedSetCount: 2),
+      ]);
+      final state = SessionState(
+        session: session,
+        openTargets: const [],
+        isComplete: true,
+      );
+
+      final groups = ExerciseViewModelAssembler.assemble(state);
+      expect(groups[0].allExercises.single.libraryExerciseId, libraryId);
+      // An unlinked snapshot exercise stays null.
+      expect(groups[1].allExercises.single.libraryExerciseId, isNull);
+    });
+
     test('plannedSummary equals PlannedSummaryFormatter.summarize output', () {
       final session = _sessionFromGroups([
         _standalone('a', plannedSetCount: 4, weightKg: 100, reps: 8),
@@ -393,6 +411,7 @@ class _ExerciseSpec {
     required this.weightKg,
     required this.reps,
     required this.supersetTag,
+    required this.libraryExerciseId,
   });
   final String id;
   final ExerciseState state;
@@ -402,6 +421,7 @@ class _ExerciseSpec {
   final double weightKg;
   final int reps;
   final String? supersetTag;
+  final String? libraryExerciseId;
 }
 
 _ExerciseSpec _standalone(
@@ -413,6 +433,7 @@ _ExerciseSpec _standalone(
   double weightKg = 100,
   int reps = 8,
   String? supersetTag,
+  String? libraryExerciseId,
 }) => _ExerciseSpec(
   id: id,
   state: state,
@@ -422,6 +443,7 @@ _ExerciseSpec _standalone(
   weightKg: weightKg,
   reps: reps,
   supersetTag: supersetTag,
+  libraryExerciseId: libraryExerciseId,
 );
 
 Session _sessionFromGroups(List<_ExerciseSpec> specs) {
@@ -441,6 +463,7 @@ Session _sessionFromGroups(List<_ExerciseSpec> specs) {
       name: 'Ex ${spec.id}',
       measurementType: spec.plannedMeasurement,
       metadata: const ExerciseMetadata(),
+      libraryExerciseId: spec.libraryExerciseId,
       sets: List.generate(spec.plannedSetCount, (j) {
         return WorkoutSet(
           id: 'ws-${spec.id}-$j',

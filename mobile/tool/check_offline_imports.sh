@@ -53,6 +53,7 @@ PM_DIRS=(
   "lib/modules/workout_overview"
   "lib/modules/export"
   "lib/modules/exercise_library"
+  "lib/modules/exercise_progress"
 )
 
 PM_NETWORKING_PATTERNS=(
