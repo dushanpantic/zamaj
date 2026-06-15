@@ -16,8 +16,9 @@ import 'package:zamaj/modules/persistence/repositories/drift_session_repository.
 const _seedAssetPath = 'assets/exercise_library_seed.json';
 
 Future<void> bootstrap() async {
-  WidgetsFlutterBinding.ensureInitialized();
+  final binding = WidgetsFlutterBinding.ensureInitialized();
   Bloc.observer = const AppBlocObserver();
+  _installGlobalErrorHandlers(binding);
   final db = AppDatabase(driftDatabase(name: 'zamaj'));
   const clock = Clock();
   final programRepo = DriftProgramRepository(db: db, clock: clock);
@@ -41,6 +42,37 @@ Future<void> bootstrap() async {
       clock: clock,
     ),
   );
+}
+
+/// Routes framework errors and uncaught async errors to the console and to the
+/// DevTools "Logging" view (channel `Error`).
+///
+/// [AppBlocObserver] only sees errors thrown *inside* a Bloc's event handler;
+/// anything else — a bad build, a navigation/Hero failure, an uncaught Future —
+/// never reaches it. These two hooks are what surface those. Debug-only payload
+/// detail; the handlers stay installed in release so failures aren't silent.
+void _installGlobalErrorHandlers(WidgetsBinding binding) {
+  final defaultOnError = FlutterError.onError;
+  FlutterError.onError = (details) {
+    // Preserve the default behaviour (red error screen + console dump in debug).
+    defaultOnError?.call(details);
+    developer.log(
+      details.exceptionAsString(),
+      name: 'Error',
+      error: details.exception,
+      stackTrace: details.stack,
+    );
+  };
+  binding.platformDispatcher.onError = (error, stack) {
+    developer.log(
+      'Uncaught error',
+      name: 'Error',
+      error: error,
+      stackTrace: stack,
+    );
+    debugPrint('Uncaught error: $error\n$stack');
+    return true;
+  };
 }
 
 /// Idempotently seeds the embedded canonical exercise catalog. Any failure —

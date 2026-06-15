@@ -112,6 +112,11 @@ class _ExerciseLibraryListScreenState extends State<ExerciseLibraryListScreen> {
         ],
       ),
       floatingActionButton: FloatingActionButton.extended(
+        // Unique tag: this tab root and the Programs tab root are co-resident in
+        // the shell's IndexedStack, so both FABs share a route subtree. Without
+        // distinct hero tags they collide on the default FAB tag during route
+        // transitions. See RootShellScreen.
+        heroTag: 'libraryFab',
         onPressed: () => _navigateToEditor(),
         icon: const Icon(Icons.add),
         label: const Text('New entry'),
