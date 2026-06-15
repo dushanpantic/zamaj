@@ -112,6 +112,9 @@ class _ExerciseLibraryListScreenState extends State<ExerciseLibraryListScreen> {
           IconButton(
             onPressed: () => _navigateToEditor(),
             icon: const Icon(Icons.add),
+            // Primary action gets the accent so it outranks the secondary
+            // Suggest action, matching the app's primary-action idiom.
+            color: colors.primary,
             tooltip: 'New entry',
           ),
         ],
