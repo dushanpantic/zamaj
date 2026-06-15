@@ -2,7 +2,6 @@ import 'package:zamaj/modules/program_management/services/text_plan/plan_draft.d
 import 'package:zamaj/modules/program_management/services/text_plan/plan_parse_warning.dart';
 
 abstract final class ProgramManagementRoutes {
-  static const programList = '/programs';
   static const programEditor = '/programs/editor';
   static const workoutDay = '/programs/workout-day';
   static const exercise = '/programs/exercise';

@@ -6,8 +6,8 @@ import 'package:zamaj/core/app_theme.dart';
 import 'package:zamaj/modules/domain/domain.dart';
 import 'package:zamaj/modules/export/services/share_plus_share_service.dart';
 import 'package:zamaj/modules/export/services/share_service.dart';
-import 'package:zamaj/modules/program_management/navigation/program_management_routes.dart';
 import 'package:zamaj/navigation/app_router.dart';
+import 'package:zamaj/navigation/app_routes.dart';
 
 class MainApp extends StatelessWidget {
   const MainApp({
@@ -48,7 +48,7 @@ class MainApp extends StatelessWidget {
         darkTheme: AppTheme.dark(),
         themeMode: ThemeMode.dark,
         onGenerateRoute: AppRouter.onGenerateRoute,
-        initialRoute: ProgramManagementRoutes.programList,
+        initialRoute: AppRoutes.shell,
       ),
     );
   }

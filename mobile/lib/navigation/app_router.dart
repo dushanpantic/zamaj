@@ -14,11 +14,14 @@ import 'package:zamaj/modules/workout_day_picker/navigation/workout_day_picker_r
 import 'package:zamaj/modules/workout_day_picker/screens/workout_day_picker_screen.dart';
 import 'package:zamaj/modules/workout_overview/bloc/bloc.dart';
 import 'package:zamaj/modules/workout_overview/screens/workout_overview_screen.dart';
+import 'package:zamaj/navigation/app_routes.dart';
+import 'package:zamaj/navigation/root_shell.dart';
 import 'package:zamaj/navigation/session_routes.dart';
 
 abstract final class AppRouter {
   static Route<dynamic>? onGenerateRoute(RouteSettings settings) {
     return switch (settings.name) {
+      AppRoutes.shell => _shellRoute(settings),
       WorkoutDayPickerRoutes.picker => _pickerRoute(settings),
       SessionRoutes.active => _sessionActiveRoute(settings),
       SessionRoutes.focus => _sessionFocusRoute(settings),
@@ -27,6 +30,13 @@ abstract final class AppRouter {
             ExportRouter.onGenerateRoute(settings) ??
             ProgramManagementRouter.onGenerateRoute(settings),
     };
+  }
+
+  static Route<dynamic> _shellRoute(RouteSettings settings) {
+    return MaterialPageRoute<void>(
+      settings: settings,
+      builder: (context) => const RootShellScreen(),
+    );
   }
 
   static Route<dynamic> _pickerRoute(RouteSettings settings) {

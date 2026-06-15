@@ -4,7 +4,6 @@ import 'package:zamaj/building_blocks/building_blocks.dart';
 import 'package:zamaj/core/app_spacing.dart';
 import 'package:zamaj/core/app_theme.dart';
 import 'package:zamaj/modules/domain/domain.dart';
-import 'package:zamaj/modules/exercise_library/navigation/exercise_library_routes.dart';
 import 'package:zamaj/modules/program_management/bloc/program_list/program_list_bloc.dart';
 import 'package:zamaj/modules/program_management/bloc/program_list/program_list_event.dart';
 import 'package:zamaj/modules/program_management/bloc/program_list/program_list_state.dart';
@@ -54,10 +53,6 @@ class _ProgramListScreenState extends State<ProgramListScreen> {
     }
   }
 
-  void _navigateToLibrary() {
-    Navigator.pushNamed(context, ExerciseLibraryRoutes.list);
-  }
-
   Future<void> _onDeleteRequested(String programId) async {
     context.read<ProgramListBloc>().add(
       ProgramListDeleteRequested(programId: programId),
@@ -93,11 +88,6 @@ class _ProgramListScreenState extends State<ProgramListScreen> {
       appBar: AppBar(
         title: const Text('Programs'),
         actions: [
-          IconButton(
-            onPressed: _navigateToLibrary,
-            icon: const Icon(Icons.library_books_outlined),
-            tooltip: 'Exercise library',
-          ),
           IconButton(
             onPressed: _navigateToImport,
             icon: const Icon(Icons.content_paste_outlined),

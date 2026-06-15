@@ -12,6 +12,7 @@ import 'package:zamaj/modules/program_management/bloc/plan_preview/plan_preview_
 import 'package:zamaj/modules/program_management/models/program_editor_draft.dart';
 import 'package:zamaj/modules/program_management/navigation/program_management_routes.dart';
 import 'package:zamaj/modules/program_management/services/text_plan/plan_parse_warning.dart';
+import 'package:zamaj/navigation/app_routes.dart';
 
 class PlanPreviewScreen extends StatefulWidget {
   const PlanPreviewScreen({super.key, required this.args});
@@ -44,10 +45,9 @@ class _PlanPreviewScreenState extends State<PlanPreviewScreen> {
 
   void _onStateChange(BuildContext context, PlanPreviewState state) {
     if (state is PlanPreviewSaved) {
-      Navigator.of(context).pushNamedAndRemoveUntil(
-        ProgramManagementRoutes.programList,
-        (route) => false,
-      );
+      Navigator.of(
+        context,
+      ).pushNamedAndRemoveUntil(AppRoutes.shell, (route) => false);
     }
     if (state is PlanPreviewDiscarded) {
       Navigator.of(context).pop();

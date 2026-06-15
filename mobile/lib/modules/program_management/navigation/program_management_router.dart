@@ -6,29 +6,18 @@ import 'package:zamaj/modules/program_management/bloc/exercise_editor/exercise_e
 import 'package:zamaj/modules/program_management/bloc/plan_import/plan_import_bloc.dart';
 import 'package:zamaj/modules/program_management/bloc/plan_preview/plan_preview_bloc.dart';
 import 'package:zamaj/modules/program_management/bloc/program_editor/program_editor_bloc.dart';
-import 'package:zamaj/modules/program_management/bloc/program_list/program_list_bloc.dart';
 import 'package:zamaj/modules/program_management/bloc/workout_day_editor/workout_day_editor_bloc.dart';
 import 'package:zamaj/modules/program_management/navigation/program_management_routes.dart';
 import 'package:zamaj/modules/program_management/screens/exercise_editor_screen.dart';
 import 'package:zamaj/modules/program_management/screens/plan_import_screen.dart';
 import 'package:zamaj/modules/program_management/screens/plan_preview_screen.dart';
 import 'package:zamaj/modules/program_management/screens/program_editor_screen.dart';
-import 'package:zamaj/modules/program_management/screens/program_list_screen.dart';
 import 'package:zamaj/modules/program_management/screens/workout_day_editor_screen.dart';
 import 'package:zamaj/modules/program_management/services/aggregate_saver.dart';
 
 abstract final class ProgramManagementRouter {
   static Route<dynamic>? onGenerateRoute(RouteSettings settings) {
     return switch (settings.name) {
-      ProgramManagementRoutes.programList => MaterialPageRoute<void>(
-        settings: settings,
-        builder: (context) => BlocProvider(
-          create: (_) => ProgramListBloc(
-            programRepository: context.read<ProgramRepository>(),
-          ),
-          child: const ProgramListScreen(),
-        ),
-      ),
       ProgramManagementRoutes.programEditor => MaterialPageRoute<void>(
         settings: settings,
         builder: (context) {
