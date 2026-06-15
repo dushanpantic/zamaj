@@ -39,6 +39,9 @@ class _RootShellScreenState extends State<RootShellScreen> {
         children: [_programsTab(context), _libraryTab(context)],
       ),
       bottomNavigationBar: NavigationBar(
+        // Trimmed from the Material default (80) for a lower-profile bar; still
+        // comfortably fits the always-shown icon + label.
+        height: 64,
         selectedIndex: _index,
         labelBehavior: NavigationDestinationLabelBehavior.alwaysShow,
         onDestinationSelected: (index) => setState(() => _index = index),

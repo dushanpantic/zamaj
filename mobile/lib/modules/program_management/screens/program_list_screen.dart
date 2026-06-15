@@ -93,17 +93,12 @@ class _ProgramListScreenState extends State<ProgramListScreen> {
             icon: const Icon(Icons.content_paste_outlined),
             tooltip: 'Import from text',
           ),
+          IconButton(
+            onPressed: () => _navigateToEditor(),
+            icon: const Icon(Icons.add),
+            tooltip: 'New program',
+          ),
         ],
-      ),
-      floatingActionButton: FloatingActionButton.extended(
-        // Unique tag: this tab root and the Library tab root are co-resident in
-        // the shell's IndexedStack, so both FABs share a route subtree. Without
-        // distinct hero tags they collide on the default FAB tag during route
-        // transitions. See RootShellScreen.
-        heroTag: 'programsFab',
-        onPressed: () => _navigateToEditor(),
-        icon: const Icon(Icons.add),
-        label: const Text('New program'),
       ),
       body: Column(
         children: [
