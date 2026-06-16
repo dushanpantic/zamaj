@@ -14,6 +14,7 @@ import 'package:zamaj/modules/program_management/services/set_input_adjustment.d
 import 'package:zamaj/modules/program_management/widgets/exercise_library_link_section.dart';
 import 'package:zamaj/modules/program_management/widgets/measurement_type_selector.dart';
 import 'package:zamaj/modules/program_management/widgets/planned_set_row.dart';
+import 'package:zamaj/modules/program_management/widgets/recent_set_history_section.dart';
 import 'package:zamaj/modules/program_management/widgets/uniform_sets_editor.dart';
 
 class ExerciseEditorForm extends StatelessWidget {
@@ -26,6 +27,7 @@ class ExerciseEditorForm extends StatelessWidget {
     required this.draft,
     required this.validation,
     required this.lastSaveError,
+    this.recentHistory,
   });
 
   final TextEditingController nameController;
@@ -35,6 +37,7 @@ class ExerciseEditorForm extends StatelessWidget {
   final ExerciseDraft draft;
   final ExerciseDraftValidation validation;
   final DomainError? lastSaveError;
+  final RecentHistoryView? recentHistory;
 
   @override
   Widget build(BuildContext context) {
@@ -166,6 +169,10 @@ class ExerciseEditorForm extends StatelessWidget {
                     ),
                   ],
                 ),
+                if (recentHistory != null) ...[
+                  const SizedBox(height: AppSpacing.xl),
+                  RecentSetHistorySection(view: recentHistory!),
+                ],
                 const SizedBox(height: AppSpacing.xl),
               ],
             ),

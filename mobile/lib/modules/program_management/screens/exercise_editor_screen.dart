@@ -174,6 +174,7 @@ class _ExerciseEditorScreenState extends State<ExerciseEditorScreen> {
             :final draft,
             :final validation,
             :final lastSaveError,
+            :final recentHistory,
           ) =>
             ExerciseEditorScaffold(
               nameController: _nameController,
@@ -184,6 +185,7 @@ class _ExerciseEditorScreenState extends State<ExerciseEditorScreen> {
               validation: validation,
               isSaving: false,
               lastSaveError: lastSaveError,
+              recentHistory: recentHistory,
             ),
           ExerciseEditorSaved() => const ExerciseEditorLoadingScaffold(),
           ExerciseEditorVideoLinkError(:final draft, :final validation) =>

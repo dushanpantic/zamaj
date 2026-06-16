@@ -53,6 +53,7 @@ class ExerciseEditorScaffold extends StatelessWidget {
     required this.validation,
     required this.isSaving,
     required this.lastSaveError,
+    this.recentHistory,
   });
 
   final TextEditingController nameController;
@@ -63,6 +64,10 @@ class ExerciseEditorScaffold extends StatelessWidget {
   final ExerciseDraftValidation validation;
   final bool isSaving;
   final DomainError? lastSaveError;
+
+  /// Recent set-history for this movement, or null in transient states (saving,
+  /// video-link error) where the section is omitted.
+  final RecentHistoryView? recentHistory;
 
   @override
   Widget build(BuildContext context) {
@@ -114,6 +119,7 @@ class ExerciseEditorScaffold extends StatelessWidget {
           draft: draft,
           validation: validation,
           lastSaveError: lastSaveError,
+          recentHistory: recentHistory,
         ),
       ),
     );
