@@ -340,7 +340,7 @@ Steps 1.3, 1.4, 2.1, 3.1 are `complex` (new abstraction / cross-cutting bloc+rep
 #### Wave 1
 - [ ] Slice 1: Domain — cap predicate, history & badge derivation
   - [x] Step 1.1: Cap predicate for rep-based and bodyweight targets
-  - [ ] Step 1.2: Cap predicate for time-based targets
+  - [x] Step 1.2: Cap predicate for time-based targets
   - [ ] Step 1.3: CapHistory models + computeHistory aggregation
   - [ ] Step 1.4: computeBadge derivation
 
@@ -372,12 +372,12 @@ Waves hand-derived: `plan-waves.sh` is absent in plugin 6.7.0. Linear waves, one
 
 ### Acceptance Criteria
 
-- [ ] AC1 — Rep-range cap rule
-- [ ] AC2 — Fixed-target cap rule
-- [ ] AC3 — Time-based cap rule
-- [ ] AC4 — Exceeding the ceiling still caps
-- [ ] AC5 — Bodyweight cap rule
-- [ ] AC6 — Pyramid / vary-by-set per-set ceiling
+- [x] AC1 — Rep-range cap rule
+- [x] AC2 — Fixed-target cap rule
+- [x] AC3 — Time-based cap rule
+- [x] AC4 — Exceeding the ceiling still caps
+- [x] AC5 — Bodyweight cap rule
+- [x] AC6 — Pyramid / vary-by-set per-set ceiling
 - [ ] AC7 — Five most recent sessions, newest first
 - [ ] AC8 — Cross-program aggregation
 - [ ] AC9 — Row content + cap marker

@@ -26,6 +26,12 @@ ActualSetValues _actReps(int reps, {double weight = 80}) =>
 ActualSetValues _actBodyweight(int reps) =>
     ActualSetValues.bodyweight(reps: reps);
 
+PlannedSetValues _time(int seconds) =>
+    PlannedSetValues.timeBased(durationSeconds: seconds);
+
+ActualSetValues _actTime(int seconds) =>
+    ActualSetValues.timeBased(durationSeconds: seconds);
+
 void main() {
   group('ExerciseCapHistoryAggregator.isCapped — rep-based & bodyweight', () {
     test('rep-range caps when every working set reaches the top (AC1)', () {
@@ -128,6 +134,38 @@ void main() {
           actualSets: [_actReps(12), _actReps(12)],
         ),
         isFalse,
+      );
+    });
+  });
+
+  group('ExerciseCapHistoryAggregator.isCapped — time-based', () {
+    test('caps when every hold meets the planned duration (AC3)', () {
+      expect(
+        ExerciseCapHistoryAggregator.isCapped(
+          plannedSets: [_time(45), _time(45), _time(45)],
+          actualSets: [_actTime(45), _actTime(50), _actTime(45)],
+        ),
+        isTrue,
+      );
+    });
+
+    test('does not cap when one hold falls short of the duration (AC3)', () {
+      expect(
+        ExerciseCapHistoryAggregator.isCapped(
+          plannedSets: [_time(45), _time(45), _time(45)],
+          actualSets: [_actTime(45), _actTime(40), _actTime(45)],
+        ),
+        isFalse,
+      );
+    });
+
+    test('a duration exceeding the planned hold still caps (AC4)', () {
+      expect(
+        ExerciseCapHistoryAggregator.isCapped(
+          plannedSets: [_time(45), _time(45), _time(45)],
+          actualSets: [_actTime(50), _actTime(60), _actTime(45)],
+        ),
+        isTrue,
       );
     });
   });

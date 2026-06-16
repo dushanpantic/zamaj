@@ -34,24 +34,23 @@ abstract final class ExerciseCapHistoryAggregator {
     ActualSetValues actual,
   ) {
     final ceiling = _ceilingFor(planned);
-    if (ceiling == null) return false;
     return switch ((planned, actual)) {
       (PlannedRepBased(), ActualRepBased(:final reps)) => reps >= ceiling,
       (PlannedBodyweight(), ActualBodyweight(:final reps)) => reps >= ceiling,
+      (PlannedTimeBased(), ActualTimeBased(:final durationSeconds)) =>
+        durationSeconds >= ceiling,
       _ => false,
     };
   }
 }
 
 /// The per-set ceiling [planned] is judged against: the top of a rep target
-/// (fixed reps or a range's `maxReps`) for rep-based and bodyweight sets.
-///
-/// Null when the planned variant has no ceiling rule wired in yet (time-based
-/// is added in the next step).
-int? _ceilingFor(PlannedSetValues planned) => switch (planned) {
+/// (fixed reps or a range's `maxReps`) for rep-based and bodyweight sets, or
+/// the planned hold for a time-based set.
+int _ceilingFor(PlannedSetValues planned) => switch (planned) {
   PlannedRepBased(:final repTarget) => _repCeiling(repTarget),
   PlannedBodyweight(:final repTarget) => _repCeiling(repTarget),
-  PlannedTimeBased() => null,
+  PlannedTimeBased(:final durationSeconds) => durationSeconds,
 };
 
 /// The top of a [RepTarget]: a fixed target's reps or a range's `maxReps`.
