@@ -2,7 +2,7 @@
 
 **Created**: 2026-06-16
 **Branch**: master
-**Status**: in-progress
+**Status**: implemented
 **Spec**: docs/specs/set-history-with-progression-hints.md
 
 ## Goal
