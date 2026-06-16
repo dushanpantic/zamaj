@@ -308,6 +308,203 @@ void main() {
       },
     );
   });
+
+  group('ExerciseCapHistoryAggregator.computeBadge', () {
+    final current = _workoutSets(
+      weightKg: 80,
+      target: RepTarget.range(minReps: 10, maxReps: 12),
+      count: 3,
+    );
+
+    test('badges after a single matching capped session (AC13, AC14)', () {
+      final badged = ExerciseCapHistoryAggregator.computeBadge(
+        currentPlannedSets: current,
+        libraryExerciseId: benchLibraryId,
+        sessions: [
+          _repSession(
+            id: 'capped',
+            startedAt: DateTime.utc(2026, 3, 1),
+            actualReps: const [12, 12, 12],
+          ),
+        ],
+      );
+      expect(badged, isTrue);
+    });
+
+    test(
+      'does not badge when the most recent matching session was an off day',
+      () {
+        final badged = ExerciseCapHistoryAggregator.computeBadge(
+          currentPlannedSets: current,
+          libraryExerciseId: benchLibraryId,
+          sessions: [
+            _repSession(
+              id: 'off',
+              startedAt: DateTime.utc(2026, 3, 1),
+              actualReps: const [12, 12, 11],
+            ),
+          ],
+        );
+        expect(badged, isFalse);
+      },
+    );
+
+    test(
+      'the most recent matching session decides, not an older capped one',
+      () {
+        final badged = ExerciseCapHistoryAggregator.computeBadge(
+          currentPlannedSets: current,
+          libraryExerciseId: benchLibraryId,
+          sessions: [
+            _repSession(
+              id: 'old-capped',
+              startedAt: DateTime.utc(2026, 3, 1),
+              actualReps: const [12, 12, 12],
+            ),
+            _repSession(
+              id: 'new-offday',
+              startedAt: DateTime.utc(2026, 3, 8),
+              actualReps: const [12, 12, 11],
+            ),
+          ],
+        );
+        expect(badged, isFalse);
+      },
+    );
+
+    test('clears when the target is tightened (AC15)', () {
+      final tightened = _workoutSets(
+        weightKg: 80,
+        target: RepTarget.fixed(reps: 12),
+        count: 3,
+      );
+      final badged = ExerciseCapHistoryAggregator.computeBadge(
+        currentPlannedSets: tightened,
+        libraryExerciseId: benchLibraryId,
+        sessions: [
+          _repSession(
+            id: 'capped',
+            startedAt: DateTime.utc(2026, 3, 1),
+            target: RepTarget.range(minReps: 10, maxReps: 12),
+            actualReps: const [12, 12, 12],
+          ),
+        ],
+      );
+      expect(badged, isFalse);
+    });
+
+    test('clears when the weight is bumped (AC15)', () {
+      final heavier = _workoutSets(
+        weightKg: 82.5,
+        target: RepTarget.range(minReps: 10, maxReps: 12),
+        count: 3,
+      );
+      final badged = ExerciseCapHistoryAggregator.computeBadge(
+        currentPlannedSets: heavier,
+        libraryExerciseId: benchLibraryId,
+        sessions: [
+          _repSession(
+            id: 'capped',
+            startedAt: DateTime.utc(2026, 3, 1),
+            weightKg: 80,
+            actualReps: const [12, 12, 12],
+          ),
+        ],
+      );
+      expect(badged, isFalse);
+    });
+
+    test(
+      'a different-load session in another program does not trigger (AC18)',
+      () {
+        final badged = ExerciseCapHistoryAggregator.computeBadge(
+          currentPlannedSets: current,
+          libraryExerciseId: benchLibraryId,
+          sessions: [
+            _repSession(
+              id: 'lighter-elsewhere',
+              startedAt: DateTime.utc(2026, 3, 1),
+              programId: 'other',
+              weightKg: 60,
+              actualReps: const [12, 12, 12],
+            ),
+          ],
+        );
+        expect(badged, isFalse);
+      },
+    );
+
+    test('badges on the matching load while ignoring a capped lighter load '
+        'elsewhere (AC18)', () {
+      final badged = ExerciseCapHistoryAggregator.computeBadge(
+        currentPlannedSets: current,
+        libraryExerciseId: benchLibraryId,
+        sessions: [
+          _repSession(
+            id: 'match-80',
+            startedAt: DateTime.utc(2026, 3, 1),
+            weightKg: 80,
+            actualReps: const [12, 12, 12],
+          ),
+          _repSession(
+            id: 'lighter-60',
+            startedAt: DateTime.utc(2026, 3, 8),
+            programId: 'other',
+            weightKg: 60,
+            actualReps: const [12, 12, 12],
+          ),
+        ],
+      );
+      expect(badged, isTrue);
+    });
+
+    test('a matching session with a different set count does not trigger', () {
+      final twoSets = _workoutSets(
+        weightKg: 80,
+        target: RepTarget.range(minReps: 10, maxReps: 12),
+        count: 2,
+      );
+      final badged = ExerciseCapHistoryAggregator.computeBadge(
+        currentPlannedSets: twoSets,
+        libraryExerciseId: benchLibraryId,
+        sessions: [
+          _repSession(
+            id: 'three-sets-capped',
+            startedAt: DateTime.utc(2026, 3, 1),
+            actualReps: const [12, 12, 12],
+          ),
+        ],
+      );
+      expect(badged, isFalse);
+    });
+  });
+}
+
+/// Current-prescription planned sets (a `List<WorkoutSet>`) built to match the
+/// planned values [_repSession] produces, so badge matching compares like with
+/// like.
+List<WorkoutSet> _workoutSets({
+  double weightKg = 80,
+  RepTarget? target,
+  required int count,
+}) {
+  final repTarget = target ?? RepTarget.range(minReps: 10, maxReps: 12);
+  return [
+    for (var i = 0; i < count; i++)
+      WorkoutSet(
+        id: 'cur-ws-$i',
+        exerciseId: 'cur',
+        position: i,
+        measurementType: const MeasurementType.repBased(),
+        plannedValues: PlannedSetValues.repBased(
+          weightKg: weightKg,
+          repTarget: repTarget,
+        ),
+        createdAt: _t0,
+        updatedAt: _t0,
+        schemaVersion: 1,
+      ),
+  ];
 }
 
 // ---------------------------------------------------------------------------

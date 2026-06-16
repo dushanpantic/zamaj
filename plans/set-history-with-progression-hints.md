@@ -338,11 +338,11 @@ Steps 1.3, 1.4, 2.1, 3.1 are `complex` (new abstraction / cross-cutting bloc+rep
 ### Slices (grouped by wave)
 
 #### Wave 1
-- [ ] Slice 1: Domain — cap predicate, history & badge derivation
+- [x] Slice 1: Domain — cap predicate, history & badge derivation
   - [x] Step 1.1: Cap predicate for rep-based and bodyweight targets
   - [x] Step 1.2: Cap predicate for time-based targets
   - [x] Step 1.3: CapHistory models + computeHistory aggregation
-  - [ ] Step 1.4: computeBadge derivation
+  - [x] Step 1.4: computeBadge derivation
 
 #### Wave 2
 - [ ] Slice 2: Exercise-editor recent-history table
@@ -384,15 +384,15 @@ Waves hand-derived: `plan-waves.sh` is absent in plugin 6.7.0. Linear waves, one
 - [ ] AC10 — Empty state
 - [ ] AC11 — Unlinked nudge
 - [ ] AC12 — Warmup hidden
-- [ ] AC13 — Badge fires on matching capped session
-- [ ] AC14 — Fires after one
-- [ ] AC15 — Clears on plan advance
+- [x] AC13 — Badge fires on matching capped session
+- [x] AC14 — Fires after one
+- [x] AC15 — Clears on plan advance
 - [ ] AC16 — Warmup never badged
 - [ ] AC17 — Unlinked never badged
-- [ ] AC18 — Per-program load gating
+- [x] AC18 — Per-program load gating
 - [ ] AC19 — No schema bump
 - [ ] AC20 — Layer rules (no networking/Drift; via SessionRepository)
 - [ ] AC21 — Tokens + 48 dp
 - [ ] AC22 — Descriptive copy
-- [ ] AC23 — Domain unit tests
+- [x] AC23 — Domain unit tests
 - [ ] AC24 — product-context.md updated

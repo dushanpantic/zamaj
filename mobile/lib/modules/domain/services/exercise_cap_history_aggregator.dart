@@ -58,6 +58,42 @@ abstract final class ExerciseCapHistoryAggregator {
     return CapHistory(entries: entries);
   }
 
+  /// Whether [libraryExerciseId] should be flagged "needs attention" at its
+  /// [currentPlannedSets] prescription: true iff, among ended sessions whose
+  /// snapshot planned sets equal [currentPlannedSets] by value (weight + target,
+  /// set-for-set, same count), the most recent one capped.
+  ///
+  /// A plan advance — tightening the target, bumping the weight, or any change
+  /// to the planned sets — leaves no matching capped session, so the flag clears
+  /// on its own. The same movement at a different load elsewhere never matches.
+  static bool computeBadge({
+    required List<WorkoutSet> currentPlannedSets,
+    required String libraryExerciseId,
+    required List<Session> sessions,
+  }) {
+    final target = _plannedValuesOf(currentPlannedSets);
+    if (target.isEmpty) return false;
+
+    for (final session in SessionHistory.completedNewestFirst(sessions)) {
+      final entry = _entryFor(session, libraryExerciseId);
+      if (entry == null) continue;
+      if (!_samePlan(entry.plannedSets, target)) continue;
+      // First match in newest-first order is the most recent matching session.
+      return entry.isCapped;
+    }
+    return false;
+  }
+
+  /// Whether two position-ordered planned-set lists are equal by value: same
+  /// length and each set's planned values (weight + target) equal in order.
+  static bool _samePlan(List<PlannedSetValues> a, List<PlannedSetValues> b) {
+    if (a.length != b.length) return false;
+    for (var i = 0; i < a.length; i++) {
+      if (a[i] != b[i]) return false;
+    }
+    return true;
+  }
+
   /// One [CapHistoryEntry] for [session] sourced from the first snapshot
   /// exercise linked to [libraryExerciseId], or null when the session logged
   /// none for it.
