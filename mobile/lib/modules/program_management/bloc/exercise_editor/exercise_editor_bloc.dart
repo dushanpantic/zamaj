@@ -13,8 +13,10 @@ class ExerciseEditorBloc
     extends Bloc<ExerciseEditorEvent, ExerciseEditorState> {
   ExerciseEditorBloc({
     required ProgramRepository programRepository,
+    required SessionRepository sessionRepository,
     required ExternalLinkLauncher externalLinkLauncher,
   }) : _programRepository = programRepository,
+       _sessionRepository = sessionRepository,
        _externalLinkLauncher = externalLinkLauncher,
        super(const ExerciseEditorInitial()) {
     on<ExerciseEditorOpened>(_onOpened);
@@ -44,6 +46,7 @@ class ExerciseEditorBloc
   }
 
   final ProgramRepository _programRepository;
+  final SessionRepository _sessionRepository;
   final ExternalLinkLauncher _externalLinkLauncher;
   final _uuid = const Uuid();
 
@@ -96,7 +99,30 @@ class ExerciseEditorBloc
     _baselineDraft = draft;
     _baselinePlannedRestInput = _plannedRestInput;
     final validation = _computeValidation(draft);
-    emit(ExerciseEditorEditing(draft: draft, validation: validation));
+    final recentHistory = await _loadRecentHistory(exercise.libraryExerciseId);
+    emit(
+      ExerciseEditorEditing(
+        draft: draft,
+        validation: validation,
+        recentHistory: recentHistory,
+      ),
+    );
+  }
+
+  /// Resolves the recent set-history view for the exercise. An unlinked
+  /// exercise has no movement identity to aggregate by, so it gets the link
+  /// nudge; a linked one gets its [CapHistory] derived from completed sessions.
+  Future<RecentHistoryView> _loadRecentHistory(
+    String? libraryExerciseId,
+  ) async {
+    if (libraryExerciseId == null) return const RecentHistoryUnlinked();
+    final sessions = await _sessionRepository.listCompletedSessions();
+    return RecentHistoryAvailable(
+      ExerciseCapHistoryAggregator.computeHistory(
+        libraryExerciseId: libraryExerciseId,
+        sessions: sessions,
+      ),
+    );
   }
 
   Future<void> _onNameChanged(
@@ -557,6 +583,7 @@ class ExerciseEditorBloc
           validation: validation,
           lastSaveError: e,
           controllerSyncRevision: current.controllerSyncRevision,
+          recentHistory: current.recentHistory,
         ),
       );
     }

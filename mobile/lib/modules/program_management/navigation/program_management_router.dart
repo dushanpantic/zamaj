@@ -50,6 +50,7 @@ abstract final class ProgramManagementRouter {
           return BlocProvider(
             create: (_) => ExerciseEditorBloc(
               programRepository: context.read<ProgramRepository>(),
+              sessionRepository: context.read<SessionRepository>(),
               externalLinkLauncher: context.read<ExternalLinkLauncher>(),
             ),
             child: ExerciseEditorScreen(args: args),

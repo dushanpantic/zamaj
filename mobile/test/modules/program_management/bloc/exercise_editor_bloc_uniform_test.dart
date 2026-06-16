@@ -32,6 +32,13 @@ class _FakeLinkLauncher implements ExternalLinkLauncher {
       const ExternalLinkOpened();
 }
 
+/// These exercises are all unlinked, so `listCompletedSessions` is never
+/// called — a no-op fake satisfies the constructor dependency.
+class _FakeSessionRepository implements SessionRepository {
+  @override
+  dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
+}
+
 final _now = DateTime.utc(2026, 1, 1);
 
 Exercise _repExercise({
@@ -133,6 +140,7 @@ Exercise _timeExercise({required int setCount, int durationSeconds = 60}) {
 Future<ExerciseEditorBloc> _opened(_FakeProgramRepository repo) async {
   final bloc = ExerciseEditorBloc(
     programRepository: repo,
+    sessionRepository: _FakeSessionRepository(),
     externalLinkLauncher: _FakeLinkLauncher(),
   );
   bloc.add(const ExerciseEditorOpened(exerciseId: 'ex1'));

@@ -99,6 +99,35 @@ final class ExerciseDraftValidation extends Equatable {
   ];
 }
 
+/// The recent set-history view for the exercise being edited.
+///
+/// Derived once on load. An unlinked exercise has no movement identity to
+/// aggregate by, so it surfaces the link nudge; a linked exercise carries its
+/// [CapHistory] (which may be empty, rendering the "No history yet" state).
+sealed class RecentHistoryView extends Equatable {
+  const RecentHistoryView();
+}
+
+/// The exercise is not linked to a library entry — render the link nudge and
+/// no rows.
+final class RecentHistoryUnlinked extends RecentHistoryView {
+  const RecentHistoryUnlinked();
+
+  @override
+  List<Object?> get props => [];
+}
+
+/// The exercise is linked — [history] holds up to its five most recent ended
+/// sessions (possibly empty).
+final class RecentHistoryAvailable extends RecentHistoryView {
+  const RecentHistoryAvailable(this.history);
+
+  final CapHistory history;
+
+  @override
+  List<Object?> get props => [history];
+}
+
 sealed class ExerciseEditorState extends Equatable {
   const ExerciseEditorState();
 }
@@ -132,11 +161,15 @@ final class ExerciseEditorEditing extends ExerciseEditorState {
     required this.validation,
     this.lastSaveError,
     this.controllerSyncRevision = 0,
+    this.recentHistory = const RecentHistoryUnlinked(),
   });
 
   final ExerciseDraft draft;
   final ExerciseDraftValidation validation;
   final DomainError? lastSaveError;
+
+  /// Recent set-history for this movement, resolved once on load.
+  final RecentHistoryView recentHistory;
 
   /// Bumped when the bloc rewrites controller-backed text (name, video URL)
   /// programmatically — e.g. linking to a library entry with "update row".
@@ -150,6 +183,7 @@ final class ExerciseEditorEditing extends ExerciseEditorState {
     ExerciseDraftValidation? validation,
     DomainError? Function()? lastSaveError,
     int? controllerSyncRevision,
+    RecentHistoryView? recentHistory,
   }) {
     return ExerciseEditorEditing(
       draft: draft ?? this.draft,
@@ -159,6 +193,7 @@ final class ExerciseEditorEditing extends ExerciseEditorState {
           : this.lastSaveError,
       controllerSyncRevision:
           controllerSyncRevision ?? this.controllerSyncRevision,
+      recentHistory: recentHistory ?? this.recentHistory,
     );
   }
 
@@ -168,6 +203,7 @@ final class ExerciseEditorEditing extends ExerciseEditorState {
     validation,
     lastSaveError,
     controllerSyncRevision,
+    recentHistory,
   ];
 }
 

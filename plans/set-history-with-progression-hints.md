@@ -327,6 +327,7 @@ Steps 1.3, 1.4, 2.1, 3.1 are `complex` (new abstraction / cross-cutting bloc+rep
 
 ## Risks & Open Questions
 
+- **User override (2026-06-16): exercise-editor history is NOT hidden for warmups.** AC12's "warmup-group exercise shows no history section" is overridden — the exercise editor shows recent history for any *linked* exercise, warmup or not (no warmup detection in `ExerciseEditorBloc`). The no-warmup-hints rule is kept only for the workout-day-editor badge (Slice 3, AC16). Drops the planned "warmup-hidden" bloc state/test.
 - **Unfinished-session rule (decided 2026-06-16).** A session caps only if **every planned working set was executed** *and* each met its ceiling. A session that logged fewer than its planned sets is not capped, even if the logged sets hit the ceiling.
 - **No automated UI coverage.** Per project test scope (no widget tests), Slices 2.2 and 3.2 have no automated test; behavioral logic is pushed into the blocs (2.1/3.1) which *are* tested. Visual correctness is the user's manual check.
 - **Always-on badge in v1.** A deliberately-held lift (rehab) badges persistently with no dismiss — accepted; suppression is a separate follow-up PR.
@@ -346,7 +347,7 @@ Steps 1.3, 1.4, 2.1, 3.1 are `complex` (new abstraction / cross-cutting bloc+rep
 
 #### Wave 2
 - [ ] Slice 2: Exercise-editor recent-history table
-  - [ ] Step 2.1: Bloc loads and exposes recent-history state
+  - [x] Step 2.1: Bloc loads and exposes recent-history state
   - [ ] Step 2.2: Render the recent-history section
 
 #### Wave 3
