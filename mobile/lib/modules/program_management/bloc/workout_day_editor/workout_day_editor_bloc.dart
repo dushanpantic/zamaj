@@ -10,9 +10,12 @@ import 'workout_day_editor_state.dart';
 
 class WorkoutDayEditorBloc
     extends Bloc<WorkoutDayEditorEvent, WorkoutDayEditorState> {
-  WorkoutDayEditorBloc({required ProgramRepository programRepository})
-    : _programRepository = programRepository,
-      super(const WorkoutDayEditorInitial()) {
+  WorkoutDayEditorBloc({
+    required ProgramRepository programRepository,
+    required SessionRepository sessionRepository,
+  }) : _programRepository = programRepository,
+       _sessionRepository = sessionRepository,
+       super(const WorkoutDayEditorInitial()) {
     on<WorkoutDayEditorOpened>(_onOpened);
     on<WorkoutDayEditorRefreshed>(_onRefreshed);
     on<WorkoutDaySaveRetryRequested>(_onSaveRetryRequested);
@@ -30,6 +33,7 @@ class WorkoutDayEditorBloc
   }
 
   final ProgramRepository _programRepository;
+  final SessionRepository _sessionRepository;
   static const _uuid = Uuid();
 
   WorkoutDay? _baseline;
@@ -55,6 +59,7 @@ class WorkoutDayEditorBloc
         WorkoutDayEditorEditing(
           draft: draft,
           validation: WorkoutDayDraftValidation.of(draft),
+          badgedExerciseIds: await _computeBadges(workoutDay),
         ),
       );
     } on DomainError catch (e) {
@@ -90,8 +95,32 @@ class WorkoutDayEditorBloc
       WorkoutDayEditorEditing(
         draft: draft,
         validation: WorkoutDayDraftValidation.of(draft),
+        badgedExerciseIds: await _computeBadges(workoutDay),
       ),
     );
+  }
+
+  /// The persisted ids of [day]'s exercises flagged "needs attention": linked,
+  /// non-warmup exercises whose most recent matching completed session capped.
+  /// Warmup-group and unlinked exercises are excluded.
+  Future<Set<String>> _computeBadges(WorkoutDay day) async {
+    final warmupIds = warmupExerciseIdsIn(day);
+    final sessions = await _sessionRepository.listCompletedSessions();
+    final badged = <String>{};
+    for (final group in day.exerciseGroups) {
+      for (final exercise in group.exercises) {
+        if (warmupIds.contains(exercise.id)) continue;
+        final libraryExerciseId = exercise.libraryExerciseId;
+        if (libraryExerciseId == null) continue;
+        final isBadged = ExerciseCapHistoryAggregator.computeBadge(
+          currentPlannedSets: exercise.sets,
+          libraryExerciseId: libraryExerciseId,
+          sessions: sessions,
+        );
+        if (isBadged) badged.add(exercise.id);
+      }
+    }
+    return badged;
   }
 
   Future<void> _onSaveRetryRequested(
@@ -604,6 +633,7 @@ class WorkoutDayEditorBloc
       }
       _baseline = finalDay;
       final newDraft = _draftFromWorkoutDay(finalDay);
+      final badged = await _computeBadges(finalDay);
 
       if (navigateToNewExercise) {
         final newExerciseId = _findNewExerciseId(finalDay);
@@ -622,6 +652,7 @@ class WorkoutDayEditorBloc
         WorkoutDayEditorEditing(
           draft: newDraft,
           validation: WorkoutDayDraftValidation.of(newDraft),
+          badgedExerciseIds: badged,
         ),
       );
     } on DomainError catch (e) {

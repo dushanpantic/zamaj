@@ -103,6 +103,7 @@ final class WorkoutDayEditorEditing extends WorkoutDayEditorState {
     required this.validation,
     this.isSaving = false,
     this.lastSaveError,
+    this.badgedExerciseIds = const {},
   });
 
   final WorkoutDayDraft draft;
@@ -110,11 +111,17 @@ final class WorkoutDayEditorEditing extends WorkoutDayEditorState {
   final bool isSaving;
   final DomainError? lastSaveError;
 
+  /// Persisted ids of exercises flagged "needs attention" — capped at their
+  /// current prescription and not yet advanced. Excludes warmup-group and
+  /// unlinked exercises. Resolved on load/refresh from completed sessions.
+  final Set<String> badgedExerciseIds;
+
   WorkoutDayEditorEditing copyWith({
     WorkoutDayDraft? draft,
     WorkoutDayDraftValidation? validation,
     bool? isSaving,
     DomainError? Function()? lastSaveError,
+    Set<String>? badgedExerciseIds,
   }) {
     return WorkoutDayEditorEditing(
       draft: draft ?? this.draft,
@@ -123,11 +130,18 @@ final class WorkoutDayEditorEditing extends WorkoutDayEditorState {
       lastSaveError: lastSaveError != null
           ? lastSaveError()
           : this.lastSaveError,
+      badgedExerciseIds: badgedExerciseIds ?? this.badgedExerciseIds,
     );
   }
 
   @override
-  List<Object?> get props => [draft, validation, isSaving, lastSaveError];
+  List<Object?> get props => [
+    draft,
+    validation,
+    isSaving,
+    lastSaveError,
+    badgedExerciseIds,
+  ];
 }
 
 final class WorkoutDayEditorExerciseCreated extends WorkoutDayEditorState {

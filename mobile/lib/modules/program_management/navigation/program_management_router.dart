@@ -38,6 +38,7 @@ abstract final class ProgramManagementRouter {
           return BlocProvider(
             create: (_) => WorkoutDayEditorBloc(
               programRepository: context.read<ProgramRepository>(),
+              sessionRepository: context.read<SessionRepository>(),
             ),
             child: WorkoutDayEditorScreen(args: args),
           );

@@ -352,7 +352,7 @@ Steps 1.3, 1.4, 2.1, 3.1 are `complex` (new abstraction / cross-cutting bloc+rep
 
 #### Wave 3
 - [ ] Slice 3: Workout-day-editor attention badge
-  - [ ] Step 3.1: Bloc computes per-exercise badge state
+  - [x] Step 3.1: Bloc computes per-exercise badge state
   - [ ] Step 3.2: Render the attention badge chip
 
 #### Wave 4
@@ -388,8 +388,8 @@ Waves hand-derived: `plan-waves.sh` is absent in plugin 6.7.0. Linear waves, one
 - [x] AC13 — Badge fires on matching capped session
 - [x] AC14 — Fires after one
 - [x] AC15 — Clears on plan advance
-- [ ] AC16 — Warmup never badged
-- [ ] AC17 — Unlinked never badged
+- [x] AC16 — Warmup never badged
+- [x] AC17 — Unlinked never badged
 - [x] AC18 — Per-program load gating
 - [ ] AC19 — No schema bump
 - [ ] AC20 — Layer rules (no networking/Drift; via SessionRepository)
