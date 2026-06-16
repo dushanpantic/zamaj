@@ -21,6 +21,7 @@ class EditorSupersetCard extends StatelessWidget {
     required this.reorderIndex,
     required this.bloc,
     required this.validation,
+    required this.badgedExerciseIds,
     required this.onNavigateToExercise,
   });
 
@@ -28,6 +29,7 @@ class EditorSupersetCard extends StatelessWidget {
   final int reorderIndex;
   final WorkoutDayEditorBloc bloc;
   final WorkoutDayDraftValidation validation;
+  final Set<String> badgedExerciseIds;
   final void Function(String exerciseId) onNavigateToExercise;
 
   static String _positionLabel(int index) {
@@ -181,6 +183,9 @@ class EditorSupersetCard extends StatelessWidget {
                     final positionLabel = _positionLabel(index);
                     final isInvalid = validation.invalidExerciseDraftIds
                         .contains(exercise.draftId);
+                    final isBadged =
+                        exercise.persistedId != null &&
+                        badgedExerciseIds.contains(exercise.persistedId);
                     return LongPressDraggable<ExerciseDragPayload>(
                       data: payload,
                       feedback: Material(
@@ -297,6 +302,7 @@ class EditorSupersetCard extends StatelessWidget {
                                         exercise: exercise,
                                         colors: colors,
                                         isInvalid: isInvalid,
+                                        isBadged: isBadged,
                                         supersetPositionLabel: positionLabel,
                                       ),
                                     ),

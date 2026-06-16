@@ -351,9 +351,9 @@ Steps 1.3, 1.4, 2.1, 3.1 are `complex` (new abstraction / cross-cutting bloc+rep
   - [x] Step 2.2: Render the recent-history section
 
 #### Wave 3
-- [ ] Slice 3: Workout-day-editor attention badge
+- [x] Slice 3: Workout-day-editor attention badge
   - [x] Step 3.1: Bloc computes per-exercise badge state
-  - [ ] Step 3.2: Render the attention badge chip
+  - [x] Step 3.2: Render the attention badge chip
 
 #### Wave 4
 - [ ] Slice 4: Product-context update
@@ -393,7 +393,7 @@ Waves hand-derived: `plan-waves.sh` is absent in plugin 6.7.0. Linear waves, one
 - [x] AC18 — Per-program load gating
 - [ ] AC19 — No schema bump
 - [ ] AC20 — Layer rules (no networking/Drift; via SessionRepository)
-- [ ] AC21 — Tokens + 48 dp
+- [x] AC21 — Tokens + 48 dp
 - [x] AC22 — Descriptive copy
 - [x] AC23 — Domain unit tests
 - [ ] AC24 — product-context.md updated

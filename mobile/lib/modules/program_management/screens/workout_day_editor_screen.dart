@@ -101,6 +101,7 @@ class _WorkoutDayEditorScreenState extends State<WorkoutDayEditorScreen> {
               validation: validation,
               isSaving: false,
               lastSaveError: null,
+              badgedExerciseIds: const <String>{},
               onNavigateToExercise: _navigateToExercise,
             ),
           WorkoutDayEditorEditing(
@@ -108,6 +109,7 @@ class _WorkoutDayEditorScreenState extends State<WorkoutDayEditorScreen> {
             :final validation,
             :final isSaving,
             :final lastSaveError,
+            :final badgedExerciseIds,
           ) =>
             _EditingBody(
               nameController: _nameController,
@@ -115,6 +117,7 @@ class _WorkoutDayEditorScreenState extends State<WorkoutDayEditorScreen> {
               validation: validation,
               isSaving: isSaving,
               lastSaveError: lastSaveError,
+              badgedExerciseIds: badgedExerciseIds,
               onNavigateToExercise: _navigateToExercise,
             ),
         };
@@ -165,6 +168,7 @@ class _EditingBody extends StatefulWidget {
     required this.validation,
     required this.isSaving,
     required this.lastSaveError,
+    required this.badgedExerciseIds,
     required this.onNavigateToExercise,
   });
 
@@ -173,6 +177,7 @@ class _EditingBody extends StatefulWidget {
   final WorkoutDayDraftValidation validation;
   final bool isSaving;
   final DomainError? lastSaveError;
+  final Set<String> badgedExerciseIds;
   final void Function(String exerciseId) onNavigateToExercise;
 
   @override
@@ -264,6 +269,7 @@ class _EditingBodyState extends State<_EditingBody> {
             child: WorkoutDayExerciseList(
               draft: widget.draft,
               validation: widget.validation,
+              badgedExerciseIds: widget.badgedExerciseIds,
               onNavigateToExercise: widget.onNavigateToExercise,
             ),
           ),

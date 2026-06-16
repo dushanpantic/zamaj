@@ -15,6 +15,7 @@ class EditorExerciseTileContent extends StatelessWidget {
     required this.colors,
     this.isWarmup = false,
     this.isInvalid = false,
+    this.isBadged = false,
     this.supersetPositionLabel,
   });
 
@@ -22,6 +23,11 @@ class EditorExerciseTileContent extends StatelessWidget {
   final AppColors colors;
   final bool isWarmup;
   final bool isInvalid;
+
+  /// Whether this exercise capped its current prescription and has not been
+  /// advanced — flags the descriptive "needs attention" badge. Never shown for
+  /// warmup-group exercises.
+  final bool isBadged;
   final String? supersetPositionLabel;
 
   @override
@@ -56,6 +62,10 @@ class EditorExerciseTileContent extends StatelessWidget {
             if (isWarmup) ...[
               const SizedBox(width: AppSpacing.sm),
               EditorWarmupBadge(colors: colors),
+            ],
+            if (isBadged && !isWarmup) ...[
+              const SizedBox(width: AppSpacing.sm),
+              _AttentionBadge(colors: colors),
             ],
           ],
         ),
@@ -116,6 +126,55 @@ class EditorWarmupBadge extends StatelessWidget {
       child: Text(
         'WARMUP',
         style: AppTypography.standard.caption.copyWith(color: colors.warmup),
+      ),
+    );
+  }
+}
+
+/// The descriptive "capped" badge: the lift met or exceeded its current
+/// prescription on its most recent matching session and has not been advanced.
+/// Non-interactive — the enclosing exercise row carries the ≥48 dp tap target.
+class _AttentionBadge extends StatelessWidget {
+  const _AttentionBadge({required this.colors});
+
+  final AppColors colors;
+
+  @override
+  Widget build(BuildContext context) {
+    return Semantics(
+      label: 'Capped at current prescription',
+      child: Container(
+        padding: const EdgeInsets.symmetric(
+          horizontal: AppSpacing.sm,
+          vertical: 2,
+        ),
+        decoration: BoxDecoration(
+          color: colors.exerciseCompleted.withValues(
+            alpha: AppOpacity.tintFill,
+          ),
+          borderRadius: BorderRadius.circular(AppRadius.pill),
+          border: Border.all(
+            color: colors.exerciseCompleted.withValues(
+              alpha: AppOpacity.borderTint,
+            ),
+          ),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            AppIcon(
+              Icons.arrow_drop_up,
+              color: colors.exerciseCompleted,
+              size: AppIconSize.sm,
+            ),
+            Text(
+              'CAPPED',
+              style: AppTypography.standard.caption.copyWith(
+                color: colors.exerciseCompleted,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

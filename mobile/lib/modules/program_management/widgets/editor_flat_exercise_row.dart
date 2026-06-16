@@ -20,6 +20,7 @@ class EditorFlatExerciseRow extends StatelessWidget {
     required this.reorderIndex,
     required this.bloc,
     required this.isInvalid,
+    required this.isBadged,
     required this.otherGroups,
     required this.onNavigateToExercise,
   });
@@ -29,6 +30,7 @@ class EditorFlatExerciseRow extends StatelessWidget {
   final int reorderIndex;
   final WorkoutDayEditorBloc bloc;
   final bool isInvalid;
+  final bool isBadged;
   final List<ExerciseGroupDraft> otherGroups;
   final void Function(String exerciseId) onNavigateToExercise;
 
@@ -235,6 +237,7 @@ class EditorFlatExerciseRow extends StatelessWidget {
                             colors: colors,
                             isWarmup: isWarmup,
                             isInvalid: isInvalid,
+                            isBadged: isBadged,
                           ),
                         ),
                         PopupMenuButton<GroupMenuAction>(

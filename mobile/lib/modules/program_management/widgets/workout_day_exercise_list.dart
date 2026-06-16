@@ -17,11 +17,13 @@ class WorkoutDayExerciseList extends StatelessWidget {
     super.key,
     required this.draft,
     required this.validation,
+    required this.badgedExerciseIds,
     required this.onNavigateToExercise,
   });
 
   final WorkoutDayDraft draft;
   final WorkoutDayDraftValidation validation;
+  final Set<String> badgedExerciseIds;
   final void Function(String exerciseId) onNavigateToExercise;
 
   @override
@@ -99,6 +101,9 @@ class WorkoutDayExerciseList extends StatelessWidget {
               isInvalid: validation.invalidExerciseDraftIds.contains(
                 exercise.draftId,
               ),
+              isBadged:
+                  exercise.persistedId != null &&
+                  badgedExerciseIds.contains(exercise.persistedId),
               otherGroups: draft.groups
                   .where((g) => g.draftId != group.draftId)
                   .toList(),
@@ -112,6 +117,7 @@ class WorkoutDayExerciseList extends StatelessWidget {
           reorderIndex: index,
           bloc: bloc,
           validation: validation,
+          badgedExerciseIds: badgedExerciseIds,
           onNavigateToExercise: onNavigateToExercise,
         );
       },
