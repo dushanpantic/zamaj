@@ -14,14 +14,16 @@ import 'package:zamaj/modules/domain/services/session_history.dart';
 ///
 /// A session caps a movement iff **every** planned working set was executed and
 /// each met (or exceeded) its own ceiling — the top of a rep target or a
-/// time-based hold's planned seconds. Vary-by-set plans are judged per set
-/// against each set's own ceiling; there is no special-casing.
+/// time-based hold's planned seconds — **at no less than the planned weight**.
+/// Hitting the rep ceiling at a lighter load does not cap. Vary-by-set plans are
+/// judged per set against each set's own ceiling; there is no special-casing.
 abstract final class ExerciseCapHistoryAggregator {
   /// Whether [actualSets] caps the [plannedSets] prescription.
   ///
   /// Capped iff at least every planned working set was executed (`actualSets`
   /// has an entry for each planned index) and each of those sets met its own
-  /// ceiling. Extra logged sets beyond the plan do not affect the result.
+  /// ceiling at no less than the planned weight. Extra logged sets beyond the
+  /// plan do not affect the result.
   static bool isCapped({
     required List<PlannedSetValues> plannedSets,
     required List<ActualSetValues> actualSets,
@@ -137,17 +139,32 @@ abstract final class ExerciseCapHistoryAggregator {
     return [for (final set in ordered) set.actualValues];
   }
 
-  /// Whether a single [actual] set meets the ceiling of its [planned] set.
+  /// Whether a single [actual] set meets its [planned] set's prescription.
+  ///
+  /// Two conditions must both hold: the actual reps/hold reach the ceiling (the
+  /// top of the rep target, or the planned hold seconds) AND the actual weight
+  /// is at least the planned weight. Hitting the rep ceiling at a lighter load
+  /// does NOT cap — the prescribed weight must be met (or exceeded) first.
+  /// Bodyweight sets carry no weight, so they remain reps-only; a time-based set
+  /// with no planned weight is judged on duration alone.
   static bool _setMeetsCeiling(
     PlannedSetValues planned,
     ActualSetValues actual,
   ) {
     final ceiling = _ceilingFor(planned);
     return switch ((planned, actual)) {
-      (PlannedRepBased(), ActualRepBased(:final reps)) => reps >= ceiling,
+      (
+        PlannedRepBased(:final weightKg),
+        ActualRepBased(:final reps, weightKg: final actualWeightKg),
+      ) =>
+        reps >= ceiling && actualWeightKg >= weightKg,
       (PlannedBodyweight(), ActualBodyweight(:final reps)) => reps >= ceiling,
-      (PlannedTimeBased(), ActualTimeBased(:final durationSeconds)) =>
-        durationSeconds >= ceiling,
+      (
+        PlannedTimeBased(:final weightKg),
+        ActualTimeBased(:final durationSeconds, weightKg: final actualWeightKg),
+      ) =>
+        durationSeconds >= ceiling &&
+            (weightKg == null || (actualWeightKg ?? 0) >= weightKg),
       _ => false,
     };
   }

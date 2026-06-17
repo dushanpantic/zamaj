@@ -104,6 +104,72 @@ void main() {
       );
     });
 
+    test(
+      'does not cap when reps hit the ceiling but the weight is below planned',
+      () {
+        // Regression: planned 12.5kg × 10, logged 10kg × 10. Hitting the rep
+        // target at a lighter load is not a cap — the prescribed weight must be
+        // met first.
+        expect(
+          ExerciseCapHistoryAggregator.isCapped(
+            plannedSets: [
+              _repFixed(10, weight: 12.5),
+              _repFixed(10, weight: 12.5),
+              _repFixed(10, weight: 12.5),
+            ],
+            actualSets: [
+              _actReps(10, weight: 10),
+              _actReps(10, weight: 10),
+              _actReps(10, weight: 10),
+            ],
+          ),
+          isFalse,
+        );
+      },
+    );
+
+    test('caps when reps hit the ceiling at exactly the planned weight', () {
+      expect(
+        ExerciseCapHistoryAggregator.isCapped(
+          plannedSets: [
+            _repFixed(10, weight: 12.5),
+            _repFixed(10, weight: 12.5),
+            _repFixed(10, weight: 12.5),
+          ],
+          actualSets: [
+            _actReps(10, weight: 12.5),
+            _actReps(10, weight: 12.5),
+            _actReps(10, weight: 12.5),
+          ],
+        ),
+        isTrue,
+      );
+    });
+
+    test('caps when the weight exceeds the planned weight', () {
+      expect(
+        ExerciseCapHistoryAggregator.isCapped(
+          plannedSets: [_repFixed(10, weight: 12.5)],
+          actualSets: [_actReps(10, weight: 15)],
+        ),
+        isTrue,
+      );
+    });
+
+    test('does not cap when a single set is under the planned weight', () {
+      expect(
+        ExerciseCapHistoryAggregator.isCapped(
+          plannedSets: [
+            _repRange(10, 12),
+            _repRange(10, 12),
+            _repRange(10, 12),
+          ],
+          actualSets: [_actReps(12), _actReps(12, weight: 77.5), _actReps(12)],
+        ),
+        isFalse,
+      );
+    });
+
     test('bodyweight uses the rep-ceiling rule and caps (AC5)', () {
       expect(
         ExerciseCapHistoryAggregator.isCapped(
@@ -202,6 +268,34 @@ void main() {
         ExerciseCapHistoryAggregator.isCapped(
           plannedSets: [_time(45), _time(45), _time(45)],
           actualSets: [_actTime(50), _actTime(60), _actTime(45)],
+        ),
+        isTrue,
+      );
+    });
+
+    test('a weighted hold does not cap when the load is below planned', () {
+      expect(
+        ExerciseCapHistoryAggregator.isCapped(
+          plannedSets: const [
+            PlannedSetValues.timeBased(durationSeconds: 45, weightKg: 10),
+          ],
+          actualSets: const [
+            ActualSetValues.timeBased(durationSeconds: 60, weightKg: 5),
+          ],
+        ),
+        isFalse,
+      );
+    });
+
+    test('a weighted hold caps when duration and load are both met', () {
+      expect(
+        ExerciseCapHistoryAggregator.isCapped(
+          plannedSets: const [
+            PlannedSetValues.timeBased(durationSeconds: 45, weightKg: 10),
+          ],
+          actualSets: const [
+            ActualSetValues.timeBased(durationSeconds: 45, weightKg: 10),
+          ],
         ),
         isTrue,
       );
