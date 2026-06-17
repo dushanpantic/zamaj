@@ -31,11 +31,14 @@ abstract final class ExerciseProgressAggregator {
     // SessionHistory derivations use. Ordered oldest-first, ties on startedAt
     // broken by id so the series is deterministic regardless of input order
     // (mirrors SessionHistory.completedNewestFirst).
-    final completed = [for (final s in sessions) if (s.endedAt != null) s]
-      ..sort((a, b) {
-        final byDate = a.startedAt.compareTo(b.startedAt);
-        return byDate != 0 ? byDate : a.id.compareTo(b.id);
-      });
+    final completed =
+        [
+          for (final s in sessions)
+            if (s.endedAt != null) s,
+        ]..sort((a, b) {
+          final byDate = a.startedAt.compareTo(b.startedAt);
+          return byDate != 0 ? byDate : a.id.compareTo(b.id);
+        });
 
     final points = <ProgressPoint>[];
     for (final session in completed) {

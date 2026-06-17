@@ -88,7 +88,10 @@ void main() {
       final snapshotExercise =
           session.snapshot.workoutDay.exerciseGroups.single.exercises.single;
       expect(snapshotExercise.name, 'Bench');
-      expect(snapshotExercise.measurementType, const MeasurementType.repBased());
+      expect(
+        snapshotExercise.measurementType,
+        const MeasurementType.repBased(),
+      );
       // Executed sets are hydrated.
       expect(
         session.sessionExercises.single.executedSets.single.actualValues,
