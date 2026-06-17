@@ -66,22 +66,3 @@ final class WorkoutDayPickerResumePressed extends WorkoutDayPickerEvent {
 final class WorkoutDayPickerErrorDismissed extends WorkoutDayPickerEvent {
   const WorkoutDayPickerErrorDismissed();
 }
-
-// TEMP: snapshot link repair — remove after one-time run.
-/// Requests the no-write repair preview for the loaded program.
-final class WorkoutDayPickerRepairPreviewRequested
-    extends WorkoutDayPickerEvent {
-  const WorkoutDayPickerRepairPreviewRequested();
-}
-
-// TEMP: snapshot link repair — remove after one-time run.
-/// Confirms and applies the previewed repair.
-final class WorkoutDayPickerRepairConfirmed extends WorkoutDayPickerEvent {
-  const WorkoutDayPickerRepairConfirmed();
-}
-
-// TEMP: snapshot link repair — remove after one-time run.
-/// Dismisses the repair preview / result without applying anything.
-final class WorkoutDayPickerRepairDismissed extends WorkoutDayPickerEvent {
-  const WorkoutDayPickerRepairDismissed();
-}

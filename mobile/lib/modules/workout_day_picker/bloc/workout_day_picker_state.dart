@@ -55,64 +55,6 @@ final class WorkoutDayPickerScreenFailure extends WorkoutDayPickerState {
   List<Object?> get props => [programId, programName, error];
 }
 
-// TEMP: snapshot link repair — remove after one-time run.
-/// Counts surfaced by the repair preview / result dialog. Non-null on a loaded
-/// state means the maintainer is mid-repair (preview or result shown).
-final class WorkoutDayPickerRepairPreview extends Equatable {
-  const WorkoutDayPickerRepairPreview({
-    required this.sessionsScanned,
-    required this.sessionsToChange,
-    required this.exercisesToReLink,
-    required this.unmatched,
-    required this.currentUnlinked,
-    required this.daysMissing,
-  });
-
-  final int sessionsScanned;
-  final int sessionsToChange;
-  final int exercisesToReLink;
-  final int unmatched;
-  final int currentUnlinked;
-  final int daysMissing;
-
-  @override
-  List<Object?> get props => [
-    sessionsScanned,
-    sessionsToChange,
-    exercisesToReLink,
-    unmatched,
-    currentUnlinked,
-    daysMissing,
-  ];
-}
-
-// TEMP: snapshot link repair — remove after one-time run.
-/// Counts surfaced by the repair result summary after the rewrites are applied.
-final class WorkoutDayPickerRepairResult extends Equatable {
-  const WorkoutDayPickerRepairResult({
-    required this.sessionsChanged,
-    required this.exercisesReLinked,
-    required this.unmatched,
-    required this.currentUnlinked,
-    required this.daysMissing,
-  });
-
-  final int sessionsChanged;
-  final int exercisesReLinked;
-  final int unmatched;
-  final int currentUnlinked;
-  final int daysMissing;
-
-  @override
-  List<Object?> get props => [
-    sessionsChanged,
-    exercisesReLinked,
-    unmatched,
-    currentUnlinked,
-    daysMissing,
-  ];
-}
-
 final class WorkoutDayPickerLoaded extends WorkoutDayPickerState {
   const WorkoutDayPickerLoaded({
     required this.program,
@@ -122,22 +64,12 @@ final class WorkoutDayPickerLoaded extends WorkoutDayPickerState {
     this.activeSession,
     this.launchInFlightWorkoutDayId,
     this.lastTransientError,
-    this.repairPreview,
-    this.repairResult,
   });
 
   final Program program;
   final List<DayViewModel> dayViewModels;
   final DateTime referenceNow;
   final TrainingWeek window;
-
-  /// TEMP: snapshot link repair — remove after one-time run. Non-null while the
-  /// repair preview is shown.
-  final WorkoutDayPickerRepairPreview? repairPreview;
-
-  /// TEMP: snapshot link repair — remove after one-time run. Non-null once the
-  /// repair has been applied and its result summary should be shown.
-  final WorkoutDayPickerRepairResult? repairResult;
 
   /// The single in-flight session anywhere in the app (its `endedAt` is null),
   /// or null when nothing is in progress. While this is non-null, starting a
@@ -156,8 +88,6 @@ final class WorkoutDayPickerLoaded extends WorkoutDayPickerState {
     Session? Function()? activeSession,
     String? Function()? launchInFlightWorkoutDayId,
     DomainError? Function()? lastTransientError,
-    WorkoutDayPickerRepairPreview? Function()? repairPreview,
-    WorkoutDayPickerRepairResult? Function()? repairResult,
   }) {
     return WorkoutDayPickerLoaded(
       program: program ?? this.program,
@@ -173,10 +103,6 @@ final class WorkoutDayPickerLoaded extends WorkoutDayPickerState {
       lastTransientError: lastTransientError != null
           ? lastTransientError()
           : this.lastTransientError,
-      repairPreview: repairPreview != null
-          ? repairPreview()
-          : this.repairPreview,
-      repairResult: repairResult != null ? repairResult() : this.repairResult,
     );
   }
 
@@ -189,7 +115,5 @@ final class WorkoutDayPickerLoaded extends WorkoutDayPickerState {
     activeSession,
     launchInFlightWorkoutDayId,
     lastTransientError,
-    repairPreview,
-    repairResult,
   ];
 }

@@ -629,26 +629,6 @@ class FakeSessionRepository implements SessionRepository {
     return updated;
   }
 
-  // TEMP: snapshot link repair — remove after one-time run.
-  //
-  // Replaces only the stored snapshot's workout day (recomputing its canonical
-  // JSON + hash via SessionSnapshot.capture), preserving the captured-at and
-  // schema version. Session timestamps and child rows are left untouched.
-  @override
-  Future<void> overwriteSnapshotWorkoutDay({
-    required String sessionId,
-    required WorkoutDay workoutDay,
-  }) async {
-    final session = _requireSession(sessionId);
-    final snapshot = SessionSnapshot.capture(
-      workoutDay: workoutDay,
-      capturedAt: session.snapshot.capturedAt,
-      schemaVersion: session.snapshot.schemaVersion,
-    );
-    _sessions[sessionId] = session.copyWith(snapshot: snapshot);
-    _notify(sessionId);
-  }
-
   Session _requireSession(String sessionId) {
     final session = _sessions[sessionId];
     if (session == null) {
