@@ -27,6 +27,18 @@ List<ActualSetValues> _reps(List<int> reps) => [
   for (final r in reps) ActualSetValues.repBased(weightKg: 100, reps: r),
 ];
 
+List<PlannedSetValues> _plannedAt(double weight, int count) => [
+  for (var i = 0; i < count; i++)
+    PlannedSetValues.repBased(
+      weightKg: weight,
+      repTarget: RepTarget.range(minReps: 8, maxReps: 12),
+    ),
+];
+
+List<ActualSetValues> _repsAt(double weight, List<int> reps) => [
+  for (final r in reps) ActualSetValues.repBased(weightKg: weight, reps: r),
+];
+
 void main() {
   group('RecentHistoryRowPresenter.present', () {
     test('capped rep-range entry: bright actuals + range cap tooltip', () {
@@ -158,6 +170,67 @@ void main() {
 
       expect(view.capDescription, 'capped');
       expect(view.capTooltip, 'Capped');
+    });
+  });
+
+  group('RecentHistoryRowPresenter.present — actuals weight when off-plan', () {
+    test('on-plan weight stays reps-only', () {
+      final view = RecentHistoryRowPresenter.present(
+        _entry(
+          planned: _plannedAt(50, 3),
+          actual: _repsAt(50, [8, 8, 8]),
+          isCapped: true,
+        ),
+      );
+      expect(view.actualsText, '8 · 8 · 8');
+    });
+
+    test('a uniform lighter weight surfaces once as a leading tag', () {
+      final view = RecentHistoryRowPresenter.present(
+        _entry(
+          planned: _plannedAt(50, 3),
+          actual: _repsAt(40, [8, 8, 8]),
+          isCapped: false,
+        ),
+      );
+      expect(view.actualsText, '@40kg 8 · 8 · 8');
+    });
+
+    test('a uniform heavier weight surfaces once as a leading tag', () {
+      final view = RecentHistoryRowPresenter.present(
+        _entry(
+          planned: _plannedAt(50, 3),
+          actual: _repsAt(55, [8, 8, 8]),
+          isCapped: true,
+        ),
+      );
+      expect(view.actualsText, '@55kg 8 · 8 · 8');
+    });
+
+    test('a fractional off-plan weight keeps its decimal', () {
+      final view = RecentHistoryRowPresenter.present(
+        _entry(
+          planned: _plannedAt(50, 1),
+          actual: _repsAt(12.5, [8]),
+          isCapped: false,
+        ),
+      );
+      expect(view.actualsText, '@12.5kg 8');
+    });
+
+    test('weights varying between sets annotate each set', () {
+      final view = RecentHistoryRowPresenter.present(
+        _entry(
+          planned: _plannedAt(50, 3),
+          actual: const [
+            ActualSetValues.repBased(weightKg: 40, reps: 8),
+            ActualSetValues.repBased(weightKg: 42.5, reps: 8),
+            ActualSetValues.repBased(weightKg: 45, reps: 8),
+          ],
+          isCapped: false,
+        ),
+      );
+      expect(view.actualsText, '40 × 8 · 42.5 × 8 · 45 × 8');
     });
   });
 }

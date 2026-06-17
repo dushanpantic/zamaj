@@ -1,3 +1,4 @@
+import 'package:zamaj/core/weight_formatter.dart';
 import 'package:zamaj/modules/domain/domain.dart';
 
 /// The strings and flags one recent-history row renders, derived purely from a
@@ -46,7 +47,7 @@ abstract final class RecentHistoryRowPresenter {
   static RecentHistoryRowView present(CapHistoryEntry entry) {
     return RecentHistoryRowView(
       plannedText: _plannedSummary(entry.plannedSets),
-      actualsText: _actualsSummary(entry.actualSets),
+      actualsText: _actualsSummary(entry.plannedSets, entry.actualSets),
       actualsAreMuted: entry.actualSets.isEmpty,
       capDescription: entry.isCapped ? _capCaption(entry.plannedSets) : null,
     );
@@ -61,19 +62,76 @@ abstract final class RecentHistoryRowPresenter {
     return SetValueFormatter.formatPlanned(first, _measurementTypeOf(first));
   }
 
-  /// The per-set reps / holds, joined — e.g. `12 · 12 · 11` or `45s · 50s`.
-  static String _actualsSummary(List<ActualSetValues> actuals) {
+  /// The per-set actuals, joined. Weight is surfaced only when a logged set
+  /// strayed from its planned weight, so the common on-plan case stays clean and
+  /// leans on the planned column for the weight:
+  ///
+  /// * on plan → reps / holds only (`12 · 12 · 11`);
+  /// * off plan, one weight across every set → a leading tag (`@40kg 8 · 8 · 8`)
+  ///   — leading so it survives the column's end-ellipsis;
+  /// * off plan, weights varying between sets → per-set (`40 × 8 · 45 × 8`).
+  static String _actualsSummary(
+    List<PlannedSetValues> planned,
+    List<ActualSetValues> actuals,
+  ) {
     if (actuals.isEmpty) return '—';
-    return actuals
-        .map(
-          (a) => switch (a) {
-            ActualRepBased(:final reps) => '$reps',
-            ActualBodyweight(:final reps) => '$reps',
-            ActualTimeBased(:final durationSeconds) => '${durationSeconds}s',
-          },
-        )
-        .join(' · ');
+
+    final weights = [for (final a in actuals) _actualWeightOf(a)];
+    var anyStrayed = false;
+    for (var i = 0; i < actuals.length; i++) {
+      final plannedWeight = i < planned.length
+          ? _plannedWeightOf(planned[i])
+          : null;
+      if (weights[i] != null &&
+          plannedWeight != null &&
+          weights[i] != plannedWeight) {
+        anyStrayed = true;
+      }
+    }
+
+    if (!anyStrayed) return actuals.map(_repsOnly).join(' · ');
+
+    final distinct = weights.whereType<double>().toSet();
+    if (distinct.length == 1 && !weights.contains(null)) {
+      return '@${WeightFormatter.formatKg(distinct.first)}kg '
+          '${actuals.map(_repsOnly).join(' · ')}';
+    }
+    return actuals.map(_weightAndReps).join(' · ');
   }
+
+  /// One set's reps / hold without weight — `12` or `45s`.
+  static String _repsOnly(ActualSetValues a) => switch (a) {
+    ActualRepBased(:final reps) => '$reps',
+    ActualBodyweight(:final reps) => '$reps',
+    ActualTimeBased(:final durationSeconds) => '${durationSeconds}s',
+  };
+
+  /// One set's weight × reps / hold — `40 × 8` or `40 × 45s`; weightless sets
+  /// fall back to reps / hold only.
+  static String _weightAndReps(ActualSetValues a) => switch (a) {
+    ActualRepBased(:final weightKg, :final reps) =>
+      '${WeightFormatter.formatKg(weightKg)} × $reps',
+    ActualTimeBased(:final durationSeconds, :final weightKg) =>
+      weightKg == null
+          ? '${durationSeconds}s'
+          : '${WeightFormatter.formatKg(weightKg)} × ${durationSeconds}s',
+    ActualBodyweight(:final reps) => '$reps',
+  };
+
+  /// The logged weight of a set, or null for a weightless (bodyweight or
+  /// unweighted hold) set.
+  static double? _actualWeightOf(ActualSetValues a) => switch (a) {
+    ActualRepBased(:final weightKg) => weightKg,
+    ActualTimeBased(:final weightKg) => weightKg,
+    ActualBodyweight() => null,
+  };
+
+  /// The planned weight of a set, or null for a weightless set.
+  static double? _plannedWeightOf(PlannedSetValues p) => switch (p) {
+    PlannedRepBased(:final weightKg) => weightKg,
+    PlannedTimeBased(:final weightKg) => weightKg,
+    PlannedBodyweight() => null,
+  };
 
   /// Descriptive caption for the cap marker, by planned target kind.
   static String _capCaption(List<PlannedSetValues> planned) {
