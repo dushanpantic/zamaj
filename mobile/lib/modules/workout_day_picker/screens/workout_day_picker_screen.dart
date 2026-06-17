@@ -5,6 +5,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:zamaj/building_blocks/building_blocks.dart';
 import 'package:zamaj/core/app_spacing.dart';
 import 'package:zamaj/core/app_theme.dart';
+import 'package:zamaj/core/app_typography.dart';
 import 'package:zamaj/modules/export/models/recent_sessions_args.dart';
 import 'package:zamaj/modules/export/navigation/export_routes.dart';
 import 'package:zamaj/modules/program_management/navigation/program_management_routes.dart';
@@ -108,11 +109,173 @@ class _WorkoutDayPickerScreenState extends State<WorkoutDayPickerScreen> {
     );
   }
 
+  // TEMP: snapshot link repair — remove after one-time run.
+  /// True while a repair preview/result dialog is on screen, so the bloc
+  /// listener does not stack a second dialog on the same transition.
+  bool _repairDialogOpen = false;
+
+  // TEMP: snapshot link repair — remove after one-time run.
+  void _onRepairRequested() {
+    context.read<WorkoutDayPickerBloc>().add(
+      const WorkoutDayPickerRepairPreviewRequested(),
+    );
+  }
+
+  // TEMP: snapshot link repair — remove after one-time run.
+  void _onRepairDismissed() {
+    context.read<WorkoutDayPickerBloc>().add(
+      const WorkoutDayPickerRepairDismissed(),
+    );
+  }
+
+  // TEMP: snapshot link repair — remove after one-time run.
+  void _onRepairConfirmed() {
+    context.read<WorkoutDayPickerBloc>().add(
+      const WorkoutDayPickerRepairConfirmed(),
+    );
+  }
+
+  // TEMP: snapshot link repair — remove after one-time run.
+  Future<void> _showRepairPreviewDialog(
+    WorkoutDayPickerRepairPreview preview,
+  ) async {
+    _repairDialogOpen = true;
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('Repair history links'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              'This rewrites the library links frozen inside past session '
+              'snapshots so they show up in history and progress again. It '
+              'changes completed history and cannot be undone.',
+            ),
+            const SizedBox(height: AppSpacing.md),
+            _RepairCountRow(
+              label: 'Sessions scanned',
+              value: preview.sessionsScanned,
+            ),
+            _RepairCountRow(
+              label: 'Sessions to update',
+              value: preview.sessionsToChange,
+            ),
+            _RepairCountRow(
+              label: 'Exercises to re-link',
+              value: preview.exercisesToReLink,
+            ),
+            _RepairCountRow(label: 'Unmatched', value: preview.unmatched),
+            _RepairCountRow(
+              label: 'Current unlinked',
+              value: preview.currentUnlinked,
+            ),
+            _RepairCountRow(
+              label: 'Skipped (deleted day)',
+              value: preview.daysMissing,
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop(false),
+            child: const Text('Cancel'),
+          ),
+          FilledButton(
+            onPressed: preview.sessionsToChange == 0
+                ? null
+                : () => Navigator.of(dialogContext).pop(true),
+            child: const Text('Repair'),
+          ),
+        ],
+      ),
+    );
+    _repairDialogOpen = false;
+    if (!mounted) return;
+    if (confirmed ?? false) {
+      _onRepairConfirmed();
+    } else {
+      _onRepairDismissed();
+    }
+  }
+
+  // TEMP: snapshot link repair — remove after one-time run.
+  Future<void> _showRepairResultDialog(
+    WorkoutDayPickerRepairResult result,
+  ) async {
+    _repairDialogOpen = true;
+    final leftover = result.unmatched + result.currentUnlinked;
+    await showDialog<void>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('Repair complete'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            _RepairCountRow(
+              label: 'Sessions changed',
+              value: result.sessionsChanged,
+            ),
+            _RepairCountRow(
+              label: 'Exercises re-linked',
+              value: result.exercisesReLinked,
+            ),
+            _RepairCountRow(label: 'Unmatched', value: result.unmatched),
+            _RepairCountRow(
+              label: 'Current unlinked',
+              value: result.currentUnlinked,
+            ),
+            _RepairCountRow(
+              label: 'Skipped (deleted day)',
+              value: result.daysMissing,
+            ),
+            if (leftover > 0) ...[
+              const SizedBox(height: AppSpacing.md),
+              const Text(
+                'Link more exercises to a library entry in the editor, then '
+                'run this again to repair the rest.',
+              ),
+            ],
+          ],
+        ),
+        actions: [
+          FilledButton(
+            onPressed: () => Navigator.of(dialogContext).pop(),
+            child: const Text('Done'),
+          ),
+        ],
+      ),
+    );
+    _repairDialogOpen = false;
+    if (!mounted) return;
+    _onRepairDismissed();
+  }
+
+  // TEMP: snapshot link repair — remove after one-time run.
+  void _onRepairStateChanged(WorkoutDayPickerState state) {
+    if (state is! WorkoutDayPickerLoaded || _repairDialogOpen) return;
+    final preview = state.repairPreview;
+    final result = state.repairResult;
+    if (preview != null) {
+      unawaited(_showRepairPreviewDialog(preview));
+    } else if (result != null) {
+      unawaited(_showRepairResultDialog(result));
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final colors = Theme.of(context).appColors;
 
-    return BlocBuilder<WorkoutDayPickerBloc, WorkoutDayPickerState>(
+    return BlocConsumer<WorkoutDayPickerBloc, WorkoutDayPickerState>(
+      // TEMP: snapshot link repair — remove after one-time run. React only when
+      // the preview/result becomes available so the dialog shows exactly once
+      // per transition.
+      listenWhen: (previous, current) =>
+          _repairBecameVisible(previous, current),
+      listener: (context, state) => _onRepairStateChanged(state),
       builder: (context, state) {
         return Scaffold(
           backgroundColor: colors.background,
@@ -125,6 +288,20 @@ class _WorkoutDayPickerScreenState extends State<WorkoutDayPickerScreen> {
                       icon: const Icon(Icons.history),
                       tooltip: 'Recent sessions',
                     ),
+                    // TEMP: snapshot link repair — remove after one-time run.
+                    PopupMenuButton<String>(
+                      onSelected: (value) {
+                        if (value == 'repair-history-links') {
+                          _onRepairRequested();
+                        }
+                      },
+                      itemBuilder: (context) => const [
+                        PopupMenuItem(
+                          value: 'repair-history-links',
+                          child: Text('Repair history links'),
+                        ),
+                      ],
+                    ),
                   ]
                 : null,
           ),
@@ -132,6 +309,20 @@ class _WorkoutDayPickerScreenState extends State<WorkoutDayPickerScreen> {
         );
       },
     );
+  }
+
+  // TEMP: snapshot link repair — remove after one-time run.
+  bool _repairBecameVisible(
+    WorkoutDayPickerState previous,
+    WorkoutDayPickerState current,
+  ) {
+    if (current is! WorkoutDayPickerLoaded) return false;
+    final previousLoaded = previous is WorkoutDayPickerLoaded ? previous : null;
+    final previewAppeared =
+        current.repairPreview != null && previousLoaded?.repairPreview == null;
+    final resultAppeared =
+        current.repairResult != null && previousLoaded?.repairResult == null;
+    return previewAppeared || resultAppeared;
   }
 
   String _titleFor(WorkoutDayPickerState state) {
@@ -259,6 +450,31 @@ class _LoadedBody extends StatelessWidget {
           ),
         ),
       ],
+    );
+  }
+}
+
+// TEMP: snapshot link repair — remove after one-time run.
+/// A single "label … value" row inside the repair preview/result dialog.
+class _RepairCountRow extends StatelessWidget {
+  const _RepairCountRow({required this.label, required this.value});
+
+  final String label;
+  final int value;
+
+  @override
+  Widget build(BuildContext context) {
+    final textTheme = Theme.of(context).textTheme;
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: AppSpacing.xxs),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Expanded(child: Text(label, style: textTheme.bodyMedium)),
+          const SizedBox(width: AppSpacing.md),
+          Text('$value', style: AppTypography.standard.numeric),
+        ],
+      ),
     );
   }
 }

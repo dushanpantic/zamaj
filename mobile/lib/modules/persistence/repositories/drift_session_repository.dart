@@ -1138,6 +1138,33 @@ class DriftSessionRepository implements SessionRepository {
     });
   }
 
+  // TEMP: snapshot link repair — remove after one-time run.
+  //
+  // Rewrites only the snapshot blob + hash for [sessionId]; leaves timestamps,
+  // schemaVersion, and all child rows untouched (no updatedAt bump — the
+  // snapshot's identity must be preserved). The pair is written as
+  // CanonicalJson.encode(...) + its SHA-256 so the session re-hydrates through
+  // SessionMapper without throwing.
+  @override
+  Future<void> overwriteSnapshotWorkoutDay({
+    required String sessionId,
+    required domain.WorkoutDay workoutDay,
+  }) async {
+    await _db.transaction(() async {
+      await _requireSessionRow(sessionId);
+      final snapshotJson = CanonicalJson.encode(workoutDay.toJson());
+      final snapshotHash = CanonicalJson.sha256Hex(snapshotJson);
+      await (_db.update(
+        _db.sessions,
+      )..where((t) => t.id.equals(sessionId))).write(
+        SessionsCompanion(
+          snapshotJson: Value(snapshotJson),
+          snapshotHash: Value(snapshotHash),
+        ),
+      );
+    });
+  }
+
   Future<domain.Session> _loadSession(String sessionId) async {
     final row = await (_db.select(
       _db.sessions,

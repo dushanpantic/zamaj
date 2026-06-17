@@ -9,6 +9,7 @@ import 'package:zamaj/modules/domain/models/exercise_metadata.dart';
 import 'package:zamaj/modules/domain/models/measurement_type.dart';
 import 'package:zamaj/modules/domain/models/planned_set_values.dart';
 import 'package:zamaj/modules/domain/models/session.dart';
+import 'package:zamaj/modules/domain/models/workout_day.dart';
 
 abstract class SessionRepository {
   /// Starts a new session for [workoutDayId], capturing an immutable snapshot
@@ -135,5 +136,17 @@ abstract class SessionRepository {
     required String sessionId,
     required String supersetTag,
     required String sessionExerciseId,
+  });
+
+  /// TEMP: snapshot link repair — remove after one-time run.
+  ///
+  /// Overwrites the stored snapshot of [sessionId] with [workoutDay],
+  /// rewriting **only** the canonical-JSON blob and its SHA-256 as a consistent
+  /// pair. Session timestamps, schema version, and every child row (executed
+  /// sets, notes, extra work) are left untouched. Used once by the maintainer
+  /// history-link repair, then removed.
+  Future<void> overwriteSnapshotWorkoutDay({
+    required String sessionId,
+    required WorkoutDay workoutDay,
   });
 }

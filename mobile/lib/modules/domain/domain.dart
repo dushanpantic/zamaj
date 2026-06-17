@@ -55,6 +55,8 @@ export 'services/session_seed.dart';
 export 'services/session_state.dart';
 export 'services/session_summary.dart';
 export 'services/set_value_formatter.dart';
+// TEMP: snapshot link repair — remove after one-time run
+export 'services/snapshot_link_backfill.dart';
 export 'services/superset_ordering.dart';
 export 'services/warmup_exercises.dart';
 export 'services/week_export_formatter.dart';

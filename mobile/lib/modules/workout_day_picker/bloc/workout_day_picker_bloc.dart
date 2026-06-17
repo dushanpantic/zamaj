@@ -30,12 +30,21 @@ class WorkoutDayPickerBloc
     on<WorkoutDayPickerStartPressed>(_onStartPressed);
     on<WorkoutDayPickerResumePressed>(_onResumePressed);
     on<WorkoutDayPickerErrorDismissed>(_onErrorDismissed);
+    // TEMP: snapshot link repair — remove after one-time run.
+    on<WorkoutDayPickerRepairPreviewRequested>(_onRepairPreviewRequested);
+    on<WorkoutDayPickerRepairConfirmed>(_onRepairConfirmed);
+    on<WorkoutDayPickerRepairDismissed>(_onRepairDismissed);
   }
 
   final ProgramRepository _programRepository;
   final SessionRepository _sessionRepository;
   final SessionFlowEngine _sessionFlowEngine;
   final Clock _clock;
+
+  // TEMP: snapshot link repair — remove after one-time run. The plan computed
+  // by the last preview, held so apply can persist its rewrites without
+  // recomputing.
+  SnapshotLinkBackfillPlan? _pendingRepairPlan;
   final StreamController<String> _navigationIntents =
       StreamController<String>.broadcast();
 
@@ -273,6 +282,114 @@ class WorkoutDayPickerBloc
     if (current is! WorkoutDayPickerLoaded) return;
     if (current.lastTransientError == null) return;
     emit(current.copyWith(lastTransientError: () => null));
+  }
+
+  // TEMP: snapshot link repair — remove after one-time run.
+  //
+  // Computes the repair plan for the open program — its ended sessions
+  // (`listCompletedSessions` already excludes in-flight ones) filtered to this
+  // program by their snapshot's `programId`, matched against the current
+  // templates — and exposes the counts without writing anything. The plan is
+  // cached for a subsequent apply.
+  Future<void> _onRepairPreviewRequested(
+    WorkoutDayPickerRepairPreviewRequested event,
+    Emitter<WorkoutDayPickerState> emit,
+  ) async {
+    final current = state;
+    if (current is! WorkoutDayPickerLoaded) return;
+    final programId = current.program.id;
+
+    final List<WorkoutDay> currentDays;
+    final List<Session> programSessions;
+    try {
+      currentDays = await _programRepository.listWorkoutDaysForProgram(
+        programId,
+      );
+      final completed = await _sessionRepository.listCompletedSessions();
+      programSessions = [
+        for (final session in completed)
+          if (session.snapshot.workoutDay.programId == programId) session,
+      ];
+    } on DomainError catch (e) {
+      emit(current.copyWith(lastTransientError: () => e));
+      return;
+    }
+
+    final plan = SnapshotLinkBackfill.plan(
+      currentDays: currentDays,
+      sessions: programSessions,
+    );
+    _pendingRepairPlan = plan;
+
+    emit(
+      current.copyWith(
+        repairPreview: () => WorkoutDayPickerRepairPreview(
+          sessionsScanned: plan.sessionsScanned,
+          sessionsToChange: plan.sessionsChanged,
+          exercisesToReLink: plan.exercisesReLinked,
+          unmatched: plan.unmatched,
+          currentUnlinked: plan.currentUnlinked,
+          daysMissing: plan.dayMissing,
+        ),
+        // A fresh preview supersedes any prior result summary.
+        repairResult: () => null,
+      ),
+    );
+  }
+
+  // TEMP: snapshot link repair — remove after one-time run.
+  //
+  // Persists each cached rewrite via [SessionRepository.overwriteSnapshotWorkoutDay]
+  // and surfaces a result summary. Day-missing sessions never appear in the
+  // plan's rewrites (they are counted but not rewritten), so a deleted day is
+  // skipped while siblings are repaired. No full reload is needed: rewriting a
+  // snapshot's library links does not change the day-tile history summaries.
+  Future<void> _onRepairConfirmed(
+    WorkoutDayPickerRepairConfirmed event,
+    Emitter<WorkoutDayPickerState> emit,
+  ) async {
+    final current = state;
+    if (current is! WorkoutDayPickerLoaded) return;
+    final plan = _pendingRepairPlan;
+    if (plan == null) return;
+
+    try {
+      for (final rewrite in plan.rewrites) {
+        await _sessionRepository.overwriteSnapshotWorkoutDay(
+          sessionId: rewrite.sessionId,
+          workoutDay: rewrite.workoutDay,
+        );
+      }
+    } on DomainError catch (e) {
+      emit(current.copyWith(lastTransientError: () => e));
+      return;
+    }
+
+    _pendingRepairPlan = null;
+    emit(
+      current.copyWith(
+        repairPreview: () => null,
+        repairResult: () => WorkoutDayPickerRepairResult(
+          sessionsChanged: plan.sessionsChanged,
+          exercisesReLinked: plan.exercisesReLinked,
+          unmatched: plan.unmatched,
+          currentUnlinked: plan.currentUnlinked,
+          daysMissing: plan.dayMissing,
+        ),
+      ),
+    );
+  }
+
+  // TEMP: snapshot link repair — remove after one-time run.
+  Future<void> _onRepairDismissed(
+    WorkoutDayPickerRepairDismissed event,
+    Emitter<WorkoutDayPickerState> emit,
+  ) async {
+    _pendingRepairPlan = null;
+    final current = state;
+    if (current is! WorkoutDayPickerLoaded) return;
+    if (current.repairPreview == null && current.repairResult == null) return;
+    emit(current.copyWith(repairPreview: () => null, repairResult: () => null));
   }
 
   Future<void> _runFullLoad({
