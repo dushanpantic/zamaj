@@ -27,8 +27,8 @@ None. Reuses `SessionRepository.listCompletedSessions()`. **No schema-version ch
 
 ### UI — exercise editor (`program_management/bloc/exercise_editor`, `screens/exercise_editor_screen.dart`)
 
-- `ExerciseEditorBloc` gains a `SessionRepository` dependency (a **domain contract** — satisfies the UI-layer import rule), loads completed sessions, runs `computeHistory`, and exposes the resulting `CapHistory` plus the empty / unlinked-nudge / warmup states in `ExerciseEditorState`.
-- The screen renders a "Recent history" section: ≤5 rows (absolute date, weight, planned target, per-set actuals, `▲` cap marker), an empty state, an unlinked nudge, and nothing for warmup-group exercises. Standard 48 dp targets (this is not a sweaty-hands surface). Theme tokens only.
+- `ExerciseEditorBloc` gains a `SessionRepository` dependency (a **domain contract** — satisfies the UI-layer import rule), loads completed sessions, runs `computeHistory`, and exposes the resulting `CapHistory` plus the empty / unlinked-nudge states in `ExerciseEditorState`.
+- The screen renders a "Recent history" section via `RecentSetHistorySection` (`program_management/widgets/recent_set_history_section.dart`): an unlinked nudge, a "No history yet" empty state, or ≤5 session rows inside a single bordered surface card, hairline-separated. Each row is one aligned line — compact date, planned summary (muted), per-set actuals (bright), and a quiet `▲` cap marker. Reuses `StatusBadge.icon` and `SetValueFormatter`; date labels come from the pure-Dart `RelativeDateFormatter.formatCompact` / `formatAbsolute` (core), with `now` read at build (precedent: `program_list_tile`). Pure presentation over the existing `RecentHistoryView` — **no new editor state/events and no extra repository calls**. Read-only display (no interactive controls); standard module ergonomics, not a sweaty-hands surface. Theme tokens only; numeric readouts use the tabular `numericSm` style.
 
 ### UI — workout-day editor (`program_management/bloc/workout_day_editor`, `screens/workout_day_editor_screen.dart`)
 
@@ -62,8 +62,13 @@ None. Reuses `SessionRepository.listCompletedSessions()`. **No schema-version ch
 ### History table (exercise editor)
 - **AC7** — Shows up to the 5 most recent ended sessions of the movement (matched by `libraryExerciseId`), newest first.
 - **AC8** — Aggregates across every program the movement appears in.
-- **AC9** — Each row shows absolute date, weight, planned target, and per-set actuals; a capped session shows the `▲` marker (`top of range` / `hit target` / `hit time`).
-- **AC10** — A linked exercise with no ended sessions shows the "No history yet" empty state.
+- **AC9** — Populated history renders as one bordered surface card holding one row per entry, newest first, hairline-separated (no divider above the first or below the last row); a single entry shows no divider. Each row is one line: date column, planned summary, per-set actuals, trailing cap-marker slot.
+- **AC9a** *(date)* — The date column reads compactly: "Today"/"Yesterday" for 0/1 days back, an abbreviated weekday ("Tue") for 2–6 days back, else short month + day ("Jun 5") — with the year appended only when the entry's year differs from today's. The unabbreviated absolute date ("Jun 5, 2024") is always available via the column's tooltip / semantic label. (Supersedes the original "absolute date" rendering.)
+- **AC9b** *(emphasis)* — Planned always renders in the muted `planned` color; actuals render in the bright `actual` color **when at least one set was logged** and in the muted `onSurfaceMuted` color when none were (the "—" case) — matching the planned/actual emphasis of the in-session and session-review set rows. Both columns use the tabular `numericSm` style and truncate to a single line with ellipsis on overflow.
+- **AC9c** *(cap marker)* — A capped session shows the `▲` glyph (`Icons.arrow_drop_up`, `exerciseCompleted` color) in the reserved trailing slot, with its description carried only in the tooltip + semantic label ("Capped — top of range" / "— hit target" / "— hit time", or "Capped" when the target kind is indeterminate) — **no descriptive caption is rendered inline**. A non-capped session leaves the slot empty but width-reserved, so the actuals column's right edge stays aligned across capped and uncapped rows. (Supersedes the original inline-caption rendering.)
+- **AC9d** *(skipped-in-session entry)* — A completed session that logged **zero** sets of the movement still produces a row (the aggregator attributes by snapshot, not by logged count): it shows the planned summary, "—" muted actuals, and **no** cap marker (`isCapped` is false because no working set was executed).
+- **AC9e** *(partial entry / defensive)* — A session with **fewer** logged sets than planned shows only the logged sets' actuals (bright) and no cap marker; a session with **more** logged sets than planned shows all logged sets. When an entry's planned-set list is empty (defensive — exercises normally have ≥1 set), the planned summary renders "—".
+- **AC10** — A linked exercise with no ended sessions shows the "No history yet" empty state (plain muted text, not a card).
 - **AC11** — An unlinked exercise shows the "link to a library entry to see history" nudge and no rows.
 - **AC12** — A warmup-group exercise shows no history section and no cap markers.
 
@@ -81,6 +86,7 @@ None. Reuses `SessionRepository.listCompletedSessions()`. **No schema-version ch
 - **AC21** — All new UI uses theme tokens (no hard-coded px / color literals); badge tap target ≥ 48 dp.
 - **AC22** — All copy is descriptive; no recommendation / imperative text.
 - **AC23** — The domain aggregator and cap predicate have unit tests covering the derivation logic behind AC1–AC18.
+- **AC23a** — The compact / absolute date-label logic behind AC9a is unit-tested in `RelativeDateFormatter` (core test scope), covering the Today / Yesterday / weekday / month-day branches, the cross-year year suffix, and UTC→local conversion.
 - **AC24** — `product-context.md` is updated to reflect the new capability on the exercise-editor and workout-day-editor screens.
 
 ## Consistency Gate
@@ -88,4 +94,7 @@ None. Reuses `SessionRepository.listCompletedSessions()`. **No schema-version ch
 - [x] Every behavior/goal maps to an acceptance criterion
 - [x] Architecture constrains without over-engineering
 - [x] Terminology consistent across artifacts
-- [x] No contradictions between artifacts
+- [x] No contradictions between artifacts — AC9a/AC9c explicitly supersede the original "absolute date" and inline-caption rendering; no stale claim remains.
+
+## Revisions
+- **2026-06-17 — history-table presentation tightened.** The exercise-editor "Recent history" rows were redesigned: actuals now carry the bright `actual` emphasis (planned muted), dates read relative + short-month with the full date in a tooltip, the cap marker is a quiet `▲` glyph with its phrase in the tooltip, and rows sit in a bordered surface card. AC9 was split into AC9–AC9e to specify the new layout and to cover the previously-unspecified **skipped-in-session** (zero logged sets → muted "—" actuals, no marker) and **partial / empty-planned** edge cases. Domain ACs (AC1–AC18) and the aggregator are unchanged. Decision: skipped-in-session entries remain visible (informative "you skipped it that day"), muted rather than hidden — matching the absent-actual treatment on the session-review set row.

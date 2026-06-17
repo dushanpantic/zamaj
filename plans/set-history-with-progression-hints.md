@@ -2,7 +2,7 @@
 
 **Created**: 2026-06-16
 **Branch**: master
-**Status**: implemented
+**Status**: implemented — Slice 5 (presentation hardening) completed 2026-06-17
 **Spec**: docs/specs/set-history-with-progression-hints.md
 
 ## Goal
@@ -19,7 +19,12 @@ Surface the planned-vs-actual record the lifter already logs, at the two moments
 - [ ] AC6 — Pyramid / vary-by-set plans are judged per set against each set's own ceiling: an ascending pyramid caps only when every set meets its own ceiling; a descending drop set generally does not. No special-casing.
 - [ ] AC7 — History shows up to the 5 most recent ended sessions of the movement (by `libraryExerciseId`), newest first.
 - [ ] AC8 — History aggregates across every program the movement appears in.
-- [ ] AC9 — Each row shows absolute date, weight, planned target, per-set actuals; capped sessions show the `▲` marker.
+- [ ] AC9 — *(superseded by AC9a–AC9e, 2026-06-17)* Each row shows date, planned target/weight, per-set actuals, and a `▲` marker on capped sessions, in a single bordered card.
+- [ ] AC9a — Date reads compactly (Today/Yesterday/abbrev-weekday/short-month-day, year only when it differs from today's); full date available via tooltip/semantic label.
+- [ ] AC9b — Planned reads muted; actuals read bright when ≥1 set logged and muted "—" when none; both tabular `numericSm`, single-line.
+- [ ] AC9c — Capped session shows the quiet `▲` glyph with its phrase ("Capped — top of range/hit target/hit time", else "Capped") in the tooltip/semantic label, not inline; the marker slot is width-reserved so actuals stay right-aligned.
+- [ ] AC9d — A completed session that logged zero sets of the movement still produces a row: planned summary, muted "—" actuals, no marker.
+- [ ] AC9e — Partial (fewer logged than planned) shows only logged sets; extra (more than planned) shows all; empty planned renders "—".
 - [ ] AC10 — Linked exercise with no ended sessions shows the "No history yet" empty state.
 - [ ] AC11 — Unlinked exercise shows the "link to a library entry to see history" nudge and no rows.
 - [ ] AC12 — Warmup-group exercise shows no history section and no cap markers.
@@ -34,6 +39,7 @@ Surface the planned-vs-actual record the lifter already logs, at the two moments
 - [ ] AC21 — New UI uses theme tokens (no hard-coded px/colors); badge tap target ≥ 48 dp.
 - [ ] AC22 — All copy is descriptive; no recommendation/imperative text.
 - [ ] AC23 — Domain aggregator and cap predicate have unit tests covering AC1–AC18 derivation.
+- [ ] AC23a — Compact/absolute date-label logic (AC9a) is unit-tested in `RelativeDateFormatter` (core scope).
 - [ ] AC24 — `product-context.md` updated for the new capability on both screens.
 
 ## Slices
@@ -292,6 +298,75 @@ Feature: Product context reflects the new capability
 **Files**: `product-context.md`
 **Commit**: `docs: document set-history table and attention badge`
 
+### Slice 5: Recent-history presentation hardening (redesign)
+
+**Depends-on:** 2
+**Files:** `mobile/lib/modules/program_management/widgets/recent_set_history_section.dart`, `mobile/lib/core/relative_date_formatter.dart`, `mobile/test/core/relative_date_formatter_test.dart`, `mobile/lib/modules/program_management/services/recent_history_row_presenter.dart` *(new, step 5.3)*, `mobile/test/modules/program_management/services/recent_history_row_presenter_test.dart` *(new, step 5.3)*
+
+> Refines Slice 2's rendering only — no change to the bloc, the aggregator, `RecentHistoryView`, or any repository call. The original `▲`-with-inline-caption row and the absolute-date column are superseded.
+
+**Behavior:**
+
+```gherkin
+Feature: Recent set-history row presentation
+
+  Scenario: A capped session reads bright actuals with a quiet cap marker
+    Given a completed session of a linked movement that capped its rep-range target
+    When its recent-history row is presented
+    Then the planned target reads in the muted planned style
+    And the per-set actuals read in the bright actual style
+    And a cap marker is shown whose accessible description is "Capped — top of range"
+
+  Scenario: A session where the movement was skipped reads a muted dash
+    Given a completed session in which the movement was planned but no set was logged
+    When its recent-history row is presented
+    Then the actuals read "—" in the muted style
+    And no cap marker is shown
+
+  Scenario: A partial session shows only the logged sets, unmarked
+    Given a completed session that logged two of three planned sets
+    When its recent-history row is presented
+    Then the actuals list only the two logged sets in the bright style
+    And no cap marker is shown
+
+  Scenario: The cap description follows the planned target kind
+    Given a capped session
+    When its planned target is a rep range, a fixed rep count, or a time hold
+    Then the cap description reads "top of range", "hit target", or "hit time" respectively
+
+  Scenario: A recent date reads relative, an older date reads short month-day
+    Given a session logged two days before today
+    Then its date label reads the abbreviated weekday
+    And a session in a previous year reads short month, day, and year
+    And the unabbreviated date is available as the row's accessible label
+```
+
+**Steps:**
+
+#### Step 5.1: Compact relative date formatting — IMPLEMENTED
+**Complexity**: standard
+**RED**: Unit tests for `formatCompact` (Today/Yesterday, abbreviated weekday, short month-day, cross-year year suffix, no zero-pad, UTC→local) and `formatAbsolute`. AC9a, AC23a.
+**GREEN**: `RelativeDateFormatter.formatCompact` / `formatAbsolute` — pure Dart in `core`, leaving the existing `format` and its four callers untouched.
+**REFACTOR**: Shared `_shortMonths` / `_shortWeekday` helpers; existing branch shape preserved.
+**Files**: `mobile/lib/core/relative_date_formatter.dart`, `mobile/test/core/relative_date_formatter_test.dart`
+**Commit**: `feat(core): compact relative date formatting for history rows`
+
+#### Step 5.2: Redesign the recent-history rows — IMPLEMENTED
+**Complexity**: standard
+**RED**: No automated test — rendering is widget-layer, outside project test scope; the derivation it depends on is covered by 5.1 (date) and 5.3 (row values).
+**GREEN**: One aligned row per session in a bordered surface card, hairline-separated; planned muted, actuals bright (muted "—" when none logged), quiet `▲` via `StatusBadge.icon` with the cap phrase in its tooltip/semantic label, compact date with full-date tooltip. AC9, AC9b, AC9c, AC9d, AC9e, AC21.
+**REFACTOR**: Removed the inline `_CapMarker` caption widget and the ISO-date column; dropped the `date_formatter` import.
+**Files**: `mobile/lib/modules/program_management/widgets/recent_set_history_section.dart`
+**Commit**: `refactor(program): redesign exercise-editor recent-history rows`
+
+#### Step 5.3: Extract a pure, unit-tested row presenter — PROPOSED
+**Complexity**: standard
+**RED**: Module unit tests for a pure `RecentHistoryRowPresenter` that maps a `CapHistoryEntry` to its display contract: `plannedText`, `actualsText`, `actualsAreMuted` (true iff no set was logged), and `capDescription` (null when not capped; "top of range" / "hit target" / "hit time" / "capped" by planned target kind). Covers AC9b, AC9c, AC9d, AC9e behaviorally **without** a widget test.
+**GREEN**: Move `_plannedSummary`, `_actualsSummary`, `_capCaption`/`_capTooltip`, and the muted-actuals predicate out of the widget into the presenter (`program_management/services`, sibling of `set_input_adjustment.dart`); the widget renders the presenter's output and owns only color/style/token choices.
+**REFACTOR**: Widget becomes a thin renderer; delete the now-private helpers it no longer holds.
+**Files**: `mobile/lib/modules/program_management/services/recent_history_row_presenter.dart`, `mobile/test/modules/program_management/services/recent_history_row_presenter_test.dart`, `mobile/lib/modules/program_management/widgets/recent_set_history_section.dart`
+**Commit**: `refactor(program): extract recent-history row presenter with unit tests`
+
 ## Parallelization
 
 ```mermaid
@@ -301,6 +376,7 @@ graph TD
   S2 --> S3
   S2 --> S4[Slice 4: product-context]
   S3 --> S4
+  S2 --> S5[Slice 5: presentation hardening]
 ```
 
 | Wave | Slices (parallel) |
@@ -309,8 +385,9 @@ graph TD
 | 2 | 2 |
 | 3 | 3 |
 | 4 | 4 |
+| 5 | 5 |
 
-Waves are linear: Slices 2 and 3 share `program_management_router.dart`, so 3 follows 2 to avoid a same-wave file collision; Slice 4 documents both UI slices.
+Waves are linear: Slices 2 and 3 share `program_management_router.dart`, so 3 follows 2 to avoid a same-wave file collision; Slice 4 documents both UI slices; Slice 5 refines Slice 2's widget and shares no file with 3/4. (`plan-waves.sh` is absent in plugin 6.7.0 — waves hand-derived; no same-wave file collision.)
 
 ## Complexity Classification
 
@@ -359,6 +436,12 @@ Steps 1.3, 1.4, 2.1, 3.1 are `complex` (new abstraction / cross-cutting bloc+rep
 - [x] Slice 4: Product-context update
   - [x] Step 4.1: Update product-context.md
 
+#### Wave 5
+- [x] Slice 5: Recent-history presentation hardening (redesign)
+  - [x] Step 5.1: Compact relative date formatting
+  - [x] Step 5.2: Redesign the recent-history rows
+  - [x] Step 5.3: Extract a pure, unit-tested row presenter
+
 ## Plan Review Summary (inline — 5 lenses)
 
 Waves hand-derived: `plan-waves.sh` is absent in plugin 6.7.0. Linear waves, one slice each, no same-wave collisions. Formal 5-agent review available on request.
@@ -368,6 +451,16 @@ Waves hand-derived: `plan-waves.sh` is absent in plugin 6.7.0. Linear waves, one
 - **UX** — *approve.* Empty / nudge / warmup states all covered; copy constrained to descriptive. Cap signal is `▲` + text (not color-only) → accessible. Minor: the v1 badge is non-interactive, so a tap does nothing — acceptable since the table (where action happens) is one tap away in the exercise editor.
 - **Strategic** — *approve.* Tight scope fit to the stated double-progression forget problem. Slice 2 (table) is independently shippable and valuable before Slice 3 (badge). Main known follow-up (dismiss/suppression) is deliberately deferred.
 - **Parallelization** — *approve.* Linear DAG, no cycles, no same-wave file overlap; router edit sequenced.
+
+### Slice 5 amendment review (2026-06-17, inline 5 lenses)
+
+- **Acceptance/Gherkin** — *approve.* The five row-presentation scenarios are deterministic and implementation-independent (no widget/selector language); they cover the happy path (capped), the skipped (muted "—") and partial edge cases, the cap-description-by-target-kind mapping, and the date branches. Each maps to AC9a–AC9e. Note: scenarios are phrased against the *presenter* contract (step 5.3) so they become executable once 5.3 lands; until then 5.2's behavior is verified visually (consistent with the plan's no-widget-test stance).
+- **Design/Architecture** — *approve.* Step 5.3 pushes display derivation out of the widget into a pure `program_management/services` presenter — the same pattern as `set_input_adjustment.dart` and `SetValueFormatter`; the date helper stays pure in `core`. No new coupling, no bloc/aggregator/`RecentHistoryView`/repo change. Layer rules intact.
+- **UX** — *approve.* The redesign fixes the inverted planned/actual emphasis, mutes the skipped-day "—" (matches the session-review set row), and keeps the cap signal non-color-only (tooltip + semantic label). Accepted degradation: under very large text scale or for cross-year dates the compact label may ellipsize — full date stays in the tooltip.
+- **Strategic** — *approve.* Scope is a presentation refinement of an already-shipped slice; 5.1–5.2 are done, 5.3 is the only net-new work and is optional-but-recommended (closes the AC9b–AC9e automated-coverage gap without widening into widget tests). Low opportunity cost.
+- **Parallelization** — *approve.* Slice 5 depends-on 2, occupies its own wave, shares no file with Slices 3–4. No collision.
+
+**Open question (2026-06-17):** Step 5.3 (presenter extraction) is a refactor of working, shipped code purely for test coverage. Recommended, but it is the one approval decision in this amendment — approve to build, or decline to leave 5.2 as the final state with the new ACs verified visually.
 
 **Open question resolved (2026-06-16):** unfinished-session rule — all planned sets must be executed *and* capped, else not capped.
 
@@ -381,7 +474,12 @@ Waves hand-derived: `plan-waves.sh` is absent in plugin 6.7.0. Linear waves, one
 - [x] AC6 — Pyramid / vary-by-set per-set ceiling
 - [x] AC7 — Five most recent sessions, newest first
 - [x] AC8 — Cross-program aggregation
-- [x] AC9 — Row content + cap marker
+- [x] AC9 — Row content + cap marker (superseded by AC9a–AC9e)
+- [x] AC9a — Compact relative date + full-date tooltip (Slice 5.1/5.2)
+- [x] AC9b — Planned-muted / actual-bright emphasis, muted "—" when none logged (Slice 5.2)
+- [x] AC9c — Quiet `▲` with description in tooltip/semantic label (Slice 5.2)
+- [x] AC9d — Skipped-in-session row shows muted "—", no marker (Slice 5.2)
+- [x] AC9e — Partial / extra / empty-planned handling (Slice 5.2)
 - [x] AC10 — Empty state
 - [x] AC11 — Unlinked nudge
 - [~] AC12 — Warmup hidden (OVERRIDDEN 2026-06-16: exercise editor shows history for warmups too)
@@ -396,4 +494,5 @@ Waves hand-derived: `plan-waves.sh` is absent in plugin 6.7.0. Linear waves, one
 - [x] AC21 — Tokens + 48 dp
 - [x] AC22 — Descriptive copy
 - [x] AC23 — Domain unit tests
+- [x] AC23a — Date-label unit tests in `RelativeDateFormatter` (Slice 5.1)
 - [x] AC24 — product-context.md updated

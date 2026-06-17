@@ -95,4 +95,80 @@ void main() {
       }
     });
   });
+
+  group('RelativeDateFormatter.formatCompact', () {
+    test('shares the Today / Yesterday anchors with format', () {
+      final now = DateTime(2025, 4, 15, 8);
+      expect(RelativeDateFormatter.formatCompact(now, now), 'Today');
+      expect(
+        RelativeDateFormatter.formatCompact(DateTime(2025, 4, 14, 22), now),
+        'Yesterday',
+      );
+    });
+
+    test('returns the abbreviated weekday for 2..6 days back', () {
+      // now = 2025-04-15 (Tuesday).
+      final now = DateTime(2025, 4, 15, 12);
+      expect(
+        RelativeDateFormatter.formatCompact(DateTime(2025, 4, 13, 9), now),
+        'Sun',
+      );
+      expect(
+        RelativeDateFormatter.formatCompact(DateTime(2025, 4, 9, 9), now),
+        'Wed',
+      );
+    });
+
+    test('returns short month + day (no year) within the same year', () {
+      final now = DateTime(2025, 4, 15);
+      // 7 days back → 2025-04-08, same year as now.
+      expect(
+        RelativeDateFormatter.formatCompact(DateTime(2025, 4, 8, 14), now),
+        'Apr 8',
+      );
+    });
+
+    test('appends the year when the target falls in a different year', () {
+      final now = DateTime(2025, 4, 15);
+      expect(
+        RelativeDateFormatter.formatCompact(DateTime(2020, 12, 1, 6), now),
+        'Dec 1, 2020',
+      );
+    });
+
+    test('does not zero-pad the day', () {
+      final now = DateTime(2025, 4, 15);
+      expect(
+        RelativeDateFormatter.formatCompact(DateTime(2025, 1, 2), now),
+        'Jan 2',
+      );
+    });
+
+    test('converts UTC inputs to local before computing', () {
+      final now = DateTime(2025, 4, 15, 12);
+      final target = DateTime(2025, 4, 15, 14).toUtc();
+      expect(RelativeDateFormatter.formatCompact(target, now), 'Today');
+    });
+  });
+
+  group('RelativeDateFormatter.formatAbsolute', () {
+    test('always returns short month, day, and year', () {
+      expect(
+        RelativeDateFormatter.formatAbsolute(DateTime(2025, 4, 8, 14)),
+        'Apr 8, 2025',
+      );
+      expect(
+        RelativeDateFormatter.formatAbsolute(DateTime(2020, 12, 1)),
+        'Dec 1, 2020',
+      );
+    });
+
+    test('converts UTC inputs to local before formatting', () {
+      final local = DateTime(2025, 6, 12, 9);
+      expect(
+        RelativeDateFormatter.formatAbsolute(local.toUtc()),
+        RelativeDateFormatter.formatAbsolute(local),
+      );
+    });
+  });
 }

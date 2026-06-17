@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:zamaj/building_blocks/building_blocks.dart';
+import 'package:zamaj/core/app_icon.dart';
 import 'package:zamaj/core/app_spacing.dart';
 import 'package:zamaj/core/app_theme.dart';
 import 'package:zamaj/core/app_typography.dart';
-import 'package:zamaj/core/date_formatter.dart';
+import 'package:zamaj/core/relative_date_formatter.dart';
 import 'package:zamaj/modules/domain/domain.dart';
 import 'package:zamaj/modules/program_management/bloc/exercise_editor/exercise_editor_state.dart';
+import 'package:zamaj/modules/program_management/services/recent_history_row_presenter.dart';
 
 /// The exercise editor's "Recent history" section: up to five recent ended
 /// sessions of the movement, each showing the planned target, the per-set
@@ -60,6 +62,10 @@ class _EmptyBody extends StatelessWidget {
   }
 }
 
+/// The populated history: each session as one aligned row inside a single
+/// bordered surface card, hairline-separated. Planned reads muted (the
+/// prescription), actuals read bright (what was logged) — matching the
+/// planned/actual emphasis used on the in-session and session-review rows.
 class _RowsBody extends StatelessWidget {
   const _RowsBody({required this.entries});
 
@@ -67,90 +73,109 @@ class _RowsBody extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [for (final entry in entries) _HistoryRow(entry: entry)],
-    );
-  }
-}
-
-class _HistoryRow extends StatelessWidget {
-  const _HistoryRow({required this.entry});
-
-  final CapHistoryEntry entry;
-
-  @override
-  Widget build(BuildContext context) {
     final colors = Theme.of(context).appColors;
-    const typography = AppTypography.standard;
+    final now = DateTime.now();
 
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: AppSpacing.sm),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
+    return Container(
+      decoration: BoxDecoration(
+        color: colors.surface,
+        borderRadius: BorderRadius.circular(AppRadius.md),
+        border: Border.all(color: colors.outline, width: AppStroke.hairline),
+      ),
+      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
+      child: Column(
         children: [
-          SizedBox(
-            width: AppSpacing.xxxl * 2,
-            child: Text(
-              DateFormatter.isoDate(entry.date.toLocal()),
-              style: typography.bodySmall.copyWith(
-                color: colors.onSurfaceMuted,
+          for (var i = 0; i < entries.length; i++) ...[
+            if (i > 0)
+              Divider(
+                height: AppStroke.hairline,
+                thickness: AppStroke.hairline,
+                color: colors.outline,
               ),
-            ),
-          ),
-          const SizedBox(width: AppSpacing.sm),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  _plannedSummary(entry.plannedSets),
-                  style: typography.body.copyWith(color: colors.onSurface),
-                ),
-                const SizedBox(height: AppSpacing.xxs),
-                Text(
-                  _actualsSummary(entry.actualSets),
-                  style: typography.numeric.copyWith(
-                    color: colors.onSurfaceMuted,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          if (entry.isCapped)
-            Padding(
-              padding: const EdgeInsets.only(left: AppSpacing.sm),
-              child: _CapMarker(caption: _capCaption(entry.plannedSets)),
-            ),
+            _HistoryRow(entry: entries[i], now: now),
+          ],
         ],
       ),
     );
   }
 }
 
-class _CapMarker extends StatelessWidget {
-  const _CapMarker({required this.caption});
+class _HistoryRow extends StatelessWidget {
+  const _HistoryRow({required this.entry, required this.now});
 
-  final String caption;
+  final CapHistoryEntry entry;
+  final DateTime now;
+
+  /// Holds the longest common compact date label ("Yesterday") on one line so
+  /// the planned column starts at the same x on every row.
+  static const double _dateColumnWidth = AppSpacing.xxxl + AppSpacing.xl;
 
   @override
   Widget build(BuildContext context) {
     final colors = Theme.of(context).appColors;
     const typography = AppTypography.standard;
+    final local = entry.date.toLocal();
+    final view = RecentHistoryRowPresenter.present(entry);
 
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Icon(
-          Icons.arrow_drop_up,
-          size: AppSpacing.lg,
-          color: colors.exerciseCompleted,
-        ),
-        Text(
-          caption,
-          style: typography.bodySmall.copyWith(color: colors.exerciseCompleted),
-        ),
-      ],
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: AppSpacing.md),
+      child: Row(
+        children: [
+          SizedBox(
+            width: _dateColumnWidth,
+            child: Tooltip(
+              message: RelativeDateFormatter.formatAbsolute(local),
+              child: Text(
+                RelativeDateFormatter.formatCompact(local, now),
+                style: typography.labelSmall.copyWith(
+                  color: colors.onSurfaceMuted,
+                ),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+          ),
+          const SizedBox(width: AppSpacing.sm),
+          Expanded(
+            child: Text(
+              view.plannedText,
+              style: typography.numericSm.copyWith(color: colors.planned),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
+          const SizedBox(width: AppSpacing.sm),
+          Expanded(
+            child: Text(
+              view.actualsText,
+              // Bright when something was logged; muted for the "—" of a
+              // session where this movement was skipped — matching the
+              // absent-actual treatment on the session-review set row.
+              style: typography.numericSm.copyWith(
+                color: view.actualsAreMuted
+                    ? colors.onSurfaceMuted
+                    : colors.actual,
+              ),
+              textAlign: TextAlign.end,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
+          const SizedBox(width: AppSpacing.sm),
+          // Always reserve the marker slot so the actuals column ends at the
+          // same x whether or not the session capped.
+          SizedBox(
+            width: AppIconSize.status,
+            child: view.isCapped
+                ? StatusBadge.icon(
+                    icon: Icons.arrow_drop_up,
+                    color: colors.exerciseCompleted,
+                    label: view.capTooltip!,
+                  )
+                : null,
+          ),
+        ],
+      ),
     );
   }
 }
@@ -171,43 +196,3 @@ class _MutedText extends StatelessWidget {
     );
   }
 }
-
-/// The planned weight + target for the session, read off its first planned set.
-/// Reuses the in-app planned formatter so the readout matches the set rows.
-String _plannedSummary(List<PlannedSetValues> planned) {
-  if (planned.isEmpty) return '—';
-  final first = planned.first;
-  return SetValueFormatter.formatPlanned(first, _measurementTypeOf(first));
-}
-
-/// The per-set reps / holds, joined — e.g. `12 · 12 · 11` or `45s · 50s`.
-String _actualsSummary(List<ActualSetValues> actuals) {
-  if (actuals.isEmpty) return '—';
-  return actuals
-      .map(
-        (a) => switch (a) {
-          ActualRepBased(:final reps) => '$reps',
-          ActualBodyweight(:final reps) => '$reps',
-          ActualTimeBased(:final durationSeconds) => '${durationSeconds}s',
-        },
-      )
-      .join(' · ');
-}
-
-/// Descriptive caption for the cap marker, by target kind.
-String _capCaption(List<PlannedSetValues> planned) {
-  final first = planned.isEmpty ? null : planned.first;
-  return switch (first) {
-    PlannedRepBased(:final repTarget) || PlannedBodyweight(:final repTarget) =>
-      repTarget is RepTargetRange ? 'top of range' : 'hit target',
-    PlannedTimeBased() => 'hit time',
-    null => 'capped',
-  };
-}
-
-MeasurementType _measurementTypeOf(PlannedSetValues planned) =>
-    switch (planned) {
-      PlannedRepBased() => const MeasurementType.repBased(),
-      PlannedTimeBased() => const MeasurementType.timeBased(),
-      PlannedBodyweight() => const MeasurementType.bodyweight(),
-    };
