@@ -14,7 +14,15 @@ abstract class SessionRepository {
   /// Starts a new session for [workoutDayId], capturing an immutable snapshot
   /// of the workout day at this moment (Req 6). Returns the fully hydrated
   /// [Session] with all [SessionExercise]s pre-seeded in `unfinished` state.
-  Future<Session> startSession({required String workoutDayId});
+  ///
+  /// When [isDeload] is true the captured snapshot is run through
+  /// [DeloadTransform.halveWorkingSets] before it is frozen, halving every
+  /// `main`-role exercise's planned set count, and the session is flagged with
+  /// `isDeload == true`. The program template is never mutated.
+  Future<Session> startSession({
+    required String workoutDayId,
+    bool isDeload = false,
+  });
 
   Future<Session?> getSession(String sessionId);
   Future<Session> getSessionByExerciseId(String sessionExerciseId);

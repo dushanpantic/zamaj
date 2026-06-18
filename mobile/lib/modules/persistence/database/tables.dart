@@ -150,6 +150,7 @@ class Sessions extends Table {
   IntColumn get createdAtMs => integer()();
   IntColumn get updatedAtMs => integer()();
   IntColumn get schemaVersion => integer()();
+  BoolColumn get isDeload => boolean().withDefault(const Constant(false))();
 
   @override
   Set<Column> get primaryKey => {id};

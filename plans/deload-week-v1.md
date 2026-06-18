@@ -352,9 +352,9 @@ graph TD
   - [x] Step 1.2: Pure set-halving transform
 
 #### Wave 2
-- [ ] Slice 2: Persistence — column, migration, start path
-  - [ ] Step 2.1: isDeload column, schema bump, migration, mapper
-  - [ ] Step 2.2: startSession applies the transform and persists the flag
+- [x] Slice 2: Persistence — column, migration, start path
+  - [x] Step 2.1: isDeload column, schema bump, migration, mapper
+  - [x] Step 2.2: startSession applies the transform and persists the flag
 - [ ] Slice 4: Exclude deload sessions from trend & CAPPED
   - [ ] Step 4.1: Exclude from the progress trend
   - [ ] Step 4.2: Exclude from CAPPED (badge + history), including mid-history
@@ -370,17 +370,17 @@ graph TD
 
 ### Acceptance Criteria
 
-- [ ] AC1: Deload affordance yields isDeload true; normal yields false.
-- [ ] AC2: Deload snapshot halves main-group exercises to ceil(n/2), first sets preserved.
-- [ ] AC3: Warmup groups keep full set count in a deload snapshot.
-- [ ] AC4: Halved quota reads completed, not partial.
-- [ ] AC5: Program WorkoutDay set counts unchanged after a deload start.
-- [ ] AC6: Deload snapshot passes its hash invariant.
+- [x] AC1: Deload affordance yields isDeload true; normal yields false.
+- [x] AC2: Deload snapshot halves main-group exercises to ceil(n/2), first sets preserved.
+- [x] AC3: Warmup groups keep full set count in a deload snapshot.
+- [x] AC4: Halved quota reads completed, not partial.
+- [x] AC5: Program WorkoutDay set counts unchanged after a deload start.
+- [x] AC6: Deload snapshot passes its hash invariant.
 - [ ] AC7: Deload session contributes no progress point.
 - [ ] AC8: Deload session never caps the badge and is absent from cap history, including mid-history.
 - [ ] AC9: Deload session stays in recent-sessions and shows a badge on tile, overview, review.
 - [ ] AC10: Plain-text export includes a deload marker.
-- [ ] AC11: Existing sessions load post-migration with isDeload false.
+- [x] AC11: Existing sessions load post-migration with isDeload false.
 
 ## Plan Review Summary
 

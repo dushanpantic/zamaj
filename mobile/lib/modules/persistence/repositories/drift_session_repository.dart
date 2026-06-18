@@ -18,6 +18,7 @@ import 'package:zamaj/modules/domain/models/substitute_exercise.dart';
 import 'package:zamaj/modules/domain/models/workout_day.dart' as domain;
 import 'package:zamaj/modules/domain/repositories/program_repository.dart';
 import 'package:zamaj/modules/domain/repositories/session_repository.dart';
+import 'package:zamaj/modules/domain/services/deload_transform.dart';
 import 'package:zamaj/modules/domain/services/effective_exercises.dart'
     as domain;
 import 'package:zamaj/modules/domain/services/exercise_state_transitions.dart'
@@ -49,12 +50,20 @@ class DriftSessionRepository implements SessionRepository {
   static const _gap = 1024;
 
   @override
-  Future<domain.Session> startSession({required String workoutDayId}) async {
+  Future<domain.Session> startSession({
+    required String workoutDayId,
+    bool isDeload = false,
+  }) async {
     return _db.transaction(() async {
-      final workoutDay = await _programRepository.getWorkoutDay(workoutDayId);
-      if (workoutDay == null) {
+      final storedDay = await _programRepository.getWorkoutDay(workoutDayId);
+      if (storedDay == null) {
         throw NotFoundError(entityType: 'WorkoutDay', id: workoutDayId);
       }
+
+      // A deload freezes a halved snapshot; the stored template is untouched.
+      final workoutDay = isDeload
+          ? DeloadTransform.halveWorkingSets(storedDay)
+          : storedDay;
 
       final snapshotJson = CanonicalJson.encode(workoutDay.toJson());
       final snapshotHash = CanonicalJson.sha256Hex(snapshotJson);
@@ -75,6 +84,7 @@ class DriftSessionRepository implements SessionRepository {
               createdAtMs: nowMs,
               updatedAtMs: nowMs,
               schemaVersion: SchemaVersions.domain,
+              isDeload: Value(isDeload),
             ),
           );
 

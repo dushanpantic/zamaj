@@ -18,6 +18,7 @@ import 'package:zamaj/modules/domain/models/session_snapshot.dart';
 import 'package:zamaj/modules/domain/models/substitute_exercise.dart';
 import 'package:zamaj/modules/domain/models/workout_day.dart';
 import 'package:zamaj/modules/domain/repositories/session_repository.dart';
+import 'package:zamaj/modules/domain/services/deload_transform.dart';
 
 class FakeSessionRepository implements SessionRepository {
   FakeSessionRepository({required this.clock, Uuid? uuid})
@@ -56,11 +57,18 @@ class FakeSessionRepository implements SessionRepository {
   }
 
   @override
-  Future<Session> startSession({required String workoutDayId}) async {
-    final workoutDay = _workoutDays[workoutDayId];
-    if (workoutDay == null) {
+  Future<Session> startSession({
+    required String workoutDayId,
+    bool isDeload = false,
+  }) async {
+    final storedDay = _workoutDays[workoutDayId];
+    if (storedDay == null) {
       throw NotFoundError(entityType: 'WorkoutDay', id: workoutDayId);
     }
+
+    final workoutDay = isDeload
+        ? DeloadTransform.halveWorkingSets(storedDay)
+        : storedDay;
 
     final now = clock.now().toUtc();
     final snapshot = SessionSnapshot.capture(
@@ -103,6 +111,7 @@ class FakeSessionRepository implements SessionRepository {
       createdAt: now,
       updatedAt: now,
       schemaVersion: 1,
+      isDeload: isDeload,
     );
 
     _sessions[sessionId] = session;

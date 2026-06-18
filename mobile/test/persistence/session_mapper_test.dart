@@ -129,6 +129,7 @@ void main() {
       createdAtMs: 1700000010000,
       updatedAtMs: 1700000020000,
       schemaVersion: 1,
+      isDeload: true,
     );
 
     sessionExerciseRow = const SessionExercise(
@@ -196,6 +197,7 @@ void main() {
     expect(companion.createdAtMs.value, equals(sessionRow.createdAtMs));
     expect(companion.updatedAtMs.value, equals(sessionRow.updatedAtMs));
     expect(companion.schemaVersion.value, equals(sessionRow.schemaVersion));
+    expect(companion.isDeload.value, equals(sessionRow.isDeload));
   });
 
   test('sessionExerciseToRow round-trips all fields', () {

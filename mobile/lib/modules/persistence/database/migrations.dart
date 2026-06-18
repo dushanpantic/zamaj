@@ -54,6 +54,9 @@ abstract final class AppMigrations {
     if (from < 12) {
       await _clearLibraryForCanonicalReseed(m, db);
     }
+    if (from < 13) {
+      await m.addColumn(db.sessions, db.sessions.isDeload);
+    }
   }
 
   /// Clears the manually-built exercise library so the embedded canonical

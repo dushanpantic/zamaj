@@ -98,6 +98,7 @@ class SessionMapper {
         isUtc: true,
       ),
       schemaVersion: row.schemaVersion,
+      isDeload: row.isDeload,
     );
   }
 
@@ -223,6 +224,7 @@ class SessionMapper {
       createdAtMs: Value(session.createdAt.millisecondsSinceEpoch),
       updatedAtMs: Value(session.updatedAt.millisecondsSinceEpoch),
       schemaVersion: Value(session.schemaVersion),
+      isDeload: Value(session.isDeload),
     );
   }
 

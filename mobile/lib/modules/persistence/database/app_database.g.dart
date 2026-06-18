@@ -4141,6 +4141,21 @@ class $SessionsTable extends Sessions with TableInfo<$SessionsTable, Session> {
     type: DriftSqlType.int,
     requiredDuringInsert: true,
   );
+  static const VerificationMeta _isDeloadMeta = const VerificationMeta(
+    'isDeload',
+  );
+  @override
+  late final GeneratedColumn<bool> isDeload = GeneratedColumn<bool>(
+    'is_deload',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("is_deload" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
   @override
   List<GeneratedColumn> get $columns => [
     id,
@@ -4152,6 +4167,7 @@ class $SessionsTable extends Sessions with TableInfo<$SessionsTable, Session> {
     createdAtMs,
     updatedAtMs,
     schemaVersion,
+    isDeload,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -4253,6 +4269,12 @@ class $SessionsTable extends Sessions with TableInfo<$SessionsTable, Session> {
     } else if (isInserting) {
       context.missing(_schemaVersionMeta);
     }
+    if (data.containsKey('is_deload')) {
+      context.handle(
+        _isDeloadMeta,
+        isDeload.isAcceptableOrUnknown(data['is_deload']!, _isDeloadMeta),
+      );
+    }
     return context;
   }
 
@@ -4298,6 +4320,10 @@ class $SessionsTable extends Sessions with TableInfo<$SessionsTable, Session> {
         DriftSqlType.int,
         data['${effectivePrefix}schema_version'],
       )!,
+      isDeload: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}is_deload'],
+      )!,
     );
   }
 
@@ -4317,6 +4343,7 @@ class Session extends DataClass implements Insertable<Session> {
   final int createdAtMs;
   final int updatedAtMs;
   final int schemaVersion;
+  final bool isDeload;
   const Session({
     required this.id,
     required this.workoutDayId,
@@ -4327,6 +4354,7 @@ class Session extends DataClass implements Insertable<Session> {
     required this.createdAtMs,
     required this.updatedAtMs,
     required this.schemaVersion,
+    required this.isDeload,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -4342,6 +4370,7 @@ class Session extends DataClass implements Insertable<Session> {
     map['created_at_ms'] = Variable<int>(createdAtMs);
     map['updated_at_ms'] = Variable<int>(updatedAtMs);
     map['schema_version'] = Variable<int>(schemaVersion);
+    map['is_deload'] = Variable<bool>(isDeload);
     return map;
   }
 
@@ -4358,6 +4387,7 @@ class Session extends DataClass implements Insertable<Session> {
       createdAtMs: Value(createdAtMs),
       updatedAtMs: Value(updatedAtMs),
       schemaVersion: Value(schemaVersion),
+      isDeload: Value(isDeload),
     );
   }
 
@@ -4376,6 +4406,7 @@ class Session extends DataClass implements Insertable<Session> {
       createdAtMs: serializer.fromJson<int>(json['createdAtMs']),
       updatedAtMs: serializer.fromJson<int>(json['updatedAtMs']),
       schemaVersion: serializer.fromJson<int>(json['schemaVersion']),
+      isDeload: serializer.fromJson<bool>(json['isDeload']),
     );
   }
   @override
@@ -4391,6 +4422,7 @@ class Session extends DataClass implements Insertable<Session> {
       'createdAtMs': serializer.toJson<int>(createdAtMs),
       'updatedAtMs': serializer.toJson<int>(updatedAtMs),
       'schemaVersion': serializer.toJson<int>(schemaVersion),
+      'isDeload': serializer.toJson<bool>(isDeload),
     };
   }
 
@@ -4404,6 +4436,7 @@ class Session extends DataClass implements Insertable<Session> {
     int? createdAtMs,
     int? updatedAtMs,
     int? schemaVersion,
+    bool? isDeload,
   }) => Session(
     id: id ?? this.id,
     workoutDayId: workoutDayId ?? this.workoutDayId,
@@ -4414,6 +4447,7 @@ class Session extends DataClass implements Insertable<Session> {
     createdAtMs: createdAtMs ?? this.createdAtMs,
     updatedAtMs: updatedAtMs ?? this.updatedAtMs,
     schemaVersion: schemaVersion ?? this.schemaVersion,
+    isDeload: isDeload ?? this.isDeload,
   );
   Session copyWithCompanion(SessionsCompanion data) {
     return Session(
@@ -4440,6 +4474,7 @@ class Session extends DataClass implements Insertable<Session> {
       schemaVersion: data.schemaVersion.present
           ? data.schemaVersion.value
           : this.schemaVersion,
+      isDeload: data.isDeload.present ? data.isDeload.value : this.isDeload,
     );
   }
 
@@ -4454,7 +4489,8 @@ class Session extends DataClass implements Insertable<Session> {
           ..write('endedAtMs: $endedAtMs, ')
           ..write('createdAtMs: $createdAtMs, ')
           ..write('updatedAtMs: $updatedAtMs, ')
-          ..write('schemaVersion: $schemaVersion')
+          ..write('schemaVersion: $schemaVersion, ')
+          ..write('isDeload: $isDeload')
           ..write(')'))
         .toString();
   }
@@ -4470,6 +4506,7 @@ class Session extends DataClass implements Insertable<Session> {
     createdAtMs,
     updatedAtMs,
     schemaVersion,
+    isDeload,
   );
   @override
   bool operator ==(Object other) =>
@@ -4483,7 +4520,8 @@ class Session extends DataClass implements Insertable<Session> {
           other.endedAtMs == this.endedAtMs &&
           other.createdAtMs == this.createdAtMs &&
           other.updatedAtMs == this.updatedAtMs &&
-          other.schemaVersion == this.schemaVersion);
+          other.schemaVersion == this.schemaVersion &&
+          other.isDeload == this.isDeload);
 }
 
 class SessionsCompanion extends UpdateCompanion<Session> {
@@ -4496,6 +4534,7 @@ class SessionsCompanion extends UpdateCompanion<Session> {
   final Value<int> createdAtMs;
   final Value<int> updatedAtMs;
   final Value<int> schemaVersion;
+  final Value<bool> isDeload;
   final Value<int> rowid;
   const SessionsCompanion({
     this.id = const Value.absent(),
@@ -4507,6 +4546,7 @@ class SessionsCompanion extends UpdateCompanion<Session> {
     this.createdAtMs = const Value.absent(),
     this.updatedAtMs = const Value.absent(),
     this.schemaVersion = const Value.absent(),
+    this.isDeload = const Value.absent(),
     this.rowid = const Value.absent(),
   });
   SessionsCompanion.insert({
@@ -4519,6 +4559,7 @@ class SessionsCompanion extends UpdateCompanion<Session> {
     required int createdAtMs,
     required int updatedAtMs,
     required int schemaVersion,
+    this.isDeload = const Value.absent(),
     this.rowid = const Value.absent(),
   }) : id = Value(id),
        workoutDayId = Value(workoutDayId),
@@ -4538,6 +4579,7 @@ class SessionsCompanion extends UpdateCompanion<Session> {
     Expression<int>? createdAtMs,
     Expression<int>? updatedAtMs,
     Expression<int>? schemaVersion,
+    Expression<bool>? isDeload,
     Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
@@ -4550,6 +4592,7 @@ class SessionsCompanion extends UpdateCompanion<Session> {
       if (createdAtMs != null) 'created_at_ms': createdAtMs,
       if (updatedAtMs != null) 'updated_at_ms': updatedAtMs,
       if (schemaVersion != null) 'schema_version': schemaVersion,
+      if (isDeload != null) 'is_deload': isDeload,
       if (rowid != null) 'rowid': rowid,
     });
   }
@@ -4564,6 +4607,7 @@ class SessionsCompanion extends UpdateCompanion<Session> {
     Value<int>? createdAtMs,
     Value<int>? updatedAtMs,
     Value<int>? schemaVersion,
+    Value<bool>? isDeload,
     Value<int>? rowid,
   }) {
     return SessionsCompanion(
@@ -4576,6 +4620,7 @@ class SessionsCompanion extends UpdateCompanion<Session> {
       createdAtMs: createdAtMs ?? this.createdAtMs,
       updatedAtMs: updatedAtMs ?? this.updatedAtMs,
       schemaVersion: schemaVersion ?? this.schemaVersion,
+      isDeload: isDeload ?? this.isDeload,
       rowid: rowid ?? this.rowid,
     );
   }
@@ -4610,6 +4655,9 @@ class SessionsCompanion extends UpdateCompanion<Session> {
     if (schemaVersion.present) {
       map['schema_version'] = Variable<int>(schemaVersion.value);
     }
+    if (isDeload.present) {
+      map['is_deload'] = Variable<bool>(isDeload.value);
+    }
     if (rowid.present) {
       map['rowid'] = Variable<int>(rowid.value);
     }
@@ -4628,6 +4676,7 @@ class SessionsCompanion extends UpdateCompanion<Session> {
           ..write('createdAtMs: $createdAtMs, ')
           ..write('updatedAtMs: $updatedAtMs, ')
           ..write('schemaVersion: $schemaVersion, ')
+          ..write('isDeload: $isDeload, ')
           ..write('rowid: $rowid')
           ..write(')'))
         .toString();
@@ -10614,6 +10663,7 @@ typedef $$SessionsTableCreateCompanionBuilder =
       required int createdAtMs,
       required int updatedAtMs,
       required int schemaVersion,
+      Value<bool> isDeload,
       Value<int> rowid,
     });
 typedef $$SessionsTableUpdateCompanionBuilder =
@@ -10627,6 +10677,7 @@ typedef $$SessionsTableUpdateCompanionBuilder =
       Value<int> createdAtMs,
       Value<int> updatedAtMs,
       Value<int> schemaVersion,
+      Value<bool> isDeload,
       Value<int> rowid,
     });
 
@@ -10748,6 +10799,11 @@ class $$SessionsTableFilterComposer
 
   ColumnFilters<int> get schemaVersion => $composableBuilder(
     column: $table.schemaVersion,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get isDeload => $composableBuilder(
+    column: $table.isDeload,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -10880,6 +10936,11 @@ class $$SessionsTableOrderingComposer
     column: $table.schemaVersion,
     builder: (column) => ColumnOrderings(column),
   );
+
+  ColumnOrderings<bool> get isDeload => $composableBuilder(
+    column: $table.isDeload,
+    builder: (column) => ColumnOrderings(column),
+  );
 }
 
 class $$SessionsTableAnnotationComposer
@@ -10931,6 +10992,9 @@ class $$SessionsTableAnnotationComposer
     column: $table.schemaVersion,
     builder: (column) => column,
   );
+
+  GeneratedColumn<bool> get isDeload =>
+      $composableBuilder(column: $table.isDeload, builder: (column) => column);
 
   Expression<T> sessionExercisesRefs<T extends Object>(
     Expression<T> Function($$SessionExercisesTableAnnotationComposer a) f,
@@ -11049,6 +11113,7 @@ class $$SessionsTableTableManager
                 Value<int> createdAtMs = const Value.absent(),
                 Value<int> updatedAtMs = const Value.absent(),
                 Value<int> schemaVersion = const Value.absent(),
+                Value<bool> isDeload = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => SessionsCompanion(
                 id: id,
@@ -11060,6 +11125,7 @@ class $$SessionsTableTableManager
                 createdAtMs: createdAtMs,
                 updatedAtMs: updatedAtMs,
                 schemaVersion: schemaVersion,
+                isDeload: isDeload,
                 rowid: rowid,
               ),
           createCompanionCallback:
@@ -11073,6 +11139,7 @@ class $$SessionsTableTableManager
                 required int createdAtMs,
                 required int updatedAtMs,
                 required int schemaVersion,
+                Value<bool> isDeload = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => SessionsCompanion.insert(
                 id: id,
@@ -11084,6 +11151,7 @@ class $$SessionsTableTableManager
                 createdAtMs: createdAtMs,
                 updatedAtMs: updatedAtMs,
                 schemaVersion: schemaVersion,
+                isDeload: isDeload,
                 rowid: rowid,
               ),
           withReferenceMapper: (p0) => p0
