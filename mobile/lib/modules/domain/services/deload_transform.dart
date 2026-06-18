@@ -24,7 +24,12 @@ abstract final class DeloadTransform {
   }
 
   static Exercise _halveExercise(Exercise exercise) {
-    final keep = (exercise.sets.length + 1) ~/ 2;
-    return exercise.copyWith(sets: exercise.sets.take(keep).toList());
+    // Sort by position so "keep the first sets" is self-contained rather than
+    // trusting hydration order — mirrors ExerciseCapHistoryAggregator's
+    // defensive position sort over the same set lists.
+    final ordered = [...exercise.sets]
+      ..sort((a, b) => a.position.compareTo(b.position));
+    final keep = (ordered.length + 1) ~/ 2;
+    return exercise.copyWith(sets: ordered.take(keep).toList());
   }
 }
