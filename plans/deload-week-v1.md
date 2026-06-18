@@ -2,7 +2,7 @@
 
 **Created**: 2026-06-18
 **Branch**: master
-**Status**: approved
+**Status**: implemented
 **Spec**: [docs/specs/deload-week.md](../docs/specs/deload-week.md)
 
 ## Goal
