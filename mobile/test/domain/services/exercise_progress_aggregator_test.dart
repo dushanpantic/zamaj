@@ -304,6 +304,29 @@ void main() {
       expect(series.points[0].topSetWeightKg, 90);
       expect(series.points[1].topSetWeightKg, 100);
     });
+
+    test('a deload session contributes no point; a normal one still does', () {
+      final normal = _session(
+        id: 's-normal',
+        startedAt: DateTime.utc(2026, 3, 1),
+        endedAt: DateTime.utc(2026, 3, 1, 1),
+        repBasedSets: const [(weightKg: 100, reps: 5)],
+      );
+      final deload = _session(
+        id: 's-deload',
+        startedAt: DateTime.utc(2026, 3, 8),
+        endedAt: DateTime.utc(2026, 3, 8, 1),
+        repBasedSets: const [(weightKg: 60, reps: 5)],
+      ).copyWith(isDeload: true);
+
+      final series = ExerciseProgressAggregator.compute(
+        libraryExerciseId: benchLibraryId,
+        sessions: [normal, deload],
+      );
+
+      expect(series.points, hasLength(1));
+      expect(series.points.single.topSetWeightKg, 100);
+    });
   });
 }
 

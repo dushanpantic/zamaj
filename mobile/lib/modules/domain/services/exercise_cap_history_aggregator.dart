@@ -52,6 +52,7 @@ abstract final class ExerciseCapHistoryAggregator {
   }) {
     final entries = <CapHistoryEntry>[];
     for (final session in SessionHistory.completedNewestFirst(sessions)) {
+      if (_excludedFromCap(session)) continue;
       final entry = _entryFor(session, libraryExerciseId);
       if (entry == null) continue;
       entries.add(entry);
@@ -77,6 +78,7 @@ abstract final class ExerciseCapHistoryAggregator {
     if (target.isEmpty) return false;
 
     for (final session in SessionHistory.completedNewestFirst(sessions)) {
+      if (_excludedFromCap(session)) continue;
       final entry = _entryFor(session, libraryExerciseId);
       if (entry == null) continue;
       if (!_samePlan(entry.plannedSets, target)) continue;
@@ -85,6 +87,13 @@ abstract final class ExerciseCapHistoryAggregator {
     }
     return false;
   }
+
+  /// Whether [session] is excluded from every CAPPED derivation. Deload sessions
+  /// are: their intentionally reduced prescription is not a real ceiling, so
+  /// neither the recent set-history table nor the needs-attention badge should
+  /// count them. The walk `continue`s past them, so a mid-history deload leaves
+  /// its non-deload neighbours' order and the limit window untouched.
+  static bool _excludedFromCap(Session session) => session.isDeload;
 
   /// Whether two position-ordered planned-set lists are equal by value: same
   /// length and each set's planned values (weight + target) equal in order.

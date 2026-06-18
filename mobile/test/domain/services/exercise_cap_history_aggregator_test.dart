@@ -572,6 +572,73 @@ void main() {
       expect(badged, isFalse);
     });
   });
+
+  group('ExerciseCapHistoryAggregator — deload exclusion', () {
+    final current = _workoutSets(
+      weightKg: 80,
+      target: RepTarget.range(minReps: 10, maxReps: 12),
+      count: 3,
+    );
+
+    test('a capped deload session never sets the badge', () {
+      final deloadCapped = _repSession(
+        id: 'deload-capped',
+        startedAt: DateTime.utc(2026, 3, 1),
+        actualReps: const [12, 12, 12],
+      ).copyWith(isDeload: true);
+
+      final badged = ExerciseCapHistoryAggregator.computeBadge(
+        currentPlannedSets: current,
+        libraryExerciseId: benchLibraryId,
+        sessions: [deloadCapped],
+      );
+
+      expect(badged, isFalse);
+    });
+
+    test('a mid-history deload session is skipped without disturbing '
+        'neighbours', () {
+      final newest = _repSession(
+        id: 'normal-newest',
+        startedAt: DateTime.utc(2026, 3, 3),
+        actualReps: const [12, 12, 12],
+      );
+      final middle = _repSession(
+        id: 'deload-middle',
+        startedAt: DateTime.utc(2026, 3, 2),
+        actualReps: const [12, 12, 12],
+      ).copyWith(isDeload: true);
+      final oldest = _repSession(
+        id: 'normal-oldest',
+        startedAt: DateTime.utc(2026, 3, 1),
+        actualReps: const [12, 12, 12],
+      );
+
+      final history = ExerciseCapHistoryAggregator.computeHistory(
+        libraryExerciseId: benchLibraryId,
+        sessions: [oldest, middle, newest],
+      );
+
+      expect(history.entries.map((e) => e.date).toList(), [
+        DateTime.utc(2026, 3, 3),
+        DateTime.utc(2026, 3, 1),
+      ]);
+    });
+
+    test('the deload exclusion stays local — completedNewestFirst still '
+        'includes deload sessions', () {
+      final deload = _repSession(
+        id: 'deload',
+        startedAt: DateTime.utc(2026, 3, 1),
+        actualReps: const [12, 12, 12],
+      ).copyWith(isDeload: true);
+
+      final completed = SessionHistory.completedNewestFirst([deload]);
+
+      expect(completed, hasLength(1));
+      expect(completed.single.id, 'deload');
+    });
+  });
 }
 
 /// Current-prescription planned sets (a `List<WorkoutSet>`) built to match the

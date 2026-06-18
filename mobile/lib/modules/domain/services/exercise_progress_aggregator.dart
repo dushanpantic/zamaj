@@ -28,13 +28,15 @@ abstract final class ExerciseProgressAggregator {
     required List<Session> sessions,
   }) {
     // Only ended sessions count — the same "completed = endedAt set" rule the
-    // SessionHistory derivations use. Ordered oldest-first, ties on startedAt
-    // broken by id so the series is deterministic regardless of input order
-    // (mirrors SessionHistory.completedNewestFirst).
+    // SessionHistory derivations use. Deload sessions are excluded: their
+    // intentionally reduced load would read as a regression in the trend.
+    // Ordered oldest-first, ties on startedAt broken by id so the series is
+    // deterministic regardless of input order (mirrors
+    // SessionHistory.completedNewestFirst).
     final completed =
         [
           for (final s in sessions)
-            if (s.endedAt != null) s,
+            if (s.endedAt != null && !s.isDeload) s,
         ]..sort((a, b) {
           final byDate = a.startedAt.compareTo(b.startedAt);
           return byDate != 0 ? byDate : a.id.compareTo(b.id);

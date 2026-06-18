@@ -355,9 +355,9 @@ graph TD
 - [x] Slice 2: Persistence — column, migration, start path
   - [x] Step 2.1: isDeload column, schema bump, migration, mapper
   - [x] Step 2.2: startSession applies the transform and persists the flag
-- [ ] Slice 4: Exclude deload sessions from trend & CAPPED
-  - [ ] Step 4.1: Exclude from the progress trend
-  - [ ] Step 4.2: Exclude from CAPPED (badge + history), including mid-history
+- [x] Slice 4: Exclude deload sessions from trend & CAPPED
+  - [x] Step 4.1: Exclude from the progress trend
+  - [x] Step 4.2: Exclude from CAPPED (badge + history), including mid-history
 - [ ] Slice 5: Visibility — badges & export marker
   - [ ] Step 5.1: Recent-sessions item carries isDeload
   - [ ] Step 5.2: Plain-text export marker
@@ -376,8 +376,8 @@ graph TD
 - [x] AC4: Halved quota reads completed, not partial.
 - [x] AC5: Program WorkoutDay set counts unchanged after a deload start.
 - [x] AC6: Deload snapshot passes its hash invariant.
-- [ ] AC7: Deload session contributes no progress point.
-- [ ] AC8: Deload session never caps the badge and is absent from cap history, including mid-history.
+- [x] AC7: Deload session contributes no progress point.
+- [x] AC8: Deload session never caps the badge and is absent from cap history, including mid-history.
 - [ ] AC9: Deload session stays in recent-sessions and shows a badge on tile, overview, review.
 - [ ] AC10: Plain-text export includes a deload marker.
 - [x] AC11: Existing sessions load post-migration with isDeload false.
