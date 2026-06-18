@@ -15,7 +15,7 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$Session {
 
- String get id; String get workoutDayId; SessionSnapshot get snapshot; List<SessionExercise> get sessionExercises; List<SessionNote> get notes; List<ExtraWork> get extraWork; DateTime get startedAt; DateTime? get endedAt; DateTime get createdAt; DateTime get updatedAt; int get schemaVersion;
+ String get id; String get workoutDayId; SessionSnapshot get snapshot; List<SessionExercise> get sessionExercises; List<SessionNote> get notes; List<ExtraWork> get extraWork; DateTime get startedAt; DateTime? get endedAt; DateTime get createdAt; DateTime get updatedAt; int get schemaVersion; bool get isDeload;
 /// Create a copy of Session
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -28,16 +28,16 @@ $SessionCopyWith<Session> get copyWith => _$SessionCopyWithImpl<Session>(this as
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is Session&&(identical(other.id, id) || other.id == id)&&(identical(other.workoutDayId, workoutDayId) || other.workoutDayId == workoutDayId)&&(identical(other.snapshot, snapshot) || other.snapshot == snapshot)&&const DeepCollectionEquality().equals(other.sessionExercises, sessionExercises)&&const DeepCollectionEquality().equals(other.notes, notes)&&const DeepCollectionEquality().equals(other.extraWork, extraWork)&&(identical(other.startedAt, startedAt) || other.startedAt == startedAt)&&(identical(other.endedAt, endedAt) || other.endedAt == endedAt)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt)&&(identical(other.updatedAt, updatedAt) || other.updatedAt == updatedAt)&&(identical(other.schemaVersion, schemaVersion) || other.schemaVersion == schemaVersion));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is Session&&(identical(other.id, id) || other.id == id)&&(identical(other.workoutDayId, workoutDayId) || other.workoutDayId == workoutDayId)&&(identical(other.snapshot, snapshot) || other.snapshot == snapshot)&&const DeepCollectionEquality().equals(other.sessionExercises, sessionExercises)&&const DeepCollectionEquality().equals(other.notes, notes)&&const DeepCollectionEquality().equals(other.extraWork, extraWork)&&(identical(other.startedAt, startedAt) || other.startedAt == startedAt)&&(identical(other.endedAt, endedAt) || other.endedAt == endedAt)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt)&&(identical(other.updatedAt, updatedAt) || other.updatedAt == updatedAt)&&(identical(other.schemaVersion, schemaVersion) || other.schemaVersion == schemaVersion)&&(identical(other.isDeload, isDeload) || other.isDeload == isDeload));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,id,workoutDayId,snapshot,const DeepCollectionEquality().hash(sessionExercises),const DeepCollectionEquality().hash(notes),const DeepCollectionEquality().hash(extraWork),startedAt,endedAt,createdAt,updatedAt,schemaVersion);
+int get hashCode => Object.hash(runtimeType,id,workoutDayId,snapshot,const DeepCollectionEquality().hash(sessionExercises),const DeepCollectionEquality().hash(notes),const DeepCollectionEquality().hash(extraWork),startedAt,endedAt,createdAt,updatedAt,schemaVersion,isDeload);
 
 @override
 String toString() {
-  return 'Session(id: $id, workoutDayId: $workoutDayId, snapshot: $snapshot, sessionExercises: $sessionExercises, notes: $notes, extraWork: $extraWork, startedAt: $startedAt, endedAt: $endedAt, createdAt: $createdAt, updatedAt: $updatedAt, schemaVersion: $schemaVersion)';
+  return 'Session(id: $id, workoutDayId: $workoutDayId, snapshot: $snapshot, sessionExercises: $sessionExercises, notes: $notes, extraWork: $extraWork, startedAt: $startedAt, endedAt: $endedAt, createdAt: $createdAt, updatedAt: $updatedAt, schemaVersion: $schemaVersion, isDeload: $isDeload)';
 }
 
 
@@ -48,7 +48,7 @@ abstract mixin class $SessionCopyWith<$Res>  {
   factory $SessionCopyWith(Session value, $Res Function(Session) _then) = _$SessionCopyWithImpl;
 @useResult
 $Res call({
- String id, String workoutDayId, SessionSnapshot snapshot, List<SessionExercise> sessionExercises, List<SessionNote> notes, List<ExtraWork> extraWork, DateTime startedAt, DateTime? endedAt, DateTime createdAt, DateTime updatedAt, int schemaVersion
+ String id, String workoutDayId, SessionSnapshot snapshot, List<SessionExercise> sessionExercises, List<SessionNote> notes, List<ExtraWork> extraWork, DateTime startedAt, DateTime? endedAt, DateTime createdAt, DateTime updatedAt, int schemaVersion, bool isDeload
 });
 
 
@@ -65,7 +65,7 @@ class _$SessionCopyWithImpl<$Res>
 
 /// Create a copy of Session
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? workoutDayId = null,Object? snapshot = null,Object? sessionExercises = null,Object? notes = null,Object? extraWork = null,Object? startedAt = null,Object? endedAt = freezed,Object? createdAt = null,Object? updatedAt = null,Object? schemaVersion = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? workoutDayId = null,Object? snapshot = null,Object? sessionExercises = null,Object? notes = null,Object? extraWork = null,Object? startedAt = null,Object? endedAt = freezed,Object? createdAt = null,Object? updatedAt = null,Object? schemaVersion = null,Object? isDeload = null,}) {
   return _then(_self.copyWith(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as String,workoutDayId: null == workoutDayId ? _self.workoutDayId : workoutDayId // ignore: cast_nullable_to_non_nullable
@@ -78,7 +78,8 @@ as DateTime,endedAt: freezed == endedAt ? _self.endedAt : endedAt // ignore: cas
 as DateTime?,createdAt: null == createdAt ? _self.createdAt : createdAt // ignore: cast_nullable_to_non_nullable
 as DateTime,updatedAt: null == updatedAt ? _self.updatedAt : updatedAt // ignore: cast_nullable_to_non_nullable
 as DateTime,schemaVersion: null == schemaVersion ? _self.schemaVersion : schemaVersion // ignore: cast_nullable_to_non_nullable
-as int,
+as int,isDeload: null == isDeload ? _self.isDeload : isDeload // ignore: cast_nullable_to_non_nullable
+as bool,
   ));
 }
 /// Create a copy of Session
@@ -172,10 +173,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id,  String workoutDayId,  SessionSnapshot snapshot,  List<SessionExercise> sessionExercises,  List<SessionNote> notes,  List<ExtraWork> extraWork,  DateTime startedAt,  DateTime? endedAt,  DateTime createdAt,  DateTime updatedAt,  int schemaVersion)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id,  String workoutDayId,  SessionSnapshot snapshot,  List<SessionExercise> sessionExercises,  List<SessionNote> notes,  List<ExtraWork> extraWork,  DateTime startedAt,  DateTime? endedAt,  DateTime createdAt,  DateTime updatedAt,  int schemaVersion,  bool isDeload)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _Session() when $default != null:
-return $default(_that.id,_that.workoutDayId,_that.snapshot,_that.sessionExercises,_that.notes,_that.extraWork,_that.startedAt,_that.endedAt,_that.createdAt,_that.updatedAt,_that.schemaVersion);case _:
+return $default(_that.id,_that.workoutDayId,_that.snapshot,_that.sessionExercises,_that.notes,_that.extraWork,_that.startedAt,_that.endedAt,_that.createdAt,_that.updatedAt,_that.schemaVersion,_that.isDeload);case _:
   return orElse();
 
 }
@@ -193,10 +194,10 @@ return $default(_that.id,_that.workoutDayId,_that.snapshot,_that.sessionExercise
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id,  String workoutDayId,  SessionSnapshot snapshot,  List<SessionExercise> sessionExercises,  List<SessionNote> notes,  List<ExtraWork> extraWork,  DateTime startedAt,  DateTime? endedAt,  DateTime createdAt,  DateTime updatedAt,  int schemaVersion)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id,  String workoutDayId,  SessionSnapshot snapshot,  List<SessionExercise> sessionExercises,  List<SessionNote> notes,  List<ExtraWork> extraWork,  DateTime startedAt,  DateTime? endedAt,  DateTime createdAt,  DateTime updatedAt,  int schemaVersion,  bool isDeload)  $default,) {final _that = this;
 switch (_that) {
 case _Session():
-return $default(_that.id,_that.workoutDayId,_that.snapshot,_that.sessionExercises,_that.notes,_that.extraWork,_that.startedAt,_that.endedAt,_that.createdAt,_that.updatedAt,_that.schemaVersion);case _:
+return $default(_that.id,_that.workoutDayId,_that.snapshot,_that.sessionExercises,_that.notes,_that.extraWork,_that.startedAt,_that.endedAt,_that.createdAt,_that.updatedAt,_that.schemaVersion,_that.isDeload);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -213,10 +214,10 @@ return $default(_that.id,_that.workoutDayId,_that.snapshot,_that.sessionExercise
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id,  String workoutDayId,  SessionSnapshot snapshot,  List<SessionExercise> sessionExercises,  List<SessionNote> notes,  List<ExtraWork> extraWork,  DateTime startedAt,  DateTime? endedAt,  DateTime createdAt,  DateTime updatedAt,  int schemaVersion)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id,  String workoutDayId,  SessionSnapshot snapshot,  List<SessionExercise> sessionExercises,  List<SessionNote> notes,  List<ExtraWork> extraWork,  DateTime startedAt,  DateTime? endedAt,  DateTime createdAt,  DateTime updatedAt,  int schemaVersion,  bool isDeload)?  $default,) {final _that = this;
 switch (_that) {
 case _Session() when $default != null:
-return $default(_that.id,_that.workoutDayId,_that.snapshot,_that.sessionExercises,_that.notes,_that.extraWork,_that.startedAt,_that.endedAt,_that.createdAt,_that.updatedAt,_that.schemaVersion);case _:
+return $default(_that.id,_that.workoutDayId,_that.snapshot,_that.sessionExercises,_that.notes,_that.extraWork,_that.startedAt,_that.endedAt,_that.createdAt,_that.updatedAt,_that.schemaVersion,_that.isDeload);case _:
   return null;
 
 }
@@ -228,7 +229,7 @@ return $default(_that.id,_that.workoutDayId,_that.snapshot,_that.sessionExercise
 @JsonSerializable()
 
 class _Session extends Session {
-  const _Session({required this.id, required this.workoutDayId, required this.snapshot, required final  List<SessionExercise> sessionExercises, required final  List<SessionNote> notes, required final  List<ExtraWork> extraWork, required this.startedAt, this.endedAt, required this.createdAt, required this.updatedAt, required this.schemaVersion}): _sessionExercises = sessionExercises,_notes = notes,_extraWork = extraWork,super._();
+  const _Session({required this.id, required this.workoutDayId, required this.snapshot, required final  List<SessionExercise> sessionExercises, required final  List<SessionNote> notes, required final  List<ExtraWork> extraWork, required this.startedAt, this.endedAt, required this.createdAt, required this.updatedAt, required this.schemaVersion, this.isDeload = false}): _sessionExercises = sessionExercises,_notes = notes,_extraWork = extraWork,super._();
   factory _Session.fromJson(Map<String, dynamic> json) => _$SessionFromJson(json);
 
 @override final  String id;
@@ -260,6 +261,7 @@ class _Session extends Session {
 @override final  DateTime createdAt;
 @override final  DateTime updatedAt;
 @override final  int schemaVersion;
+@override@JsonKey() final  bool isDeload;
 
 /// Create a copy of Session
 /// with the given fields replaced by the non-null parameter values.
@@ -274,16 +276,16 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _Session&&(identical(other.id, id) || other.id == id)&&(identical(other.workoutDayId, workoutDayId) || other.workoutDayId == workoutDayId)&&(identical(other.snapshot, snapshot) || other.snapshot == snapshot)&&const DeepCollectionEquality().equals(other._sessionExercises, _sessionExercises)&&const DeepCollectionEquality().equals(other._notes, _notes)&&const DeepCollectionEquality().equals(other._extraWork, _extraWork)&&(identical(other.startedAt, startedAt) || other.startedAt == startedAt)&&(identical(other.endedAt, endedAt) || other.endedAt == endedAt)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt)&&(identical(other.updatedAt, updatedAt) || other.updatedAt == updatedAt)&&(identical(other.schemaVersion, schemaVersion) || other.schemaVersion == schemaVersion));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _Session&&(identical(other.id, id) || other.id == id)&&(identical(other.workoutDayId, workoutDayId) || other.workoutDayId == workoutDayId)&&(identical(other.snapshot, snapshot) || other.snapshot == snapshot)&&const DeepCollectionEquality().equals(other._sessionExercises, _sessionExercises)&&const DeepCollectionEquality().equals(other._notes, _notes)&&const DeepCollectionEquality().equals(other._extraWork, _extraWork)&&(identical(other.startedAt, startedAt) || other.startedAt == startedAt)&&(identical(other.endedAt, endedAt) || other.endedAt == endedAt)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt)&&(identical(other.updatedAt, updatedAt) || other.updatedAt == updatedAt)&&(identical(other.schemaVersion, schemaVersion) || other.schemaVersion == schemaVersion)&&(identical(other.isDeload, isDeload) || other.isDeload == isDeload));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,id,workoutDayId,snapshot,const DeepCollectionEquality().hash(_sessionExercises),const DeepCollectionEquality().hash(_notes),const DeepCollectionEquality().hash(_extraWork),startedAt,endedAt,createdAt,updatedAt,schemaVersion);
+int get hashCode => Object.hash(runtimeType,id,workoutDayId,snapshot,const DeepCollectionEquality().hash(_sessionExercises),const DeepCollectionEquality().hash(_notes),const DeepCollectionEquality().hash(_extraWork),startedAt,endedAt,createdAt,updatedAt,schemaVersion,isDeload);
 
 @override
 String toString() {
-  return 'Session(id: $id, workoutDayId: $workoutDayId, snapshot: $snapshot, sessionExercises: $sessionExercises, notes: $notes, extraWork: $extraWork, startedAt: $startedAt, endedAt: $endedAt, createdAt: $createdAt, updatedAt: $updatedAt, schemaVersion: $schemaVersion)';
+  return 'Session(id: $id, workoutDayId: $workoutDayId, snapshot: $snapshot, sessionExercises: $sessionExercises, notes: $notes, extraWork: $extraWork, startedAt: $startedAt, endedAt: $endedAt, createdAt: $createdAt, updatedAt: $updatedAt, schemaVersion: $schemaVersion, isDeload: $isDeload)';
 }
 
 
@@ -294,7 +296,7 @@ abstract mixin class _$SessionCopyWith<$Res> implements $SessionCopyWith<$Res> {
   factory _$SessionCopyWith(_Session value, $Res Function(_Session) _then) = __$SessionCopyWithImpl;
 @override @useResult
 $Res call({
- String id, String workoutDayId, SessionSnapshot snapshot, List<SessionExercise> sessionExercises, List<SessionNote> notes, List<ExtraWork> extraWork, DateTime startedAt, DateTime? endedAt, DateTime createdAt, DateTime updatedAt, int schemaVersion
+ String id, String workoutDayId, SessionSnapshot snapshot, List<SessionExercise> sessionExercises, List<SessionNote> notes, List<ExtraWork> extraWork, DateTime startedAt, DateTime? endedAt, DateTime createdAt, DateTime updatedAt, int schemaVersion, bool isDeload
 });
 
 
@@ -311,7 +313,7 @@ class __$SessionCopyWithImpl<$Res>
 
 /// Create a copy of Session
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? workoutDayId = null,Object? snapshot = null,Object? sessionExercises = null,Object? notes = null,Object? extraWork = null,Object? startedAt = null,Object? endedAt = freezed,Object? createdAt = null,Object? updatedAt = null,Object? schemaVersion = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? workoutDayId = null,Object? snapshot = null,Object? sessionExercises = null,Object? notes = null,Object? extraWork = null,Object? startedAt = null,Object? endedAt = freezed,Object? createdAt = null,Object? updatedAt = null,Object? schemaVersion = null,Object? isDeload = null,}) {
   return _then(_Session(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as String,workoutDayId: null == workoutDayId ? _self.workoutDayId : workoutDayId // ignore: cast_nullable_to_non_nullable
@@ -324,7 +326,8 @@ as DateTime,endedAt: freezed == endedAt ? _self.endedAt : endedAt // ignore: cas
 as DateTime?,createdAt: null == createdAt ? _self.createdAt : createdAt // ignore: cast_nullable_to_non_nullable
 as DateTime,updatedAt: null == updatedAt ? _self.updatedAt : updatedAt // ignore: cast_nullable_to_non_nullable
 as DateTime,schemaVersion: null == schemaVersion ? _self.schemaVersion : schemaVersion // ignore: cast_nullable_to_non_nullable
-as int,
+as int,isDeload: null == isDeload ? _self.isDeload : isDeload // ignore: cast_nullable_to_non_nullable
+as bool,
   ));
 }
 

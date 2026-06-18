@@ -42,6 +42,7 @@ _Session _$SessionFromJson(
     createdAt: $checkedConvert('createdAt', (v) => DateTime.parse(v as String)),
     updatedAt: $checkedConvert('updatedAt', (v) => DateTime.parse(v as String)),
     schemaVersion: $checkedConvert('schemaVersion', (v) => (v as num).toInt()),
+    isDeload: $checkedConvert('isDeload', (v) => v as bool? ?? false),
   );
   return val;
 });
@@ -58,4 +59,5 @@ Map<String, dynamic> _$SessionToJson(_Session instance) => <String, dynamic>{
   'createdAt': instance.createdAt.toIso8601String(),
   'updatedAt': instance.updatedAt.toIso8601String(),
   'schemaVersion': instance.schemaVersion,
+  'isDeload': instance.isDeload,
 };

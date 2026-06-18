@@ -24,6 +24,7 @@ abstract class Session with _$Session {
     required DateTime createdAt,
     required DateTime updatedAt,
     required int schemaVersion,
+    @Default(false) bool isDeload,
   }) = _Session;
 
   factory Session.fromJson(Map<String, dynamic> json) =>
