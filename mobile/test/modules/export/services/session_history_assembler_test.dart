@@ -82,6 +82,27 @@ void main() {
       expect(items.single.completedExerciseCount, 2);
       expect(items.single.totalExerciseCount, 4);
     });
+
+    test(
+      'marks the item as a deload for a deload session, not a normal one',
+      () {
+        final items = SessionHistoryAssembler.assemble(
+          sessions: [
+            _session(id: 'normal', endedAt: DateTime.utc(2026, 5, 12, 18)),
+            _session(
+              id: 'deload',
+              endedAt: DateTime.utc(2026, 5, 13, 18),
+            ).copyWith(isDeload: true),
+          ],
+          window: window,
+        );
+
+        final normal = items.firstWhere((i) => i.sessionId == 'normal');
+        final deload = items.firstWhere((i) => i.sessionId == 'deload');
+        expect(deload.isDeload, isTrue);
+        expect(normal.isDeload, isFalse);
+      },
+    );
   });
 
   group('session-review badge outcome (derived input shape)', () {

@@ -17,6 +17,31 @@ void main() {
       expect(out.contains('(in progress)'), isFalse);
     });
 
+    test(
+      'marks a deload session in the header; a normal one has no marker',
+      () {
+        final deload = _session(
+          workoutDayName: 'Upper A',
+          endedAt: DateTime.utc(2026, 5, 12, 18, 30),
+          exercises: const [],
+        ).copyWith(isDeload: true);
+        final normal = _session(
+          workoutDayName: 'Upper A',
+          endedAt: DateTime.utc(2026, 5, 12, 18, 30),
+          exercises: const [],
+        );
+
+        expect(
+          SessionExportFormatter.format(deload).split('\n').first,
+          contains('DELOAD'),
+        );
+        expect(
+          SessionExportFormatter.format(normal),
+          isNot(contains('DELOAD')),
+        );
+      },
+    );
+
     test('completed session appends duration suffix to date line', () {
       final session = _session(
         workoutDayName: 'Upper A',

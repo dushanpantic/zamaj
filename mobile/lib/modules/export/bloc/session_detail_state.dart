@@ -30,6 +30,10 @@ final class SessionDetailLoaded extends SessionDetailState {
   /// at open (in-week + ended) and held stable for the screen's lifetime.
   final bool canEdit;
 
+  /// Whether this session was logged as a deload — drives the DELOAD badge on
+  /// the review header.
+  bool get isDeload => session.isDeload;
+
   @override
   List<Object?> get props => [session, groups, canEdit];
 }

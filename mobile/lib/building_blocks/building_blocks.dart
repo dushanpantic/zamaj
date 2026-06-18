@@ -14,6 +14,7 @@ export 'package:zamaj/building_blocks/app_notice_banner.dart';
 export 'package:zamaj/building_blocks/app_skeleton.dart';
 export 'package:zamaj/building_blocks/app_state_view.dart';
 export 'package:zamaj/building_blocks/bullet.dart';
+export 'package:zamaj/building_blocks/deload_badge.dart';
 export 'package:zamaj/building_blocks/domain_error_presenter.dart';
 export 'package:zamaj/building_blocks/external_link_launcher.dart';
 export 'package:zamaj/building_blocks/in_progress_accent_bar.dart';

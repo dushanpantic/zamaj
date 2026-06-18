@@ -10,6 +10,7 @@ class SessionHistoryItem {
     required this.completedExerciseCount,
     required this.totalExerciseCount,
     required this.isInThisWeek,
+    required this.isDeload,
   });
 
   final String sessionId;
@@ -29,4 +30,8 @@ class SessionHistoryItem {
   /// True when [endedAt] falls inside the same Mon-Sun window as the
   /// reference clock — used to bucket the list into "This week" vs "Earlier".
   final bool isInThisWeek;
+
+  /// True when this session was logged as a deload — drives the DELOAD badge
+  /// on the recent-sessions tile.
+  final bool isDeload;
 }

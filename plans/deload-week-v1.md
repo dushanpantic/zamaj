@@ -358,10 +358,10 @@ graph TD
 - [x] Slice 4: Exclude deload sessions from trend & CAPPED
   - [x] Step 4.1: Exclude from the progress trend
   - [x] Step 4.2: Exclude from CAPPED (badge + history), including mid-history
-- [ ] Slice 5: Visibility — badges & export marker
-  - [ ] Step 5.1: Recent-sessions item carries isDeload
-  - [ ] Step 5.2: Plain-text export marker
-  - [ ] Step 5.3: Badges on review, recent list, and overview
+- [x] Slice 5: Visibility — badges & export marker
+  - [x] Step 5.1: Recent-sessions item carries isDeload
+  - [x] Step 5.2: Plain-text export marker
+  - [x] Step 5.3: Badges on review, recent list, and overview
 
 #### Wave 3
 - [ ] Slice 3: Engine pass-through & picker "Deload week" toggle
@@ -378,8 +378,8 @@ graph TD
 - [x] AC6: Deload snapshot passes its hash invariant.
 - [x] AC7: Deload session contributes no progress point.
 - [x] AC8: Deload session never caps the badge and is absent from cap history, including mid-history.
-- [ ] AC9: Deload session stays in recent-sessions and shows a badge on tile, overview, review.
-- [ ] AC10: Plain-text export includes a deload marker.
+- [x] AC9: Deload session stays in recent-sessions and shows a badge on tile, overview, review.
+- [x] AC10: Plain-text export includes a deload marker.
 - [x] AC11: Existing sessions load post-migration with isDeload false.
 
 ## Plan Review Summary

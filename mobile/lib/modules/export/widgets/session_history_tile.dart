@@ -62,13 +62,23 @@ class SessionHistoryTile extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
-                        item.workoutDayName,
-                        style: typography.title.copyWith(
-                          color: colors.onSurface,
-                        ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
+                      Row(
+                        children: [
+                          Flexible(
+                            child: Text(
+                              item.workoutDayName,
+                              style: typography.title.copyWith(
+                                color: colors.onSurface,
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                          if (item.isDeload) ...[
+                            const SizedBox(width: AppSpacing.sm),
+                            const DeloadBadge(),
+                          ],
+                        ],
                       ),
                       const SizedBox(height: AppSpacing.xs),
                       Text(

@@ -26,6 +26,7 @@ abstract final class SessionHistoryAssembler {
       completedExerciseCount: SessionHistory.completedExerciseCount(s),
       totalExerciseCount: s.sessionExercises.length,
       isInThisWeek: window.contains(s.endedAt!),
+      isDeload: s.isDeload,
     );
   }
 }

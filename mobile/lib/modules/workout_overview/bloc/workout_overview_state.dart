@@ -85,6 +85,10 @@ final class WorkoutOverviewLoaded extends WorkoutOverviewState {
 
   bool get isEnded => sessionState.session.endedAt != null;
 
+  /// Whether this session was logged as a deload — drives the DELOAD badge in
+  /// the overview header.
+  bool get isDeload => sessionState.session.isDeload;
+
   /// Whether the user may log new sets and make structural changes (reorder,
   /// skip, mark-done, group-into, notes). False once the session has ended.
   bool get canLog => !isEnded;

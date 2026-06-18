@@ -74,7 +74,7 @@ class _SessionDetailScreenState extends State<SessionDetailScreen> {
 
     return BlocBuilder<SessionDetailBloc, SessionDetailState>(
       builder: (context, state) {
-        final SessionDetailLoaded(:session, :groups, :canEdit) =
+        final SessionDetailLoaded(:session, :groups, :canEdit, :isDeload) =
             state as SessionDetailLoaded;
         final workoutDayName = session.snapshot.workoutDay.name;
 
@@ -98,6 +98,11 @@ class _SessionDetailScreenState extends State<SessionDetailScreen> {
           appBar: AppBar(
             title: Text(workoutDayName),
             actions: [
+              if (isDeload)
+                const Padding(
+                  padding: EdgeInsets.only(right: AppSpacing.sm),
+                  child: Center(child: DeloadBadge()),
+                ),
               IconButton(
                 tooltip: 'Share',
                 icon: const Icon(Icons.share),

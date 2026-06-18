@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:zamaj/building_blocks/building_blocks.dart';
+import 'package:zamaj/core/app_spacing.dart';
 import 'package:zamaj/core/app_theme.dart';
 import 'package:zamaj/core/app_typography.dart';
 import 'package:zamaj/modules/domain/domain.dart';
@@ -23,10 +25,21 @@ class WorkoutOverviewAppBarTitle extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       mainAxisSize: MainAxisSize.min,
       children: [
-        Text(
-          state.sessionState.session.snapshot.workoutDay.name,
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis,
+        Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Flexible(
+              child: Text(
+                state.sessionState.session.snapshot.workoutDay.name,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+            if (state.isDeload) ...[
+              const SizedBox(width: AppSpacing.sm),
+              const DeloadBadge(),
+            ],
+          ],
         ),
         Row(
           children: [

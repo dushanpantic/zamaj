@@ -30,6 +30,7 @@ class AppColors {
     required this.warmupBg,
     required this.loggableHint,
     required this.restTimer,
+    required this.deload,
     required this.scrim,
   });
 
@@ -86,6 +87,12 @@ class AppColors {
   /// not compete with the orange LOG SET action; a cool tone reads as recovery.
   final Color restTimer;
 
+  /// Accent for the DELOAD badge on session surfaces (overview header, review
+  /// header, recent-sessions tile). An indigo family reads as a deliberate
+  /// lighter/recovery week, distinct from [warmup], [restTimer], and
+  /// [exerciseReplaced].
+  final Color deload;
+
   /// Translucent overlay color for modal/scrim layers behind dialogs and
   /// saving indicators. Always combined with an alpha around 0.4-0.6.
   final Color scrim;
@@ -116,6 +123,7 @@ class AppColors {
     warmupBg: Color(0xFF13262B),
     loggableHint: Color(0xFFF97316),
     restTimer: Color(0xFF2DD4BF),
+    deload: Color(0xFF818CF8),
     scrim: Color(0xCC000000),
   );
 
@@ -146,6 +154,7 @@ class AppColors {
     warmupBg: Color(0xFFE0F2FE),
     loggableHint: Color(0xFFEA580C),
     restTimer: Color(0xFF0D9488),
+    deload: Color(0xFF4F46E5),
     scrim: Color(0x99000000),
   );
 }

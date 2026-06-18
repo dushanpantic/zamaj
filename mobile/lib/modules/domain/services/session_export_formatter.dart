@@ -26,7 +26,8 @@ import 'package:zamaj/modules/domain/services/warmup_exercises.dart';
 abstract final class SessionExportFormatter {
   static String format(Session session, {bool includeWarmups = true}) {
     final buf = StringBuffer();
-    buf.writeln(session.snapshot.workoutDay.name);
+    final dayName = session.snapshot.workoutDay.name;
+    buf.writeln(session.isDeload ? '$dayName (DELOAD)' : dayName);
 
     final dateInstant = session.endedAt ?? session.startedAt;
     final local = dateInstant.isUtc ? dateInstant.toLocal() : dateInstant;
