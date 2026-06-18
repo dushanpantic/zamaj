@@ -64,7 +64,8 @@ List<String> _orderedIds(List<domain_se.SessionExercise> exercises) {
 
 void main() {
   group('superset ordering through the repo', () {
-    test('createSuperset across a gap yields [a, c, b, d]', () async {
+    test('createSuperset across a gap anchors at the drop target → '
+        '[b, a, c, d]', () async {
       final db = AppDatabase(NativeDatabase.memory());
       try {
         final programRepo = DriftProgramRepository(db: db);
@@ -79,15 +80,17 @@ void main() {
           count: 4,
         );
 
+        // Drag a (ids[0]) onto target c (ids[2]); the target is passed last and
+        // is the anchor, so the new [a, c] block lands at c's slot, not at a's.
         final result = await sessionRepo.createSuperset(
           sessionId: sessionId,
           sessionExerciseIds: [ids[0], ids[2]],
         );
 
         expect(_orderedIds(result.sessionExercises), [
+          ids[1],
           ids[0],
           ids[2],
-          ids[1],
           ids[3],
         ]);
       } finally {

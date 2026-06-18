@@ -75,6 +75,59 @@ abstract final class ReorderMoveResolver {
     };
   }
 
+  /// Move up / move down **target unfinished indices** for the whole superset
+  /// [supersetTag], moved as one block relative to whole top-level groups
+  /// (jumping over an entire neighbouring group, skipping all-finished anchors
+  /// just like [_standaloneTargets]). A null direction is a disabled end.
+  ///
+  /// Returns `(up: null, down: null)` when the tag is unknown or the group
+  /// isn't fully unfinished — only a fully-unfinished superset moves as a
+  /// whole, mirroring [SupersetReorderResolver.isWholeDragEligible]. The
+  /// indices are in the pre-move unfinished coordinate space the drag gaps use,
+  /// so dispatching `WorkoutOverviewSupersetReordered(tag, index)` lands the
+  /// group identically to dropping it into that gap.
+  static ({int? up, int? down}) supersetTargetsFor({
+    required List<SupersetGroupViewModel> groups,
+    required String supersetTag,
+  }) {
+    var groupIndex = -1;
+    SupersetGroup? group;
+    for (var i = 0; i < groups.length; i++) {
+      final g = groups[i];
+      if (g is SupersetGroup && g.tag == supersetTag) {
+        groupIndex = i;
+        group = g;
+        break;
+      }
+    }
+    if (group == null) return (up: null, down: null);
+    final allUnfinished = group.exercises.every(
+      (e) => e.sessionExercise.state is UnfinishedState,
+    );
+    if (!allUnfinished) return (up: null, down: null);
+
+    int? up;
+    int? down;
+    // Up: drop the block just before the nearest group above with at least one
+    // unfinished exercise (all-finished groups are skipped anchors).
+    for (var i = groupIndex - 1; i >= 0; i--) {
+      if (_unfinishedInGroup(groups[i]) > 0) {
+        up = _unfinishedBeforeGroup(groups, i);
+        break;
+      }
+    }
+    // Down: drop the block just after the nearest group below with an
+    // unfinished exercise — before the first unfinished slot past that group.
+    for (var i = groupIndex + 1; i < groups.length; i++) {
+      final inGroup = _unfinishedInGroup(groups[i]);
+      if (inGroup > 0) {
+        down = _unfinishedBeforeGroup(groups, i) + inGroup;
+        break;
+      }
+    }
+    return (up: up, down: down);
+  }
+
   /// Number of unfinished exercises in `groups[0 .. groupIndex - 1]`.
   static int _unfinishedBeforeGroup(
     List<SupersetGroupViewModel> groups,

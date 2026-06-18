@@ -9,7 +9,7 @@ import 'package:zamaj/modules/workout_overview/bloc/bloc.dart';
 import 'package:zamaj/modules/workout_overview/models/drop_intent.dart';
 import 'package:zamaj/modules/workout_overview/services/drag_session.dart';
 import 'package:zamaj/modules/workout_overview/widgets/drag_hover_registration.dart';
-import 'package:zamaj/modules/workout_overview/widgets/exercise_card.dart';
+import 'package:zamaj/modules/workout_overview/widgets/overview_drag_payload.dart';
 
 /// Drop zone between two members of the same superset (or at the top/bottom
 /// edges of the member list). Accepts only payloads whose `supersetTag`
@@ -53,17 +53,27 @@ class _SupersetReorderGapState extends State<SupersetReorderGap>
       animation: widget.dragSession,
       builder: (context, _) {
         final dragActive = widget.dragSession.active;
-        return DragTarget<ExerciseDragPayload>(
+        return DragTarget<OverviewDragPayload>(
           onWillAcceptWithDetails: (details) {
-            return details.data.supersetTag == widget.supersetTag;
+            switch (details.data) {
+              // Only a member of *this* group reorders in place here; a whole
+              // superset drag is rejected (it reorders via the between-group
+              // gaps), keeping the contiguous run intact.
+              case ExerciseDragPayload(:final supersetTag):
+                return supersetTag == widget.supersetTag;
+              case SupersetDragPayload():
+                return false;
+            }
           },
           onLeave: (_) => clearHoverRegistration(),
           onAcceptWithDetails: (details) {
+            final data = details.data;
+            if (data is! ExerciseDragPayload) return;
             clearHoverRegistration();
             Haptics.tap();
             context.read<WorkoutOverviewBloc>().add(
               WorkoutOverviewDropResolved(
-                draggedSessionExerciseId: details.data.sessionExerciseId,
+                draggedSessionExerciseId: data.sessionExerciseId,
                 target: DropTarget.beforeIndex(widget.unfinishedIndex),
               ),
             );

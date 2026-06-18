@@ -10,9 +10,11 @@ import 'package:zamaj/modules/workout_overview/models/superset_group_view_model.
 import 'package:zamaj/modules/workout_overview/services/drag_auto_scroller.dart';
 import 'package:zamaj/modules/workout_overview/services/drag_session.dart';
 import 'package:zamaj/modules/workout_overview/services/reorder_move_resolver.dart';
+import 'package:zamaj/modules/workout_overview/services/superset_reorder_resolver.dart';
 import 'package:zamaj/modules/workout_overview/widgets/drag_handle.dart';
 import 'package:zamaj/modules/workout_overview/widgets/draggable_exercise.dart';
 import 'package:zamaj/modules/workout_overview/widgets/exercise_card.dart';
+import 'package:zamaj/modules/workout_overview/widgets/overview_drag_payload.dart';
 import 'package:zamaj/modules/workout_overview/widgets/superset_card.dart';
 import 'package:zamaj/modules/workout_overview/widgets/superset_drop_target.dart';
 import 'package:zamaj/modules/workout_overview/widgets/superset_reorder_gap.dart';
@@ -180,8 +182,11 @@ class WorkoutGroupBuilder extends StatelessWidget {
         onMoveDown: _moveHandler(context, exerciseId, moveTargets.down),
         dragHandle: canDrag
             ? DragHandle(
-                exercise: exercise,
-                exerciseName: exercise.displayName,
+                payload: ExerciseDragPayload(
+                  sessionExerciseId: exerciseId,
+                  supersetTag: exercise.sessionExercise.supersetTag,
+                ),
+                feedbackLabel: exercise.displayName,
                 autoScroller: autoScroller,
                 dragSession: dragSession,
               )
@@ -215,8 +220,11 @@ class WorkoutGroupBuilder extends StatelessWidget {
       if (state.isEnded) return null;
       if (member.sessionExercise.state is! UnfinishedState) return null;
       return DragHandle(
-        exercise: member,
-        exerciseName: member.displayName,
+        payload: ExerciseDragPayload(
+          sessionExerciseId: member.sessionExercise.id,
+          supersetTag: member.sessionExercise.supersetTag,
+        ),
+        feedbackLabel: member.displayName,
         autoScroller: autoScroller,
         dragSession: dragSession,
       );
@@ -306,6 +314,53 @@ class WorkoutGroupBuilder extends StatelessWidget {
     final allUnfinished = exercises.every(
       (e) => e.sessionExercise.state is UnfinishedState,
     );
+
+    // The whole group can be dragged as one block only while the session is
+    // live and every member is unfinished. Gated on the unit-tested eligibility
+    // predicate (not canMutate) so the handle slot doesn't flicker during the
+    // LOG-SET in-flight window — same reasoning as the per-member handle above.
+    final canDragGroup = SupersetReorderResolver.isWholeDragEligible(
+      groups: state.groups,
+      supersetTag: tag,
+      isEnded: state.isEnded,
+    );
+    final groupDragHandle = canDragGroup
+        ? DragHandle(
+            payload: SupersetDragPayload(
+              tag: tag,
+              memberIds: exercises.map((e) => e.sessionExercise.id).toList(),
+            ),
+            feedbackLabel: 'Superset (${exercises.length})',
+            isGroup: true,
+            semanticLabel: 'Drag superset',
+            autoScroller: autoScroller,
+            dragSession: dragSession,
+          )
+        : null;
+
+    // Tap-only whole-group reorder for the header kebab. Resolves to the same
+    // unfinished target indices the group drag uses (shared resolver), then
+    // dispatches the whole-superset reorder event — disabled directions arrive
+    // as null and the kebab greys them out.
+    final groupMoveTargets = canMutate
+        ? ReorderMoveResolver.supersetTargetsFor(
+            groups: state.groups,
+            supersetTag: tag,
+          )
+        : (up: null, down: null);
+    VoidCallback? groupMoveHandler(int? targetIndex) {
+      if (targetIndex == null) return null;
+      return () {
+        Haptics.tap();
+        context.read<WorkoutOverviewBloc>().add(
+          WorkoutOverviewSupersetReordered(
+            supersetTag: tag,
+            targetUnfinishedIndex: targetIndex,
+          ),
+        );
+      };
+    }
+
     final card = SupersetCard(
       tag: tag,
       exercises: exercises,
@@ -313,7 +368,10 @@ class WorkoutGroupBuilder extends StatelessWidget {
       canMutate: canMutate,
       currentSessionExerciseIds: currentSessionExerciseIds,
       lastTouchedSessionExerciseId: state.lastTouchedSessionExerciseId,
+      groupDragHandle: groupDragHandle,
       onUngroupPressed: () => onUngroup(tag),
+      onMoveUp: groupMoveHandler(groupMoveTargets.up),
+      onMoveDown: groupMoveHandler(groupMoveTargets.down),
       onToggleExpansion: (id) => context.read<WorkoutOverviewBloc>().add(
         WorkoutOverviewExpansionToggled(id),
       ),

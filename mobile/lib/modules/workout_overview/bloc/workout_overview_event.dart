@@ -111,6 +111,25 @@ final class WorkoutOverviewSupersetUngrouped extends WorkoutOverviewEvent {
   List<Object?> get props => [supersetTag];
 }
 
+/// Reorders a whole superset as one contiguous block — dispatched by the
+/// header drag handle (dropped into a between-group gap) and the Move up/down
+/// header actions. [targetUnfinishedIndex] is the gap's position in the global
+/// unfinished id sequence (the same coordinate [DropTarget.beforeIndex] uses).
+/// The bloc routes it through [SupersetReorderResolver] then the existing
+/// `reorderUnfinished` path — no new engine mutation.
+final class WorkoutOverviewSupersetReordered extends WorkoutOverviewEvent {
+  const WorkoutOverviewSupersetReordered({
+    required this.supersetTag,
+    required this.targetUnfinishedIndex,
+  });
+
+  final String supersetTag;
+  final int targetUnfinishedIndex;
+
+  @override
+  List<Object?> get props => [supersetTag, targetUnfinishedIndex];
+}
+
 final class WorkoutOverviewSessionNoteAdded extends WorkoutOverviewEvent {
   const WorkoutOverviewSessionNoteAdded(this.body);
 

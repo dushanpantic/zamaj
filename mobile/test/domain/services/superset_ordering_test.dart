@@ -3,32 +3,67 @@ import 'package:zamaj/modules/domain/services/superset_ordering.dart';
 
 void main() {
   group('SupersetOrdering.blockedOrderForCreate', () {
-    test('pulls chosen members into a contiguous block at the earliest anchor, '
+    test('anchors the block at the drop-target slot, ordered as chosen', () {
+      // Drag "A" onto target "B" within "A, X, Y, B": the new [A, B] group
+      // lands at B's slot, below the existing [X, Y].
+      final order = SupersetOrdering.blockedOrderForCreate(
+        allIds: ['A', 'X', 'Y', 'B'],
+        chosenIds: ['A', 'B'],
+        anchorId: 'B',
+      );
+      expect(order, ['X', 'Y', 'A', 'B']);
+    });
+
+    test('anchors at the target even when the target is the earliest slot', () {
+      // Drag "B" onto target "A": the new [B, A] group lands at A's slot.
+      final order = SupersetOrdering.blockedOrderForCreate(
+        allIds: ['A', 'X', 'Y', 'B'],
+        chosenIds: ['B', 'A'],
+        anchorId: 'A',
+      );
+      expect(order, ['B', 'A', 'X', 'Y']);
+    });
+
+    test('pulls non-adjacent members into one block at the target, '
         'preserving non-member order', () {
+      // Drag "a" onto target "c": block lands at c's slot; b and d keep order.
       final order = SupersetOrdering.blockedOrderForCreate(
         allIds: ['a', 'b', 'c', 'd'],
         chosenIds: ['a', 'c'],
+        anchorId: 'c',
       );
-      // Anchor is a's slot (index 0); b and d keep their relative order after.
-      expect(order, ['a', 'c', 'b', 'd']);
+      expect(order, ['b', 'a', 'c', 'd']);
     });
 
-    test('anchors the block at the first chosen position when it is not the '
-        'first overall', () {
+    test('grouping two already-adjacent exercises keeps the global order', () {
+      // Drag "b" onto target "c": already adjacent, so nothing moves.
       final order = SupersetOrdering.blockedOrderForCreate(
         allIds: ['a', 'b', 'c', 'd'],
-        chosenIds: ['b', 'd'],
+        chosenIds: ['b', 'c'],
+        anchorId: 'c',
       );
-      expect(order, ['a', 'b', 'd', 'c']);
+      expect(order, ['a', 'b', 'c', 'd']);
     });
 
-    test('keeps the chosen block in the provided order', () {
+    test('a terminal exercise in range keeps its absolute slot', () {
+      // "F" is skipped (a non-member); "A","B" group below it at B's slot.
       final order = SupersetOrdering.blockedOrderForCreate(
-        allIds: ['a', 'b', 'c', 'd'],
-        chosenIds: ['c', 'a'],
+        allIds: ['F', 'A', 'B'],
+        chosenIds: ['A', 'B'],
+        anchorId: 'B',
       );
-      // First chosen present in allIds is 'a' (index 0) → anchor 0.
-      expect(order, ['c', 'a', 'b', 'd']);
+      expect(order, ['F', 'A', 'B']);
+    });
+
+    test('throws when the anchor is not one of the chosen members', () {
+      expect(
+        () => SupersetOrdering.blockedOrderForCreate(
+          allIds: ['a', 'b', 'c'],
+          chosenIds: ['a', 'b'],
+          anchorId: 'c',
+        ),
+        throwsArgumentError,
+      );
     });
   });
 

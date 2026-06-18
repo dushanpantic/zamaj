@@ -20,25 +20,6 @@ import 'package:zamaj/modules/workout_overview/widgets/set_row.dart';
 /// the sweaty-hands [AppInSessionSize.stepButton] (64 dp) grab target.
 const double kExerciseLeadingSlotWidth = AppInSessionSize.stepButton;
 
-/// Drag payload that travels with a LongPressDraggable started on this
-/// card's handle. Lives at the screen level too: the screen's DragTarget
-/// regions resolve drops via [DropResolver].
-///
-/// [supersetTag] is the dragged exercise's current `supersetTag`. Drop
-/// targets gate on it: main-list reorder gaps and onto-card targets accept
-/// only payloads with `supersetTag == null`, while reorder gaps inside a
-/// superset accept only payloads whose `supersetTag` matches the group.
-/// This keeps within-superset reordering contiguous and prevents accidental
-/// breakage of an existing group.
-class ExerciseDragPayload {
-  const ExerciseDragPayload({
-    required this.sessionExerciseId,
-    required this.supersetTag,
-  });
-  final String sessionExerciseId;
-  final String? supersetTag;
-}
-
 /// Vertical card showing a single session exercise with its set rows, notes,
 /// and contextual actions. The card itself never mutates state — it emits
 /// intent through the callback fields, all of which the screen plumbs back

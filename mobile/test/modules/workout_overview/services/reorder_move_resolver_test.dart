@@ -12,6 +12,9 @@ import 'package:zamaj/modules/workout_overview/models/set_row_view_model.dart';
 import 'package:zamaj/modules/workout_overview/models/superset_group_view_model.dart';
 import 'package:zamaj/modules/workout_overview/services/drop_resolver.dart';
 import 'package:zamaj/modules/workout_overview/services/reorder_move_resolver.dart';
+import 'package:zamaj/modules/workout_overview/services/superset_reorder_resolver.dart';
+
+import 'whole_superset_reorder_fixture.dart';
 
 const _sessionId = 'session-1';
 
@@ -113,6 +116,107 @@ void main() {
       // The first member can still move down within the group.
       expect(_movedOrder(specs, 'b', up: false), ['c', 'b', 'e']);
     });
+  });
+
+  group('ReorderMoveResolver.supersetTargetsFor', () {
+    test('up jumps above the group above; down jumps below the one below', () {
+      // p · [x,y] · q
+      final t = ReorderMoveResolver.supersetTargetsFor(
+        groups: backgroundPxyQ(),
+        supersetTag: supersetXyTag,
+      );
+      expect(t.up, 0); // above p
+      // Below q — the SAME index the equivalent drag uses (shared constant).
+      expect(t.down, gapBelowQ);
+    });
+
+    test('directions are disabled at the ends', () {
+      final top = ReorderMoveResolver.supersetTargetsFor(
+        groups: buildGroups([
+          unfinished('x', tag: supersetXyTag),
+          unfinished('y', tag: supersetXyTag),
+          unfinished('q'),
+        ]),
+        supersetTag: supersetXyTag,
+      );
+      expect(top.up, isNull);
+      expect(top.down, isNotNull);
+
+      final bottom = ReorderMoveResolver.supersetTargetsFor(
+        groups: buildGroups([
+          unfinished('p'),
+          unfinished('x', tag: supersetXyTag),
+          unfinished('y', tag: supersetXyTag),
+        ]),
+        supersetTag: supersetXyTag,
+      );
+      expect(bottom.down, isNull);
+      expect(bottom.up, isNotNull);
+    });
+
+    test('all-finished groups are skipped as fixed anchors', () {
+      // p · F(finished) · [x,y] → Move up lands above p (index 0), past F.
+      final t = ReorderMoveResolver.supersetTargetsFor(
+        groups: buildGroups([
+          unfinished('p'),
+          finished('F'),
+          unfinished('x', tag: supersetXyTag),
+          unfinished('y', tag: supersetXyTag),
+        ]),
+        supersetTag: supersetXyTag,
+      );
+      expect(t.up, 0);
+    });
+
+    test('a group that is not fully unfinished has no move targets', () {
+      final t = ReorderMoveResolver.supersetTargetsFor(
+        groups: buildGroups([
+          unfinished('p'),
+          unfinished('x', tag: supersetXyTag),
+          finished('y', tag: supersetXyTag),
+          unfinished('q'),
+        ]),
+        supersetTag: supersetXyTag,
+      );
+      expect(t.up, isNull);
+      expect(t.down, isNull);
+    });
+
+    test('an unknown tag has no move targets', () {
+      final t = ReorderMoveResolver.supersetTargetsFor(
+        groups: backgroundPxyQ(),
+        supersetTag: 'gone',
+      );
+      expect(t.up, isNull);
+      expect(t.down, isNull);
+    });
+
+    test(
+      'Move down lands at the same concrete order as the equivalent drag',
+      () {
+        final groups = backgroundPxyQ();
+        final down = ReorderMoveResolver.supersetTargetsFor(
+          groups: groups,
+          supersetTag: supersetXyTag,
+        ).down;
+        expect(down, gapBelowQ);
+        // Dispatching the same whole-superset reorder the drag does resolves to
+        // the identical unfinished order — the two resolvers cannot diverge.
+        final intent = SupersetReorderResolver.resolve(
+          sessionId: supersetSessionId,
+          groups: groups,
+          supersetTag: supersetXyTag,
+          targetUnfinishedIndex: down!,
+        );
+        expect(
+          intent,
+          const DropIntent.reorder(
+            sessionId: supersetSessionId,
+            orderedUnfinishedIds: ['p', 'q', 'x', 'y'],
+          ),
+        );
+      },
+    );
   });
 }
 

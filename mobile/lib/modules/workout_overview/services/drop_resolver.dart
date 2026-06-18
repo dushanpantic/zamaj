@@ -1,8 +1,8 @@
-import 'package:flutter/foundation.dart';
 import 'package:zamaj/modules/domain/domain.dart';
 import 'package:zamaj/modules/workout_overview/models/drop_intent.dart';
 import 'package:zamaj/modules/workout_overview/models/exercise_view_model.dart';
 import 'package:zamaj/modules/workout_overview/models/superset_group_view_model.dart';
+import 'package:zamaj/modules/workout_overview/services/reorder_arithmetic.dart';
 
 /// Pure resolver that turns a (drag origin, drop target) pair into a typed
 /// [DropIntent].
@@ -50,21 +50,21 @@ abstract final class DropResolver {
 
   /// Reorder algorithm: remove dragged from the unfinished sequence, then
   /// insert at the requested gap, adjusting for the self-removal shift so
-  /// drag-to-end / drag-to-self produce stable orderings.
+  /// drag-to-end / drag-to-self produce stable orderings. The block here is a
+  /// single id; the whole-superset drag reuses the same arithmetic for an
+  /// N-member block via [ReorderArithmetic.reorderBlock].
   static DropIntent _resolveGap({
     required String sessionId,
     required List<String> unfinishedIds,
     required String draggedId,
     required int index,
   }) {
-    final draggedIndex = unfinishedIds.indexOf(draggedId);
-    final without = List<String>.of(unfinishedIds)..removeAt(draggedIndex);
-    final clampedTarget = index.clamp(0, unfinishedIds.length);
-    final insertion = clampedTarget > draggedIndex
-        ? clampedTarget - 1
-        : clampedTarget;
-    final reordered = List<String>.of(without)..insert(insertion, draggedId);
-    if (listEquals(reordered, unfinishedIds)) return const DropIntent.noop();
+    final reordered = ReorderArithmetic.reorderBlock(
+      unfinishedIds: unfinishedIds,
+      block: [draggedId],
+      targetIndex: index,
+    );
+    if (reordered == null) return const DropIntent.noop();
     return DropIntent.reorder(
       sessionId: sessionId,
       orderedUnfinishedIds: reordered,

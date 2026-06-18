@@ -13,7 +13,7 @@ import 'package:zamaj/modules/workout_overview/models/drop_intent.dart';
 import 'package:zamaj/modules/workout_overview/models/exercise_view_model.dart';
 import 'package:zamaj/modules/workout_overview/services/drag_session.dart';
 import 'package:zamaj/modules/workout_overview/widgets/drag_hover_registration.dart';
-import 'package:zamaj/modules/workout_overview/widgets/exercise_card.dart';
+import 'package:zamaj/modules/workout_overview/widgets/overview_drag_payload.dart';
 
 /// Wraps an exercise card with a DragTarget so the whole card body accepts
 /// drops to start a superset. The drag *source* (the LongPressDraggable) is
@@ -48,30 +48,42 @@ class _DraggableExerciseState extends State<DraggableExercise>
     final isUnfinished =
         widget.exercise.sessionExercise.state is UnfinishedState;
 
-    return DragTarget<ExerciseDragPayload>(
+    return DragTarget<OverviewDragPayload>(
       onWillAcceptWithDetails: (details) {
         if (!widget.canMutate) return false;
-        if (details.data.sessionExerciseId ==
-            widget.exercise.sessionExercise.id) {
-          return false;
+        switch (details.data) {
+          case ExerciseDragPayload(
+            :final sessionExerciseId,
+            :final supersetTag,
+          ):
+            if (sessionExerciseId == widget.exercise.sessionExercise.id) {
+              return false;
+            }
+            if (!isUnfinished) return false;
+            if (widget.exercise.sessionExercise.supersetTag != null) {
+              return false;
+            }
+            // A dragged exercise that is itself part of a superset cannot
+            // create or append to a new superset by being dropped onto a
+            // standalone card, so such a drop is rejected here. Leaving a
+            // superset is done via the header ungroup button, and the
+            // within-superset reorder gaps handle in-place moves.
+            return supersetTag == null;
+          // A whole superset can't be grouped onto a card — it only reorders
+          // into a between-group gap.
+          case SupersetDragPayload():
+            return false;
         }
-        if (!isUnfinished) return false;
-        if (widget.exercise.sessionExercise.supersetTag != null) return false;
-        // A dragged exercise that is itself part of a superset cannot create
-        // or append to a new superset by being dropped onto a standalone card,
-        // so such a drop is rejected here. Leaving a superset is done via the
-        // header ungroup button, and the within-superset reorder gaps handle
-        // in-place moves.
-        if (details.data.supersetTag != null) return false;
-        return true;
       },
       onLeave: (_) => clearHoverRegistration(),
       onAcceptWithDetails: (details) {
+        final data = details.data;
+        if (data is! ExerciseDragPayload) return;
         clearHoverRegistration();
         Haptics.tap();
         context.read<WorkoutOverviewBloc>().add(
           WorkoutOverviewDropResolved(
-            draggedSessionExerciseId: details.data.sessionExerciseId,
+            draggedSessionExerciseId: data.sessionExerciseId,
             target: DropTarget.ontoExercise(widget.exercise.sessionExercise.id),
           ),
         );

@@ -7,6 +7,7 @@ import 'package:zamaj/modules/workout_overview/bloc/workout_overview_state.dart'
 import 'package:zamaj/modules/workout_overview/models/drop_intent.dart';
 import 'package:zamaj/modules/workout_overview/services/drop_resolver.dart';
 import 'package:zamaj/modules/workout_overview/services/exercise_view_model_assembler.dart';
+import 'package:zamaj/modules/workout_overview/services/superset_reorder_resolver.dart';
 
 class WorkoutOverviewBloc
     extends Bloc<WorkoutOverviewEvent, WorkoutOverviewState> {
@@ -21,6 +22,7 @@ class WorkoutOverviewBloc
     on<WorkoutOverviewSetEdited>(_onSetEdited);
     on<WorkoutOverviewExerciseSkipped>(_onExerciseSkipped);
     on<WorkoutOverviewDropResolved>(_onDropResolved);
+    on<WorkoutOverviewSupersetReordered>(_onSupersetReordered);
     on<WorkoutOverviewSupersetUngrouped>(_onSupersetUngrouped);
     on<WorkoutOverviewSessionNoteAdded>(_onSessionNoteAdded);
     on<WorkoutOverviewExtraWorkAdded>(_onExtraWorkAdded);
@@ -237,6 +239,37 @@ class WorkoutOverviewBloc
             sessionExerciseId: sessionExerciseId,
           ),
         );
+    }
+  }
+
+  Future<void> _onSupersetReordered(
+    WorkoutOverviewSupersetReordered event,
+    Emitter<WorkoutOverviewState> emit,
+  ) async {
+    final current = state;
+    if (current is! WorkoutOverviewLoaded) return;
+    final intent = SupersetReorderResolver.resolve(
+      sessionId: current.sessionState.session.id,
+      groups: current.groups,
+      supersetTag: event.supersetTag,
+      targetUnfinishedIndex: event.targetUnfinishedIndex,
+    );
+    switch (intent) {
+      case NoopIntent():
+        return;
+      case ReorderIntent(:final sessionId, :final orderedUnfinishedIds):
+        await _runMutation(
+          emit,
+          () => _engine.reorderUnfinished(
+            sessionId: sessionId,
+            orderedUnfinishedIds: orderedUnfinishedIds,
+          ),
+        );
+      // The resolver only ever yields a reorder or a no-op; the other DropIntent
+      // variants (create/append) are unreachable for a whole-superset move.
+      case CreateSupersetIntent():
+      case AppendToSupersetIntent():
+        return;
     }
   }
 

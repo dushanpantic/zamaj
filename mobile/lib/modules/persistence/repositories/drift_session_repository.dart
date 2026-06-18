@@ -850,18 +850,20 @@ class DriftSessionRepository implements SessionRepository {
       }
 
       // Pull the chosen members into one contiguous block, anchored at the
-      // earliest chosen member's slot and ordered as provided; every other
-      // exercise keeps its relative order. The assembler renders a superset
-      // only from a contiguous run of same-tag rows, so without this a group
-      // whose members weren't already adjacent (e.g. dropped onto a
-      // non-neighbouring card, or split by an intervening locked exercise)
-      // would render as orphaned singles — undraggable, with no ungroup
-      // affordance. Positions are permuted across the full ordering via the
-      // same two-phase write reorderUnfinished uses, since SQLite has no
-      // deferred UNIQUE constraints.
+      // drop target's slot and ordered as provided; every other exercise keeps
+      // its relative order. The resolver and picker place the drop target last
+      // in [sessionExerciseIds], so the block lands where the lifter dropped it.
+      // The assembler renders a superset only from a contiguous run of same-tag
+      // rows, so without this a group whose members weren't already adjacent
+      // (e.g. dropped onto a non-neighbouring card, or split by an intervening
+      // locked exercise) would render as orphaned singles — undraggable, with
+      // no ungroup affordance. Positions are permuted across the full ordering
+      // via the same two-phase write reorderUnfinished uses, since SQLite has
+      // no deferred UNIQUE constraints.
       final newOrder = domain.SupersetOrdering.blockedOrderForCreate(
         allIds: allExercises.map((e) => e.id).toList(),
         chosenIds: sessionExerciseIds,
+        anchorId: sessionExerciseIds.last,
       );
 
       final slots = allExercises.map((e) => e.position).toList()..sort();

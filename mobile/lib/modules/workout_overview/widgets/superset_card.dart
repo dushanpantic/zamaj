@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:zamaj/building_blocks/building_blocks.dart';
 import 'package:zamaj/core/app_icon.dart';
 import 'package:zamaj/core/app_spacing.dart';
 import 'package:zamaj/core/app_theme.dart';
@@ -7,10 +8,11 @@ import 'package:zamaj/modules/domain/domain.dart';
 import 'package:zamaj/modules/workout_overview/models/exercise_view_model.dart';
 import 'package:zamaj/modules/workout_overview/widgets/exercise_card.dart';
 
-/// Wraps a contiguous run of exercises that share a `supersetTag` in a
-/// labeled container with an "ungroup" action. The header is the only
-/// part that's superset-specific; the individual exercise cards inside
-/// are unchanged from the standalone single-exercise display.
+/// Wraps a contiguous run of exercises that share a `supersetTag` in a labeled
+/// container. The header is the only superset-specific part: a leading
+/// whole-group drag handle (when eligible), the "Superset" label, and a single
+/// trailing overflow kebab holding Move up / Move down / Ungroup. The exercise
+/// cards inside are unchanged from the standalone single-exercise display.
 class SupersetCard extends StatelessWidget {
   const SupersetCard({
     super.key,
@@ -19,6 +21,8 @@ class SupersetCard extends StatelessWidget {
     required this.expandedExerciseIds,
     required this.canMutate,
     required this.onUngroupPressed,
+    this.onMoveUp,
+    this.onMoveDown,
     required this.onToggleExpansion,
     required this.onLogSet,
     required this.onEditSet,
@@ -26,6 +30,7 @@ class SupersetCard extends StatelessWidget {
     required this.onOpenVideo,
     this.currentSessionExerciseIds = const <String>{},
     this.lastTouchedSessionExerciseId,
+    this.groupDragHandle,
     this.memberDragHandleBuilder,
     this.memberMoveBuilder,
     this.gapBuilder,
@@ -36,6 +41,13 @@ class SupersetCard extends StatelessWidget {
   final Set<String> expandedExerciseIds;
   final bool canMutate;
   final VoidCallback onUngroupPressed;
+
+  /// Tap-only whole-superset reorder, surfaced as the header kebab's Move up /
+  /// Move down entries. A null direction is a disabled end; both null when the
+  /// group isn't whole-move eligible (a finished member, or the session ended),
+  /// in which case the Move entries are omitted and only Ungroup remains.
+  final VoidCallback? onMoveUp;
+  final VoidCallback? onMoveDown;
   final void Function(String sessionExerciseId) onToggleExpansion;
   final void Function(
     String sessionExerciseId,
@@ -55,6 +67,12 @@ class SupersetCard extends StatelessWidget {
   /// the set from `openTargets.first` and the assembled groups.
   final Set<String> currentSessionExerciseIds;
   final String? lastTouchedSessionExerciseId;
+
+  /// Optional drag handle for moving the whole superset as one block, rendered
+  /// in the header's leading slot. Non-null only when the group is whole-drag
+  /// eligible (session live and every member unfinished); the screen passes a
+  /// [LongPressDraggable]-wrapped handle carrying a `SupersetDragPayload`.
+  final Widget? groupDragHandle;
 
   /// Optional per-member drag-handle builder. When non-null and the returned
   /// widget is non-null, the handle is rendered in the member card's leading
@@ -111,6 +129,10 @@ class SupersetCard extends StatelessWidget {
             ),
             child: Row(
               children: [
+                if (groupDragHandle != null) ...[
+                  groupDragHandle!,
+                  const SizedBox(width: AppSpacing.xs),
+                ],
                 AppIcon(
                   Icons.link,
                   color: colors.primary,
@@ -123,16 +145,10 @@ class SupersetCard extends StatelessWidget {
                 ),
                 const Spacer(),
                 if (canMutate && anyUnfinished)
-                  TextButton.icon(
-                    onPressed: onUngroupPressed,
-                    icon: const AppIcon(Icons.call_split, size: AppIconSize.sm),
-                    label: const Text('Ungroup'),
-                    style: TextButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: AppSpacing.sm,
-                      ),
-                      minimumSize: const Size(0, AppSpacing.compactAction),
-                    ),
+                  _SupersetHeaderMenu(
+                    onMoveUp: onMoveUp,
+                    onMoveDown: onMoveDown,
+                    onUngroup: onUngroupPressed,
                   ),
               ],
             ),
@@ -171,3 +187,74 @@ class SupersetCard extends StatelessWidget {
     );
   }
 }
+
+/// The superset header's single trailing overflow kebab. Holds Move up / Move
+/// down (the whole-group reorder fallback) and Ungroup, so the header never
+/// carries two competing trailing affordances. Move entries appear only when
+/// the group is whole-move eligible (at least one direction available); a no-op
+/// end is rendered disabled so the menu layout stays stable, mirroring the
+/// per-exercise card kebab.
+class _SupersetHeaderMenu extends StatelessWidget {
+  const _SupersetHeaderMenu({
+    required this.onMoveUp,
+    required this.onMoveDown,
+    required this.onUngroup,
+  });
+
+  final VoidCallback? onMoveUp;
+  final VoidCallback? onMoveDown;
+  final VoidCallback onUngroup;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = Theme.of(context).appColors;
+    final canReorder = onMoveUp != null || onMoveDown != null;
+    return PopupMenuButton<_SupersetMenuAction>(
+      tooltip: 'Superset actions',
+      icon: AppIcon(
+        Icons.more_vert,
+        color: colors.onSurfaceMuted,
+        size: AppIconSize.lg,
+      ),
+      padding: EdgeInsets.zero,
+      onSelected: (action) {
+        switch (action) {
+          case _SupersetMenuAction.moveUp:
+            onMoveUp?.call();
+          case _SupersetMenuAction.moveDown:
+            onMoveDown?.call();
+          case _SupersetMenuAction.ungroup:
+            onUngroup();
+        }
+      },
+      itemBuilder: (context) => [
+        if (canReorder) ...[
+          PopupMenuItem(
+            value: _SupersetMenuAction.moveUp,
+            enabled: onMoveUp != null,
+            child: AppMenuRow(
+              icon: Icons.arrow_upward,
+              label: 'Move superset up',
+              enabled: onMoveUp != null,
+            ),
+          ),
+          PopupMenuItem(
+            value: _SupersetMenuAction.moveDown,
+            enabled: onMoveDown != null,
+            child: AppMenuRow(
+              icon: Icons.arrow_downward,
+              label: 'Move superset down',
+              enabled: onMoveDown != null,
+            ),
+          ),
+        ],
+        const PopupMenuItem(
+          value: _SupersetMenuAction.ungroup,
+          child: AppMenuRow(icon: Icons.call_split, label: 'Ungroup'),
+        ),
+      ],
+    );
+  }
+}
+
+enum _SupersetMenuAction { moveUp, moveDown, ungroup }

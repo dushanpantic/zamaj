@@ -11,7 +11,7 @@ import 'package:zamaj/modules/workout_overview/bloc/bloc.dart';
 import 'package:zamaj/modules/workout_overview/models/drop_intent.dart';
 import 'package:zamaj/modules/workout_overview/services/drag_session.dart';
 import 'package:zamaj/modules/workout_overview/widgets/drag_hover_registration.dart';
-import 'package:zamaj/modules/workout_overview/widgets/exercise_card.dart';
+import 'package:zamaj/modules/workout_overview/widgets/overview_drag_payload.dart';
 
 /// Wraps a whole [SupersetCard] in a DragTarget so an *outside* exercise
 /// dropped anywhere on the group is appended to it (a 3rd+ member). The
@@ -62,25 +62,33 @@ class _SupersetDropTargetState extends State<SupersetDropTarget>
 
   @override
   Widget build(BuildContext context) {
-    return DragTarget<ExerciseDragPayload>(
+    return DragTarget<OverviewDragPayload>(
       // Translucent so the whole group — header and padding included — is a
       // valid append zone; deeper reorder gaps are still resolved first.
       hitTestBehavior: HitTestBehavior.translucent,
       onWillAcceptWithDetails: (details) {
         if (!widget.canAccept) return false;
-        // Members reorder in place via the intra-superset gaps. Only outside
-        // (ungrouped) exercises append here; this guard is what keeps member
-        // reorders flowing to the deeper gap targets.
-        if (details.data.supersetTag != null) return false;
-        return true;
+        switch (details.data) {
+          // Members reorder in place via the intra-superset gaps. Only outside
+          // (ungrouped) exercises append here; this guard keeps member
+          // reorders flowing to the deeper gap targets.
+          case ExerciseDragPayload(:final supersetTag):
+            return supersetTag == null;
+          // Dropping a whole superset onto another group does nothing — it
+          // only reorders into a between-group gap.
+          case SupersetDragPayload():
+            return false;
+        }
       },
       onLeave: (_) => clearHoverRegistration(),
       onAcceptWithDetails: (details) {
+        final data = details.data;
+        if (data is! ExerciseDragPayload) return;
         clearHoverRegistration();
         Haptics.tap();
         context.read<WorkoutOverviewBloc>().add(
           WorkoutOverviewDropResolved(
-            draggedSessionExerciseId: details.data.sessionExerciseId,
+            draggedSessionExerciseId: data.sessionExerciseId,
             target: DropTarget.ontoExercise(widget.anchorSessionExerciseId),
           ),
         );
