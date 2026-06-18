@@ -364,9 +364,9 @@ graph TD
   - [x] Step 5.3: Badges on review, recent list, and overview
 
 #### Wave 3
-- [ ] Slice 3: Engine pass-through & picker "Deload week" toggle
-  - [ ] Step 3.1: Engine startSession deload pass-through
-  - [ ] Step 3.2: Picker toggle + event wiring (plain, default off)
+- [x] Slice 3: Engine pass-through & picker "Deload week" toggle
+  - [x] Step 3.1: Engine startSession deload pass-through
+  - [x] Step 3.2: Picker toggle + event wiring (plain, default off)
 
 ### Acceptance Criteria
 

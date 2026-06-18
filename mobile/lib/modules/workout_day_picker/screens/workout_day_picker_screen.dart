@@ -5,6 +5,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:zamaj/building_blocks/building_blocks.dart';
 import 'package:zamaj/core/app_spacing.dart';
 import 'package:zamaj/core/app_theme.dart';
+import 'package:zamaj/core/app_typography.dart';
 import 'package:zamaj/modules/export/models/recent_sessions_args.dart';
 import 'package:zamaj/modules/export/navigation/export_routes.dart';
 import 'package:zamaj/modules/program_management/navigation/program_management_routes.dart';
@@ -82,6 +83,12 @@ class _WorkoutDayPickerScreenState extends State<WorkoutDayPickerScreen> {
         workoutDayId: workoutDayId,
         activeSessionId: activeSessionId,
       ),
+    );
+  }
+
+  void _onDeloadToggled(bool selected) {
+    context.read<WorkoutDayPickerBloc>().add(
+      WorkoutDayPickerDeloadToggled(selected),
     );
   }
 
@@ -169,6 +176,7 @@ class _WorkoutDayPickerScreenState extends State<WorkoutDayPickerScreen> {
         onTileRetry: _onTileRetry,
         onStart: _onStart,
         onResume: _onResume,
+        onDeloadToggled: _onDeloadToggled,
         onDismissError: _onDismissError,
       ),
     };
@@ -182,6 +190,7 @@ class _LoadedBody extends StatelessWidget {
     required this.onTileRetry,
     required this.onStart,
     required this.onResume,
+    required this.onDeloadToggled,
     required this.onDismissError,
   });
 
@@ -190,6 +199,7 @@ class _LoadedBody extends StatelessWidget {
   final void Function(String workoutDayId) onTileRetry;
   final void Function(String workoutDayId) onStart;
   final void Function(String workoutDayId, String activeSessionId) onResume;
+  final void Function(bool selected) onDeloadToggled;
   final VoidCallback onDismissError;
 
   @override
@@ -225,6 +235,13 @@ class _LoadedBody extends StatelessWidget {
             session: activeSession,
             onTap: () => onResume(activeSession.workoutDayId, activeSession.id),
           ),
+        // No point offering the toggle while starting is blocked by an
+        // in-flight session. Resets to off on each load (carried by state).
+        if (activeSession == null)
+          _DeloadToggleTile(
+            selected: state.deloadSelected,
+            onChanged: onDeloadToggled,
+          ),
         Expanded(
           child: RefreshIndicator(
             onRefresh: () async {
@@ -259,6 +276,38 @@ class _LoadedBody extends StatelessWidget {
           ),
         ),
       ],
+    );
+  }
+}
+
+/// "Deload week" toggle on the day picker. A plain per-load switch (default
+/// off): turning it on halves each working exercise's planned sets in the next
+/// session started from this screen. Standard 48 dp control — the picker is not
+/// a live, sweaty-hands surface.
+class _DeloadToggleTile extends StatelessWidget {
+  const _DeloadToggleTile({required this.selected, required this.onChanged});
+
+  final bool selected;
+  final void Function(bool selected) onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = Theme.of(context).appColors;
+    return SwitchListTile.adaptive(
+      value: selected,
+      onChanged: onChanged,
+      activeThumbColor: colors.deload,
+      contentPadding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
+      title: Text(
+        'Deload week',
+        style: AppTypography.standard.title.copyWith(color: colors.onSurface),
+      ),
+      subtitle: Text(
+        'Halves planned sets for the session you start',
+        style: AppTypography.standard.caption.copyWith(
+          color: colors.onSurfaceMuted,
+        ),
+      ),
     );
   }
 }

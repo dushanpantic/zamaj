@@ -100,6 +100,33 @@ void main() {
       expect(completed.isComplete, isTrue);
       expect(s.engine.isSessionComplete(completed.session), isTrue);
     });
+
+    test(
+      'forwards isDeload to the repository; defaults to a normal start',
+      () async {
+        final s = setup();
+        final workoutDay = _buildWorkoutDay(
+          id: 'wd-deload',
+          exerciseSpecs: [
+            _ExerciseSpec(
+              name: 'Squat',
+              measurementType: const MeasurementType.repBased(),
+              setCount: 4,
+            ),
+          ],
+        );
+        s.repo.seedWorkoutDay(workoutDay);
+
+        final deload = await s.engine.startSession(
+          workoutDayId: workoutDay.id,
+          isDeload: true,
+        );
+        expect(deload.session.isDeload, isTrue);
+
+        final normal = await s.engine.startSession(workoutDayId: workoutDay.id);
+        expect(normal.session.isDeload, isFalse);
+      },
+    );
   });
 
   group('NotFoundError for missing entities', () {

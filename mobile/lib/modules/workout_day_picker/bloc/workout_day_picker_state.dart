@@ -64,12 +64,18 @@ final class WorkoutDayPickerLoaded extends WorkoutDayPickerState {
     this.activeSession,
     this.launchInFlightWorkoutDayId,
     this.lastTransientError,
+    this.deloadSelected = false,
   });
 
   final Program program;
   final List<DayViewModel> dayViewModels;
   final DateTime referenceNow;
   final TrainingWeek window;
+
+  /// Whether the "Deload week" toggle is on. A plain per-load selection that
+  /// defaults to off on every full load — no week-derived inference — and is
+  /// forwarded to the engine when a day is started.
+  final bool deloadSelected;
 
   /// The single in-flight session anywhere in the app (its `endedAt` is null),
   /// or null when nothing is in progress. While this is non-null, starting a
@@ -88,6 +94,7 @@ final class WorkoutDayPickerLoaded extends WorkoutDayPickerState {
     Session? Function()? activeSession,
     String? Function()? launchInFlightWorkoutDayId,
     DomainError? Function()? lastTransientError,
+    bool? deloadSelected,
   }) {
     return WorkoutDayPickerLoaded(
       program: program ?? this.program,
@@ -103,6 +110,7 @@ final class WorkoutDayPickerLoaded extends WorkoutDayPickerState {
       lastTransientError: lastTransientError != null
           ? lastTransientError()
           : this.lastTransientError,
+      deloadSelected: deloadSelected ?? this.deloadSelected,
     );
   }
 
@@ -115,5 +123,6 @@ final class WorkoutDayPickerLoaded extends WorkoutDayPickerState {
     activeSession,
     launchInFlightWorkoutDayId,
     lastTransientError,
+    deloadSelected,
   ];
 }

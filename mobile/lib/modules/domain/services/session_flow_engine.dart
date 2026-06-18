@@ -23,9 +23,17 @@ class SessionFlowEngine {
 
   final SessionRepository _repository;
 
-  /// Starts a new session from a workout day.
-  Future<SessionState> startSession({required String workoutDayId}) async {
-    final session = await _repository.startSession(workoutDayId: workoutDayId);
+  /// Starts a new session from a workout day. When [isDeload] is true the
+  /// captured snapshot is halved and the session is flagged as a deload (the
+  /// repository owns the transform); the program template is untouched.
+  Future<SessionState> startSession({
+    required String workoutDayId,
+    bool isDeload = false,
+  }) async {
+    final session = await _repository.startSession(
+      workoutDayId: workoutDayId,
+      isDeload: isDeload,
+    );
     return _buildState(session);
   }
 

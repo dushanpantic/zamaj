@@ -28,6 +28,7 @@ class WorkoutDayPickerBloc
     on<WorkoutDayPickerRefreshRequested>(_onRefreshRequested);
     on<WorkoutDayPickerReturnedFromSession>(_onReturnedFromSession);
     on<WorkoutDayPickerStartPressed>(_onStartPressed);
+    on<WorkoutDayPickerDeloadToggled>(_onDeloadToggled);
     on<WorkoutDayPickerResumePressed>(_onResumePressed);
     on<WorkoutDayPickerErrorDismissed>(_onErrorDismissed);
   }
@@ -165,6 +166,7 @@ class WorkoutDayPickerBloc
     try {
       final sessionState = await _sessionFlowEngine.startSession(
         workoutDayId: event.workoutDayId,
+        isDeload: current.deloadSelected,
       );
       _navigationIntents.add(sessionState.session.id);
       final latest = state;
@@ -182,6 +184,16 @@ class WorkoutDayPickerBloc
         );
       }
     }
+  }
+
+  Future<void> _onDeloadToggled(
+    WorkoutDayPickerDeloadToggled event,
+    Emitter<WorkoutDayPickerState> emit,
+  ) async {
+    final current = state;
+    if (current is! WorkoutDayPickerLoaded) return;
+    if (current.deloadSelected == event.selected) return;
+    emit(current.copyWith(deloadSelected: event.selected));
   }
 
   Future<void> _onResumePressed(

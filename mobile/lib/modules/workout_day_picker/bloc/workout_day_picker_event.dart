@@ -50,6 +50,15 @@ final class WorkoutDayPickerStartPressed extends WorkoutDayPickerEvent {
   List<Object?> get props => [workoutDayId];
 }
 
+final class WorkoutDayPickerDeloadToggled extends WorkoutDayPickerEvent {
+  const WorkoutDayPickerDeloadToggled(this.selected);
+
+  final bool selected;
+
+  @override
+  List<Object?> get props => [selected];
+}
+
 final class WorkoutDayPickerResumePressed extends WorkoutDayPickerEvent {
   const WorkoutDayPickerResumePressed({
     required this.workoutDayId,
