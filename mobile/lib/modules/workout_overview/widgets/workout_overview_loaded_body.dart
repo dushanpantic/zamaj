@@ -9,6 +9,7 @@ import 'package:zamaj/modules/workout_overview/models/exercise_view_model.dart';
 import 'package:zamaj/modules/workout_overview/models/superset_group_view_model.dart';
 import 'package:zamaj/modules/workout_overview/services/drag_auto_scroller.dart';
 import 'package:zamaj/modules/workout_overview/services/drag_session.dart';
+import 'package:zamaj/modules/workout_overview/widgets/add_exercise_sheet.dart';
 import 'package:zamaj/modules/workout_overview/widgets/delayed_mutation_indicator.dart';
 import 'package:zamaj/modules/workout_overview/widgets/notes_section.dart';
 import 'package:zamaj/modules/workout_overview/widgets/reorder_gap.dart';
@@ -231,6 +232,12 @@ class _WorkoutOverviewLoadedBodyState extends State<WorkoutOverviewLoadedBody>
               ),
               sliver: SliverList.list(
                 children: [
+                  if (canLog) ...[
+                    _AddExerciseButton(
+                      onPressed: () => _onAddExercisePressed(context, state),
+                    ),
+                    const SizedBox(height: AppSpacing.lg),
+                  ],
                   SessionNotesSection(
                     notes: state.sessionState.session.notes,
                     canAdd: canLog,
@@ -258,6 +265,21 @@ class _WorkoutOverviewLoadedBodyState extends State<WorkoutOverviewLoadedBody>
     );
   }
 
+  /// Opens the two-step add-exercise flow and, on confirm, dispatches the add
+  /// to the bloc. No-op when the user backs out (the sheet returns null).
+  Future<void> _onAddExercisePressed(
+    BuildContext context,
+    WorkoutOverviewLoaded state,
+  ) async {
+    final bloc = context.read<WorkoutOverviewBloc>();
+    final plan = await AddExerciseSheet.show(
+      context,
+      session: state.sessionState.session,
+    );
+    if (plan == null) return;
+    bloc.add(WorkoutOverviewAddExerciseRequested(plan));
+  }
+
   /// Translates a gap-between-groups index into the "unfinished count at or
   /// before this gap" the reorder semantics want — i.e. the number of
   /// unfinished exercises that appear strictly before the gap.
@@ -269,5 +291,34 @@ class _WorkoutOverviewLoadedBodyState extends State<WorkoutOverviewLoadedBody>
       }
     }
     return count;
+  }
+}
+
+/// Foot-of-list entry point for adding an unplanned exercise. A labelled,
+/// ≥56 dp-tall outlined button — discoverable without crowding the cards.
+class _AddExerciseButton extends StatelessWidget {
+  const _AddExerciseButton({required this.onPressed});
+
+  final VoidCallback onPressed;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = Theme.of(context).appColors;
+    return SizedBox(
+      width: double.infinity,
+      height: AppInSessionSize.controlMin,
+      child: OutlinedButton.icon(
+        onPressed: onPressed,
+        icon: const Icon(Icons.add),
+        label: Text('Add exercise', style: AppTypography.standard.actionLabel),
+        style: OutlinedButton.styleFrom(
+          foregroundColor: colors.primary,
+          side: BorderSide(color: colors.primary, width: AppStroke.emphasis),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(AppRadius.md),
+          ),
+        ),
+      ),
+    );
   }
 }
