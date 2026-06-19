@@ -35,6 +35,12 @@ abstract class ExerciseViewModel with _$ExerciseViewModel {
     required bool isLoggable,
     required MeasurementType effectiveMeasurementType,
     @Default(ExerciseGroupRole.main) ExerciseGroupRole plannedGroupRole,
+
+    /// True when the user may log an extra set beyond the planned quota on this
+    /// exercise: it is `completed` and the session is still live. The kebab's
+    /// "Add set" item is gated on this — the re-do affordance for a completed
+    /// exercise (skipped/ended use Resume; unfinished use the inline LOG SET).
+    @Default(false) bool canAddSet,
   }) = _ExerciseViewModel;
 }
 

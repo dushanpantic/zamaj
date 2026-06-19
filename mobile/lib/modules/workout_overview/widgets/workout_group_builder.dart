@@ -175,6 +175,12 @@ class WorkoutGroupBuilder extends StatelessWidget {
             ),
         onEndOrSkipPressed: () => onEndOrSkip(exercise),
         onOpenVideo: onOpenVideo,
+        onAddSetPressed: () {
+          Haptics.tap();
+          context.read<WorkoutOverviewBloc>().add(
+            WorkoutOverviewExtraSetRequested(exerciseId),
+          );
+        },
         onGroupIntoPressed: (candidates.isEmpty && eligibleGroups.isEmpty)
             ? null
             : () => onGroupInto(exercise, candidates, eligibleGroups),
@@ -395,6 +401,12 @@ class WorkoutGroupBuilder extends StatelessWidget {
       onEndOrSkipPressed: (id) =>
           onEndOrSkip(exercises.firstWhere((e) => e.sessionExercise.id == id)),
       onOpenVideo: onOpenVideo,
+      onAddSetPressed: (id) {
+        Haptics.tap();
+        context.read<WorkoutOverviewBloc>().add(
+          WorkoutOverviewExtraSetRequested(id),
+        );
+      },
       memberDragHandleBuilder: memberDragHandle,
       memberMoveBuilder: memberMove,
       gapBuilder: gapWrap,

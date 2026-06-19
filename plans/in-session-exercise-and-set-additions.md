@@ -555,7 +555,7 @@ Five plan-review personas ran. Parallelization approved in iteration 1. Acceptan
 #### Wave 1
 - [ ] Slice 1: Add an extra set beyond plan
   - [x] Step 1.1: Extra-set bloc event routed to completeSet
-  - [ ] Step 1.2: "Add set" affordance + beyond-plan row rendering
+  - [x] Step 1.2: "Add set" affordance + beyond-plan row rendering
   - [ ] Step 1.3: Extra sets in review + plain-text export
   - [ ] Step 1.4: Update product-context for add-set
 - [ ] Slice 2: Domain & persistence foundation — added-exercise carrier + addExercise

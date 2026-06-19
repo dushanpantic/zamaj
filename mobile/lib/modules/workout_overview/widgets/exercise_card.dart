@@ -35,6 +35,7 @@ class ExerciseCard extends StatelessWidget {
     required this.onEditSet,
     required this.onEndOrSkipPressed,
     required this.onOpenVideo,
+    this.onAddSetPressed,
     this.onGroupIntoPressed,
     this.onMoveUp,
     this.onMoveDown,
@@ -57,6 +58,11 @@ class ExerciseCard extends StatelessWidget {
   /// terminal mutation — read surfaces derive skipped-vs-partial from counts.
   final VoidCallback onEndOrSkipPressed;
   final void Function(String videoUrl) onOpenVideo;
+
+  /// Logs an extra set beyond plan. Surfaced as the "Add set" kebab item on a
+  /// completed card (the re-do affordance) while [ExerciseViewModel.canAddSet]
+  /// is true. Null hides the entry.
+  final VoidCallback? onAddSetPressed;
 
   /// When non-null, the per-card ⋮ menu surfaces a "Group into superset…"
   /// entry that opens the picker dialog. Null hides the entry — used inside
@@ -126,6 +132,7 @@ class ExerciseCard extends StatelessWidget {
               onTap: onToggleExpansion,
               onEndOrSkip: onEndOrSkipPressed,
               onOpenVideo: onOpenVideo,
+              onAddSet: onAddSetPressed,
               onGroupInto: onGroupIntoPressed,
               onMoveUp: onMoveUp,
               onMoveDown: onMoveDown,
@@ -160,6 +167,7 @@ class _Header extends StatelessWidget {
     required this.onTap,
     required this.onEndOrSkip,
     required this.onOpenVideo,
+    required this.onAddSet,
     required this.onGroupInto,
     required this.onMoveUp,
     required this.onMoveDown,
@@ -175,6 +183,7 @@ class _Header extends StatelessWidget {
   final VoidCallback onTap;
   final VoidCallback onEndOrSkip;
   final void Function(String videoUrl) onOpenVideo;
+  final VoidCallback? onAddSet;
   final VoidCallback? onGroupInto;
   final VoidCallback? onMoveUp;
   final VoidCallback? onMoveDown;
@@ -289,10 +298,12 @@ class _Header extends StatelessWidget {
                 isUnfinished: isUnfinished,
                 canMutate: canMutate,
                 hasExecutedSet: hasExecutedSet,
+                canAddSet: viewModel.canAddSet,
                 videoUrl: videoUrl,
                 isExpanded: isExpanded,
                 onEndOrSkip: onEndOrSkip,
                 onOpenVideo: onOpenVideo,
+                onAddSet: onAddSet,
                 onGroupInto: onGroupInto,
                 onMoveUp: onMoveUp,
                 onMoveDown: onMoveDown,
@@ -465,10 +476,12 @@ class _Actions extends StatelessWidget {
     required this.isUnfinished,
     required this.canMutate,
     required this.hasExecutedSet,
+    required this.canAddSet,
     required this.videoUrl,
     required this.isExpanded,
     required this.onEndOrSkip,
     required this.onOpenVideo,
+    required this.onAddSet,
     required this.onGroupInto,
     required this.onMoveUp,
     required this.onMoveDown,
@@ -478,10 +491,12 @@ class _Actions extends StatelessWidget {
   final bool isUnfinished;
   final bool canMutate;
   final bool hasExecutedSet;
+  final bool canAddSet;
   final String? videoUrl;
   final bool isExpanded;
   final VoidCallback onEndOrSkip;
   final void Function(String videoUrl) onOpenVideo;
+  final VoidCallback? onAddSet;
   final VoidCallback? onGroupInto;
   final VoidCallback? onMoveUp;
   final VoidCallback? onMoveDown;
@@ -498,10 +513,15 @@ class _Actions extends StatelessWidget {
     // still unfinished; terminal exercises (ended, skipped, auto-completed,
     // replaced) keep only their non-terminal menu items (e.g. Open video).
     final canEndOrSkip = canMutate && isUnfinished;
-    // Every secondary action lives in the kebab: Move up/down / Group into /
-    // End or Skip / Open video. The card surface stays reserved for the one
-    // direct control that matters in the gym, LOG SET.
+    // "Add set" is the re-do affordance for a completed exercise — logging one
+    // extra set beyond plan. Gated on the assembler's canAddSet (completed +
+    // live session) and a wired callback.
+    final showAddSet = canMutate && canAddSet && onAddSet != null;
+    // Every secondary action lives in the kebab: Add set / Move up/down /
+    // Group into / End or Skip / Open video. The card surface stays reserved
+    // for the one direct control that matters in the gym, LOG SET.
     final hasMenu =
+        showAddSet ||
         canReorder ||
         canGroupInto ||
         canEndOrSkip ||
@@ -525,6 +545,8 @@ class _Actions extends StatelessWidget {
             padding: EdgeInsets.zero,
             onSelected: (action) {
               switch (action) {
+                case _MenuAction.addSet:
+                  onAddSet?.call();
                 case _MenuAction.moveUp:
                   onMoveUp?.call();
                 case _MenuAction.moveDown:
@@ -539,6 +561,15 @@ class _Actions extends StatelessWidget {
               }
             },
             itemBuilder: (context) => [
+              // The completed-exercise re-do slot sits first in the menu.
+              if (showAddSet)
+                const PopupMenuItem(
+                  value: _MenuAction.addSet,
+                  child: AppMenuRow(
+                    icon: Icons.add,
+                    label: 'Add set',
+                  ),
+                ),
               if (canReorder) ...[
                 PopupMenuItem(
                   value: _MenuAction.moveUp,
@@ -594,7 +625,7 @@ class _Actions extends StatelessWidget {
   }
 }
 
-enum _MenuAction { moveUp, moveDown, groupInto, endOrSkip, openVideo }
+enum _MenuAction { addSet, moveUp, moveDown, groupInto, endOrSkip, openVideo }
 
 class _ExpandedBody extends StatelessWidget {
   const _ExpandedBody({

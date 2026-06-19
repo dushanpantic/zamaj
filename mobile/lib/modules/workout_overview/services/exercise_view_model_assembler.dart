@@ -23,6 +23,10 @@ abstract final class ExerciseViewModelAssembler {
 
     final effective = EffectiveExercises.of(session);
 
+    // The extra-set affordance is live-session only — a finished session's
+    // review is read-only, so completed exercises there offer no "Add set".
+    final isSessionLive = session.endedAt == null;
+
     final sorted = List<SessionExercise>.of(session.sessionExercises)
       ..sort((a, b) => a.position.compareTo(b.position));
 
@@ -32,6 +36,7 @@ abstract final class ExerciseViewModelAssembler {
           ex,
           effective.forSessionExercise(ex),
           loggableSetIndexByExerciseId[ex.id],
+          isSessionLive: isSessionLive,
         ),
     ];
 
@@ -41,8 +46,9 @@ abstract final class ExerciseViewModelAssembler {
   static ExerciseViewModel _buildViewModel(
     SessionExercise sessionExercise,
     EffectiveExercise effective,
-    int? loggableSetIndex,
-  ) {
+    int? loggableSetIndex, {
+    required bool isSessionLive,
+  }) {
     final planned = effective.plannedExercise;
     return ExerciseViewModel(
       sessionExercise: sessionExercise,
@@ -56,6 +62,9 @@ abstract final class ExerciseViewModelAssembler {
       isLoggable: loggableSetIndex != null,
       effectiveMeasurementType: effective.effectiveMeasurementType,
       plannedGroupRole: effective.plannedGroupRole,
+      // "Add set" is the completed-exercise re-do affordance; live only.
+      canAddSet:
+          isSessionLive && sessionExercise.state is CompletedState,
     );
   }
 
