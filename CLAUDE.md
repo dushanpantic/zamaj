@@ -39,6 +39,10 @@ dart run tool/generate_aggregate_goldens.dart  # regenerate JSON goldens
 
 **Session flow:** `SessionFlowEngine` is a stateless orchestrator. Every mutation round-trips through `SessionRepository`, recomputes a `Cursor`, returns a fresh `SessionState`. UI blocs depend on the engine, not on repositories directly for session flow.
 
+**Single active session:** the "one session in progress at a time" rule is a UI guard in `WorkoutDayPickerBloc` only — the domain deliberately permits concurrent sessions (future coach+trainee model). Don't push it into `SessionFlowEngine` as an invariant. `ActiveSessionPolicy` is the source of truth for which in-progress session is "active."
+
+**Replace-exercise is dormant:** the domain (`SessionFlowEngine.replaceExercise`, `ReplacedState`, `SubstituteExercise`, and assembler/view-model render branches) is intentionally kept but the UI/bloc was removed pending a redesign. Don't re-add the Replace UI or "clean up" the dormant domain code without the user.
+
 **Schema versions:** `lib/core/schema_versions.dart` is the single source of truth for both Drift's `schemaVersion` and the `domain` version stamped on every persisted row. Bump deliberately and add a migration under `lib/modules/persistence/database/migrations.dart`.
 
 **Canonical JSON:** `lib/core/canonical_json.dart` produces byte-stable JSON (sorted keys, trimmed numbers, RFC 8259 escapes) used for snapshot hashing and goldens.
@@ -61,6 +65,10 @@ abstract class MyModel with _$MyModel {
 ```
 
 The factory must not be `const` (freezed-generated `const _MyModel(...)` can't call a non-const super). Do not parameterise `._({...})` — json_serializable targets the public factory's signature. `explicit_to_json: true` is set globally in `build.yaml`.
+
+### Coach-marks / first-run tips
+
+Suppress repeat display with a per-app-process `static bool` flag (the tip re-appears after each cold start), as in `workout_day_editor_screen.dart`, `workout_overview_loaded_body.dart`, `session_detail_screen.dart`. Do not reach for `shared_preferences` — once-ever persistence is deferred to a future cross-screen refactor that covers every coach-mark at once.
 
 ### UI tokens (mandatory under `lib/modules/**/screens|widgets/`, `lib/building_blocks/`)
 
@@ -85,4 +93,4 @@ Outside these two modules (program management, day picker, settings), the normal
 
 ### Tests
 
-Scope is **domain + persistence**. Do not add `bloc_test` (not a dependency) or widget tests. Layout mirrors `lib/` under `test/{core,domain,persistence,repository,serialization}`. Property tests use `test/support/generators.dart`. Drift end-to-end tests live in `test/integration/`; use `makeInMemoryDatabase()` from `test/support/in_memory_app_database.dart`. `Random.nextInt(max)` requires `max <= 2^32` — for dates, use a base timestamp + millisecond offset.
+Scope is **domain, persistence, and pure UI logic** — blocs, services, and assemblers under `test/modules/**`, written as plain `flutter_test` `test()` (+ `FakeSessionRepository`). Still no `bloc_test` package and no Flutter widget tests; verify actual widgets (menus, panels, render) by inspection. Bloc tests must earn their place: cover bloc-only orchestration (draft/optimistic state, timers/tickers, transient-vs-terminal error surfacing, UI-only guards like single-active-session) — never re-prove engine/domain behavior the domain suite already covers. Layout mirrors `lib/` under `test/{core,domain,persistence,repository,serialization,modules}`. Property tests use `test/support/generators.dart`. Drift end-to-end tests live in `test/integration/`; use `makeInMemoryDatabase()` from `test/support/in_memory_app_database.dart`. `Random.nextInt(max)` requires `max <= 2^32` — for dates, use a base timestamp + millisecond offset.
