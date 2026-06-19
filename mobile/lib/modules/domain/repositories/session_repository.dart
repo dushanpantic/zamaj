@@ -6,9 +6,6 @@ library;
 
 import 'package:zamaj/modules/domain/models/actual_set_values.dart';
 import 'package:zamaj/modules/domain/models/added_exercise_plan.dart';
-import 'package:zamaj/modules/domain/models/exercise_metadata.dart';
-import 'package:zamaj/modules/domain/models/measurement_type.dart';
-import 'package:zamaj/modules/domain/models/planned_set_values.dart';
 import 'package:zamaj/modules/domain/models/session.dart';
 
 abstract class SessionRepository {
@@ -107,14 +104,17 @@ abstract class SessionRepository {
     required AddedExercisePlan plan,
   });
 
+  /// Replaces [sessionExerciseId] in one transaction: the original is
+  /// terminated via the existing skip action (it reads `skipped` when no sets
+  /// were logged, `partial` when some were) and a new exercise is appended from
+  /// [plan] (same insert as [addExercise]). Both writes commit together so a
+  /// half-applied replace — a terminated original with no replacement, or an
+  /// orphan added exercise — can never be observed. The snapshot is untouched.
+  /// The any-state duplicate-movement guard (with the original excluded) lives
+  /// in the engine, not here.
   Future<Session> replaceExercise({
     required String sessionExerciseId,
-    required String substituteName,
-    required MeasurementType substituteMeasurementType,
-    required PlannedSetValues substitutePlannedValues,
-    required int substituteSetCount,
-    ExerciseMetadata? substituteMetadata,
-    String? substituteLibraryExerciseId,
+    required AddedExercisePlan plan,
   });
 
   /// Reorders unfinished [SessionExercise]s only. Throws [OrderingError] if

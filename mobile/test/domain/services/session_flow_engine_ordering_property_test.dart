@@ -69,17 +69,10 @@ void main() {
 
             final target = _pickNonUnfinishedExercise(rng, session);
 
-            final substituteMt = anyMeasurementType(rng);
             expect(
               () => engine.replaceExercise(
                 sessionExerciseId: target.id,
-                substituteName: anyUuidV4(rng),
-                substituteMeasurementType: substituteMt,
-                substitutePlannedValues: anyPlannedSetValuesForMeasurement(
-                  rng,
-                  substituteMt,
-                ),
-                substituteSetCount: 1 + rng.nextInt(3),
+                plan: anyAddedExercisePlan(rng, libraryLinked: false),
               ),
               throwsA(
                 isA<OrderingError>().having(

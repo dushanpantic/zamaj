@@ -1,7 +1,6 @@
 import 'package:zamaj/modules/domain/errors.dart';
 import 'package:zamaj/modules/domain/models/actual_set_values.dart';
 import 'package:zamaj/modules/domain/models/added_exercise_plan.dart';
-import 'package:zamaj/modules/domain/models/exercise_metadata.dart';
 import 'package:zamaj/modules/domain/models/exercise_state.dart';
 import 'package:zamaj/modules/domain/models/measurement_type.dart';
 import 'package:zamaj/modules/domain/models/planned_set_values.dart';
@@ -113,29 +112,35 @@ class SessionFlowEngine {
     return _buildState(updatedSession);
   }
 
-  /// Replaces an unfinished exercise with a substitute.
+  /// Replaces an unfinished exercise as a composition of terminate + add: the
+  /// original is terminated via the existing skip action (it reads `skipped`
+  /// when no sets were logged, `partial` when some were) and a new exercise is
+  /// added in its place from [plan], in one atomic repository transaction.
+  /// There is no `replaced` state — composition makes it redundant, so the
+  /// original simply finishes in its terminal state and a fresh added-exercise
+  /// card takes its place.
+  ///
+  /// The any-state dedup guard (see [addExercise]) applies to [plan], except the
+  /// original being replaced is excluded from its own block-set — it is about to
+  /// be terminated, so re-picking its own movement as the replacement is
+  /// allowed. Returns a fresh [SessionState]; the snapshot is never changed.
   Future<SessionState> replaceExercise({
     required String sessionExerciseId,
-    required String substituteName,
-    required MeasurementType substituteMeasurementType,
-    required PlannedSetValues substitutePlannedValues,
-    required int substituteSetCount,
-    ExerciseMetadata? substituteMetadata,
-    String? substituteLibraryExerciseId,
+    required AddedExercisePlan plan,
   }) async {
     final session = await _repository.getSessionByExerciseId(sessionExerciseId);
     final exercise = session.sessionExercises.firstWhere(
       (SessionExercise e) => e.id == sessionExerciseId,
     );
     _assertUnfinished(exercise);
+    _assertNoDuplicateMovement(
+      session,
+      plan,
+      excludeSessionExerciseId: sessionExerciseId,
+    );
     final updatedSession = await _repository.replaceExercise(
       sessionExerciseId: sessionExerciseId,
-      substituteName: substituteName,
-      substituteMeasurementType: substituteMeasurementType,
-      substitutePlannedValues: substitutePlannedValues,
-      substituteSetCount: substituteSetCount,
-      substituteMetadata: substituteMetadata,
-      substituteLibraryExerciseId: substituteLibraryExerciseId,
+      plan: plan,
     );
     return _buildState(updatedSession);
   }
@@ -162,6 +167,30 @@ class SessionFlowEngine {
       throw NotFoundError(entityType: 'Session', id: sessionId);
     }
 
+    _assertNoDuplicateMovement(
+      session,
+      plan,
+      excludeSessionExerciseId: excludeSessionExerciseId,
+    );
+
+    final updatedSession = await _repository.addExercise(
+      sessionId: sessionId,
+      plan: plan,
+    );
+    return _buildState(updatedSession);
+  }
+
+  /// Throws a [ValidationError] when [plan] carries a `libraryExerciseId` that
+  /// is already the effective movement of a session exercise (other than
+  /// [excludeSessionExerciseId]). Shared by [addExercise] and [replaceExercise]
+  /// — re-doing a movement already in the session is done on its existing card
+  /// (Resume / Add set), not by re-adding. One-off plans (null id) are never
+  /// deduplicated.
+  void _assertNoDuplicateMovement(
+    Session session,
+    AddedExercisePlan plan, {
+    String? excludeSessionExerciseId,
+  }) {
     final libraryId = plan.libraryExerciseId;
     if (libraryId != null &&
         _libraryMovementInSession(
@@ -170,19 +199,13 @@ class SessionFlowEngine {
           excludeSessionExerciseId: excludeSessionExerciseId,
         )) {
       throw ValidationError(
-        entityId: sessionId,
+        entityId: session.id,
         invariant: 'added_exercise_duplicate_library_movement',
         message:
-            'Library movement $libraryId is already in session $sessionId; '
+            'Library movement $libraryId is already in session ${session.id}; '
             'resume or add a set on its existing card instead',
       );
     }
-
-    final updatedSession = await _repository.addExercise(
-      sessionId: sessionId,
-      plan: plan,
-    );
-    return _buildState(updatedSession);
   }
 
   /// Whether [libraryId] is the effective library movement of any session

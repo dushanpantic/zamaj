@@ -60,19 +60,9 @@ void main() {
           // each replacement locks one exercise at a strictly increasing
           // position, so no UNIQUE constraint conflicts arise.
           for (final se in session.sessionExercises) {
-            final mt = anyMeasurementType(rng);
             await sessionRepo.replaceExercise(
               sessionExerciseId: se.id,
-              substituteName: 'Sub${se.id}',
-              substituteMeasurementType: mt,
-              substitutePlannedValues: anyPlannedSetValuesForMeasurement(
-                rng,
-                mt,
-              ),
-              substituteSetCount: 1 + rng.nextInt(4),
-              substituteMetadata: rng.nextBool()
-                  ? anyExerciseMetadata(rng)
-                  : null,
+              plan: anyAddedExercisePlan(rng, libraryLinked: false),
             );
           }
 

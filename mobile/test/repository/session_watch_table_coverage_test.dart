@@ -1,5 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:zamaj/modules/domain/models/actual_set_values.dart';
+import 'package:zamaj/modules/domain/models/added_exercise_plan.dart';
 import 'package:zamaj/modules/domain/models/exercise.dart' as domain;
 import 'package:zamaj/modules/domain/models/exercise_group_kind.dart';
 import 'package:zamaj/modules/domain/models/exercise_metadata.dart';
@@ -117,13 +118,15 @@ void main() {
       expect(emissions, hasLength(5));
       await sessionRepo.replaceExercise(
         sessionExerciseId: sessionExId,
-        substituteName: 'Goblet Squat',
-        substituteMeasurementType: const MeasurementType.repBased(),
-        substitutePlannedValues: PlannedSetValues.repBased(
-          weightKg: 20,
-          repTarget: RepTarget.fixed(reps: 8),
+        plan: AddedExercisePlan(
+          name: 'Goblet Squat',
+          measurementType: const MeasurementType.repBased(),
+          plannedValues: PlannedSetValues.repBased(
+            weightKg: 20,
+            repTarget: RepTarget.fixed(reps: 8),
+          ),
+          setCount: 3,
         ),
-        substituteSetCount: 3,
       );
       await pumpEventQueue();
       expect(

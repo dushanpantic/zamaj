@@ -423,10 +423,11 @@ void main() {
 
   // **Validates: Requirements 8.1, 8.2**
   group(
-    'Property 13: Replace sets correct state and preserves snapshot reference',
+    'Property 13: Composed replace terminates the original and appends the '
+    'replacement as an added exercise',
     () {
-      test('replaceExercise transitions to replaced with provided substitute '
-          'and leaves plannedExerciseIdInSnapshot unchanged', () async {
+      test('replaceExercise skips the original (snapshot id unchanged) and '
+          'appends a new added exercise carrying the plan', () async {
         const iterations = 100;
         final masterSeed = Random().nextInt(1 << 32);
 
@@ -444,68 +445,56 @@ void main() {
               .toList();
           final target = unfinished[rng.nextInt(unfinished.length)];
           final originalPlannedId = target.plannedExerciseIdInSnapshot;
+          final originalCount = session.sessionExercises.length;
 
-          final substituteName = 'substitute_${anyUuidV4(rng)}';
-          final substituteMt = anyMeasurementType(rng);
-          final substituteMetadata = rng.nextBool()
-              ? anyExerciseMetadata(rng)
-              : null;
-          final substitutePlannedValues = anyPlannedSetValuesForMeasurement(
-            rng,
-            substituteMt,
-          );
-          final substituteSetCount = 1 + rng.nextInt(5);
+          // One-off plan so the dedup guard never rejects a random replacement.
+          final plan = anyAddedExercisePlan(rng, libraryLinked: false);
 
           final result = await engine.replaceExercise(
             sessionExerciseId: target.id,
-            substituteName: substituteName,
-            substituteMeasurementType: substituteMt,
-            substitutePlannedValues: substitutePlannedValues,
-            substituteSetCount: substituteSetCount,
-            substituteMetadata: substituteMetadata,
+            plan: plan,
           );
 
-          final updated = result.session.sessionExercises.firstWhere(
+          final original = result.session.sessionExercises.firstWhere(
             (e) => e.id == target.id,
           );
 
           expect(
-            updated.state,
-            isA<ReplacedState>(),
+            original.state,
+            isA<SkippedState>(),
             reason:
                 'iteration $i (seed ${masterSeed + i}): '
-                'state must be ReplacedState after replaceExercise',
-          );
-
-          final replaced = updated.state as ReplacedState;
-          expect(
-            replaced.substitute.name,
-            equals(substituteName),
-            reason:
-                'iteration $i (seed ${masterSeed + i}): '
-                'substitute name must match the value passed in',
+                'the original is terminated (skipped) by a composed replace',
           );
           expect(
-            replaced.substitute.measurementType,
-            equals(substituteMt),
-            reason:
-                'iteration $i (seed ${masterSeed + i}): '
-                'substitute measurementType must match the value passed in',
-          );
-          expect(
-            replaced.substitute.metadata,
-            equals(substituteMetadata),
-            reason:
-                'iteration $i (seed ${masterSeed + i}): '
-                'substitute metadata must match the value passed in',
-          );
-
-          expect(
-            updated.plannedExerciseIdInSnapshot,
+            original.plannedExerciseIdInSnapshot,
             equals(originalPlannedId),
             reason:
                 'iteration $i (seed ${masterSeed + i}): '
-                'plannedExerciseIdInSnapshot must remain unchanged',
+                'the original keeps its snapshot id',
+          );
+          expect(
+            result.session.sessionExercises.length,
+            equals(originalCount + 1),
+            reason:
+                'iteration $i (seed ${masterSeed + i}): '
+                'a replacement exercise is appended',
+          );
+
+          final added = result.session.sessionExercises.last;
+          expect(
+            added.state,
+            isA<UnfinishedState>(),
+            reason:
+                'iteration $i (seed ${masterSeed + i}): '
+                'the replacement is loggable (unfinished)',
+          );
+          expect(
+            added.addedPlan?.name,
+            equals(plan.name),
+            reason:
+                'iteration $i (seed ${masterSeed + i}): '
+                'the replacement carries the supplied plan',
           );
         }
       });
@@ -845,17 +834,10 @@ Future<SessionState> Function()? _pickMutation(
   mutations.add(() => engine.skipExercise(sessionExerciseId: skipTarget.id));
 
   final replaceTarget = unfinished[rng.nextInt(unfinished.length)];
-  final substituteMt = anyMeasurementType(rng);
   mutations.add(
     () => engine.replaceExercise(
       sessionExerciseId: replaceTarget.id,
-      substituteName: anyUuidV4(rng),
-      substituteMeasurementType: substituteMt,
-      substitutePlannedValues: anyPlannedSetValuesForMeasurement(
-        rng,
-        substituteMt,
-      ),
-      substituteSetCount: 1 + rng.nextInt(3),
+      plan: anyAddedExercisePlan(rng, libraryLinked: false),
     ),
   );
 

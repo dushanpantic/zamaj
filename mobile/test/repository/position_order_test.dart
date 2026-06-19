@@ -175,6 +175,11 @@ void main() {
             final result = await sessionRepo.getSession(sessionId);
             expect(result, isNotNull);
             for (final se in result!.sessionExercises) {
+              // Exercises added mid-session (via addExercise / composed replace)
+              // are new rows appended at maxPosition + gap; they have no
+              // startSession position. The invariant is that originally-seeded
+              // exercises never drift.
+              if (!initialPositions.containsKey(se.id)) continue;
               expect(
                 se.position,
                 equals(initialPositions[se.id]),
@@ -510,11 +515,7 @@ Future<domain.Session> _applySingleOp({
     SkipExerciseOp() => sessionRepo.skipExercise(seId),
     ReplaceExerciseOp() => sessionRepo.replaceExercise(
       sessionExerciseId: seId,
-      substituteName: op.substituteName,
-      substituteMeasurementType: op.substituteMeasurementType,
-      substitutePlannedValues: op.substitutePlannedValues,
-      substituteSetCount: op.substituteSetCount,
-      substituteMetadata: op.substituteMetadata,
+      plan: op.plan,
     ),
     ReorderUnfinishedOp() => sessionRepo.reorderUnfinished(
       sessionId: sessionId,

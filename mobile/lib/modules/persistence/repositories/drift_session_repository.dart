@@ -9,10 +9,8 @@ import 'package:zamaj/core/schema_versions.dart';
 import 'package:zamaj/modules/domain/errors.dart';
 import 'package:zamaj/modules/domain/models/actual_set_values.dart';
 import 'package:zamaj/modules/domain/models/added_exercise_plan.dart';
-import 'package:zamaj/modules/domain/models/exercise_metadata.dart';
 import 'package:zamaj/modules/domain/models/exercise_state.dart' as domain;
 import 'package:zamaj/modules/domain/models/measurement_type.dart';
-import 'package:zamaj/modules/domain/models/planned_set_values.dart';
 import 'package:zamaj/modules/domain/models/session.dart' as domain;
 import 'package:zamaj/modules/domain/models/session_exercise.dart' as domain;
 import 'package:zamaj/modules/domain/models/substitute_exercise.dart';
@@ -684,48 +682,8 @@ class DriftSessionRepository implements SessionRepository {
   }) async {
     return _db.transaction(() async {
       final sessionRow = await _requireSessionRow(sessionId);
-
-      // Append after the current last exercise (maxPosition + gap).
-      final existing = await (_db.select(
-        _db.sessionExercises,
-      )..where((t) => t.sessionId.equals(sessionId))).get();
-      final maxPosition = existing.isEmpty
-          ? -_gap
-          : existing.map((e) => e.position).reduce((a, b) => a > b ? a : b);
-
-      final now = _clock.now().toUtc();
-      final nowMs = utcToMs(now);
-
-      await _db
-          .into(_db.sessionExercises)
-          .insert(
-            SessionExercisesCompanion.insert(
-              id: _uuid.v4(),
-              sessionId: sessionId,
-              position: maxPosition + _gap,
-              // Synthetic 36-char id; never resolved against the snapshot
-              // because EffectiveExercises branches on addedPlan first.
-              plannedExerciseIdInSnapshot: _uuid.v4(),
-              stateDiscriminator: 'unfinished',
-              substitutePayloadJson: const Value(null),
-              addedPlanJson: Value(CanonicalJson.encode(plan.toJson())),
-              supersetTag: const Value(null),
-              createdAtMs: nowMs,
-              updatedAtMs: nowMs,
-              schemaVersion: SchemaVersions.domain,
-            ),
-          );
-
-      final sessionUpdatedAt = _timestamps.nextUpdatedAt(
-        previousUpdatedAt: msToUtc(sessionRow.updatedAtMs),
-        createdAt: msToUtc(sessionRow.createdAtMs),
-      );
-      await (_db.update(
-        _db.sessions,
-      )..where((t) => t.id.equals(sessionId))).write(
-        SessionsCompanion(updatedAtMs: Value(utcToMs(sessionUpdatedAt))),
-      );
-
+      await insertAddedExerciseRow(sessionId: sessionId, plan: plan);
+      await _touchSession(sessionRow);
       return _loadSession(sessionId);
     });
   }
@@ -733,55 +691,91 @@ class DriftSessionRepository implements SessionRepository {
   @override
   Future<domain.Session> replaceExercise({
     required String sessionExerciseId,
-    required String substituteName,
-    required MeasurementType substituteMeasurementType,
-    required PlannedSetValues substitutePlannedValues,
-    required int substituteSetCount,
-    ExerciseMetadata? substituteMetadata,
-    String? substituteLibraryExerciseId,
+    required AddedExercisePlan plan,
   }) async {
     return _db.transaction(() async {
       final exerciseRow = await _requireSessionExerciseRow(sessionExerciseId);
       _requireUnfinished(exerciseRow);
+      final sessionId = exerciseRow.sessionId;
 
-      final substitute = SubstituteExercise(
-        name: substituteName,
-        measurementType: substituteMeasurementType,
-        plannedValues: substitutePlannedValues,
-        setCount: substituteSetCount,
-        metadata: substituteMetadata,
-        libraryExerciseId: substituteLibraryExerciseId,
-      );
-      final substituteJson = CanonicalJson.encode(substitute.toJson());
-
+      // Terminate the original via the existing skip action (the outcome —
+      // skipped with no sets, partial with some — is derived downstream); no
+      // `replaced` state is written.
       final exerciseUpdatedAt = _timestamps.nextUpdatedAt(
         previousUpdatedAt: msToUtc(exerciseRow.updatedAtMs),
         createdAt: msToUtc(exerciseRow.createdAtMs),
       );
-
       await (_db.update(
         _db.sessionExercises,
       )..where((t) => t.id.equals(sessionExerciseId))).write(
         SessionExercisesCompanion(
-          stateDiscriminator: const Value('replaced'),
-          substitutePayloadJson: Value(substituteJson),
+          stateDiscriminator: const Value('skipped'),
           updatedAtMs: Value(utcToMs(exerciseUpdatedAt)),
         ),
       );
 
-      final sessionRow = await _requireSessionRow(exerciseRow.sessionId);
-      final sessionUpdatedAt = _timestamps.nextUpdatedAt(
-        previousUpdatedAt: msToUtc(sessionRow.updatedAtMs),
-        createdAt: msToUtc(sessionRow.createdAtMs),
-      );
-      await (_db.update(
-        _db.sessions,
-      )..where((t) => t.id.equals(exerciseRow.sessionId))).write(
-        SessionsCompanion(updatedAtMs: Value(utcToMs(sessionUpdatedAt))),
-      );
+      // Append the replacement as an added exercise in the same transaction, so
+      // a half-applied replace (terminated original with no replacement, or an
+      // orphan added exercise) can never be observed.
+      await insertAddedExerciseRow(sessionId: sessionId, plan: plan);
 
-      return _loadSession(exerciseRow.sessionId);
+      final sessionRow = await _requireSessionRow(sessionId);
+      await _touchSession(sessionRow);
+      return _loadSession(sessionId);
     });
+  }
+
+  /// Inserts an added-exercise row at `maxPosition + gap` from [plan], with a
+  /// synthetic 36-char `plannedExerciseIdInSnapshot` that is never resolved
+  /// against the snapshot (EffectiveExercises branches on `addedPlan` first).
+  /// Shared by [addExercise] and the add half of [replaceExercise].
+  ///
+  /// Non-private so a test subclass can override it to simulate an add-write
+  /// fault mid-`replaceExercise` and assert the whole transaction rolls back
+  /// (true atomicity); not part of the [SessionRepository] contract.
+  Future<void> insertAddedExerciseRow({
+    required String sessionId,
+    required AddedExercisePlan plan,
+  }) async {
+    final existing = await (_db.select(
+      _db.sessionExercises,
+    )..where((t) => t.sessionId.equals(sessionId))).get();
+    final maxPosition = existing.isEmpty
+        ? -_gap
+        : existing.map((e) => e.position).reduce((a, b) => a > b ? a : b);
+
+    final nowMs = utcToMs(_clock.now().toUtc());
+
+    await _db
+        .into(_db.sessionExercises)
+        .insert(
+          SessionExercisesCompanion.insert(
+            id: _uuid.v4(),
+            sessionId: sessionId,
+            position: maxPosition + _gap,
+            plannedExerciseIdInSnapshot: _uuid.v4(),
+            stateDiscriminator: 'unfinished',
+            substitutePayloadJson: const Value(null),
+            addedPlanJson: Value(CanonicalJson.encode(plan.toJson())),
+            supersetTag: const Value(null),
+            createdAtMs: nowMs,
+            updatedAtMs: nowMs,
+            schemaVersion: SchemaVersions.domain,
+          ),
+        );
+  }
+
+  /// Bumps [sessionRow]'s `updatedAt` under the monotonic timestamp oracle.
+  Future<void> _touchSession(Session sessionRow) async {
+    final sessionUpdatedAt = _timestamps.nextUpdatedAt(
+      previousUpdatedAt: msToUtc(sessionRow.updatedAtMs),
+      createdAt: msToUtc(sessionRow.createdAtMs),
+    );
+    await (_db.update(
+      _db.sessions,
+    )..where((t) => t.id.equals(sessionRow.id))).write(
+      SessionsCompanion(updatedAtMs: Value(utcToMs(sessionUpdatedAt))),
+    );
   }
 
   @override

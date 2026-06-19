@@ -3,6 +3,7 @@ import 'dart:math';
 import 'package:zamaj/core/canonical_json.dart';
 import 'package:zamaj/core/clock.dart';
 import 'package:zamaj/modules/domain/models/actual_set_values.dart';
+import 'package:zamaj/modules/domain/models/added_exercise_plan.dart';
 import 'package:zamaj/modules/domain/models/executed_set.dart';
 import 'package:zamaj/modules/domain/models/exercise.dart';
 import 'package:zamaj/modules/domain/models/exercise_group.dart';
@@ -77,6 +78,21 @@ SubstituteExercise anySubstituteExercise(Random rng) {
     setCount: 1 + rng.nextInt(5),
     metadata: rng.nextBool() ? anyExerciseMetadata(rng) : null,
     libraryExerciseId: rng.nextBool() ? anyUuidV4(rng) : null,
+  );
+}
+
+/// Inline plan for an added exercise. [libraryLinked] forces the library id
+/// to null (one-off) or non-null; left null it is randomized.
+AddedExercisePlan anyAddedExercisePlan(Random rng, {bool? libraryLinked}) {
+  final mt = anyMeasurementType(rng);
+  final linked = libraryLinked ?? rng.nextBool();
+  return AddedExercisePlan(
+    name: _anyTrimmedNonEmptyString(rng, maxLen: 40),
+    measurementType: mt,
+    plannedValues: anyPlannedSetValuesForMeasurement(rng, mt),
+    setCount: 1 + rng.nextInt(5),
+    metadata: rng.nextBool() ? anyExerciseMetadata(rng) : null,
+    libraryExerciseId: linked ? anyUuidV4(rng) : null,
   );
 }
 
@@ -747,20 +763,9 @@ final class SkipExerciseOp extends SessionRepoOp {
 }
 
 final class ReplaceExerciseOp extends SessionRepoOp {
-  ReplaceExerciseOp({
-    required this.sessionExerciseId,
-    required this.substituteName,
-    required this.substituteMeasurementType,
-    required this.substitutePlannedValues,
-    required this.substituteSetCount,
-    this.substituteMetadata,
-  });
+  ReplaceExerciseOp({required this.sessionExerciseId, required this.plan});
   final String sessionExerciseId;
-  final String substituteName;
-  final MeasurementType substituteMeasurementType;
-  final PlannedSetValues substitutePlannedValues;
-  final int substituteSetCount;
-  final ExerciseMetadata? substituteMetadata;
+  final AddedExercisePlan plan;
 }
 
 final class ReorderUnfinishedOp extends SessionRepoOp {
@@ -813,18 +818,12 @@ List<SessionRepoOp> anySessionRepoOpSequence(Random rng) {
     } else if (roll < 6) {
       ops.add(SkipExerciseOp(sessionExerciseId: seId));
     } else if (roll < 7) {
-      final substituteMt = anyMeasurementType(rng);
       ops.add(
         ReplaceExerciseOp(
           sessionExerciseId: seId,
-          substituteName: _anyString(rng, maxLen: 30),
-          substituteMeasurementType: substituteMt,
-          substitutePlannedValues: anyPlannedSetValuesForMeasurement(
-            rng,
-            substituteMt,
-          ),
-          substituteSetCount: 1 + rng.nextInt(5),
-          substituteMetadata: rng.nextBool() ? anyExerciseMetadata(rng) : null,
+          // One-off plan (null library id) so the engine's any-state dedup
+          // guard never spuriously rejects a random replacement.
+          plan: anyAddedExercisePlan(rng, libraryLinked: false),
         ),
       );
     } else if (roll == 7) {

@@ -1,6 +1,7 @@
 import 'package:clock/clock.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:zamaj/modules/domain/models/actual_set_values.dart';
+import 'package:zamaj/modules/domain/models/added_exercise_plan.dart';
 import 'package:zamaj/modules/domain/models/exercise.dart';
 import 'package:zamaj/modules/domain/models/exercise_group.dart';
 import 'package:zamaj/modules/domain/models/exercise_group_kind.dart';
@@ -263,21 +264,26 @@ void main() {
 
     await s.engine.replaceExercise(
       sessionExerciseId: exA,
-      substituteName: 'Push-Up',
-      substituteMeasurementType: const MeasurementType.repBased(),
-      substitutePlannedValues: PlannedSetValues.repBased(
-        weightKg: 0,
-        repTarget: RepTarget.fixed(reps: 10),
+      plan: AddedExercisePlan(
+        name: 'Push-Up',
+        measurementType: const MeasurementType.repBased(),
+        plannedValues: PlannedSetValues.repBased(
+          weightKg: 0,
+          repTarget: RepTarget.fixed(reps: 10),
+        ),
+        setCount: 3,
       ),
-      substituteSetCount: 3,
     );
     await pumpEventQueue();
     expect(emissions, hasLength(2));
 
+    // Composed replace terminates the original (skipped) and appends a new
+    // added exercise — both visible in the emitted state.
     final ex = emissions.last!.session.sessionExercises.firstWhere(
       (e) => e.id == exA,
     );
-    expect(ex.state, isA<ReplacedState>());
+    expect(ex.state, isA<SkippedState>());
+    expect(emissions.last!.session.sessionExercises.last.addedPlan, isNotNull);
 
     await sub.cancel();
   });

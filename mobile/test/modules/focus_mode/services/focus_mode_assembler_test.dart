@@ -315,8 +315,8 @@ void main() {
       );
     });
 
-    test('replaced exercise reflects substitute in display name + measurement '
-        'type and flags isReplaced', () async {
+    test('composed replace: the replacement added exercise renders its inline '
+        'plan and is loggable; never flags isReplaced', () async {
       final s = setup();
       s.repo.seedWorkoutDay(buildDay());
       final state = await s.engine.startSession(workoutDayId: 'wd-1');
@@ -325,21 +325,22 @@ void main() {
           .id;
       final after = await s.engine.replaceExercise(
         sessionExerciseId: benchId,
-        substituteName: 'Cable Fly',
-        substituteMeasurementType: const MeasurementType.timeBased(),
-        substitutePlannedValues: const PlannedSetValues.timeBased(
-          durationSeconds: 30,
+        plan: AddedExercisePlan(
+          name: 'Cable Fly',
+          measurementType: const MeasurementType.timeBased(),
+          plannedValues: const PlannedSetValues.timeBased(durationSeconds: 30),
+          setCount: 3,
         ),
-        substituteSetCount: 3,
       );
+      // The original is terminated; the replacement is a fresh added card.
+      final flyId = after.session.sessionExercises.last.id;
       final group = FocusModeAssembler.assemble(
         after,
-        anchorSessionExerciseId: benchId,
+        anchorSessionExerciseId: flyId,
       )!;
       final panel = group.panels.single;
       expect(panel.displayExerciseName, 'Cable Fly');
-      expect(panel.plannedExerciseName, 'Bench Press');
-      expect(panel.isReplaced, isTrue);
+      expect(panel.isReplaced, isFalse);
       expect(panel.effectiveMeasurementType, isA<TimeBasedMeasurement>());
       expect(panel.isLoggable, isTrue);
     });

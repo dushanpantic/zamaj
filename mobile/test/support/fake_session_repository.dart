@@ -7,16 +7,13 @@ import 'package:zamaj/modules/domain/models/actual_set_values.dart';
 import 'package:zamaj/modules/domain/models/added_exercise_plan.dart';
 import 'package:zamaj/modules/domain/models/executed_set.dart';
 import 'package:zamaj/modules/domain/models/exercise_group_kind.dart';
-import 'package:zamaj/modules/domain/models/exercise_metadata.dart';
 import 'package:zamaj/modules/domain/models/exercise_state.dart';
 import 'package:zamaj/modules/domain/models/extra_work.dart';
 import 'package:zamaj/modules/domain/models/measurement_type.dart';
-import 'package:zamaj/modules/domain/models/planned_set_values.dart';
 import 'package:zamaj/modules/domain/models/session.dart';
 import 'package:zamaj/modules/domain/models/session_exercise.dart';
 import 'package:zamaj/modules/domain/models/session_note.dart';
 import 'package:zamaj/modules/domain/models/session_snapshot.dart';
-import 'package:zamaj/modules/domain/models/substitute_exercise.dart';
 import 'package:zamaj/modules/domain/models/workout_day.dart';
 import 'package:zamaj/modules/domain/repositories/session_repository.dart';
 import 'package:zamaj/modules/domain/services/deload_transform.dart';
@@ -361,28 +358,12 @@ class FakeSessionRepository implements SessionRepository {
   }) async {
     final session = _requireSession(sessionId);
     final now = clock.now().toUtc();
-    final maxPosition = session.sessionExercises.isEmpty
-        ? -1
-        : session.sessionExercises
-              .map((e) => e.position)
-              .reduce((a, b) => a > b ? a : b);
-
-    final added = SessionExercise(
-      id: _uuid.v4(),
-      sessionId: sessionId,
-      position: maxPosition + 1,
-      // Synthetic 36-char id; never resolved because addedPlan branches first.
-      plannedExerciseIdInSnapshot: _uuid.v4(),
-      state: const ExerciseState.unfinished(),
-      executedSets: const [],
-      addedPlan: plan,
-      createdAt: now,
-      updatedAt: now,
-      schemaVersion: 1,
-    );
 
     final updated = session.copyWith(
-      sessionExercises: [...session.sessionExercises, added],
+      sessionExercises: [
+        ...session.sessionExercises,
+        _buildAddedExercise(session, plan, now),
+      ],
       updatedAt: now,
     );
     _sessions[sessionId] = updated;
@@ -393,32 +374,25 @@ class FakeSessionRepository implements SessionRepository {
   @override
   Future<Session> replaceExercise({
     required String sessionExerciseId,
-    required String substituteName,
-    required MeasurementType substituteMeasurementType,
-    required PlannedSetValues substitutePlannedValues,
-    required int substituteSetCount,
-    ExerciseMetadata? substituteMetadata,
-    String? substituteLibraryExerciseId,
+    required AddedExercisePlan plan,
   }) async {
     final session = await getSessionByExerciseId(sessionExerciseId);
     final now = clock.now().toUtc();
 
-    final updatedExercises = session.sessionExercises.map((exercise) {
-      if (exercise.id != sessionExerciseId) return exercise;
-      return exercise.copyWith(
-        state: ExerciseState.replaced(
-          substitute: SubstituteExercise(
-            name: substituteName,
-            measurementType: substituteMeasurementType,
-            plannedValues: substitutePlannedValues,
-            setCount: substituteSetCount,
-            metadata: substituteMetadata,
-            libraryExerciseId: substituteLibraryExerciseId,
-          ),
-        ),
-        updatedAt: now,
-      );
-    }).toList();
+    // Composed replace: terminate the original via the existing skip action
+    // (outcome is derived — skipped with no sets, partial with some) and append
+    // the replacement as an added exercise, in one atomic step.
+    final updatedExercises = [
+      for (final exercise in session.sessionExercises)
+        if (exercise.id == sessionExerciseId)
+          exercise.copyWith(
+            state: const ExerciseState.skipped(),
+            updatedAt: now,
+          )
+        else
+          exercise,
+      _buildAddedExercise(session, plan, now),
+    ];
 
     final updated = session.copyWith(
       sessionExercises: updatedExercises,
@@ -427,6 +401,31 @@ class FakeSessionRepository implements SessionRepository {
     _sessions[session.id] = updated;
     _notify(session.id);
     return updated;
+  }
+
+  SessionExercise _buildAddedExercise(
+    Session session,
+    AddedExercisePlan plan,
+    DateTime now,
+  ) {
+    final maxPosition = session.sessionExercises.isEmpty
+        ? -1
+        : session.sessionExercises
+              .map((e) => e.position)
+              .reduce((a, b) => a > b ? a : b);
+    return SessionExercise(
+      id: _uuid.v4(),
+      sessionId: session.id,
+      position: maxPosition + 1,
+      // Synthetic 36-char id; never resolved because addedPlan branches first.
+      plannedExerciseIdInSnapshot: _uuid.v4(),
+      state: const ExerciseState.unfinished(),
+      executedSets: const [],
+      addedPlan: plan,
+      createdAt: now,
+      updatedAt: now,
+      schemaVersion: 1,
+    );
   }
 
   @override
@@ -707,6 +706,11 @@ class FakeSessionRepository implements SessionRepository {
   }
 
   int _lookupPlannedSetCount(SessionExercise exercise, Session session) {
+    // Added exercises carry their own inline quota and have no snapshot entry —
+    // branch on addedPlan first (mirrors the inline-aware EffectiveExercises).
+    final addedPlan = exercise.addedPlan;
+    if (addedPlan != null) return addedPlan.setCount;
+
     final workoutDay = session.snapshot.workoutDay;
     for (final group in workoutDay.exerciseGroups) {
       for (final ex in group.exercises) {
