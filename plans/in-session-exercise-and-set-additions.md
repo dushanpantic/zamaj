@@ -571,8 +571,8 @@ Five plan-review personas ran. Parallelization approved in iteration 1. Acceptan
   - [x] Step 3.2: Add-exercise bloc event → engine
   - [x] Step 3.3: Assembler renders added exercises from inline plan
   - [x] Step 3.4: Add-exercise sheet + foot-of-list entry point
-  - [ ] Step 3.5: Resume affordance on skipped/ended cards
-  - [ ] Step 3.6: Update product-context for add-exercise + resume
+  - [x] Step 3.5: Resume affordance on skipped/ended cards
+  - [x] Step 3.6: Update product-context for add-exercise + resume
 
 #### Wave 3
 - [ ] Slice 4: Replace as composed terminate + add
