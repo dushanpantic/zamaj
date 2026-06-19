@@ -188,6 +188,23 @@ final class WorkoutOverviewResumeRequested extends WorkoutOverviewEvent {
   List<Object?> get props => [sessionExerciseId];
 }
 
+/// Replaces [sessionExerciseId] with a built [AddedExercisePlan]: the original
+/// is terminated (skip/end) and a new exercise is added in its place, in one
+/// action. Routed through `engine.replaceExercise`; a duplicate-movement guard
+/// rejection surfaces as a transient error and leaves the original unchanged.
+final class WorkoutOverviewReplaceRequested extends WorkoutOverviewEvent {
+  const WorkoutOverviewReplaceRequested({
+    required this.sessionExerciseId,
+    required this.plan,
+  });
+
+  final String sessionExerciseId;
+  final AddedExercisePlan plan;
+
+  @override
+  List<Object?> get props => [sessionExerciseId, plan];
+}
+
 final class WorkoutOverviewSessionEnded extends WorkoutOverviewEvent {
   const WorkoutOverviewSessionEnded();
 }

@@ -37,6 +37,7 @@ class ExerciseCard extends StatelessWidget {
     required this.onOpenVideo,
     this.onAddSetPressed,
     this.onResumePressed,
+    this.onReplacePressed,
     this.onGroupIntoPressed,
     this.onMoveUp,
     this.onMoveDown,
@@ -69,6 +70,11 @@ class ExerciseCard extends StatelessWidget {
   /// "Resume" kebab item on a terminated (skipped) card — the re-do slot for a
   /// movement that was skipped or ended early. Null hides the entry.
   final VoidCallback? onResumePressed;
+
+  /// Replaces this exercise (terminate + add a new one in its place). Surfaced
+  /// as the "Replace" kebab item on an unfinished, non-terminal card. Null
+  /// hides the entry.
+  final VoidCallback? onReplacePressed;
 
   /// When non-null, the per-card ⋮ menu surfaces a "Group into superset…"
   /// entry that opens the picker dialog. Null hides the entry — used inside
@@ -140,6 +146,7 @@ class ExerciseCard extends StatelessWidget {
               onOpenVideo: onOpenVideo,
               onAddSet: onAddSetPressed,
               onResume: onResumePressed,
+              onReplace: onReplacePressed,
               onGroupInto: onGroupIntoPressed,
               onMoveUp: onMoveUp,
               onMoveDown: onMoveDown,
@@ -176,6 +183,7 @@ class _Header extends StatelessWidget {
     required this.onOpenVideo,
     required this.onAddSet,
     required this.onResume,
+    required this.onReplace,
     required this.onGroupInto,
     required this.onMoveUp,
     required this.onMoveDown,
@@ -193,6 +201,7 @@ class _Header extends StatelessWidget {
   final void Function(String videoUrl) onOpenVideo;
   final VoidCallback? onAddSet;
   final VoidCallback? onResume;
+  final VoidCallback? onReplace;
   final VoidCallback? onGroupInto;
   final VoidCallback? onMoveUp;
   final VoidCallback? onMoveDown;
@@ -315,6 +324,7 @@ class _Header extends StatelessWidget {
                 onOpenVideo: onOpenVideo,
                 onAddSet: onAddSet,
                 onResume: onResume,
+                onReplace: onReplace,
                 onGroupInto: onGroupInto,
                 onMoveUp: onMoveUp,
                 onMoveDown: onMoveDown,
@@ -495,6 +505,7 @@ class _Actions extends StatelessWidget {
     required this.onOpenVideo,
     required this.onAddSet,
     required this.onResume,
+    required this.onReplace,
     required this.onGroupInto,
     required this.onMoveUp,
     required this.onMoveDown,
@@ -512,6 +523,7 @@ class _Actions extends StatelessWidget {
   final void Function(String videoUrl) onOpenVideo;
   final VoidCallback? onAddSet;
   final VoidCallback? onResume;
+  final VoidCallback? onReplace;
   final VoidCallback? onGroupInto;
   final VoidCallback? onMoveUp;
   final VoidCallback? onMoveDown;
@@ -537,12 +549,17 @@ class _Actions extends StatelessWidget {
     // completed card's re-do slot; the two are mutually exclusive by state
     // (skipped vs completed) so they never both appear.
     final showResume = canMutate && canResume && onResume != null;
-    // Every secondary action lives in the kebab: Add set / Resume / Move
-    // up/down / Group into / End or Skip / Open video. The card surface stays
-    // reserved for the one direct control that matters in the gym, LOG SET.
+    // "Replace" terminates this exercise and adds a new one in its place —
+    // offered only on an unfinished, non-terminal card.
+    final showReplace = canMutate && isUnfinished && onReplace != null;
+    // Every secondary action lives in the kebab: Add set / Resume / Replace /
+    // Move up/down / Group into / End or Skip / Open video. The card surface
+    // stays reserved for the one direct control that matters in the gym,
+    // LOG SET.
     final hasMenu =
         showAddSet ||
         showResume ||
+        showReplace ||
         canReorder ||
         canGroupInto ||
         canEndOrSkip ||
@@ -574,6 +591,8 @@ class _Actions extends StatelessWidget {
                   onMoveUp?.call();
                 case _MenuAction.moveDown:
                   onMoveDown?.call();
+                case _MenuAction.replace:
+                  onReplace?.call();
                 case _MenuAction.groupInto:
                   onGroupInto?.call();
                 case _MenuAction.endOrSkip:
@@ -630,6 +649,14 @@ class _Actions extends StatelessWidget {
                     label: 'Group into superset…',
                   ),
                 ),
+              if (showReplace)
+                const PopupMenuItem(
+                  value: _MenuAction.replace,
+                  child: AppMenuRow(
+                    icon: Icons.swap_horiz,
+                    label: 'Replace…',
+                  ),
+                ),
               if (canEndOrSkip)
                 PopupMenuItem(
                   value: _MenuAction.endOrSkip,
@@ -660,6 +687,7 @@ class _Actions extends StatelessWidget {
 enum _MenuAction {
   addSet,
   resume,
+  replace,
   moveUp,
   moveDown,
   groupInto,

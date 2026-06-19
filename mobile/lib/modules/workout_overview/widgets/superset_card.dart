@@ -30,6 +30,7 @@ class SupersetCard extends StatelessWidget {
     required this.onOpenVideo,
     this.onAddSetPressed,
     this.onResumePressed,
+    this.onReplacePressed,
     this.currentSessionExerciseIds = const <String>{},
     this.lastTouchedSessionExerciseId,
     this.groupDragHandle,
@@ -71,6 +72,10 @@ class SupersetCard extends StatelessWidget {
   /// Resumes a skipped/ended-early member back to in-progress. Threaded to each
   /// member card's "Resume" kebab item; null hides it.
   final void Function(String sessionExerciseId)? onResumePressed;
+
+  /// Replaces an unfinished member (terminate + add). Threaded to each member
+  /// card's "Replace" kebab item; null hides it.
+  final void Function(String sessionExerciseId)? onReplacePressed;
 
   /// Members that should render the CURRENT chip + accent border. Includes
   /// every unfinished member of the active superset; the screen computes
@@ -191,6 +196,9 @@ class SupersetCard extends StatelessWidget {
                     onResumePressed: onResumePressed == null
                         ? null
                         : () => onResumePressed!(memberId),
+                    onReplacePressed: onReplacePressed == null
+                        ? null
+                        : () => onReplacePressed!(memberId),
                     onMoveUp: move?.up,
                     onMoveDown: move?.down,
                     dragHandle: memberDragHandleBuilder?.call(exercises[i]),

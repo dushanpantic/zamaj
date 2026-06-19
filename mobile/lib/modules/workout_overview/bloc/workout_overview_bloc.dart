@@ -28,6 +28,7 @@ class WorkoutOverviewBloc
     on<WorkoutOverviewExtraWorkAdded>(_onExtraWorkAdded);
     on<WorkoutOverviewExtraSetRequested>(_onExtraSetRequested);
     on<WorkoutOverviewAddExerciseRequested>(_onAddExerciseRequested);
+    on<WorkoutOverviewReplaceRequested>(_onReplaceRequested);
     on<WorkoutOverviewResumeRequested>(_onResumeRequested);
     on<WorkoutOverviewSessionEnded>(_onSessionEnded);
     on<InternalSessionPushed>(_onSessionPushed);
@@ -364,6 +365,23 @@ class WorkoutOverviewBloc
         sessionId: current.sessionState.session.id,
         plan: event.plan,
       ),
+    );
+  }
+
+  Future<void> _onReplaceRequested(
+    WorkoutOverviewReplaceRequested event,
+    Emitter<WorkoutOverviewState> emit,
+  ) async {
+    final current = state;
+    if (current is! WorkoutOverviewLoaded) return;
+    if (current.isEnded) return;
+    await _runMutation(
+      emit,
+      () => _engine.replaceExercise(
+        sessionExerciseId: event.sessionExerciseId,
+        plan: event.plan,
+      ),
+      touchedSessionExerciseId: event.sessionExerciseId,
     );
   }
 
