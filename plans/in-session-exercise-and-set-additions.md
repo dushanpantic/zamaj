@@ -576,9 +576,9 @@ Five plan-review personas ran. Parallelization approved in iteration 1. Acceptan
 
 #### Wave 3
 - [ ] Slice 4: Replace as composed terminate + add
-  - [ ] Step 4.1: Composed replaceExercise — engine + atomic repo transaction
-  - [ ] Step 4.2: Overview replace action wired through bloc
-  - [ ] Step 4.3: Update product-context for replace
+  - [x] Step 4.1: Composed replaceExercise — engine + atomic repo transaction
+  - [x] Step 4.2: Overview replace action wired through bloc
+  - [x] Step 4.3: Update product-context for replace
 
 #### Wave 4
 - [ ] Slice 5: Retire the replaced/substitute machinery + legacy migration
