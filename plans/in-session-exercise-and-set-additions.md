@@ -569,7 +569,7 @@ Five plan-review personas ran. Parallelization approved in iteration 1. Acceptan
 - [ ] Slice 3: Overview UI — add an exercise
   - [x] Step 3.1: Picker pre-filter + plan-builder (pure logic)
   - [x] Step 3.2: Add-exercise bloc event → engine
-  - [ ] Step 3.3: Assembler renders added exercises from inline plan
+  - [x] Step 3.3: Assembler renders added exercises from inline plan
   - [ ] Step 3.4: Add-exercise sheet + foot-of-list entry point
   - [ ] Step 3.5: Resume affordance on skipped/ended cards
   - [ ] Step 3.6: Update product-context for add-exercise + resume
