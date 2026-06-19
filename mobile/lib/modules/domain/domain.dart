@@ -3,6 +3,7 @@ library;
 
 export 'errors.dart';
 export 'models/actual_set_values.dart';
+export 'models/added_exercise_plan.dart';
 export 'models/canonical_seed_exercise.dart';
 export 'models/cap_history.dart';
 export 'models/executed_set.dart';
