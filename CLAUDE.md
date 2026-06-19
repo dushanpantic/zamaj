@@ -28,7 +28,7 @@ dart run tool/generate_aggregate_goldens.dart  # regenerate JSON goldens
 
 ## Architecture
 
-`lib/modules/` splits into `domain/` (pure Dart: freezed models, repo contracts, `SessionFlowEngine`), `persistence/` (Drift tables, migrations, repo impls), and UI feature modules (`program_management/`, `workout_day_picker/`, `workout_overview/`, `focus_mode/`). `lib/core/` is cross-cutting (theme, tokens, clock, canonical_json, schema_versions). `lib/navigation/` routes per-module.
+`lib/modules/` splits into `domain/` (pure Dart: freezed models, repo contracts, `SessionFlowEngine`), `persistence/` (Drift tables, migrations, repo impls), and UI feature modules (`program_management/`, `exercise_library/`, `workout_day_picker/`, `workout_overview/`, `focus_mode/`, `export/`, `exercise_progress/`). `lib/core/` is cross-cutting (theme, tokens, clock, canonical_json, schema_versions). `lib/navigation/` routes per-module.
 
 **Layer rules — enforced by `tool/check_offline_imports.sh`:**
 

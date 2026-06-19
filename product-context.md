@@ -11,7 +11,7 @@ A solo lifter following a structured strength program — squats, bench, accesso
 ## Two pillars
 
 1. **Planned vs. actual are first-class.** Every set carries its planned target (weight × reps, time, bodyweight reps, etc.) and a separately-tracked actual value. The UI never collapses one into the other. This is what enables honest retros, deload decisions, and the per-exercise progress trend.
-2. **Sweaty-hands ergonomics in-session.** The two live-session surfaces ([workout_overview/](mobile/lib/modules/workout_overview/), [focus_mode/](mobile/lib/modules/focus_mode/)) are tuned for wet hands and quick taps between sets: 64 dp counter buttons, 36 px numeric readouts, ≥56 dp primary actions. Outside the gym (program editing, settings) the standard 48 dp tap target is fine.
+2. **Sweaty-hands ergonomics in-session.** The two live-session surfaces ([workout_overview/](mobile/lib/modules/workout_overview/), [focus_mode/](mobile/lib/modules/focus_mode/)) are tuned for wet hands and quick taps between sets: oversized counter buttons, large numeric readouts, and tall primary actions, so a set logs in one confident tap. Outside the gym (program editing, settings) standard tap targets are fine. The exact dp spec and its exceptions live in CLAUDE.md.
 
 ## How a session works
 
