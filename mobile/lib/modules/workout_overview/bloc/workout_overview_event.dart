@@ -164,6 +164,18 @@ final class WorkoutOverviewExtraSetRequested extends WorkoutOverviewEvent {
   List<Object?> get props => [sessionExerciseId];
 }
 
+/// Adds an exercise to the live session from a built [AddedExercisePlan]
+/// (library-linked or one-off). Routed through `engine.addExercise`; a
+/// duplicate-movement guard rejection surfaces as a transient error.
+final class WorkoutOverviewAddExerciseRequested extends WorkoutOverviewEvent {
+  const WorkoutOverviewAddExerciseRequested(this.plan);
+
+  final AddedExercisePlan plan;
+
+  @override
+  List<Object?> get props => [plan];
+}
+
 final class WorkoutOverviewSessionEnded extends WorkoutOverviewEvent {
   const WorkoutOverviewSessionEnded();
 }
