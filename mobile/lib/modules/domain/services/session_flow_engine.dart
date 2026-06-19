@@ -1,5 +1,6 @@
 import 'package:zamaj/modules/domain/errors.dart';
 import 'package:zamaj/modules/domain/models/actual_set_values.dart';
+import 'package:zamaj/modules/domain/models/added_exercise_plan.dart';
 import 'package:zamaj/modules/domain/models/exercise_metadata.dart';
 import 'package:zamaj/modules/domain/models/exercise_state.dart';
 import 'package:zamaj/modules/domain/models/measurement_type.dart';
@@ -110,6 +111,70 @@ class SessionFlowEngine {
       substituteLibraryExerciseId: substituteLibraryExerciseId,
     );
     return _buildState(updatedSession);
+  }
+
+  /// Adds an exercise to [sessionId] from an inline [plan] — work not present
+  /// in the frozen snapshot.
+  ///
+  /// When [plan] carries a `libraryExerciseId`, the add is rejected with a
+  /// [ValidationError] if that movement is already present as **any** session
+  /// exercise regardless of state (re-doing a movement already in the session
+  /// is done on its existing card via Resume or Add set, not by re-adding). A
+  /// one-off plan (null library id) is never deduplicated. [excludeSessionExerciseId],
+  /// when set, drops one exercise from the block-set — used by replace, where
+  /// the exercise being terminated may share the replacement's movement.
+  ///
+  /// Returns a fresh [SessionState]. The session snapshot is never changed.
+  Future<SessionState> addExercise({
+    required String sessionId,
+    required AddedExercisePlan plan,
+    String? excludeSessionExerciseId,
+  }) async {
+    final session = await _repository.getSession(sessionId);
+    if (session == null) {
+      throw NotFoundError(entityType: 'Session', id: sessionId);
+    }
+
+    final libraryId = plan.libraryExerciseId;
+    if (libraryId != null &&
+        _libraryMovementInSession(
+          session,
+          libraryId,
+          excludeSessionExerciseId: excludeSessionExerciseId,
+        )) {
+      throw ValidationError(
+        entityId: sessionId,
+        invariant: 'added_exercise_duplicate_library_movement',
+        message:
+            'Library movement $libraryId is already in session $sessionId; '
+            'resume or add a set on its existing card instead',
+      );
+    }
+
+    final updatedSession = await _repository.addExercise(
+      sessionId: sessionId,
+      plan: plan,
+    );
+    return _buildState(updatedSession);
+  }
+
+  /// Whether [libraryId] is the effective library movement of any session
+  /// exercise (other than [excludeSessionExerciseId]). Resolves each exercise's
+  /// movement through the inline-aware [EffectiveExercises] so added rows (which
+  /// have no snapshot entry) are matched on their inline plan's library id.
+  bool _libraryMovementInSession(
+    Session session,
+    String libraryId, {
+    String? excludeSessionExerciseId,
+  }) {
+    final effective = EffectiveExercises.of(session);
+    for (final exercise in session.sessionExercises) {
+      if (exercise.id == excludeSessionExerciseId) continue;
+      final exLibraryId =
+          effective.forSessionExercise(exercise).plannedExercise.libraryExerciseId;
+      if (exLibraryId == libraryId) return true;
+    }
+    return false;
   }
 
   /// Reorders all unfinished exercises to the specified order.

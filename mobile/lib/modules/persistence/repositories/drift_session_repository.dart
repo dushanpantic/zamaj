@@ -8,6 +8,7 @@ import 'package:zamaj/core/canonical_json.dart';
 import 'package:zamaj/core/schema_versions.dart';
 import 'package:zamaj/modules/domain/errors.dart';
 import 'package:zamaj/modules/domain/models/actual_set_values.dart';
+import 'package:zamaj/modules/domain/models/added_exercise_plan.dart';
 import 'package:zamaj/modules/domain/models/exercise_metadata.dart';
 import 'package:zamaj/modules/domain/models/exercise_state.dart' as domain;
 import 'package:zamaj/modules/domain/models/measurement_type.dart';
@@ -637,6 +638,19 @@ class DriftSessionRepository implements SessionRepository {
 
       return _loadSession(exerciseRow.sessionId);
     });
+  }
+
+  @override
+  Future<domain.Session> addExercise({
+    required String sessionId,
+    required AddedExercisePlan plan,
+  }) {
+    // Implemented in Step 2.4 (added_plan_json column + schema bump). The
+    // add-exercise UI is not wired until Slice 3, so this is never reached
+    // before the real implementation lands in the next step.
+    throw UnimplementedError(
+      'DriftSessionRepository.addExercise is implemented in Step 2.4',
+    );
   }
 
   @override

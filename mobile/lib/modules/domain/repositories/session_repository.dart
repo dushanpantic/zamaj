@@ -5,6 +5,7 @@
 library;
 
 import 'package:zamaj/modules/domain/models/actual_set_values.dart';
+import 'package:zamaj/modules/domain/models/added_exercise_plan.dart';
 import 'package:zamaj/modules/domain/models/exercise_metadata.dart';
 import 'package:zamaj/modules/domain/models/measurement_type.dart';
 import 'package:zamaj/modules/domain/models/planned_set_values.dart';
@@ -86,6 +87,19 @@ abstract class SessionRepository {
   Future<Session> deleteExecutedSet({required String executedSetId});
 
   Future<Session> skipExercise(String sessionExerciseId);
+
+  /// Appends a new exercise to [sessionId] from an inline [plan] — work added
+  /// after the session started that is not part of the frozen snapshot.
+  ///
+  /// The new [SessionExercise] is positioned after the current last exercise,
+  /// starts in `unfinished` state with no executed sets, and carries [plan] in
+  /// its `addedPlan` field (with a synthetic `plannedExerciseIdInSnapshot` that
+  /// is never resolved against the snapshot). The session snapshot is untouched.
+  /// The any-state duplicate-movement guard lives in the engine, not here.
+  Future<Session> addExercise({
+    required String sessionId,
+    required AddedExercisePlan plan,
+  });
 
   Future<Session> replaceExercise({
     required String sessionExerciseId,

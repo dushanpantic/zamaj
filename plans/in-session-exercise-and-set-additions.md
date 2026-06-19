@@ -561,7 +561,7 @@ Five plan-review personas ran. Parallelization approved in iteration 1. Acceptan
 - [ ] Slice 2: Domain & persistence foundation — added-exercise carrier + addExercise
   - [x] Step 2.1: AddedExercisePlan model
   - [x] Step 2.2: SessionExercise.addedPlan + inline-aware EffectiveExercises
-  - [ ] Step 2.3: SessionFlowEngine.addExercise + any-state dedup guard
+  - [x] Step 2.3: SessionFlowEngine.addExercise + any-state dedup guard
   - [ ] Step 2.4: Drift addExercise impl + added_plan_json column + schema bump
   - [ ] Step 2.5: resumeExercise (skipped/ended → unfinished)
 

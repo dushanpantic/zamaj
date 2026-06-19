@@ -4,6 +4,7 @@ import 'package:clock/clock.dart';
 import 'package:uuid/uuid.dart';
 import 'package:zamaj/modules/domain/errors.dart';
 import 'package:zamaj/modules/domain/models/actual_set_values.dart';
+import 'package:zamaj/modules/domain/models/added_exercise_plan.dart';
 import 'package:zamaj/modules/domain/models/executed_set.dart';
 import 'package:zamaj/modules/domain/models/exercise_group_kind.dart';
 import 'package:zamaj/modules/domain/models/exercise_metadata.dart';
@@ -327,6 +328,42 @@ class FakeSessionRepository implements SessionRepository {
     );
     _sessions[session.id] = updated;
     _notify(session.id);
+    return updated;
+  }
+
+  @override
+  Future<Session> addExercise({
+    required String sessionId,
+    required AddedExercisePlan plan,
+  }) async {
+    final session = _requireSession(sessionId);
+    final now = clock.now().toUtc();
+    final maxPosition = session.sessionExercises.isEmpty
+        ? -1
+        : session.sessionExercises
+              .map((e) => e.position)
+              .reduce((a, b) => a > b ? a : b);
+
+    final added = SessionExercise(
+      id: _uuid.v4(),
+      sessionId: sessionId,
+      position: maxPosition + 1,
+      // Synthetic 36-char id; never resolved because addedPlan branches first.
+      plannedExerciseIdInSnapshot: _uuid.v4(),
+      state: const ExerciseState.unfinished(),
+      executedSets: const [],
+      addedPlan: plan,
+      createdAt: now,
+      updatedAt: now,
+      schemaVersion: 1,
+    );
+
+    final updated = session.copyWith(
+      sessionExercises: [...session.sessionExercises, added],
+      updatedAt: now,
+    );
+    _sessions[sessionId] = updated;
+    _notify(sessionId);
     return updated;
   }
 
