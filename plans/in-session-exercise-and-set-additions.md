@@ -558,12 +558,12 @@ Five plan-review personas ran. Parallelization approved in iteration 1. Acceptan
   - [x] Step 1.2: "Add set" affordance + beyond-plan row rendering
   - [x] Step 1.3: Extra sets in review + plain-text export
   - [x] Step 1.4: Update product-context for add-set
-- [ ] Slice 2: Domain & persistence foundation — added-exercise carrier + addExercise
+- [x] Slice 2: Domain & persistence foundation — added-exercise carrier + addExercise
   - [x] Step 2.1: AddedExercisePlan model
   - [x] Step 2.2: SessionExercise.addedPlan + inline-aware EffectiveExercises
   - [x] Step 2.3: SessionFlowEngine.addExercise + any-state dedup guard
   - [x] Step 2.4: Drift addExercise impl + added_plan_json column + schema bump
-  - [ ] Step 2.5: resumeExercise (skipped/ended → unfinished)
+  - [x] Step 2.5: resumeExercise (skipped/ended → unfinished)
 
 #### Wave 2
 - [ ] Slice 3: Overview UI — add an exercise

@@ -86,6 +86,33 @@ class SessionFlowEngine {
     return _buildState(updatedSession);
   }
 
+  /// Resumes a terminated (`skipped`) exercise back to `unfinished`.
+  ///
+  /// The inverse of [skipExercise] and the re-do path for a skipped or
+  /// ended-early exercise: its logged sets, position, and superset membership
+  /// are retained, and it re-enters the normal under-quota [UnfinishedState]
+  /// flow (loggable from its next un-logged set). Throws [OrderingError] if the
+  /// exercise is not currently `skipped`. The snapshot is never changed.
+  Future<SessionState> resumeExercise({
+    required String sessionExerciseId,
+  }) async {
+    final session = await _repository.getSessionByExerciseId(sessionExerciseId);
+    final exercise = session.sessionExercises.firstWhere(
+      (SessionExercise e) => e.id == sessionExerciseId,
+    );
+    if (exercise.state is! SkippedState) {
+      throw OrderingError(
+        sessionExerciseId: sessionExerciseId,
+        currentState: exercise.state.discriminator,
+        message:
+            'Cannot resume exercise $sessionExerciseId: state is '
+            '${exercise.state.discriminator}, not skipped',
+      );
+    }
+    final updatedSession = await _repository.resumeExercise(sessionExerciseId);
+    return _buildState(updatedSession);
+  }
+
   /// Replaces an unfinished exercise with a substitute.
   Future<SessionState> replaceExercise({
     required String sessionExerciseId,

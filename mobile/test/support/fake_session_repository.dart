@@ -332,6 +332,29 @@ class FakeSessionRepository implements SessionRepository {
   }
 
   @override
+  Future<Session> resumeExercise(String sessionExerciseId) async {
+    final session = await getSessionByExerciseId(sessionExerciseId);
+    final now = clock.now().toUtc();
+
+    final updatedExercises = session.sessionExercises.map((exercise) {
+      if (exercise.id != sessionExerciseId) return exercise;
+      // Sets, position, and superset membership are untouched.
+      return exercise.copyWith(
+        state: const ExerciseState.unfinished(),
+        updatedAt: now,
+      );
+    }).toList();
+
+    final updated = session.copyWith(
+      sessionExercises: updatedExercises,
+      updatedAt: now,
+    );
+    _sessions[session.id] = updated;
+    _notify(session.id);
+    return updated;
+  }
+
+  @override
   Future<Session> addExercise({
     required String sessionId,
     required AddedExercisePlan plan,

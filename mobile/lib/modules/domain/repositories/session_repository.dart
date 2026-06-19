@@ -88,6 +88,12 @@ abstract class SessionRepository {
 
   Future<Session> skipExercise(String sessionExerciseId);
 
+  /// Reverts a terminated (`skipped`) exercise back to `unfinished`, retaining
+  /// its logged sets, position, and superset membership. The single-row state
+  /// write is the inverse of [skipExercise]; the engine guards that the current
+  /// state is `skipped`.
+  Future<Session> resumeExercise(String sessionExerciseId);
+
   /// Appends a new exercise to [sessionId] from an inline [plan] — work added
   /// after the session started that is not part of the frozen snapshot.
   ///
