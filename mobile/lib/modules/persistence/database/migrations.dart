@@ -57,6 +57,18 @@ abstract final class AppMigrations {
     if (from < 13) {
       await m.addColumn(db.sessions, db.sessions.isDeload);
     }
+    if (from < 14) {
+      // Inline-plan carrier for exercises added mid-session (Slice 2). Nullable,
+      // so every pre-existing row defaults to null (no added plan). Guarded so
+      // a minimal pre-v14 fixture without the table upgrades cleanly; the table
+      // always exists in a real install.
+      if (await _tableExists(db, 'session_exercises')) {
+        await m.addColumn(
+          db.sessionExercises,
+          db.sessionExercises.addedPlanJson,
+        );
+      }
+    }
   }
 
   /// Clears the manually-built exercise library so the embedded canonical

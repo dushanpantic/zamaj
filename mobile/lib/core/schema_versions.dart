@@ -3,6 +3,6 @@
 /// [drift] is the Drift `schemaVersion` passed to [GeneratedDatabase].
 /// [domain] is stamped onto every written domain entity row.
 abstract final class SchemaVersions {
-  static const int drift = 13;
-  static const int domain = 9;
+  static const int drift = 14;
+  static const int domain = 10;
 }

@@ -4,6 +4,7 @@ import 'package:drift/drift.dart';
 import 'package:zamaj/core/canonical_json.dart';
 import 'package:zamaj/modules/domain/errors.dart';
 import 'package:zamaj/modules/domain/models/actual_set_values.dart';
+import 'package:zamaj/modules/domain/models/added_exercise_plan.dart';
 import 'package:zamaj/modules/domain/models/executed_set.dart' as domain;
 import 'package:zamaj/modules/domain/models/exercise_state.dart';
 import 'package:zamaj/modules/domain/models/extra_work.dart' as domain;
@@ -141,6 +142,14 @@ class SessionMapper {
 
     final executedSets = sortedSets.map(_executedSetToDomain).toList();
 
+    // Read unconditionally — independent of stateDiscriminator — so an added
+    // exercise's inline plan rehydrates in every state.
+    final addedPlan = row.addedPlanJson != null
+        ? AddedExercisePlan.fromJson(
+            jsonDecode(row.addedPlanJson!) as Map<String, dynamic>,
+          )
+        : null;
+
     return domain.SessionExercise(
       id: row.id,
       sessionId: row.sessionId,
@@ -149,6 +158,7 @@ class SessionMapper {
       state: state,
       executedSets: executedSets,
       supersetTag: row.supersetTag,
+      addedPlan: addedPlan,
       createdAt: DateTime.fromMillisecondsSinceEpoch(
         row.createdAtMs,
         isUtc: true,
@@ -248,6 +258,11 @@ class SessionMapper {
       plannedExerciseIdInSnapshot: Value(exercise.plannedExerciseIdInSnapshot),
       stateDiscriminator: Value(discriminator),
       substitutePayloadJson: Value(substituteJson),
+      addedPlanJson: Value(
+        exercise.addedPlan != null
+            ? CanonicalJson.encode(exercise.addedPlan!.toJson())
+            : null,
+      ),
       supersetTag: Value(exercise.supersetTag),
       createdAtMs: Value(exercise.createdAt.millisecondsSinceEpoch),
       updatedAtMs: Value(exercise.updatedAt.millisecondsSinceEpoch),

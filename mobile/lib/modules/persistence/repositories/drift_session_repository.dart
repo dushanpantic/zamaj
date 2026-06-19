@@ -644,13 +644,53 @@ class DriftSessionRepository implements SessionRepository {
   Future<domain.Session> addExercise({
     required String sessionId,
     required AddedExercisePlan plan,
-  }) {
-    // Implemented in Step 2.4 (added_plan_json column + schema bump). The
-    // add-exercise UI is not wired until Slice 3, so this is never reached
-    // before the real implementation lands in the next step.
-    throw UnimplementedError(
-      'DriftSessionRepository.addExercise is implemented in Step 2.4',
-    );
+  }) async {
+    return _db.transaction(() async {
+      final sessionRow = await _requireSessionRow(sessionId);
+
+      // Append after the current last exercise (maxPosition + gap).
+      final existing = await (_db.select(
+        _db.sessionExercises,
+      )..where((t) => t.sessionId.equals(sessionId))).get();
+      final maxPosition = existing.isEmpty
+          ? -_gap
+          : existing.map((e) => e.position).reduce((a, b) => a > b ? a : b);
+
+      final now = _clock.now().toUtc();
+      final nowMs = utcToMs(now);
+
+      await _db
+          .into(_db.sessionExercises)
+          .insert(
+            SessionExercisesCompanion.insert(
+              id: _uuid.v4(),
+              sessionId: sessionId,
+              position: maxPosition + _gap,
+              // Synthetic 36-char id; never resolved against the snapshot
+              // because EffectiveExercises branches on addedPlan first.
+              plannedExerciseIdInSnapshot: _uuid.v4(),
+              stateDiscriminator: 'unfinished',
+              substitutePayloadJson: const Value(null),
+              addedPlanJson: Value(CanonicalJson.encode(plan.toJson())),
+              supersetTag: const Value(null),
+              createdAtMs: nowMs,
+              updatedAtMs: nowMs,
+              schemaVersion: SchemaVersions.domain,
+            ),
+          );
+
+      final sessionUpdatedAt = _timestamps.nextUpdatedAt(
+        previousUpdatedAt: msToUtc(sessionRow.updatedAtMs),
+        createdAt: msToUtc(sessionRow.createdAtMs),
+      );
+      await (_db.update(
+        _db.sessions,
+      )..where((t) => t.id.equals(sessionId))).write(
+        SessionsCompanion(updatedAtMs: Value(utcToMs(sessionUpdatedAt))),
+      );
+
+      return _loadSession(sessionId);
+    });
   }
 
   @override
@@ -1252,6 +1292,13 @@ class DriftSessionRepository implements SessionRepository {
     Session sessionRow,
   ) {
     final workoutDay = _parseSnapshotWorkoutDay(sessionRow);
+    // Reconstruct the inline plan so an added (snapshot-less) row resolves via
+    // its plan instead of throwing NotFoundError on its synthetic snapshot id.
+    final addedPlan = exerciseRow.addedPlanJson != null
+        ? AddedExercisePlan.fromJson(
+            jsonDecode(exerciseRow.addedPlanJson!) as Map<String, dynamic>,
+          )
+        : null;
     final sessionExercise = domain.SessionExercise(
       id: exerciseRow.id,
       sessionId: exerciseRow.sessionId,
@@ -1260,6 +1307,7 @@ class DriftSessionRepository implements SessionRepository {
       state: _stateForRow(exerciseRow),
       executedSets: const [],
       supersetTag: exerciseRow.supersetTag,
+      addedPlan: addedPlan,
       createdAt: msToUtc(exerciseRow.createdAtMs),
       updatedAt: msToUtc(exerciseRow.updatedAtMs),
       schemaVersion: exerciseRow.schemaVersion,
