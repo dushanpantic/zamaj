@@ -26,6 +26,7 @@ class WorkoutOverviewBloc
     on<WorkoutOverviewSupersetUngrouped>(_onSupersetUngrouped);
     on<WorkoutOverviewSessionNoteAdded>(_onSessionNoteAdded);
     on<WorkoutOverviewExtraWorkAdded>(_onExtraWorkAdded);
+    on<WorkoutOverviewExtraSetRequested>(_onExtraSetRequested);
     on<WorkoutOverviewSessionEnded>(_onSessionEnded);
     on<InternalSessionPushed>(_onSessionPushed);
     on<InternalSessionMissing>(_onSessionMissing);
@@ -320,6 +321,31 @@ class WorkoutOverviewBloc
         sessionId: current.sessionState.session.id,
         body: event.body,
       ),
+    );
+  }
+
+  Future<void> _onExtraSetRequested(
+    WorkoutOverviewExtraSetRequested event,
+    Emitter<WorkoutOverviewState> emit,
+  ) async {
+    final current = state;
+    if (current is! WorkoutOverviewLoaded) return;
+    if (current.isEnded) return;
+    // Seed the extra set from the exercise's last logged set (or its planned
+    // values if none) so the user lands on a sensible default and dials in
+    // from there with the inline editor.
+    final suggested = _engine.suggestValuesFor(
+      session: current.sessionState.session,
+      sessionExerciseId: event.sessionExerciseId,
+    );
+    await _runMutation(
+      emit,
+      // No plannedSetIdInSnapshot: this set is beyond the planned quota.
+      () => _engine.completeSet(
+        sessionExerciseId: event.sessionExerciseId,
+        actualValues: suggested,
+      ),
+      touchedSessionExerciseId: event.sessionExerciseId,
     );
   }
 

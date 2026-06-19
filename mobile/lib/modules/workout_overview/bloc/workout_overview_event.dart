@@ -148,6 +148,22 @@ final class WorkoutOverviewExtraWorkAdded extends WorkoutOverviewEvent {
   List<Object?> get props => [body];
 }
 
+/// Logs one extra set beyond the planned quota on [sessionExerciseId].
+///
+/// The single secondary "re-do more" affordance for a completed exercise: the
+/// bloc seeds the new set from the exercise's last logged set (via
+/// `engine.suggestValuesFor`) and routes it through the same `completeSet`
+/// path. The exercise stays completed; the new set is recorded as work beyond
+/// the plan, never folded into the snapshot.
+final class WorkoutOverviewExtraSetRequested extends WorkoutOverviewEvent {
+  const WorkoutOverviewExtraSetRequested(this.sessionExerciseId);
+
+  final String sessionExerciseId;
+
+  @override
+  List<Object?> get props => [sessionExerciseId];
+}
+
 final class WorkoutOverviewSessionEnded extends WorkoutOverviewEvent {
   const WorkoutOverviewSessionEnded();
 }
