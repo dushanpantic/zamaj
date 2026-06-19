@@ -36,6 +36,7 @@ class ExerciseCard extends StatelessWidget {
     required this.onEndOrSkipPressed,
     required this.onOpenVideo,
     this.onAddSetPressed,
+    this.onResumePressed,
     this.onGroupIntoPressed,
     this.onMoveUp,
     this.onMoveDown,
@@ -63,6 +64,11 @@ class ExerciseCard extends StatelessWidget {
   /// completed card (the re-do affordance) while [ExerciseViewModel.canAddSet]
   /// is true. Null hides the entry.
   final VoidCallback? onAddSetPressed;
+
+  /// Resumes a skipped/ended exercise back to in-progress. Surfaced as the
+  /// "Resume" kebab item on a terminated (skipped) card — the re-do slot for a
+  /// movement that was skipped or ended early. Null hides the entry.
+  final VoidCallback? onResumePressed;
 
   /// When non-null, the per-card ⋮ menu surfaces a "Group into superset…"
   /// entry that opens the picker dialog. Null hides the entry — used inside
@@ -133,6 +139,7 @@ class ExerciseCard extends StatelessWidget {
               onEndOrSkip: onEndOrSkipPressed,
               onOpenVideo: onOpenVideo,
               onAddSet: onAddSetPressed,
+              onResume: onResumePressed,
               onGroupInto: onGroupIntoPressed,
               onMoveUp: onMoveUp,
               onMoveDown: onMoveDown,
@@ -168,6 +175,7 @@ class _Header extends StatelessWidget {
     required this.onEndOrSkip,
     required this.onOpenVideo,
     required this.onAddSet,
+    required this.onResume,
     required this.onGroupInto,
     required this.onMoveUp,
     required this.onMoveDown,
@@ -184,6 +192,7 @@ class _Header extends StatelessWidget {
   final VoidCallback onEndOrSkip;
   final void Function(String videoUrl) onOpenVideo;
   final VoidCallback? onAddSet;
+  final VoidCallback? onResume;
   final VoidCallback? onGroupInto;
   final VoidCallback? onMoveUp;
   final VoidCallback? onMoveDown;
@@ -299,11 +308,13 @@ class _Header extends StatelessWidget {
                 canMutate: canMutate,
                 hasExecutedSet: hasExecutedSet,
                 canAddSet: viewModel.canAddSet,
+                canResume: state is SkippedState,
                 videoUrl: videoUrl,
                 isExpanded: isExpanded,
                 onEndOrSkip: onEndOrSkip,
                 onOpenVideo: onOpenVideo,
                 onAddSet: onAddSet,
+                onResume: onResume,
                 onGroupInto: onGroupInto,
                 onMoveUp: onMoveUp,
                 onMoveDown: onMoveDown,
@@ -477,11 +488,13 @@ class _Actions extends StatelessWidget {
     required this.canMutate,
     required this.hasExecutedSet,
     required this.canAddSet,
+    required this.canResume,
     required this.videoUrl,
     required this.isExpanded,
     required this.onEndOrSkip,
     required this.onOpenVideo,
     required this.onAddSet,
+    required this.onResume,
     required this.onGroupInto,
     required this.onMoveUp,
     required this.onMoveDown,
@@ -492,11 +505,13 @@ class _Actions extends StatelessWidget {
   final bool canMutate;
   final bool hasExecutedSet;
   final bool canAddSet;
+  final bool canResume;
   final String? videoUrl;
   final bool isExpanded;
   final VoidCallback onEndOrSkip;
   final void Function(String videoUrl) onOpenVideo;
   final VoidCallback? onAddSet;
+  final VoidCallback? onResume;
   final VoidCallback? onGroupInto;
   final VoidCallback? onMoveUp;
   final VoidCallback? onMoveDown;
@@ -517,11 +532,17 @@ class _Actions extends StatelessWidget {
     // extra set beyond plan. Gated on the assembler's canAddSet (completed +
     // live session) and a wired callback.
     final showAddSet = canMutate && canAddSet && onAddSet != null;
-    // Every secondary action lives in the kebab: Add set / Move up/down /
-    // Group into / End or Skip / Open video. The card surface stays reserved
-    // for the one direct control that matters in the gym, LOG SET.
+    // "Resume" is the re-do affordance for a skipped or ended-early exercise —
+    // reverting it to in-progress (retaining any logged sets). It shares the
+    // completed card's re-do slot; the two are mutually exclusive by state
+    // (skipped vs completed) so they never both appear.
+    final showResume = canMutate && canResume && onResume != null;
+    // Every secondary action lives in the kebab: Add set / Resume / Move
+    // up/down / Group into / End or Skip / Open video. The card surface stays
+    // reserved for the one direct control that matters in the gym, LOG SET.
     final hasMenu =
         showAddSet ||
+        showResume ||
         canReorder ||
         canGroupInto ||
         canEndOrSkip ||
@@ -547,6 +568,8 @@ class _Actions extends StatelessWidget {
               switch (action) {
                 case _MenuAction.addSet:
                   onAddSet?.call();
+                case _MenuAction.resume:
+                  onResume?.call();
                 case _MenuAction.moveUp:
                   onMoveUp?.call();
                 case _MenuAction.moveDown:
@@ -561,13 +584,22 @@ class _Actions extends StatelessWidget {
               }
             },
             itemBuilder: (context) => [
-              // The completed-exercise re-do slot sits first in the menu.
+              // The re-do slot sits first in the menu: "Add set" for a
+              // completed exercise, "Resume" for a skipped/ended-early one.
               if (showAddSet)
                 const PopupMenuItem(
                   value: _MenuAction.addSet,
                   child: AppMenuRow(
                     icon: Icons.add,
                     label: 'Add set',
+                  ),
+                ),
+              if (showResume)
+                const PopupMenuItem(
+                  value: _MenuAction.resume,
+                  child: AppMenuRow(
+                    icon: Icons.play_arrow,
+                    label: 'Resume',
                   ),
                 ),
               if (canReorder) ...[
@@ -625,7 +657,15 @@ class _Actions extends StatelessWidget {
   }
 }
 
-enum _MenuAction { addSet, moveUp, moveDown, groupInto, endOrSkip, openVideo }
+enum _MenuAction {
+  addSet,
+  resume,
+  moveUp,
+  moveDown,
+  groupInto,
+  endOrSkip,
+  openVideo,
+}
 
 class _ExpandedBody extends StatelessWidget {
   const _ExpandedBody({

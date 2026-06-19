@@ -176,6 +176,18 @@ final class WorkoutOverviewAddExerciseRequested extends WorkoutOverviewEvent {
   List<Object?> get props => [plan];
 }
 
+/// Resumes a skipped/ended exercise back to in-progress (the re-do path for a
+/// terminated movement), retaining its logged sets. Routed through
+/// `engine.resumeExercise`.
+final class WorkoutOverviewResumeRequested extends WorkoutOverviewEvent {
+  const WorkoutOverviewResumeRequested(this.sessionExerciseId);
+
+  final String sessionExerciseId;
+
+  @override
+  List<Object?> get props => [sessionExerciseId];
+}
+
 final class WorkoutOverviewSessionEnded extends WorkoutOverviewEvent {
   const WorkoutOverviewSessionEnded();
 }

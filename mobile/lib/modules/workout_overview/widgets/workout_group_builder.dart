@@ -181,6 +181,12 @@ class WorkoutGroupBuilder extends StatelessWidget {
             WorkoutOverviewExtraSetRequested(exerciseId),
           );
         },
+        onResumePressed: () {
+          Haptics.tap();
+          context.read<WorkoutOverviewBloc>().add(
+            WorkoutOverviewResumeRequested(exerciseId),
+          );
+        },
         onGroupIntoPressed: (candidates.isEmpty && eligibleGroups.isEmpty)
             ? null
             : () => onGroupInto(exercise, candidates, eligibleGroups),
@@ -405,6 +411,12 @@ class WorkoutGroupBuilder extends StatelessWidget {
         Haptics.tap();
         context.read<WorkoutOverviewBloc>().add(
           WorkoutOverviewExtraSetRequested(id),
+        );
+      },
+      onResumePressed: (id) {
+        Haptics.tap();
+        context.read<WorkoutOverviewBloc>().add(
+          WorkoutOverviewResumeRequested(id),
         );
       },
       memberDragHandleBuilder: memberDragHandle,
