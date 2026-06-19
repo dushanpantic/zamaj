@@ -28,6 +28,12 @@ _SessionExercise _$SessionExerciseFromJson(
           .toList(),
     ),
     supersetTag: $checkedConvert('supersetTag', (v) => v as String?),
+    addedPlan: $checkedConvert(
+      'addedPlan',
+      (v) => v == null
+          ? null
+          : AddedExercisePlan.fromJson(v as Map<String, dynamic>),
+    ),
     createdAt: $checkedConvert('createdAt', (v) => DateTime.parse(v as String)),
     updatedAt: $checkedConvert('updatedAt', (v) => DateTime.parse(v as String)),
     schemaVersion: $checkedConvert('schemaVersion', (v) => (v as num).toInt()),
@@ -44,6 +50,7 @@ Map<String, dynamic> _$SessionExerciseToJson(_SessionExercise instance) =>
       'state': instance.state.toJson(),
       'executedSets': instance.executedSets.map((e) => e.toJson()).toList(),
       'supersetTag': ?instance.supersetTag,
+      'addedPlan': ?instance.addedPlan?.toJson(),
       'createdAt': instance.createdAt.toIso8601String(),
       'updatedAt': instance.updatedAt.toIso8601String(),
       'schemaVersion': instance.schemaVersion,

@@ -1,6 +1,8 @@
 import 'package:zamaj/modules/domain/errors.dart';
+import 'package:zamaj/modules/domain/models/added_exercise_plan.dart';
 import 'package:zamaj/modules/domain/models/exercise.dart';
 import 'package:zamaj/modules/domain/models/exercise_group_role.dart';
+import 'package:zamaj/modules/domain/models/exercise_metadata.dart';
 import 'package:zamaj/modules/domain/models/exercise_state.dart';
 import 'package:zamaj/modules/domain/models/measurement_type.dart';
 import 'package:zamaj/modules/domain/models/planned_set_values.dart';
@@ -11,15 +13,22 @@ import 'package:zamaj/modules/domain/models/workout_set.dart';
 
 /// Snapshot-aware resolver for [SessionExercise]s.
 ///
-/// A session's immutable snapshot is the single source of truth for a
+/// A session's immutable snapshot is the source of truth for a snapshot-backed
 /// session-exercise's planned data; a [ReplacedState] substitute overrides the
 /// measurement type, set count, display name, and planned values while the
 /// group role still derives from the snapshot. This projection is the one place
 /// that pairing lives — previously copied into the engine, the Drift repo, and
 /// the overview/focus assemblers with three behavioural divergences (a silent
 /// planned-set-count of zero and a `main` group-role fallback on a missing
-/// snapshot entry). Here a missing planned exercise **always** throws
-/// [NotFoundError].
+/// snapshot entry).
+///
+/// An **added** session-exercise ([SessionExercise.addedPlan] non-null) is work
+/// not present in the frozen snapshot: it resolves entirely from its inline
+/// [AddedExercisePlan], with a synthesized [Exercise] standing in for the
+/// (absent) snapshot entry and a `main` group role. For these the
+/// `plannedExerciseIdInSnapshot` is a synthetic id and is never looked up.
+/// A non-added session-exercise whose planned id is missing from the snapshot
+/// still **always** throws [NotFoundError].
 class EffectiveExercises {
   EffectiveExercises._(this._plannedById, this._roleById);
 
@@ -47,10 +56,21 @@ class EffectiveExercises {
 
   /// Resolves the effective view of [sessionExercise].
   ///
-  /// Throws [NotFoundError] when the session-exercise's planned exercise is
-  /// absent from the snapshot — including for a replaced exercise, whose group
-  /// role still requires the snapshot original.
+  /// Branch order: an added exercise (inline plan) resolves from its plan; a
+  /// snapshot-backed exercise resolves from the snapshot (the replaced
+  /// substitute is then applied by the [EffectiveExercise] getters). Throws
+  /// [NotFoundError] only when a non-added session-exercise's planned exercise
+  /// is absent from the snapshot — including for a replaced exercise, whose
+  /// group role still requires the snapshot original.
   EffectiveExercise forSessionExercise(SessionExercise sessionExercise) {
+    final addedPlan = sessionExercise.addedPlan;
+    if (addedPlan != null) {
+      return EffectiveExercise._(
+        plannedExercise: _synthesizePlanned(sessionExercise, addedPlan),
+        sessionExercise: sessionExercise,
+        plannedGroupRole: ExerciseGroupRole.main,
+      );
+    }
     final id = sessionExercise.plannedExerciseIdInSnapshot;
     final planned = _plannedById[id];
     final role = _roleById[id];
@@ -63,6 +83,42 @@ class EffectiveExercises {
       plannedGroupRole: role,
     );
   }
+
+  /// Synthesizes a stand-in [Exercise] for an added session-exercise from its
+  /// inline plan, so the [EffectiveExercise] getters (which read
+  /// `plannedExercise`) work unchanged. The plan's single planned-value set is
+  /// repeated [AddedExercisePlan.setCount] times.
+  static Exercise _synthesizePlanned(
+    SessionExercise sessionExercise,
+    AddedExercisePlan plan,
+  ) {
+    final syntheticId = sessionExercise.plannedExerciseIdInSnapshot;
+    return Exercise(
+      id: syntheticId,
+      exerciseGroupId: 'added:${sessionExercise.id}',
+      position: sessionExercise.position,
+      name: plan.name,
+      measurementType: plan.measurementType,
+      metadata: plan.metadata ?? const ExerciseMetadata(),
+      libraryExerciseId: plan.libraryExerciseId,
+      sets: [
+        for (var i = 0; i < plan.setCount; i++)
+          WorkoutSet(
+            id: '$syntheticId-set-$i',
+            exerciseId: syntheticId,
+            position: i,
+            measurementType: plan.measurementType,
+            plannedValues: plan.plannedValues,
+            createdAt: sessionExercise.createdAt,
+            updatedAt: sessionExercise.updatedAt,
+            schemaVersion: sessionExercise.schemaVersion,
+          ),
+      ],
+      createdAt: sessionExercise.createdAt,
+      updatedAt: sessionExercise.updatedAt,
+      schemaVersion: sessionExercise.schemaVersion,
+    );
+  }
 }
 
 /// Resolved, snapshot-aware view of a single [SessionExercise].
@@ -73,8 +129,11 @@ class EffectiveExercise {
     required this.plannedGroupRole,
   });
 
-  /// The planned exercise from the immutable snapshot. Always present even when
-  /// the session-exercise is replaced.
+  /// The planned exercise this view resolves against. For a snapshot-backed
+  /// session-exercise it is the snapshot entry (present even when the exercise
+  /// is replaced — the substitute is applied by the getters below). For an
+  /// added exercise it is a stand-in synthesized from the inline plan, since
+  /// there is no snapshot entry.
   final Exercise plannedExercise;
 
   final SessionExercise sessionExercise;
