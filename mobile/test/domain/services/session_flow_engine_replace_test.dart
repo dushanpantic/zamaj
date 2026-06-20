@@ -60,17 +60,19 @@ WorkoutDay _day(List<Exercise> exercises) => WorkoutDay(
   schemaVersion: 1,
 );
 
-AddedExercisePlan _plan({String? libraryExerciseId, String name = 'Replacement'}) =>
-    AddedExercisePlan(
-      name: name,
-      measurementType: const MeasurementType.repBased(),
-      plannedValues: PlannedSetValues.repBased(
-        weightKg: 60,
-        repTarget: RepTarget.fixed(reps: 12),
-      ),
-      setCount: 2,
-      libraryExerciseId: libraryExerciseId,
-    );
+AddedExercisePlan _plan({
+  String? libraryExerciseId,
+  String name = 'Replacement',
+}) => AddedExercisePlan(
+  name: name,
+  measurementType: const MeasurementType.repBased(),
+  plannedValues: PlannedSetValues.repBased(
+    weightKg: 60,
+    repTarget: RepTarget.fixed(reps: 12),
+  ),
+  setCount: 2,
+  libraryExerciseId: libraryExerciseId,
+);
 
 ({FakeSessionRepository repo, SessionFlowEngine engine}) _setup() {
   final repo = FakeSessionRepository(clock: Clock.fixed(_t));
@@ -145,34 +147,38 @@ void main() {
       );
     });
 
-    test('rejects a replacement duplicating another exercise already in the '
-        'session; the original is left unchanged and nothing is written',
-        () async {
-      final s = _setup();
-      s.repo.seedWorkoutDay(_day([
-        _exercise('a', libraryExerciseId: _libA),
-        _exercise('b', libraryExerciseId: _libB),
-      ]));
-      final started = await s.repo.startSession(workoutDayId: 'wd-1');
-      final aId = started.sessionExercises[0].id;
-      final countBefore = started.sessionExercises.length;
+    test(
+      'rejects a replacement duplicating another exercise already in the '
+      'session; the original is left unchanged and nothing is written',
+      () async {
+        final s = _setup();
+        s.repo.seedWorkoutDay(
+          _day([
+            _exercise('a', libraryExerciseId: _libA),
+            _exercise('b', libraryExerciseId: _libB),
+          ]),
+        );
+        final started = await s.repo.startSession(workoutDayId: 'wd-1');
+        final aId = started.sessionExercises[0].id;
+        final countBefore = started.sessionExercises.length;
 
-      // Replacing A with B's movement collides with the still-present B.
-      await expectLater(
-        s.engine.replaceExercise(
-          sessionExerciseId: aId,
-          plan: _plan(libraryExerciseId: _libB),
-        ),
-        throwsA(isA<ValidationError>()),
-      );
+        // Replacing A with B's movement collides with the still-present B.
+        await expectLater(
+          s.engine.replaceExercise(
+            sessionExerciseId: aId,
+            plan: _plan(libraryExerciseId: _libB),
+          ),
+          throwsA(isA<ValidationError>()),
+        );
 
-      final after = await s.repo.getSession(started.id);
-      expect(after!.sessionExercises.length, countBefore);
-      expect(
-        after.sessionExercises.firstWhere((e) => e.id == aId).state,
-        isA<UnfinishedState>(),
-      );
-    });
+        final after = await s.repo.getSession(started.id);
+        expect(after!.sessionExercises.length, countBefore);
+        expect(
+          after.sessionExercises.firstWhere((e) => e.id == aId).state,
+          isA<UnfinishedState>(),
+        );
+      },
+    );
 
     test('replacing an exercise with its own movement is allowed (the original '
         'is excluded from its own dedup block-set)', () async {

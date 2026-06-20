@@ -283,7 +283,6 @@ void main() {
         }
       },
     );
-
   });
 
   // **Validates: Requirements 7.1, 7.2, 7.4**
@@ -371,84 +370,81 @@ void main() {
   });
 
   // **Validates: Requirements 8.1, 8.2**
-  group(
-    'Property 13: Composed replace terminates the original and appends the '
-    'replacement as an added exercise',
-    () {
-      test('replaceExercise skips the original (snapshot id unchanged) and '
-          'appends a new added exercise carrying the plan', () async {
-        const iterations = 100;
-        final masterSeed = Random().nextInt(1 << 32);
+  group('Property 13: Composed replace terminates the original and appends the '
+      'replacement as an added exercise', () {
+    test('replaceExercise skips the original (snapshot id unchanged) and '
+        'appends a new added exercise carrying the plan', () async {
+      const iterations = 100;
+      final masterSeed = Random().nextInt(1 << 32);
 
-        for (var i = 0; i < iterations; i++) {
-          final rng = Random(masterSeed + i);
-          final session = anySessionWithLoggableTargets(rng);
-          final fakeClock = Clock.fixed(anyUtcDateTime(rng));
-          final repo = FakeSessionRepository(clock: fakeClock);
-          repo.seedSession(session);
+      for (var i = 0; i < iterations; i++) {
+        final rng = Random(masterSeed + i);
+        final session = anySessionWithLoggableTargets(rng);
+        final fakeClock = Clock.fixed(anyUtcDateTime(rng));
+        final repo = FakeSessionRepository(clock: fakeClock);
+        repo.seedSession(session);
 
-          final engine = SessionFlowEngine(repository: repo);
+        final engine = SessionFlowEngine(repository: repo);
 
-          final unfinished = session.sessionExercises
-              .where((e) => e.state is UnfinishedState)
-              .toList();
-          final target = unfinished[rng.nextInt(unfinished.length)];
-          final originalPlannedId = target.plannedExerciseIdInSnapshot;
-          final originalCount = session.sessionExercises.length;
+        final unfinished = session.sessionExercises
+            .where((e) => e.state is UnfinishedState)
+            .toList();
+        final target = unfinished[rng.nextInt(unfinished.length)];
+        final originalPlannedId = target.plannedExerciseIdInSnapshot;
+        final originalCount = session.sessionExercises.length;
 
-          // One-off plan so the dedup guard never rejects a random replacement.
-          final plan = anyAddedExercisePlan(rng, libraryLinked: false);
+        // One-off plan so the dedup guard never rejects a random replacement.
+        final plan = anyAddedExercisePlan(rng, libraryLinked: false);
 
-          final result = await engine.replaceExercise(
-            sessionExerciseId: target.id,
-            plan: plan,
-          );
+        final result = await engine.replaceExercise(
+          sessionExerciseId: target.id,
+          plan: plan,
+        );
 
-          final original = result.session.sessionExercises.firstWhere(
-            (e) => e.id == target.id,
-          );
+        final original = result.session.sessionExercises.firstWhere(
+          (e) => e.id == target.id,
+        );
 
-          expect(
-            original.state,
-            isA<SkippedState>(),
-            reason:
-                'iteration $i (seed ${masterSeed + i}): '
-                'the original is terminated (skipped) by a composed replace',
-          );
-          expect(
-            original.plannedExerciseIdInSnapshot,
-            equals(originalPlannedId),
-            reason:
-                'iteration $i (seed ${masterSeed + i}): '
-                'the original keeps its snapshot id',
-          );
-          expect(
-            result.session.sessionExercises.length,
-            equals(originalCount + 1),
-            reason:
-                'iteration $i (seed ${masterSeed + i}): '
-                'a replacement exercise is appended',
-          );
+        expect(
+          original.state,
+          isA<SkippedState>(),
+          reason:
+              'iteration $i (seed ${masterSeed + i}): '
+              'the original is terminated (skipped) by a composed replace',
+        );
+        expect(
+          original.plannedExerciseIdInSnapshot,
+          equals(originalPlannedId),
+          reason:
+              'iteration $i (seed ${masterSeed + i}): '
+              'the original keeps its snapshot id',
+        );
+        expect(
+          result.session.sessionExercises.length,
+          equals(originalCount + 1),
+          reason:
+              'iteration $i (seed ${masterSeed + i}): '
+              'a replacement exercise is appended',
+        );
 
-          final added = result.session.sessionExercises.last;
-          expect(
-            added.state,
-            isA<UnfinishedState>(),
-            reason:
-                'iteration $i (seed ${masterSeed + i}): '
-                'the replacement is loggable (unfinished)',
-          );
-          expect(
-            added.addedPlan?.name,
-            equals(plan.name),
-            reason:
-                'iteration $i (seed ${masterSeed + i}): '
-                'the replacement carries the supplied plan',
-          );
-        }
-      });
-    },
-  );
+        final added = result.session.sessionExercises.last;
+        expect(
+          added.state,
+          isA<UnfinishedState>(),
+          reason:
+              'iteration $i (seed ${masterSeed + i}): '
+              'the replacement is loggable (unfinished)',
+        );
+        expect(
+          added.addedPlan?.name,
+          equals(plan.name),
+          reason:
+              'iteration $i (seed ${masterSeed + i}): '
+              'the replacement carries the supplied plan',
+        );
+      }
+    });
+  });
 
   // **Validates: Requirements 9.1, 9.4**
   group(

@@ -126,9 +126,7 @@ Future<List<Map<String, Object?>>> _sessionExerciseRows(
           'id': r.read<String>('id'),
           'position': r.read<int>('position'),
           'state_discriminator': r.read<String>('state_discriminator'),
-          'substitute_payload_json': r.read<String?>(
-            'substitute_payload_json',
-          ),
+          'substitute_payload_json': r.read<String?>('substitute_payload_json'),
           'added_plan_json': r.read<String?>('added_plan_json'),
         },
       )
@@ -136,21 +134,18 @@ Future<List<Map<String, Object?>>> _sessionExerciseRows(
 }
 
 void _seedSession(raw.Database db) {
-  db.execute(
-    'INSERT INTO sessions VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
-    [
-      _sessionId,
-      'wd---xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx',
-      '{"exerciseGroups":[]}',
-      'a' * 64,
-      _ts,
-      null,
-      _ts,
-      _ts,
-      10,
-      0,
-    ],
-  );
+  db.execute('INSERT INTO sessions VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)', [
+    _sessionId,
+    'wd---xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx',
+    '{"exerciseGroups":[]}',
+    'a' * 64,
+    _ts,
+    null,
+    _ts,
+    _ts,
+    10,
+    0,
+  ]);
 }
 
 void _seedSessionExercise(

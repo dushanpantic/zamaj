@@ -597,18 +597,12 @@ class _Actions extends StatelessWidget {
               if (showAddSet)
                 const PopupMenuItem(
                   value: _MenuAction.addSet,
-                  child: AppMenuRow(
-                    icon: Icons.add,
-                    label: 'Add set',
-                  ),
+                  child: AppMenuRow(icon: Icons.add, label: 'Add set'),
                 ),
               if (showResume)
                 const PopupMenuItem(
                   value: _MenuAction.resume,
-                  child: AppMenuRow(
-                    icon: Icons.play_arrow,
-                    label: 'Resume',
-                  ),
+                  child: AppMenuRow(icon: Icons.play_arrow, label: 'Resume'),
                 ),
               if (canReorder) ...[
                 PopupMenuItem(
@@ -641,10 +635,7 @@ class _Actions extends StatelessWidget {
               if (showReplace)
                 const PopupMenuItem(
                   value: _MenuAction.replace,
-                  child: AppMenuRow(
-                    icon: Icons.swap_horiz,
-                    label: 'Replace…',
-                  ),
+                  child: AppMenuRow(icon: Icons.swap_horiz, label: 'Replace…'),
                 ),
               if (canEndOrSkip)
                 PopupMenuItem(

@@ -146,21 +146,24 @@ void main() {
       expect(vm.canAddSet, isFalse);
     });
 
-    test('an unfinished exercise does not offer Add set (it logs normally)', () {
-      final session = _session(state: const ExerciseState.unfinished());
-      final state = SessionState(
-        session: session,
-        openTargets: const [
-          LogTarget(sessionExerciseId: 'se-a', plannedSetIndex: 0),
-        ],
-        isComplete: false,
-      );
+    test(
+      'an unfinished exercise does not offer Add set (it logs normally)',
+      () {
+        final session = _session(state: const ExerciseState.unfinished());
+        final state = SessionState(
+          session: session,
+          openTargets: const [
+            LogTarget(sessionExerciseId: 'se-a', plannedSetIndex: 0),
+          ],
+          isComplete: false,
+        );
 
-      final vm = ExerciseViewModelAssembler.assemble(
-        state,
-      ).single.allExercises.single;
-      expect(vm.canAddSet, isFalse);
-    });
+        final vm = ExerciseViewModelAssembler.assemble(
+          state,
+        ).single.allExercises.single;
+        expect(vm.canAddSet, isFalse);
+      },
+    );
 
     test('a completed exercise on an ended session does not offer Add set', () {
       final session = _session(

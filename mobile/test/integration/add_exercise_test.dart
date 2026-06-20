@@ -63,42 +63,46 @@ void main() {
         kind: const ExerciseGroupKind.single(),
         exercises: [_exercise('Squat')],
       );
-      final session = await sessionRepo.startSession(workoutDayId: workoutDay.id);
+      final session = await sessionRepo.startSession(
+        workoutDayId: workoutDay.id,
+      );
       return (repo: sessionRepo, sessionId: session.id, db: db);
     }
 
-    test('persists an added exercise: appended after max position, synthetic '
-        '36-char id, addedPlan rehydrated, unfinished, snapshot untouched',
-        () async {
-      final s = await startedSession();
-      try {
-        final before = (await s.repo.getSession(s.sessionId))!;
-        final hashBefore = before.snapshot.sha256Hash;
-        final maxPositionBefore = before.sessionExercises
-            .map((e) => e.position)
-            .reduce((a, b) => a > b ? a : b);
+    test(
+      'persists an added exercise: appended after max position, synthetic '
+      '36-char id, addedPlan rehydrated, unfinished, snapshot untouched',
+      () async {
+        final s = await startedSession();
+        try {
+          final before = (await s.repo.getSession(s.sessionId))!;
+          final hashBefore = before.snapshot.sha256Hash;
+          final maxPositionBefore = before.sessionExercises
+              .map((e) => e.position)
+              .reduce((a, b) => a > b ? a : b);
 
-        final session = await s.repo.addExercise(
-          sessionId: s.sessionId,
-          plan: _plan(libraryExerciseId: _libraryId),
-        );
+          final session = await s.repo.addExercise(
+            sessionId: s.sessionId,
+            plan: _plan(libraryExerciseId: _libraryId),
+          );
 
-        final added = session.sessionExercises.last;
-        expect(session.sessionExercises, hasLength(2));
-        expect(added.state, isA<UnfinishedState>());
-        expect(added.addedPlan?.name, 'Added Curl');
-        expect(added.addedPlan?.libraryExerciseId, _libraryId);
-        expect(added.position, greaterThan(maxPositionBefore));
-        expect(added.plannedExerciseIdInSnapshot.length, 36);
-        expect(session.snapshot.sha256Hash, hashBefore);
+          final added = session.sessionExercises.last;
+          expect(session.sessionExercises, hasLength(2));
+          expect(added.state, isA<UnfinishedState>());
+          expect(added.addedPlan?.name, 'Added Curl');
+          expect(added.addedPlan?.libraryExerciseId, _libraryId);
+          expect(added.position, greaterThan(maxPositionBefore));
+          expect(added.plannedExerciseIdInSnapshot.length, 36);
+          expect(session.snapshot.sha256Hash, hashBefore);
 
-        // Reloads from disk identically (added_plan_json round-trips).
-        final reloaded = (await s.repo.getSession(s.sessionId))!;
-        expect(reloaded.sessionExercises.last.addedPlan?.name, 'Added Curl');
-      } finally {
-        await s.db.close();
-      }
-    });
+          // Reloads from disk identically (added_plan_json round-trips).
+          final reloaded = (await s.repo.getSession(s.sessionId))!;
+          expect(reloaded.sessionExercises.last.addedPlan?.name, 'Added Curl');
+        } finally {
+          await s.db.close();
+        }
+      },
+    );
 
     test('addedPlan rehydrates regardless of state (survives completion) and '
         'logging persists executed sets', () async {

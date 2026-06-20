@@ -66,37 +66,41 @@ void main() {
   }
 
   group('WorkoutOverviewBloc resume', () {
-    test('resumes a skipped exercise back to loggable via the engine',
-        () async {
-      final s = setup();
-      addTearDown(s.bloc.close);
-      s.repo.seedWorkoutDay(_day());
-      final session = await s.repo.startSession(workoutDayId: 'wd-valid');
-      final seId = session.sessionExercises.single.id;
-      await s.repo.skipExercise(seId);
+    test(
+      'resumes a skipped exercise back to loggable via the engine',
+      () async {
+        final s = setup();
+        addTearDown(s.bloc.close);
+        s.repo.seedWorkoutDay(_day());
+        final session = await s.repo.startSession(workoutDayId: 'wd-valid');
+        final seId = session.sessionExercises.single.id;
+        await s.repo.skipExercise(seId);
 
-      s.bloc.add(WorkoutOverviewOpened(session.id));
-      await s.bloc.stream.firstWhere(
-        (st) =>
-            st is WorkoutOverviewLoaded &&
-            st.sessionState.session.sessionExercises.single.state
-                is SkippedState,
-      );
+        s.bloc.add(WorkoutOverviewOpened(session.id));
+        await s.bloc.stream.firstWhere(
+          (st) =>
+              st is WorkoutOverviewLoaded &&
+              st.sessionState.session.sessionExercises.single.state
+                  is SkippedState,
+        );
 
-      s.bloc.add(WorkoutOverviewResumeRequested(seId));
+        s.bloc.add(WorkoutOverviewResumeRequested(seId));
 
-      final loaded = await s.bloc.stream.firstWhere(
-        (st) =>
-            st is WorkoutOverviewLoaded &&
-            st.sessionState.session.sessionExercises.single.state
-                is UnfinishedState,
-      ) as WorkoutOverviewLoaded;
+        final loaded =
+            await s.bloc.stream.firstWhere(
+                  (st) =>
+                      st is WorkoutOverviewLoaded &&
+                      st.sessionState.session.sessionExercises.single.state
+                          is UnfinishedState,
+                )
+                as WorkoutOverviewLoaded;
 
-      expect(
-        loaded.sessionState.openTargets.map((t) => t.sessionExerciseId),
-        contains(seId),
-      );
-    });
+        expect(
+          loaded.sessionState.openTargets.map((t) => t.sessionExerciseId),
+          contains(seId),
+        );
+      },
+    );
 
     test('no-ops when the session has ended', () async {
       final s = setup();

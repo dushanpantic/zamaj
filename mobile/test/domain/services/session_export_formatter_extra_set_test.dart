@@ -144,17 +144,20 @@ void main() {
       expect(out, isNot(contains('sets)')));
     });
 
-    test('uniform extra sets collapse into the count (2 done vs 1 planned)', () {
-      // Identical values collapse to one Done line whose count includes the
-      // extra set — the plan line shows 1, Done shows 2.
-      final session = _sessionWith(
-        planned: 1,
-        actual: const [(100, 5), (100, 5)],
-      );
+    test(
+      'uniform extra sets collapse into the count (2 done vs 1 planned)',
+      () {
+        // Identical values collapse to one Done line whose count includes the
+        // extra set — the plan line shows 1, Done shows 2.
+        final session = _sessionWith(
+          planned: 1,
+          actual: const [(100, 5), (100, 5)],
+        );
 
-      final out = SessionExportFormatter.format(session);
-      expect(out, contains('Plan: 100kg 1 × 5'));
-      expect(out, contains('Done: 100kg 2 × 5'));
-    });
+        final out = SessionExportFormatter.format(session);
+        expect(out, contains('Plan: 100kg 1 × 5'));
+        expect(out, contains('Done: 100kg 2 × 5'));
+      },
+    );
   });
 }

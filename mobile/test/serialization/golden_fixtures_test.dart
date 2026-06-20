@@ -80,7 +80,6 @@ void main() {
       );
     });
 
-
     test('RepTarget.fixed', () {
       expect(
         _encode(RepTarget.fixed(reps: 10).toJson()),
@@ -273,7 +272,6 @@ void main() {
       );
       expect(_encode(program.toJson()), equals(_golden('program')));
     });
-
 
     test('ExecutedSet', () {
       final executedSet = ExecutedSet(

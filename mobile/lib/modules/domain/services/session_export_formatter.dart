@@ -282,5 +282,4 @@ abstract final class SessionExportFormatter {
         '× ${RepTargetFormatter.format(repTarget)}',
     };
   }
-
 }

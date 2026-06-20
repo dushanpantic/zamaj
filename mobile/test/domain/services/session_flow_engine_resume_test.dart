@@ -170,9 +170,7 @@ void main() {
       expect(tag, isNotNull);
       await s.repo.skipExercise(member.id);
 
-      final state = await s.engine.resumeExercise(
-        sessionExerciseId: member.id,
-      );
+      final state = await s.engine.resumeExercise(sessionExerciseId: member.id);
 
       final resumed = state.session.sessionExercises.firstWhere(
         (e) => e.id == member.id,

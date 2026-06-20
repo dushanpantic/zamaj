@@ -135,8 +135,9 @@ Session _session({List<SessionExercise> extra = const []}) {
   );
 }
 
-SessionFlowEngine _engine() =>
-    SessionFlowEngine(repository: FakeSessionRepository(clock: Clock.fixed(_t)));
+SessionFlowEngine _engine() => SessionFlowEngine(
+  repository: FakeSessionRepository(clock: Clock.fixed(_t)),
+);
 
 void main() {
   group('EffectiveExercises resolves an added (snapshot-less) exercise', () {
@@ -151,7 +152,10 @@ void main() {
       final resolved = effective.forSessionExercise(added);
 
       expect(resolved.displayName, 'Added Curl');
-      expect(resolved.effectiveMeasurementType, const MeasurementType.repBased());
+      expect(
+        resolved.effectiveMeasurementType,
+        const MeasurementType.repBased(),
+      );
       expect(resolved.plannedSetCount, 2);
       expect(resolved.plannedGroupRole, ExerciseGroupRole.main);
       expect(
@@ -165,32 +169,42 @@ void main() {
 
     test('a snapshot-backed exercise still resolves from the snapshot', () {
       final session = _session();
-      final snap = session.sessionExercises.firstWhere((e) => e.id == 'se-snap');
+      final snap = session.sessionExercises.firstWhere(
+        (e) => e.id == 'se-snap',
+      );
       final resolved = EffectiveExercises.of(session).forSessionExercise(snap);
       expect(resolved.displayName, 'Planned planned-real');
       expect(resolved.plannedSetCount, 3);
     });
-
   });
 
   group('EffectiveExercises consumers tolerate an added exercise', () {
-    test('engine.computeOpenTargets includes the added unfinished exercise', () {
-      final session = _session(extra: [_addedExercise()]);
-      final targets = _engine().computeOpenTargets(session);
-      expect(
-        targets.map((t) => t.sessionExerciseId),
-        containsAll(<String>['se-snap', 'se-added']),
-      );
-    });
+    test(
+      'engine.computeOpenTargets includes the added unfinished exercise',
+      () {
+        final session = _session(extra: [_addedExercise()]);
+        final targets = _engine().computeOpenTargets(session);
+        expect(
+          targets.map((t) => t.sessionExerciseId),
+          containsAll(<String>['se-snap', 'se-added']),
+        );
+      },
+    );
 
-    test('engine.suggestValuesFor on the added exercise seeds from its plan', () {
-      final session = _session(extra: [_addedExercise()]);
-      final suggested = _engine().suggestValuesFor(
-        session: session,
-        sessionExerciseId: 'se-added',
-      );
-      expect(suggested, const ActualSetValues.repBased(weightKg: 60, reps: 12));
-    });
+    test(
+      'engine.suggestValuesFor on the added exercise seeds from its plan',
+      () {
+        final session = _session(extra: [_addedExercise()]);
+        final suggested = _engine().suggestValuesFor(
+          session: session,
+          sessionExerciseId: 'se-added',
+        );
+        expect(
+          suggested,
+          const ActualSetValues.repBased(weightKg: 60, reps: 12),
+        );
+      },
+    );
 
     test('engine.isSessionComplete handles a completed added exercise', () {
       // Single completed added exercise → session reads complete.
@@ -229,38 +243,44 @@ void main() {
       expect(_engine().isSessionComplete(session), isTrue);
     });
 
-    test('the overview assembler builds a view model for the added exercise', () {
-      final session = _session(extra: [_addedExercise()]);
-      final state = SessionState(
-        session: session,
-        openTargets: _engine().computeOpenTargets(session),
-        isComplete: false,
-      );
-      final groups = ExerciseViewModelAssembler.assemble(state);
-      final addedVm = groups
-          .expand((g) => g.allExercises)
-          .firstWhere((vm) => vm.sessionExercise.id == 'se-added');
-      expect(addedVm.displayName, 'Added Curl');
-      expect(addedVm.setRows, hasLength(2));
-    });
+    test(
+      'the overview assembler builds a view model for the added exercise',
+      () {
+        final session = _session(extra: [_addedExercise()]);
+        final state = SessionState(
+          session: session,
+          openTargets: _engine().computeOpenTargets(session),
+          isComplete: false,
+        );
+        final groups = ExerciseViewModelAssembler.assemble(state);
+        final addedVm = groups
+            .expand((g) => g.allExercises)
+            .firstWhere((vm) => vm.sessionExercise.id == 'se-added');
+        expect(addedVm.displayName, 'Added Curl');
+        expect(addedVm.setRows, hasLength(2));
+      },
+    );
 
-    test('the focus assembler builds a panel anchored on the added exercise', () {
-      final session = _session(extra: [_addedExercise()]);
-      final state = SessionState(
-        session: session,
-        openTargets: _engine().computeOpenTargets(session),
-        isComplete: false,
-      );
-      final group = FocusModeAssembler.assemble(
-        state,
-        anchorSessionExerciseId: 'se-added',
-      );
-      expect(group, isNotNull);
-      final panel = group!.panels.firstWhere(
-        (p) => p.sessionExerciseId == 'se-added',
-      );
-      expect(panel.displayExerciseName, 'Added Curl');
-      expect(panel.totalPlannedSets, 2);
-    });
+    test(
+      'the focus assembler builds a panel anchored on the added exercise',
+      () {
+        final session = _session(extra: [_addedExercise()]);
+        final state = SessionState(
+          session: session,
+          openTargets: _engine().computeOpenTargets(session),
+          isComplete: false,
+        );
+        final group = FocusModeAssembler.assemble(
+          state,
+          anchorSessionExerciseId: 'se-added',
+        );
+        expect(group, isNotNull);
+        final panel = group!.panels.firstWhere(
+          (p) => p.sessionExerciseId == 'se-added',
+        );
+        expect(panel.displayExerciseName, 'Added Curl');
+        expect(panel.totalPlannedSets, 2);
+      },
+    );
   });
 }

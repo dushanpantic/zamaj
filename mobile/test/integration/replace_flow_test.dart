@@ -120,10 +120,7 @@ void main() {
         final originalId = started.sessionExercises.single.id;
 
         await expectLater(
-          faulty.replaceExercise(
-            sessionExerciseId: originalId,
-            plan: _plan(),
-          ),
+          faulty.replaceExercise(sessionExerciseId: originalId, plan: _plan()),
           throwsA(isA<StateError>()),
         );
 
@@ -131,10 +128,7 @@ void main() {
         // no replacement exercise exists.
         final after = (await faulty.getSession(started.id))!;
         expect(after.sessionExercises, hasLength(1));
-        expect(
-          after.sessionExercises.single.id,
-          originalId,
-        );
+        expect(after.sessionExercises.single.id, originalId);
         expect(after.sessionExercises.single.state, isA<UnfinishedState>());
       } finally {
         await seed.db.close();

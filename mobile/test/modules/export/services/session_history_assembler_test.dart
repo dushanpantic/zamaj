@@ -164,7 +164,6 @@ void main() {
         ExerciseOutcome.skipped,
       );
     });
-
   });
 }
 

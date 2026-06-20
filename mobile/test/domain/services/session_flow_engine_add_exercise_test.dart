@@ -7,38 +7,35 @@ import '../../support/fake_session_repository.dart';
 final _t = DateTime.utc(2025);
 const _libraryId = '11111111-1111-4111-8111-111111111111';
 
-Exercise _exercise(
-  String id, {
-  int sets = 1,
-  String? libraryExerciseId,
-}) => Exercise(
-  id: id,
-  exerciseGroupId: 'g-$id',
-  position: 0,
-  name: 'Ex $id',
-  measurementType: const MeasurementType.repBased(),
-  metadata: const ExerciseMetadata(),
-  libraryExerciseId: libraryExerciseId,
-  sets: [
-    for (var i = 0; i < sets; i++)
-      WorkoutSet(
-        id: 'ws-$id-$i',
-        exerciseId: id,
-        position: i,
-        measurementType: const MeasurementType.repBased(),
-        plannedValues: PlannedSetValues.repBased(
-          weightKg: 100,
-          repTarget: RepTarget.fixed(reps: 5),
-        ),
-        createdAt: _t,
-        updatedAt: _t,
-        schemaVersion: 1,
-      ),
-  ],
-  createdAt: _t,
-  updatedAt: _t,
-  schemaVersion: 1,
-);
+Exercise _exercise(String id, {int sets = 1, String? libraryExerciseId}) =>
+    Exercise(
+      id: id,
+      exerciseGroupId: 'g-$id',
+      position: 0,
+      name: 'Ex $id',
+      measurementType: const MeasurementType.repBased(),
+      metadata: const ExerciseMetadata(),
+      libraryExerciseId: libraryExerciseId,
+      sets: [
+        for (var i = 0; i < sets; i++)
+          WorkoutSet(
+            id: 'ws-$id-$i',
+            exerciseId: id,
+            position: i,
+            measurementType: const MeasurementType.repBased(),
+            plannedValues: PlannedSetValues.repBased(
+              weightKg: 100,
+              repTarget: RepTarget.fixed(reps: 5),
+            ),
+            createdAt: _t,
+            updatedAt: _t,
+            schemaVersion: 1,
+          ),
+      ],
+      createdAt: _t,
+      updatedAt: _t,
+      schemaVersion: 1,
+    );
 
 WorkoutDay _day({int sets = 1, String? libraryExerciseId}) => WorkoutDay(
   id: 'wd-1',
@@ -51,7 +48,11 @@ WorkoutDay _day({int sets = 1, String? libraryExerciseId}) => WorkoutDay(
       position: 0,
       kind: const ExerciseGroupKind.single(),
       exercises: [
-        _exercise('planned-real', sets: sets, libraryExerciseId: libraryExerciseId),
+        _exercise(
+          'planned-real',
+          sets: sets,
+          libraryExerciseId: libraryExerciseId,
+        ),
       ],
       createdAt: _t,
       updatedAt: _t,
@@ -122,8 +123,10 @@ void main() {
       );
 
       expect(state.session.sessionExercises, hasLength(2));
-      expect(state.session.sessionExercises.last.addedPlan?.libraryExerciseId,
-          isNull);
+      expect(
+        state.session.sessionExercises.last.addedPlan?.libraryExerciseId,
+        isNull,
+      );
     });
 
     test('two one-off adds with the same name are both accepted (never '
@@ -154,8 +157,9 @@ void main() {
         final started = await s.repo.startSession(workoutDayId: 'wd-1');
         final seId = started.sessionExercises.single.id;
         await transition(s.repo, seId);
-        final countBefore =
-            (await s.repo.getSession(started.id))!.sessionExercises.length;
+        final countBefore = (await s.repo.getSession(
+          started.id,
+        ))!.sessionExercises.length;
 
         await expectLater(
           s.engine.addExercise(
@@ -178,7 +182,10 @@ void main() {
         await expectRejected((repo, seId) async {
           await repo.completeSet(
             sessionExerciseId: seId,
-            actualValues: const ActualSetValues.repBased(weightKg: 100, reps: 5),
+            actualValues: const ActualSetValues.repBased(
+              weightKg: 100,
+              reps: 5,
+            ),
           );
         });
       });
@@ -190,23 +197,28 @@ void main() {
       });
     });
 
-    test('excludeSessionExerciseId drops one exercise from the dedup block-set',
-        () async {
-      final s = _setup();
-      s.repo.seedWorkoutDay(_day(libraryExerciseId: _libraryId));
-      final started = await s.repo.startSession(workoutDayId: 'wd-1');
-      final originalId = started.sessionExercises.single.id;
+    test(
+      'excludeSessionExerciseId drops one exercise from the dedup block-set',
+      () async {
+        final s = _setup();
+        s.repo.seedWorkoutDay(_day(libraryExerciseId: _libraryId));
+        final started = await s.repo.startSession(workoutDayId: 'wd-1');
+        final originalId = started.sessionExercises.single.id;
 
-      // Re-adding the same movement is allowed when the only holder of that
-      // movement is the excluded exercise (the replace path).
-      final state = await s.engine.addExercise(
-        sessionId: started.id,
-        plan: _plan(libraryExerciseId: _libraryId, name: 'Replacement'),
-        excludeSessionExerciseId: originalId,
-      );
+        // Re-adding the same movement is allowed when the only holder of that
+        // movement is the excluded exercise (the replace path).
+        final state = await s.engine.addExercise(
+          sessionId: started.id,
+          plan: _plan(libraryExerciseId: _libraryId, name: 'Replacement'),
+          excludeSessionExerciseId: originalId,
+        );
 
-      expect(state.session.sessionExercises, hasLength(2));
-      expect(state.session.sessionExercises.last.addedPlan?.name, 'Replacement');
-    });
+        expect(state.session.sessionExercises, hasLength(2));
+        expect(
+          state.session.sessionExercises.last.addedPlan?.name,
+          'Replacement',
+        );
+      },
+    );
   });
 }

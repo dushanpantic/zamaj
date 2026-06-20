@@ -142,10 +142,7 @@ void main() {
           _addedSe(id: 'se-added-oneoff'), // null library id
         ],
       );
-      expect(
-        AddExercisePlanBuilder.excludedLibraryIds(session),
-        {libA, libC},
-      );
+      expect(AddExercisePlanBuilder.excludedLibraryIds(session), {libA, libC});
     });
 
     test('an unlinked snapshot exercise contributes nothing', () {
@@ -184,18 +181,20 @@ void main() {
   });
 
   group('AddExercisePlanBuilder.oneOff', () {
-    test('maps name + chosen measurement type, leaving libraryExerciseId null',
-        () {
-      final plan = AddExercisePlanBuilder.oneOff(
-        name: '  Sled Push  ',
-        measurementType: const MeasurementType.timeBased(),
-        plannedValues: const PlannedSetValues.timeBased(durationSeconds: 30),
-        setCount: 2,
-      );
-      expect(plan.name, 'Sled Push'); // trimmed
-      expect(plan.measurementType, const MeasurementType.timeBased());
-      expect(plan.libraryExerciseId, isNull);
-    });
+    test(
+      'maps name + chosen measurement type, leaving libraryExerciseId null',
+      () {
+        final plan = AddExercisePlanBuilder.oneOff(
+          name: '  Sled Push  ',
+          measurementType: const MeasurementType.timeBased(),
+          plannedValues: const PlannedSetValues.timeBased(durationSeconds: 30),
+          setCount: 2,
+        );
+        expect(plan.name, 'Sled Push'); // trimmed
+        expect(plan.measurementType, const MeasurementType.timeBased());
+        expect(plan.libraryExerciseId, isNull);
+      },
+    );
 
     test('rejects an empty name', () {
       expect(

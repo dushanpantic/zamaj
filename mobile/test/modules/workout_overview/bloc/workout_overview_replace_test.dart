@@ -59,17 +59,19 @@ WorkoutDay _day(List<Exercise> exercises) => WorkoutDay(
   schemaVersion: 1,
 );
 
-AddedExercisePlan _plan({String? libraryExerciseId, String name = 'Replacement'}) =>
-    AddedExercisePlan(
-      name: name,
-      measurementType: const MeasurementType.repBased(),
-      plannedValues: PlannedSetValues.repBased(
-        weightKg: 60,
-        repTarget: RepTarget.fixed(reps: 12),
-      ),
-      setCount: 3,
-      libraryExerciseId: libraryExerciseId,
-    );
+AddedExercisePlan _plan({
+  String? libraryExerciseId,
+  String name = 'Replacement',
+}) => AddedExercisePlan(
+  name: name,
+  measurementType: const MeasurementType.repBased(),
+  plannedValues: PlannedSetValues.repBased(
+    weightKg: 60,
+    repTarget: RepTarget.fixed(reps: 12),
+  ),
+  setCount: 3,
+  libraryExerciseId: libraryExerciseId,
+);
 
 void main() {
   final fakeClock = Clock.fixed(_t);
@@ -81,46 +83,52 @@ void main() {
   }
 
   group('WorkoutOverviewBloc replace', () {
-    test('replaces an exercise: original terminated + new card via the engine',
-        () async {
-      final s = setup();
-      addTearDown(s.bloc.close);
-      s.repo.seedWorkoutDay(_day([_exercise('a')]));
-      final session = await s.repo.startSession(workoutDayId: 'wd-valid');
-      final originalId = session.sessionExercises.single.id;
+    test(
+      'replaces an exercise: original terminated + new card via the engine',
+      () async {
+        final s = setup();
+        addTearDown(s.bloc.close);
+        s.repo.seedWorkoutDay(_day([_exercise('a')]));
+        final session = await s.repo.startSession(workoutDayId: 'wd-valid');
+        final originalId = session.sessionExercises.single.id;
 
-      s.bloc.add(WorkoutOverviewOpened(session.id));
-      await s.bloc.stream.firstWhere((st) => st is WorkoutOverviewLoaded);
+        s.bloc.add(WorkoutOverviewOpened(session.id));
+        await s.bloc.stream.firstWhere((st) => st is WorkoutOverviewLoaded);
 
-      s.bloc.add(
-        WorkoutOverviewReplaceRequested(
-          sessionExerciseId: originalId,
-          plan: _plan(name: 'Goblet Squat'),
-        ),
-      );
+        s.bloc.add(
+          WorkoutOverviewReplaceRequested(
+            sessionExerciseId: originalId,
+            plan: _plan(name: 'Goblet Squat'),
+          ),
+        );
 
-      final loaded = await s.bloc.stream.firstWhere(
-        (st) =>
-            st is WorkoutOverviewLoaded &&
-            st.sessionState.session.sessionExercises.length == 2,
-      ) as WorkoutOverviewLoaded;
+        final loaded =
+            await s.bloc.stream.firstWhere(
+                  (st) =>
+                      st is WorkoutOverviewLoaded &&
+                      st.sessionState.session.sessionExercises.length == 2,
+                )
+                as WorkoutOverviewLoaded;
 
-      final exercises = loaded.sessionState.session.sessionExercises;
-      expect(
-        exercises.firstWhere((e) => e.id == originalId).state,
-        isA<SkippedState>(),
-      );
-      expect(exercises.last.addedPlan?.name, 'Goblet Squat');
-    });
+        final exercises = loaded.sessionState.session.sessionExercises;
+        expect(
+          exercises.firstWhere((e) => e.id == originalId).state,
+          isA<SkippedState>(),
+        );
+        expect(exercises.last.addedPlan?.name, 'Goblet Squat');
+      },
+    );
 
     test('a duplicate-movement guard error surfaces transiently and leaves the '
         'original unchanged', () async {
       final s = setup();
       addTearDown(s.bloc.close);
-      s.repo.seedWorkoutDay(_day([
-        _exercise('a', libraryExerciseId: _libA),
-        _exercise('b', libraryExerciseId: _libB),
-      ]));
+      s.repo.seedWorkoutDay(
+        _day([
+          _exercise('a', libraryExerciseId: _libA),
+          _exercise('b', libraryExerciseId: _libB),
+        ]),
+      );
       final session = await s.repo.startSession(workoutDayId: 'wd-valid');
       final aId = session.sessionExercises[0].id;
 
@@ -135,9 +143,13 @@ void main() {
         ),
       );
 
-      final loaded = await s.bloc.stream.firstWhere(
-        (st) => st is WorkoutOverviewLoaded && st.lastTransientError != null,
-      ) as WorkoutOverviewLoaded;
+      final loaded =
+          await s.bloc.stream.firstWhere(
+                (st) =>
+                    st is WorkoutOverviewLoaded &&
+                    st.lastTransientError != null,
+              )
+              as WorkoutOverviewLoaded;
 
       expect(loaded.lastTransientError, isA<ValidationError>());
       final exercises = loaded.sessionState.session.sessionExercises;

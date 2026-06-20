@@ -394,9 +394,7 @@ class WorkoutOverviewBloc
     if (current.isEnded) return;
     await _runMutation(
       emit,
-      () => _engine.resumeExercise(
-        sessionExerciseId: event.sessionExerciseId,
-      ),
+      () => _engine.resumeExercise(sessionExerciseId: event.sessionExerciseId),
       touchedSessionExerciseId: event.sessionExerciseId,
     );
   }

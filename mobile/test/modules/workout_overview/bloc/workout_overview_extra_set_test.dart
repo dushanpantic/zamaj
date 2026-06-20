@@ -101,12 +101,20 @@ void main() {
 
       c.bloc.add(WorkoutOverviewExtraSetRequested(c.seId));
 
-      final loaded = await c.bloc.stream.firstWhere(
-        (st) =>
-            st is WorkoutOverviewLoaded &&
-            st.sessionState.session.sessionExercises.single.executedSets.length ==
-                2,
-      ) as WorkoutOverviewLoaded;
+      final loaded =
+          await c.bloc.stream.firstWhere(
+                (st) =>
+                    st is WorkoutOverviewLoaded &&
+                    st
+                            .sessionState
+                            .session
+                            .sessionExercises
+                            .single
+                            .executedSets
+                            .length ==
+                        2,
+              )
+              as WorkoutOverviewLoaded;
 
       final exercise = loaded.sessionState.session.sessionExercises.single;
       // Still completed — an extra set never demotes a completed exercise.

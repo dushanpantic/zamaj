@@ -220,8 +220,10 @@ class SessionFlowEngine {
     final effective = EffectiveExercises.of(session);
     for (final exercise in session.sessionExercises) {
       if (exercise.id == excludeSessionExerciseId) continue;
-      final exLibraryId =
-          effective.forSessionExercise(exercise).plannedExercise.libraryExerciseId;
+      final exLibraryId = effective
+          .forSessionExercise(exercise)
+          .plannedExercise
+          .libraryExerciseId;
       if (exLibraryId == libraryId) return true;
     }
     return false;

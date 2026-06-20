@@ -314,8 +314,7 @@ class _LibraryPickerSheetState extends State<LibraryPickerSheet> {
           disabledNote: disabled ? widget.disabledNote : null,
           onTap: disabled
               ? null
-              : () =>
-                    Navigator.of(context).pop(LibraryPickerSelected(entry)),
+              : () => Navigator.of(context).pop(LibraryPickerSelected(entry)),
         );
       },
     );

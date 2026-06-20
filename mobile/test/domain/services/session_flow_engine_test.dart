@@ -541,7 +541,10 @@ void main() {
         _findExercise(finalExercises, plankId).state,
         equals(const ExerciseState.skipped()),
       );
-      expect(_findExercise(finalExercises, wallSit.id).executedSets, hasLength(2));
+      expect(
+        _findExercise(finalExercises, wallSit.id).executedSets,
+        hasLength(2),
+      );
     });
   });
 

@@ -197,6 +197,5 @@ void main() {
         _plannedFor(const MeasurementType.repBased(), 2),
       );
     });
-
   });
 }

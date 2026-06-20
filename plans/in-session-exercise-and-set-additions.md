@@ -584,7 +584,7 @@ Five plan-review personas ran. Parallelization approved in iteration 1. Acceptan
 - [ ] Slice 5: Retire the replaced/substitute machinery + legacy migration
   - [x] Step 5.1: Legacy replaced → skip + added-exercise migration
   - [x] Step 5.2: Remove replaced read path + delete SubstituteExercise
-  - [ ] Step 5.3: Remove ExerciseOutcome.replaced + all replaced render sites
+  - [x] Step 5.3: Remove ExerciseOutcome.replaced + all replaced render sites
   - [ ] Step 5.4: Final sweep — product-context + CI
 
 ### Acceptance Criteria

@@ -41,7 +41,8 @@ abstract final class AddExerciseSheet {
             : 'Replacing: $replacingName',
         allowCreateOneOff: true,
         disabledEntryIds: excludedIds,
-        disabledNote: 'Already in this session — resume or add a set from '
+        disabledNote:
+            'Already in this session — resume or add a set from '
             'its card',
       );
 
@@ -283,9 +284,7 @@ class _PlanConfigSheetState extends State<_PlanConfigSheet> {
   Widget _durationStepper() => _CounterRow(
     label: 'seconds',
     value: '$_duration',
-    onDecrement: _duration > 5
-        ? () => setState(() => _duration -= 5)
-        : null,
+    onDecrement: _duration > 5 ? () => setState(() => _duration -= 5) : null,
     onIncrement: () => setState(() => _duration += 5),
   );
 }
@@ -370,12 +369,21 @@ class _MeasurementTypeSelector extends StatelessWidget {
 
     return Row(
       children: [
-        chip('Reps', const MeasurementType.repBased(),
-            selected is RepBasedMeasurement),
-        chip('Time', const MeasurementType.timeBased(),
-            selected is TimeBasedMeasurement),
-        chip('Bodyweight', const MeasurementType.bodyweight(),
-            selected is BodyweightMeasurement),
+        chip(
+          'Reps',
+          const MeasurementType.repBased(),
+          selected is RepBasedMeasurement,
+        ),
+        chip(
+          'Time',
+          const MeasurementType.timeBased(),
+          selected is TimeBasedMeasurement,
+        ),
+        chip(
+          'Bodyweight',
+          const MeasurementType.bodyweight(),
+          selected is BodyweightMeasurement,
+        ),
       ],
     );
   }

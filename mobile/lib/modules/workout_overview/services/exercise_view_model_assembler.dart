@@ -63,8 +63,7 @@ abstract final class ExerciseViewModelAssembler {
       effectiveMeasurementType: effective.effectiveMeasurementType,
       plannedGroupRole: effective.plannedGroupRole,
       // "Add set" is the completed-exercise re-do affordance; live only.
-      canAddSet:
-          isSessionLive && sessionExercise.state is CompletedState,
+      canAddSet: isSessionLive && sessionExercise.state is CompletedState,
     );
   }
 

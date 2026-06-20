@@ -88,13 +88,17 @@ void main() {
       s.bloc.add(WorkoutOverviewOpened(session.id));
       await s.bloc.stream.firstWhere((st) => st is WorkoutOverviewLoaded);
 
-      s.bloc.add(WorkoutOverviewAddExerciseRequested(_plan(name: 'Cable Curl')));
+      s.bloc.add(
+        WorkoutOverviewAddExerciseRequested(_plan(name: 'Cable Curl')),
+      );
 
-      final loaded = await s.bloc.stream.firstWhere(
-        (st) =>
-            st is WorkoutOverviewLoaded &&
-            st.sessionState.session.sessionExercises.length == 2,
-      ) as WorkoutOverviewLoaded;
+      final loaded =
+          await s.bloc.stream.firstWhere(
+                (st) =>
+                    st is WorkoutOverviewLoaded &&
+                    st.sessionState.session.sessionExercises.length == 2,
+              )
+              as WorkoutOverviewLoaded;
 
       expect(loaded.groups, hasLength(2));
       expect(
@@ -114,13 +118,18 @@ void main() {
       await s.bloc.stream.firstWhere((st) => st is WorkoutOverviewLoaded);
 
       s.bloc.add(
-        WorkoutOverviewAddExerciseRequested(_plan(libraryExerciseId: _libraryId)),
+        WorkoutOverviewAddExerciseRequested(
+          _plan(libraryExerciseId: _libraryId),
+        ),
       );
 
-      final loaded = await s.bloc.stream.firstWhere(
-        (st) =>
-            st is WorkoutOverviewLoaded && st.lastTransientError != null,
-      ) as WorkoutOverviewLoaded;
+      final loaded =
+          await s.bloc.stream.firstWhere(
+                (st) =>
+                    st is WorkoutOverviewLoaded &&
+                    st.lastTransientError != null,
+              )
+              as WorkoutOverviewLoaded;
 
       expect(loaded.lastTransientError, isA<ValidationError>());
       expect(loaded.sessionState.session.sessionExercises, hasLength(1));
