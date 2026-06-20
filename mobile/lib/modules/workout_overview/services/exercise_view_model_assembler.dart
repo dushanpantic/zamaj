@@ -102,23 +102,15 @@ abstract final class ExerciseViewModelAssembler {
     // dense ExecutedSet.position). Planned sets live on the template side
     // and use LexoRank ordering, so sort them once.
     final executed = sessionExercise.executedSets;
-    final state = sessionExercise.state;
-    final PlannedSetValues? Function(int) plannedValuesAt;
-    final String? Function(int) plannedSetIdAt;
-    final int plannedCount;
-    if (state is ReplacedState) {
-      final n = state.substitute.setCount;
-      plannedValuesAt = (i) => i < n ? state.substitute.plannedValues : null;
-      plannedSetIdAt = (_) => null;
-      plannedCount = n;
-    } else {
-      final sorted = List<WorkoutSet>.of(plannedExercise.sets)
-        ..sort((a, b) => a.position.compareTo(b.position));
-      plannedValuesAt = (i) =>
-          i < sorted.length ? sorted[i].plannedValues : null;
-      plannedSetIdAt = (i) => i < sorted.length ? sorted[i].id : null;
-      plannedCount = sorted.length;
-    }
+    // Planned data resolves uniformly through the (effective) planned exercise:
+    // the snapshot entry for snapshot-backed exercises, or a stand-in
+    // synthesized from the inline plan for added exercises.
+    final sorted = List<WorkoutSet>.of(plannedExercise.sets)
+      ..sort((a, b) => a.position.compareTo(b.position));
+    PlannedSetValues? plannedValuesAt(int i) =>
+        i < sorted.length ? sorted[i].plannedValues : null;
+    String? plannedSetIdAt(int i) => i < sorted.length ? sorted[i].id : null;
+    final plannedCount = sorted.length;
 
     final maxIndex = executed.length > plannedCount
         ? executed.length

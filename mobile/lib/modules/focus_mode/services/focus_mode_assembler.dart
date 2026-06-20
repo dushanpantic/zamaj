@@ -256,7 +256,7 @@ abstract final class FocusModeAssembler {
       final actionable = visible
           .where((e) {
             return switch (e.state) {
-              UnfinishedState() || ReplacedState() => true,
+              UnfinishedState() => true,
               _ => false,
             };
           })
@@ -303,12 +303,8 @@ abstract final class FocusModeAssembler {
     final eff = effective.forSessionExercise(exercise);
     final planned = eff.plannedExercise;
     final effectiveMt = eff.effectiveMeasurementType;
-    final isReplaced = exercise.state is ReplacedState;
     final displayName = eff.displayName;
-    final displayMetadata = switch (exercise.state) {
-      ReplacedState(:final substitute) => substitute.metadata,
-      _ => planned.metadata,
-    };
+    final displayMetadata = planned.metadata;
 
     final totalPlannedSets = eff.plannedSetCount;
 
@@ -318,32 +314,14 @@ abstract final class FocusModeAssembler {
 
     final currentSetIndex = sortedExecuted.length;
 
-    final (
-      currentPlannedValues,
-      currentPlannedSetId,
-      plannedSummary,
-    ) = switch (exercise.state) {
-      ReplacedState(:final substitute) => (
-        currentSetIndex < substitute.setCount ? substitute.plannedValues : null,
-        null,
-        PlannedSummaryFormatter.summarizeValues(
-          substitute.plannedValues,
-          substitute.setCount,
-        ),
-      ),
-      _ => () {
-        final sortedPlanned = List<WorkoutSet>.of(planned.sets)
-          ..sort((a, b) => a.position.compareTo(b.position));
-        final currentPlanned = currentSetIndex < sortedPlanned.length
-            ? sortedPlanned[currentSetIndex]
-            : null;
-        return (
-          currentPlanned?.plannedValues,
-          currentPlanned?.id,
-          PlannedSummaryFormatter.summarize(planned),
-        );
-      }(),
-    };
+    final sortedPlanned = List<WorkoutSet>.of(planned.sets)
+      ..sort((a, b) => a.position.compareTo(b.position));
+    final currentPlanned = currentSetIndex < sortedPlanned.length
+        ? sortedPlanned[currentSetIndex]
+        : null;
+    final currentPlannedValues = currentPlanned?.plannedValues;
+    final currentPlannedSetId = currentPlanned?.id;
+    final plannedSummary = PlannedSummaryFormatter.summarize(planned);
 
     return FocusModeViewModel(
       sessionExerciseId: exercise.id,
@@ -358,7 +336,6 @@ abstract final class FocusModeAssembler {
       currentPlannedSetIdInSnapshot: currentPlannedSetId,
       lastExecutedValues: lastExecuted?.actualValues,
       plannedRestSeconds: planned.plannedRestSeconds,
-      isReplaced: isReplaced,
       plannedExerciseName: planned.name,
       isLoggable: isLoggable,
       plannedGroupRole: plannedGroupRole,

@@ -16,22 +16,18 @@ enum ExerciseOutcome { completed, partial, skipped, replaced }
 abstract final class ExerciseOutcomes {
   /// Derives the outcome for a record.
   ///
-  /// Precedence:
-  /// 1. [ReplacedState] always reads as [ExerciseOutcome.replaced], regardless
-  ///    of set counts.
-  /// 2. Otherwise the logged-set count decides: meeting (or exceeding) the
-  ///    planned quota → [ExerciseOutcome.completed]; some-but-not-all →
-  ///    [ExerciseOutcome.partial]; none → [ExerciseOutcome.skipped].
+  /// The logged-set count decides: meeting (or exceeding) the planned quota →
+  /// [ExerciseOutcome.completed]; some-but-not-all → [ExerciseOutcome.partial];
+  /// none → [ExerciseOutcome.skipped].
   ///
-  /// The stored discriminator for non-replaced states is deliberately ignored,
-  /// so a row stored as `completed` at 2 of 4 sets or `skipped` with 2 sets both
-  /// read as [ExerciseOutcome.partial].
+  /// The stored discriminator is deliberately ignored, so a row stored as
+  /// `completed` at 2 of 4 sets or `skipped` with 2 sets both read as
+  /// [ExerciseOutcome.partial].
   static ExerciseOutcome of({
     required ExerciseState state,
     required int executedSetCount,
     required int plannedSetCount,
   }) {
-    if (state is ReplacedState) return ExerciseOutcome.replaced;
     if (executedSetCount >= plannedSetCount) return ExerciseOutcome.completed;
     if (executedSetCount == 0) return ExerciseOutcome.skipped;
     return ExerciseOutcome.partial;

@@ -20,7 +20,6 @@ import 'package:zamaj/modules/domain/models/session.dart';
 import 'package:zamaj/modules/domain/models/session_exercise.dart';
 import 'package:zamaj/modules/domain/models/session_note.dart';
 import 'package:zamaj/modules/domain/models/session_snapshot.dart';
-import 'package:zamaj/modules/domain/models/substitute_exercise.dart';
 import 'package:zamaj/modules/domain/models/workout_day.dart';
 import 'package:zamaj/modules/domain/models/workout_set.dart';
 import 'package:zamaj/modules/domain/services/log_target.dart';
@@ -69,18 +68,6 @@ ExerciseMetadata anyExerciseMetadata(Random rng) {
   );
 }
 
-SubstituteExercise anySubstituteExercise(Random rng) {
-  final mt = anyMeasurementType(rng);
-  return SubstituteExercise(
-    name: _anyString(rng, maxLen: 40),
-    measurementType: mt,
-    plannedValues: anyPlannedSetValuesForMeasurement(rng, mt),
-    setCount: 1 + rng.nextInt(5),
-    metadata: rng.nextBool() ? anyExerciseMetadata(rng) : null,
-    libraryExerciseId: rng.nextBool() ? anyUuidV4(rng) : null,
-  );
-}
-
 /// Inline plan for an added exercise. [libraryLinked] forces the library id
 /// to null (one-off) or non-null; left null it is randomized.
 AddedExercisePlan anyAddedExercisePlan(Random rng, {bool? libraryLinked}) {
@@ -120,15 +107,13 @@ String _anyTrimmedNonEmptyString(Random rng, {required int maxLen}) {
 }
 
 ExerciseState anyExerciseState(Random rng) {
-  switch (rng.nextInt(4)) {
+  switch (rng.nextInt(3)) {
     case 0:
       return const ExerciseState.unfinished();
     case 1:
       return const ExerciseState.completed();
-    case 2:
-      return const ExerciseState.skipped();
     default:
-      return ExerciseState.replaced(substitute: anySubstituteExercise(rng));
+      return const ExerciseState.skipped();
   }
 }
 
@@ -976,10 +961,7 @@ Session anySessionForEngine(Random rng) {
       plannedExerciseIdInSnapshot: planned.id,
       state: state,
       executedSets: List.generate(executedSetCount, (j) {
-        final effectiveMt = switch (state) {
-          ReplacedState(:final substitute) => substitute.measurementType,
-          _ => mt,
-        };
+        final effectiveMt = mt;
         return ExecutedSet(
           id: anyUuidV4(rng),
           sessionExerciseId: anyUuidV4(rng),
@@ -1050,10 +1032,7 @@ Session anySessionWithStates(
       plannedExerciseIdInSnapshot: planned.id,
       state: state,
       executedSets: List.generate(executedSetCount, (j) {
-        final effectiveMt = switch (state) {
-          ReplacedState(:final substitute) => substitute.measurementType,
-          _ => mt,
-        };
+        final effectiveMt = mt;
         return ExecutedSet(
           id: anyUuidV4(rng),
           sessionExerciseId: anyUuidV4(rng),
@@ -1097,14 +1076,9 @@ Session anySessionWithLoggableTargets(Random rng) {
   final states = List.generate(exerciseCount, (i) {
     if (i == unfinishedIndex) return const ExerciseState.unfinished();
     if (i < unfinishedIndex) {
-      switch (rng.nextInt(3)) {
-        case 0:
-          return const ExerciseState.completed();
-        case 1:
-          return const ExerciseState.skipped();
-        default:
-          return ExerciseState.replaced(substitute: anySubstituteExercise(rng));
-      }
+      return rng.nextBool()
+          ? const ExerciseState.completed()
+          : const ExerciseState.skipped();
     }
     return anyExerciseState(rng);
   });
@@ -1139,10 +1113,7 @@ Session anySessionWithLoggableTargets(Random rng) {
       plannedExerciseIdInSnapshot: planned.id,
       state: state,
       executedSets: List.generate(executedSetCount, (j) {
-        final effectiveMt = switch (state) {
-          ReplacedState(:final substitute) => substitute.measurementType,
-          _ => mt,
-        };
+        final effectiveMt = mt;
         return ExecutedSet(
           id: anyUuidV4(rng),
           sessionExerciseId: anyUuidV4(rng),
@@ -1209,15 +1180,6 @@ List<LogTarget> _openTargetsForSession(Session session) {
           ),
         );
       }
-    } else if (state is ReplacedState) {
-      if (ex.executedSets.length < state.substitute.setCount) {
-        targets.add(
-          LogTarget(
-            sessionExerciseId: ex.id,
-            plannedSetIndex: ex.executedSets.length,
-          ),
-        );
-      }
     }
   }
   return targets;
@@ -1229,8 +1191,6 @@ bool _isSessionComplete(Session session) {
       case CompletedState():
       case SkippedState():
         continue;
-      case ReplacedState(:final substitute):
-        if (ex.executedSets.length < substitute.setCount) return false;
       case UnfinishedState():
         return false;
     }
@@ -1362,7 +1322,6 @@ int _executedSetCountForState(
   return switch (state) {
     CompletedState() => plannedSetCount,
     SkippedState() => rng.nextInt(plannedSetCount + 1),
-    ReplacedState(:final substitute) => rng.nextInt(substitute.setCount + 1),
     UnfinishedState() => rng.nextInt(plannedSetCount),
   };
 }

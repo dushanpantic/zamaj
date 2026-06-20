@@ -7,7 +7,6 @@ import 'package:zamaj/modules/domain/models/exercise_group_kind.dart';
 import 'package:zamaj/modules/domain/models/exercise_state.dart';
 import 'package:zamaj/modules/domain/models/measurement_type.dart';
 import 'package:zamaj/modules/domain/models/planned_set_values.dart';
-import 'package:zamaj/modules/domain/models/substitute_exercise.dart';
 
 import '../support/generators.dart';
 
@@ -115,15 +114,6 @@ void main() {
         }
       });
 
-      test('replaced variant with missing substitute names the field', () {
-        for (var i = 0; i < iterations; i++) {
-          final json = <String, dynamic>{'type': 'replaced'};
-          _assertDeserializationError(
-            () => ExerciseState.fromJson(json),
-            'substitute',
-          );
-        }
-      });
     });
 
     group('PlannedSetValues', () {
@@ -174,28 +164,5 @@ void main() {
       });
     });
 
-    group('SubstituteExercise', () {
-      test('missing required name field names the field', () {
-        for (var i = 0; i < iterations; i++) {
-          final v = anySubstituteExercise(rng);
-          final corrupted = _dropField(v.toJson(), 'name');
-          _assertDeserializationError(
-            () => SubstituteExercise.fromJson(corrupted),
-            'name',
-          );
-        }
-      });
-
-      test('missing required measurementType field names the field', () {
-        for (var i = 0; i < iterations; i++) {
-          final v = anySubstituteExercise(rng);
-          final corrupted = _dropField(v.toJson(), 'measurementType');
-          _assertDeserializationError(
-            () => SubstituteExercise.fromJson(corrupted),
-            'measurementType',
-          );
-        }
-      });
-    });
   });
 }

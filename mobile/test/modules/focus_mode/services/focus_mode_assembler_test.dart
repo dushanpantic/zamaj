@@ -264,7 +264,6 @@ void main() {
       expect(panel.lastExecutedValues, isNull);
       expect(panel.plannedSummary, '100kg 2×8');
       expect(panel.plannedRestSeconds, 120);
-      expect(panel.isReplaced, isFalse);
       expect(panel.isLoggable, isTrue);
       expect(group.upNextGroupLabel, 'Row');
     });
@@ -316,7 +315,7 @@ void main() {
     });
 
     test('composed replace: the replacement added exercise renders its inline '
-        'plan and is loggable; never flags isReplaced', () async {
+        'plan and is loggable', () async {
       final s = setup();
       s.repo.seedWorkoutDay(buildDay());
       final state = await s.engine.startSession(workoutDayId: 'wd-1');
@@ -340,7 +339,6 @@ void main() {
       )!;
       final panel = group.panels.single;
       expect(panel.displayExerciseName, 'Cable Fly');
-      expect(panel.isReplaced, isFalse);
       expect(panel.effectiveMeasurementType, isA<TimeBasedMeasurement>());
       expect(panel.isLoggable, isTrue);
     });

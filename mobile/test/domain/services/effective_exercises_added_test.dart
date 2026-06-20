@@ -171,33 +171,6 @@ void main() {
       expect(resolved.plannedSetCount, 3);
     });
 
-    test('a replaced exercise still resolves its substitute (regression)', () {
-      final replaced = SessionExercise(
-        id: 'se-replaced',
-        sessionId: 'session-1',
-        position: 2,
-        plannedExerciseIdInSnapshot: 'planned-real',
-        state: ExerciseState.replaced(
-          substitute: SubstituteExercise(
-            name: 'Cable Fly',
-            measurementType: const MeasurementType.timeBased(),
-            plannedValues: const PlannedSetValues.timeBased(durationSeconds: 30),
-            setCount: 4,
-          ),
-        ),
-        executedSets: const [],
-        createdAt: _t,
-        updatedAt: _t,
-        schemaVersion: 1,
-      );
-      final session = _session(extra: [replaced]);
-      final resolved = EffectiveExercises.of(
-        session,
-      ).forSessionExercise(replaced);
-      expect(resolved.displayName, 'Cable Fly');
-      expect(resolved.effectiveMeasurementType, const MeasurementType.timeBased());
-      expect(resolved.plannedSetCount, 4);
-    });
   });
 
   group('EffectiveExercises consumers tolerate an added exercise', () {

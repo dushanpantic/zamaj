@@ -11,7 +11,6 @@ import 'package:zamaj/modules/domain/models/session.dart';
 import 'package:zamaj/modules/domain/models/session_exercise.dart';
 import 'package:zamaj/modules/domain/models/session_note.dart';
 import 'package:zamaj/modules/domain/models/session_snapshot.dart';
-import 'package:zamaj/modules/domain/models/substitute_exercise.dart';
 import 'package:zamaj/modules/domain/models/workout_day.dart';
 import 'package:zamaj/modules/domain/models/workout_set.dart';
 
@@ -148,30 +147,6 @@ void main() {
           _assertDeserializationError(
             () => WorkoutSet.fromJson(_dropField(v.toJson(), 'plannedValues')),
             'plannedValues',
-          );
-        }
-      });
-    });
-
-    group('SubstituteExercise', () {
-      test('missing name names the field', () {
-        for (var i = 0; i < iterations; i++) {
-          final v = anySubstituteExercise(rng);
-          _assertDeserializationError(
-            () => SubstituteExercise.fromJson(_dropField(v.toJson(), 'name')),
-            'name',
-          );
-        }
-      });
-
-      test('missing measurementType names the field', () {
-        for (var i = 0; i < iterations; i++) {
-          final v = anySubstituteExercise(rng);
-          _assertDeserializationError(
-            () => SubstituteExercise.fromJson(
-              _dropField(v.toJson(), 'measurementType'),
-            ),
-            'measurementType',
           );
         }
       });

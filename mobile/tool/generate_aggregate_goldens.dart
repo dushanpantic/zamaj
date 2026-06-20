@@ -18,7 +18,6 @@ import 'package:zamaj/modules/domain/models/session.dart';
 import 'package:zamaj/modules/domain/models/session_exercise.dart';
 import 'package:zamaj/modules/domain/models/session_note.dart';
 import 'package:zamaj/modules/domain/models/session_snapshot.dart';
-import 'package:zamaj/modules/domain/models/substitute_exercise.dart';
 import 'package:zamaj/modules/domain/models/workout_day.dart';
 import 'package:zamaj/modules/domain/models/workout_set.dart';
 
@@ -120,17 +119,6 @@ void main() {
     schemaVersion: 1,
   );
 
-  final substitute = SubstituteExercise(
-    name: 'Dumbbell Press',
-    measurementType: const MeasurementType.repBased(),
-    plannedValues: PlannedSetValues.repBased(
-      weightKg: 22.5,
-      repTarget: RepTarget.fixed(reps: 10),
-    ),
-    setCount: 3,
-    metadata: const ExerciseMetadata(notes: 'Use 30kg dumbbells'),
-  );
-
   final executedSet = ExecutedSet(
     id: executedSetId,
     sessionExerciseId: sessionExerciseId,
@@ -206,7 +194,6 @@ void main() {
   writeGolden('exercise_group', exerciseGroup.toJson());
   writeGolden('workout_day', workoutDay.toJson());
   writeGolden('program', program.toJson());
-  writeGolden('substitute_exercise', substitute.toJson());
   writeGolden('executed_set', executedSet.toJson());
   writeGolden('session_exercise', sessionExercise.toJson());
   writeGolden('session_note', sessionNote.toJson());

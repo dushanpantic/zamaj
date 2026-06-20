@@ -298,7 +298,6 @@ class SessionFlowEngine {
     for (final exercise in sorted) {
       switch (exercise.state) {
         case UnfinishedState():
-        case ReplacedState():
           final plannedSetCount = effective
               .forSessionExercise(exercise)
               .plannedSetCount;
@@ -675,19 +674,11 @@ class SessionFlowEngine {
   /// Returns `true` when every exercise is in a terminal state with all
   /// planned sets fulfilled.
   bool isSessionComplete(Session session) {
-    final effective = EffectiveExercises.of(session);
     for (final exercise in session.sessionExercises) {
       switch (exercise.state) {
         case CompletedState():
         case SkippedState():
           continue;
-        case ReplacedState():
-          final plannedSetCount = effective
-              .forSessionExercise(exercise)
-              .plannedSetCount;
-          if (exercise.executedSets.length < plannedSetCount) {
-            return false;
-          }
         case UnfinishedState():
           return false;
       }

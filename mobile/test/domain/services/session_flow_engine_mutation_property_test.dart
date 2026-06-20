@@ -21,7 +21,6 @@ import 'package:zamaj/modules/domain/models/measurement_type.dart';
 import 'package:zamaj/modules/domain/models/session.dart';
 import 'package:zamaj/modules/domain/models/session_exercise.dart';
 import 'package:zamaj/modules/domain/models/session_snapshot.dart';
-import 'package:zamaj/modules/domain/models/substitute_exercise.dart';
 import 'package:zamaj/modules/domain/models/workout_day.dart';
 import 'package:zamaj/modules/domain/models/workout_set.dart';
 import 'package:zamaj/modules/domain/services/session_flow_engine.dart';
@@ -99,10 +98,7 @@ void main() {
         );
 
         final planned = _lookupPlannedExercise(activeExercise, session);
-        final effectiveMt = switch (activeExercise.state) {
-          ReplacedState(:final substitute) => substitute.measurementType,
-          _ => planned.measurementType,
-        };
+        final effectiveMt = planned.measurementType;
 
         final values = anyActualSetValuesForMeasurement(rng, effectiveMt);
 
@@ -224,10 +220,7 @@ void main() {
         );
 
         final planned = _lookupPlannedExercise(activeExercise, session);
-        final effectiveMt = switch (activeExercise.state) {
-          ReplacedState(:final substitute) => substitute.measurementType,
-          _ => planned.measurementType,
-        };
+        final effectiveMt = planned.measurementType;
 
         final wrongMt = _oppositeMeasurementType(effectiveMt);
         final wrongValues = anyActualSetValuesForMeasurement(rng, wrongMt);
@@ -271,10 +264,7 @@ void main() {
               .executedSets[rng.nextInt(targetExercise.executedSets.length)];
 
           final planned = _lookupPlannedExercise(targetExercise, session);
-          final effectiveMt = switch (targetExercise.state) {
-            ReplacedState(:final substitute) => substitute.measurementType,
-            _ => planned.measurementType,
-          };
+          final effectiveMt = planned.measurementType;
 
           final wrongMt = _oppositeMeasurementType(effectiveMt);
           final wrongValues = anyActualSetValuesForMeasurement(rng, wrongMt);
@@ -294,46 +284,6 @@ void main() {
       },
     );
 
-    test('completeSet on replaced exercise with original type throws '
-        'ValidationError', () async {
-      const iterations = 100;
-      final masterSeed = Random().nextInt(1 << 32);
-
-      for (var i = 0; i < iterations; i++) {
-        final rng = Random(masterSeed + i);
-        final session = _anySessionWithReplacedDifferentType(rng);
-        final fakeClock = Clock.fixed(anyUtcDateTime(rng));
-        final repo = FakeSessionRepository(clock: fakeClock);
-        repo.seedSession(session);
-
-        final engine = SessionFlowEngine(repository: repo);
-        final targets = engine.computeOpenTargets(session);
-
-        if (targets.isEmpty) continue;
-
-        final activeExercise = session.sessionExercises.firstWhere(
-          (SessionExercise e) => e.id == targets.first.sessionExerciseId,
-        );
-
-        if (activeExercise.state is! ReplacedState) continue;
-
-        final planned = _lookupPlannedExercise(activeExercise, session);
-        final originalMt = planned.measurementType;
-        final wrongValues = anyActualSetValuesForMeasurement(rng, originalMt);
-
-        expect(
-          () => engine.completeSet(
-            sessionExerciseId: activeExercise.id,
-            actualValues: wrongValues,
-          ),
-          throwsA(isA<ValidationError>()),
-          reason:
-              'iteration $i (seed ${masterSeed + i}): '
-              'completeSet on replaced exercise with original type '
-              'must throw ValidationError',
-        );
-      }
-    });
   });
 
   // **Validates: Requirements 7.1, 7.2, 7.4**
@@ -388,12 +338,11 @@ void main() {
             (e) => e.id == t.sessionExerciseId,
           );
           expect(
-            ex.state is UnfinishedState || ex.state is ReplacedState,
+            ex.state is UnfinishedState,
             isTrue,
             reason:
                 'iteration $i (seed ${masterSeed + i}): '
-                'every openTarget must point at an unfinished or '
-                'replaced exercise',
+                'every openTarget must point at an unfinished exercise',
           );
         }
 
@@ -402,7 +351,7 @@ void main() {
             e,
           ) {
             if (e.id == target.id) return false;
-            if (e.state is! UnfinishedState && e.state is! ReplacedState) {
+            if (e.state is! UnfinishedState) {
               return false;
             }
             final plannedSetCount = _lookupPlannedSetCount(e, result.session);
@@ -623,10 +572,7 @@ void main() {
             .executedSets[rng.nextInt(targetExercise.executedSets.length)];
 
         final planned = _lookupPlannedExercise(targetExercise, session);
-        final effectiveMt = switch (targetExercise.state) {
-          ReplacedState(:final substitute) => substitute.measurementType,
-          _ => planned.measurementType,
-        };
+        final effectiveMt = planned.measurementType;
         final newValues = anyActualSetValuesForMeasurement(rng, effectiveMt);
 
         final result = await engine.updateExecutedSet(
@@ -761,14 +707,9 @@ Session _anySessionWithAtLeastTwoUnfinished(Random rng) {
   final states = <ExerciseState>[
     ...List.generate(unfinishedCount, (_) => const ExerciseState.unfinished()),
     ...List.generate(lockedCount, (_) {
-      switch (rng.nextInt(3)) {
-        case 0:
-          return const ExerciseState.completed();
-        case 1:
-          return const ExerciseState.skipped();
-        default:
-          return ExerciseState.replaced(substitute: anySubstituteExercise(rng));
-      }
+      return rng.nextBool()
+          ? const ExerciseState.completed()
+          : const ExerciseState.skipped();
     }),
   ];
   states.shuffle(rng);
@@ -782,14 +723,9 @@ Session _anySessionForReorder(Random rng) {
 
   final states = <ExerciseState>[
     ...List.generate(lockedCount, (_) {
-      switch (rng.nextInt(3)) {
-        case 0:
-          return const ExerciseState.completed();
-        case 1:
-          return const ExerciseState.skipped();
-        default:
-          return ExerciseState.replaced(substitute: anySubstituteExercise(rng));
-      }
+      return rng.nextBool()
+          ? const ExerciseState.completed()
+          : const ExerciseState.skipped();
     }),
     ...List.generate(unfinishedCount, (_) => const ExerciseState.unfinished()),
   ];
@@ -817,10 +753,7 @@ Future<SessionState> Function()? _pickMutation(
       (SessionExercise e) => e.id == targets.first.sessionExerciseId,
     );
     final planned = _lookupPlannedExercise(activeExercise, session);
-    final effectiveMt = switch (activeExercise.state) {
-      ReplacedState(:final substitute) => substitute.measurementType,
-      _ => planned.measurementType,
-    };
+    final effectiveMt = planned.measurementType;
 
     mutations.add(
       () => engine.completeSet(
@@ -870,8 +803,6 @@ Exercise _lookupPlannedExercise(
 }
 
 int _lookupPlannedSetCount(SessionExercise exercise, Session session) {
-  final state = exercise.state;
-  if (state is ReplacedState) return state.substitute.setCount;
   final planned = _lookupPlannedExercise(exercise, session);
   return planned.sets.length;
 }
@@ -1145,23 +1076,12 @@ Session _anySessionWithExecutedSets(Random rng) {
 
     final ExerciseState state;
     final int executedSetCount;
-    switch (rng.nextInt(3)) {
-      case 0:
-        state = const ExerciseState.completed();
-        executedSetCount = plannedSetCount;
-      case 1:
-        state = const ExerciseState.skipped();
-        executedSetCount = 1 + rng.nextInt(plannedSetCount);
-      default:
-        final sub = SubstituteExercise(
-          name: 'sub_$i',
-          measurementType: mt,
-          plannedValues: anyPlannedSetValuesForMeasurement(rng, mt),
-          setCount: plannedSetCount,
-          metadata: null,
-        );
-        state = ExerciseState.replaced(substitute: sub);
-        executedSetCount = 1 + rng.nextInt(plannedSetCount);
+    if (rng.nextBool()) {
+      state = const ExerciseState.completed();
+      executedSetCount = plannedSetCount;
+    } else {
+      state = const ExerciseState.skipped();
+      executedSetCount = 1 + rng.nextInt(plannedSetCount);
     }
 
     return SessionExercise(
@@ -1171,180 +1091,13 @@ Session _anySessionWithExecutedSets(Random rng) {
       plannedExerciseIdInSnapshot: planned.id,
       state: state,
       executedSets: List.generate(executedSetCount, (j) {
-        final effectiveMt = switch (state) {
-          ReplacedState(:final substitute) => substitute.measurementType,
-          _ => mt,
-        };
+        final effectiveMt = mt;
         return ExecutedSet(
           id: anyUuidV4(rng),
           sessionExerciseId: anyUuidV4(rng),
           position: j,
           measurementType: effectiveMt,
           actualValues: anyActualSetValuesForMeasurement(rng, effectiveMt),
-          plannedSetIdInSnapshot: j < planned.sets.length
-              ? planned.sets[j].id
-              : null,
-          completedAt: anyUtcDateTime(rng),
-          createdAt: anyUtcDateTime(rng),
-          updatedAt: anyUtcDateTime(rng),
-          schemaVersion: 1,
-        );
-      }),
-      createdAt: anyUtcDateTime(rng),
-      updatedAt: anyUtcDateTime(rng),
-      schemaVersion: 1,
-    );
-  });
-
-  return Session(
-    id: sessionId,
-    workoutDayId: workoutDay.id,
-    snapshot: snapshot,
-    sessionExercises: sessionExercises,
-    notes: const [],
-    extraWork: const [],
-    startedAt: anyUtcDateTime(rng),
-    endedAt: null,
-    createdAt: anyUtcDateTime(rng),
-    updatedAt: anyUtcDateTime(rng),
-    schemaVersion: 1,
-  );
-}
-
-Session _anySessionWithReplacedDifferentType(Random rng) {
-  final exerciseCount = 1 + rng.nextInt(3);
-  final replacedIndex = rng.nextInt(exerciseCount);
-  final workoutDayId = anyUuidV4(rng);
-  final groups = <ExerciseGroup>[];
-  var groupPosition = 0;
-
-  for (var i = 0; i < exerciseCount; i++) {
-    final groupId = anyUuidV4(rng);
-    final exerciseId = anyUuidV4(rng);
-    final MeasurementType mt;
-    if (i == replacedIndex) {
-      mt = const MeasurementType.repBased();
-    } else {
-      mt = anyMeasurementType(rng);
-    }
-    final setCount = 1 + rng.nextInt(5);
-
-    groups.add(
-      ExerciseGroup(
-        id: groupId,
-        workoutDayId: workoutDayId,
-        position: groupPosition++,
-        kind: const ExerciseGroupKind.single(),
-        exercises: [
-          Exercise(
-            id: exerciseId,
-            exerciseGroupId: groupId,
-            position: 0,
-            name: 'exercise_$i',
-            measurementType: mt,
-            metadata: anyExerciseMetadata(rng),
-            plannedRestSeconds: null,
-            sets: List.generate(setCount, (j) {
-              return WorkoutSet(
-                id: anyUuidV4(rng),
-                exerciseId: exerciseId,
-                position: j,
-                measurementType: mt,
-                plannedValues: anyPlannedSetValuesForMeasurement(rng, mt),
-                createdAt: anyUtcDateTime(rng),
-                updatedAt: anyUtcDateTime(rng),
-                schemaVersion: 1,
-              );
-            }),
-            createdAt: anyUtcDateTime(rng),
-            updatedAt: anyUtcDateTime(rng),
-            schemaVersion: 1,
-          ),
-        ],
-        createdAt: anyUtcDateTime(rng),
-        updatedAt: anyUtcDateTime(rng),
-        schemaVersion: 1,
-      ),
-    );
-  }
-
-  final workoutDay = WorkoutDay(
-    id: workoutDayId,
-    programId: anyUuidV4(rng),
-    name: 'workout_day',
-    exerciseGroups: groups,
-    createdAt: anyUtcDateTime(rng),
-    updatedAt: anyUtcDateTime(rng),
-    schemaVersion: 1,
-  );
-
-  final snapshot = SessionSnapshot.capture(
-    workoutDay: workoutDay,
-    capturedAt: anyUtcDateTime(rng),
-    schemaVersion: 1,
-  );
-
-  final allExercises = [
-    for (final group in workoutDay.exerciseGroups) ...group.exercises,
-  ];
-  final sessionId = anyUuidV4(rng);
-
-  final sessionExercises = List.generate(exerciseCount, (i) {
-    final planned = allExercises[i];
-    final mt = planned.measurementType;
-    final plannedSetCount = planned.sets.length;
-
-    if (i == replacedIndex) {
-      final substituteMt = _oppositeMeasurementType(mt);
-      final sub = SubstituteExercise(
-        name: 'substitute_$i',
-        measurementType: substituteMt,
-        plannedValues: anyPlannedSetValuesForMeasurement(rng, substituteMt),
-        setCount: plannedSetCount,
-        metadata: null,
-      );
-      final executedSetCount = rng.nextInt(plannedSetCount);
-      return SessionExercise(
-        id: anyUuidV4(rng),
-        sessionId: sessionId,
-        position: i,
-        plannedExerciseIdInSnapshot: planned.id,
-        state: ExerciseState.replaced(substitute: sub),
-        executedSets: List.generate(executedSetCount, (j) {
-          return ExecutedSet(
-            id: anyUuidV4(rng),
-            sessionExerciseId: anyUuidV4(rng),
-            position: j,
-            measurementType: substituteMt,
-            actualValues: anyActualSetValuesForMeasurement(rng, substituteMt),
-            plannedSetIdInSnapshot: j < planned.sets.length
-                ? planned.sets[j].id
-                : null,
-            completedAt: anyUtcDateTime(rng),
-            createdAt: anyUtcDateTime(rng),
-            updatedAt: anyUtcDateTime(rng),
-            schemaVersion: 1,
-          );
-        }),
-        createdAt: anyUtcDateTime(rng),
-        updatedAt: anyUtcDateTime(rng),
-        schemaVersion: 1,
-      );
-    }
-
-    return SessionExercise(
-      id: anyUuidV4(rng),
-      sessionId: sessionId,
-      position: i,
-      plannedExerciseIdInSnapshot: planned.id,
-      state: const ExerciseState.completed(),
-      executedSets: List.generate(plannedSetCount, (j) {
-        return ExecutedSet(
-          id: anyUuidV4(rng),
-          sessionExerciseId: anyUuidV4(rng),
-          position: j,
-          measurementType: mt,
-          actualValues: anyActualSetValuesForMeasurement(rng, mt),
           plannedSetIdInSnapshot: j < planned.sets.length
               ? planned.sets[j].id
               : null,

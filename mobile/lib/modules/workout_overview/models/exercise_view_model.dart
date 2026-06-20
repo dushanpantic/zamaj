@@ -45,10 +45,8 @@ abstract class ExerciseViewModel with _$ExerciseViewModel {
 }
 
 extension ExerciseViewModelDisplayNameX on ExerciseViewModel {
-  /// The name to show for this exercise: a replaced exercise shows its
-  /// substitute's name, everything else shows the planned name.
-  String get displayName => switch (sessionExercise.state) {
-    ReplacedState(:final substitute) => substitute.name,
-    _ => plannedExerciseName,
-  };
+  /// The name to show for this exercise. For a snapshot-backed exercise this is
+  /// the planned name; for an added exercise the assembler has already resolved
+  /// it from the inline plan.
+  String get displayName => plannedExerciseName;
 }

@@ -12,7 +12,6 @@ import 'package:zamaj/modules/domain/models/rep_target.dart';
 import 'package:zamaj/modules/domain/models/session.dart';
 import 'package:zamaj/modules/domain/models/session_exercise.dart';
 import 'package:zamaj/modules/domain/models/session_snapshot.dart';
-import 'package:zamaj/modules/domain/models/substitute_exercise.dart';
 import 'package:zamaj/modules/domain/models/workout_day.dart';
 import 'package:zamaj/modules/domain/models/workout_set.dart';
 import 'package:zamaj/modules/domain/services/effective_exercises.dart';
@@ -159,48 +158,6 @@ void main() {
     });
 
     test(
-      'resolves a substituted exercise from the substitute, not the snapshot',
-      () {
-        final planned = _exercise(
-          id: 'ex1',
-          groupId: 'g1',
-          measurementType: const MeasurementType.repBased(),
-          name: 'Bench Press',
-          setCount: 3,
-        );
-        final substitute = SubstituteExercise(
-          name: 'Plank',
-          measurementType: const MeasurementType.timeBased(),
-          plannedValues: const PlannedSetValues.timeBased(durationSeconds: 60),
-          setCount: 2,
-        );
-        final se = _sessionExercise(
-          plannedId: 'ex1',
-          state: ExerciseState.replaced(substitute: substitute),
-        );
-        final session = _session(
-          groups: [
-            _group(
-              id: 'g1',
-              exercises: [planned],
-              role: ExerciseGroupRole.warmup,
-            ),
-          ],
-          sessionExercises: [se],
-        );
-
-        final eff = EffectiveExercises.of(session).forSessionExercise(se);
-
-        expect(eff.effectiveMeasurementType, const MeasurementType.timeBased());
-        expect(eff.plannedSetCount, 2);
-        expect(eff.displayName, 'Plank');
-        // Group role still comes from the immutable snapshot, not the substitute.
-        expect(eff.plannedGroupRole, ExerciseGroupRole.warmup);
-        expect(eff.plannedExercise.id, 'ex1');
-      },
-    );
-
-    test(
       'throws NotFoundError when the planned exercise is absent (no set-count-0, no main fallback)',
       () {
         final planned = _exercise(id: 'ex1', groupId: 'g1');
@@ -215,34 +172,6 @@ void main() {
         expect(
           () => EffectiveExercises.of(session).forSessionExercise(se),
           throwsA(isA<NotFoundError>().having((e) => e.id, 'id', 'missing')),
-        );
-      },
-    );
-
-    test(
-      'a replaced exercise with a missing snapshot original still throws (always throws)',
-      () {
-        final planned = _exercise(id: 'ex1', groupId: 'g1');
-        final substitute = SubstituteExercise(
-          name: 'Plank',
-          measurementType: const MeasurementType.timeBased(),
-          plannedValues: const PlannedSetValues.timeBased(durationSeconds: 60),
-          setCount: 2,
-        );
-        final se = _sessionExercise(
-          plannedId: 'missing',
-          state: ExerciseState.replaced(substitute: substitute),
-        );
-        final session = _session(
-          groups: [
-            _group(id: 'g1', exercises: [planned]),
-          ],
-          sessionExercises: [se],
-        );
-
-        expect(
-          () => EffectiveExercises.of(session).forSessionExercise(se),
-          throwsA(isA<NotFoundError>()),
         );
       },
     );
@@ -269,33 +198,5 @@ void main() {
       );
     });
 
-    test(
-      'plannedValuesAt resolves the substitute values regardless of position when replaced',
-      () {
-        final planned = _exercise(id: 'ex1', groupId: 'g1', setCount: 3);
-        const subValues = PlannedSetValues.timeBased(durationSeconds: 60);
-        final substitute = SubstituteExercise(
-          name: 'Plank',
-          measurementType: const MeasurementType.timeBased(),
-          plannedValues: subValues,
-          setCount: 2,
-        );
-        final se = _sessionExercise(
-          plannedId: 'ex1',
-          state: ExerciseState.replaced(substitute: substitute),
-        );
-        final session = _session(
-          groups: [
-            _group(id: 'g1', exercises: [planned]),
-          ],
-          sessionExercises: [se],
-        );
-
-        final eff = EffectiveExercises.of(session).forSessionExercise(se);
-
-        expect(eff.plannedValuesAt(0), subValues);
-        expect(eff.plannedValuesAt(1), subValues);
-      },
-    );
   });
 }

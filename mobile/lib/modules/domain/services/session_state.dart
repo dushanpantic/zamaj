@@ -10,13 +10,12 @@ abstract class SessionState with _$SessionState {
     required Session session,
 
     /// One [LogTarget] for every currently-loggable exercise (state
-    /// `unfinished` or `replaced` with `executedSets.length <
-    /// plannedSetCount`), in position order.
+    /// `unfinished` with `executedSets.length < plannedSetCount`), in position
+    /// order.
     required List<LogTarget> openTargets,
 
     /// True when every exercise is in a terminal state with its planned-set
-    /// quota satisfied (`completed`, `skipped`, or `replaced` with all
-    /// substitute sets logged).
+    /// quota satisfied (`completed` or `skipped`).
     required bool isComplete,
   }) = _SessionState;
 }

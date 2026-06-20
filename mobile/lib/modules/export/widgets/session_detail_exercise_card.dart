@@ -176,13 +176,6 @@ class _Exercise extends StatelessWidget {
           viewModel.plannedSummary,
           style: typography.caption.copyWith(color: colors.onSurfaceMuted),
         ),
-        if (state is ReplacedState) ...[
-          const SizedBox(height: AppSpacing.xxs),
-          Text(
-            'Replaced from "${viewModel.plannedExerciseName}"',
-            style: typography.caption.copyWith(color: colors.exerciseReplaced),
-          ),
-        ],
         const Divider(height: AppSpacing.lg),
         for (final row in viewModel.setRows)
           _SetLine(

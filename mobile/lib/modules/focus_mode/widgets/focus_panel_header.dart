@@ -31,13 +31,6 @@ class FocusPanelHeader extends StatelessWidget {
           maxLines: 2,
           overflow: TextOverflow.ellipsis,
         ),
-        if (panel.isReplaced) ...[
-          const SizedBox(height: AppSpacing.xs),
-          Text(
-            'Replaced from "${panel.plannedExerciseName}"',
-            style: typography.caption.copyWith(color: colors.exerciseReplaced),
-          ),
-        ],
       ],
     );
   }

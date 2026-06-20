@@ -16,9 +16,9 @@ import 'package:zamaj/modules/domain/models/session.dart';
 /// session simply stops appearing.
 ///
 /// v1 attributes sets by the session snapshot's *planned* exercise
-/// (`libraryExerciseId` / `measurementType`); it does not resolve a
-/// [ReplacedState] substitute's own link. Replace is a dormant feature, so this
-/// has no live effect; reconcile with `EffectiveExercises` if it is reactivated.
+/// (`libraryExerciseId` / `measurementType`); it does not resolve an added
+/// exercise's inline-plan link. Reconcile with `EffectiveExercises` if added
+/// exercises need to contribute to progress series.
 abstract final class ExerciseProgressAggregator {
   /// Computes the oldest-first top-set series for [libraryExerciseId] from
   /// [sessions]. Non-ended sessions, sessions that never logged the exercise,

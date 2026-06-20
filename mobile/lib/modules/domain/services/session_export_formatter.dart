@@ -8,7 +8,6 @@ import 'package:zamaj/modules/domain/models/exercise_state.dart';
 import 'package:zamaj/modules/domain/models/planned_set_values.dart';
 import 'package:zamaj/modules/domain/models/session.dart';
 import 'package:zamaj/modules/domain/models/session_exercise.dart';
-import 'package:zamaj/modules/domain/models/substitute_exercise.dart';
 import 'package:zamaj/modules/domain/models/workout_day.dart';
 import 'package:zamaj/modules/domain/models/workout_set.dart';
 import 'package:zamaj/modules/domain/services/exercise_outcome.dart';
@@ -143,11 +142,7 @@ abstract final class SessionExportFormatter {
     Map<String, Exercise> plannedById,
   ) {
     final planned = plannedById[sx.plannedExerciseIdInSnapshot];
-    final plannedName = planned?.name ?? '(unknown)';
-    return switch (sx.state) {
-      ReplacedState(:final substitute) => '$plannedName → ${substitute.name}',
-      _ => plannedName,
-    };
+    return planned?.name ?? '(unknown)';
   }
 
   static void _renderExercise(
@@ -165,10 +160,7 @@ abstract final class SessionExportFormatter {
     // as partial too. An unfinished exercise (only seen in an in-progress
     // export) carries no verdict suffix.
     final executedCount = sx.executedSets.length;
-    final plannedCount = switch (state) {
-      ReplacedState(:final substitute) => substitute.setCount,
-      _ => planned?.sets.length ?? 0,
-    };
+    final plannedCount = planned?.sets.length ?? 0;
     final outcome = ExerciseOutcomes.of(
       state: state,
       executedSetCount: executedCount,
@@ -190,13 +182,6 @@ abstract final class SessionExportFormatter {
     // Plan line — always show coach's planned values from snapshot.
     if (planned != null) {
       buf.writeln('${indent}Plan: ${_plannedSummary(planned)}');
-    }
-
-    // If replaced, show substitute's planned values on a second line.
-    if (state is ReplacedState) {
-      buf.writeln(
-        '${indent}Sub plan: ${_substitutePlanSummary(state.substitute)}',
-      );
     }
 
     final sets = [...sx.executedSets]
@@ -299,17 +284,4 @@ abstract final class SessionExportFormatter {
     };
   }
 
-  static String _substitutePlanSummary(SubstituteExercise sub) {
-    return switch (sub.plannedValues) {
-      PlannedRepBased(:final weightKg, :final repTarget) =>
-        '${WeightFormatter.formatKg(weightKg)}kg ${sub.setCount} × ${RepTargetFormatter.format(repTarget)}',
-      PlannedTimeBased(:final durationSeconds, :final weightKg) =>
-        weightKg == null
-            ? '${sub.setCount} × ${durationSeconds}s'
-            : '${WeightFormatter.formatKg(weightKg)}kg '
-                  '${sub.setCount} × ${durationSeconds}s',
-      PlannedBodyweight(:final repTarget) =>
-        '${sub.setCount} × ${RepTargetFormatter.format(repTarget)}',
-    };
-  }
 }

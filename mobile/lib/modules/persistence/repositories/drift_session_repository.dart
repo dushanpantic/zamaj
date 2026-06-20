@@ -13,7 +13,6 @@ import 'package:zamaj/modules/domain/models/exercise_state.dart' as domain;
 import 'package:zamaj/modules/domain/models/measurement_type.dart';
 import 'package:zamaj/modules/domain/models/session.dart' as domain;
 import 'package:zamaj/modules/domain/models/session_exercise.dart' as domain;
-import 'package:zamaj/modules/domain/models/substitute_exercise.dart';
 import 'package:zamaj/modules/domain/models/workout_day.dart' as domain;
 import 'package:zamaj/modules/domain/repositories/program_repository.dart';
 import 'package:zamaj/modules/domain/repositories/session_repository.dart';
@@ -1367,12 +1366,6 @@ class DriftSessionRepository implements SessionRepository {
       'unfinished' => const domain.ExerciseState.unfinished(),
       'completed' => const domain.ExerciseState.completed(),
       'skipped' => const domain.ExerciseState.skipped(),
-      'replaced' => domain.ExerciseState.replaced(
-        substitute: SubstituteExercise.fromJson(
-          jsonDecode(exerciseRow.substitutePayloadJson!)
-              as Map<String, dynamic>,
-        ),
-      ),
       final d => throw DeserializationError(
         field: 'stateDiscriminator',
         discriminator: d,

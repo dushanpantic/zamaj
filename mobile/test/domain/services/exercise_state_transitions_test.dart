@@ -1,18 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:zamaj/modules/domain/models/exercise_state.dart';
-import 'package:zamaj/modules/domain/models/measurement_type.dart';
-import 'package:zamaj/modules/domain/models/planned_set_values.dart';
-import 'package:zamaj/modules/domain/models/substitute_exercise.dart';
 import 'package:zamaj/modules/domain/services/exercise_state_transitions.dart';
-
-final _replaced = ExerciseState.replaced(
-  substitute: SubstituteExercise(
-    name: 'Plank',
-    measurementType: const MeasurementType.timeBased(),
-    plannedValues: const PlannedSetValues.timeBased(durationSeconds: 60),
-    setCount: 2,
-  ),
-);
 
 void main() {
   group('ExerciseStateTransitions.afterSetLogged', () {
@@ -32,15 +20,6 @@ void main() {
         plannedSetCount: 3,
       );
       expect(next, const ExerciseState.unfinished());
-    });
-
-    test('a replaced exercise that meets quota stays replaced', () {
-      final next = ExerciseStateTransitions.afterSetLogged(
-        _replaced,
-        executedSetCount: 2,
-        plannedSetCount: 2,
-      );
-      expect(next, _replaced);
     });
 
     test(
@@ -91,15 +70,6 @@ void main() {
         plannedSetCount: 3,
       );
       expect(next, const ExerciseState.unfinished());
-    });
-
-    test('a replaced exercise below quota stays replaced', () {
-      final next = ExerciseStateTransitions.afterSetDeleted(
-        _replaced,
-        executedSetCount: 0,
-        plannedSetCount: 2,
-      );
-      expect(next, _replaced);
     });
 
     test('a skipped exercise below quota stays skipped', () {

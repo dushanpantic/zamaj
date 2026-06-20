@@ -238,14 +238,9 @@ Session _anySessionForSupersetCreation(Random rng) {
   final states = <ExerciseState>[
     ...List.generate(unfinishedCount, (_) => const ExerciseState.unfinished()),
     ...List.generate(otherCount, (_) {
-      switch (rng.nextInt(3)) {
-        case 0:
-          return const ExerciseState.completed();
-        case 1:
-          return const ExerciseState.skipped();
-        default:
-          return ExerciseState.replaced(substitute: anySubstituteExercise(rng));
-      }
+      return rng.nextBool()
+          ? const ExerciseState.completed()
+          : const ExerciseState.skipped();
     }),
   ];
   states.shuffle(rng);
@@ -264,14 +259,9 @@ Session _anySessionWithUnfinishedSuperset(Random rng) {
       (_) => const ExerciseState.unfinished(),
     ),
     ...List.generate(locked, (_) {
-      switch (rng.nextInt(3)) {
-        case 0:
-          return const ExerciseState.completed();
-        case 1:
-          return const ExerciseState.skipped();
-        default:
-          return ExerciseState.replaced(substitute: anySubstituteExercise(rng));
-      }
+      return rng.nextBool()
+          ? const ExerciseState.completed()
+          : const ExerciseState.skipped();
     }),
   ];
   states.shuffle(rng);

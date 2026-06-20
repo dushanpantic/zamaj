@@ -46,16 +46,9 @@ void main() {
     for (var i = 0; i < iterations; i++) {
       final exerciseCount = 1 + rng.nextInt(5);
       final states = List.generate(exerciseCount, (_) {
-        switch (rng.nextInt(3)) {
-          case 0:
-            return const ExerciseState.completed();
-          case 1:
-            return const ExerciseState.skipped();
-          default:
-            return ExerciseState.replaced(
-              substitute: anySubstituteExercise(rng),
-            );
-        }
+        return rng.nextBool()
+            ? const ExerciseState.completed()
+            : const ExerciseState.skipped();
       });
 
       final session = anySessionWithStates(rng, states: states);
@@ -157,8 +150,6 @@ bool _isLoggable(SessionExercise exercise, Session session) {
     case UnfinishedState():
       final plannedSetCount = _lookupPlannedSetCount(exercise, session);
       return exercise.executedSets.length < plannedSetCount;
-    case ReplacedState(:final substitute):
-      return exercise.executedSets.length < substitute.setCount;
     case CompletedState():
     case SkippedState():
       return false;
@@ -183,8 +174,6 @@ bool _allExercisesTerminal(Session session) {
       case CompletedState():
       case SkippedState():
         continue;
-      case ReplacedState(:final substitute):
-        if (exercise.executedSets.length < substitute.setCount) return false;
       case UnfinishedState():
         return false;
     }

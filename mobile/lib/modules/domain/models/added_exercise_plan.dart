@@ -16,9 +16,8 @@ part 'added_exercise_plan.g.dart';
 /// the snapshot — so added exercises (library-linked or one-off) record their
 /// own intended work alongside the immutable plan without ever mutating it.
 ///
-/// Mirrors [SubstituteExercise]'s shape and validation; the generalized
-/// carrier supersedes it (the replaced/substitute machinery is retired once
-/// composed replace ships).
+/// The single inline-plan carrier for non-snapshot work; it superseded the
+/// former substitute/replaced machinery, which has been retired.
 @freezed
 abstract class AddedExercisePlan with _$AddedExercisePlan {
   AddedExercisePlan._() {

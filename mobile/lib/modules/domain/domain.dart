@@ -30,7 +30,6 @@ export 'models/session.dart';
 export 'models/session_exercise.dart';
 export 'models/session_note.dart';
 export 'models/session_snapshot.dart';
-export 'models/substitute_exercise.dart';
 export 'models/training_week.dart';
 export 'models/workout_day.dart';
 export 'models/workout_set.dart';

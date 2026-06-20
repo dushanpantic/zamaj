@@ -61,16 +61,9 @@ void main() {
         final rng = Random(masterSeed + i);
         final exerciseCount = 1 + rng.nextInt(5);
         final states = List.generate(exerciseCount, (_) {
-          switch (rng.nextInt(3)) {
-            case 0:
-              return const ExerciseState.completed();
-            case 1:
-              return const ExerciseState.skipped();
-            default:
-              return ExerciseState.replaced(
-                substitute: anySubstituteExercise(rng),
-              );
-          }
+          return rng.nextBool()
+              ? const ExerciseState.completed()
+              : const ExerciseState.skipped();
         });
 
         final session = _sessionWithFullSets(rng, states: states);
@@ -98,16 +91,9 @@ void main() {
           if (j == unfinishedIndex) {
             return const ExerciseState.unfinished();
           }
-          switch (rng.nextInt(3)) {
-            case 0:
-              return const ExerciseState.completed();
-            case 1:
-              return const ExerciseState.skipped();
-            default:
-              return ExerciseState.replaced(
-                substitute: anySubstituteExercise(rng),
-              );
-          }
+          return rng.nextBool()
+              ? const ExerciseState.completed()
+              : const ExerciseState.skipped();
         });
 
         final session = anySessionWithStates(rng, states: states);
@@ -123,27 +109,6 @@ void main() {
       }
     });
 
-    test(
-      'sessions with a replaced exercise having incomplete sets return false',
-      () {
-        const iterations = 100;
-        final masterSeed = Random().nextInt(1 << 32);
-
-        for (var i = 0; i < iterations; i++) {
-          final rng = Random(masterSeed + i);
-          final session = _sessionWithIncompleteReplaced(rng);
-          final actual = engine.isSessionComplete(session);
-
-          expect(
-            actual,
-            isFalse,
-            reason:
-                'iteration $i (seed ${masterSeed + i}): '
-                'replaced exercise with fewer sets than planned should be incomplete',
-          );
-        }
-      },
-    );
   });
 }
 
@@ -153,10 +118,6 @@ bool _oracleIsComplete(Session session) {
       case CompletedState():
       case SkippedState():
         continue;
-      case ReplacedState(:final substitute):
-        if (exercise.executedSets.length < substitute.setCount) {
-          return false;
-        }
       case UnfinishedState():
         return false;
     }
@@ -190,7 +151,6 @@ Session _sessionWithFullSets(
     final executedSetCount = switch (state) {
       CompletedState() => plannedSetCount,
       SkippedState() => rng.nextInt(plannedSetCount + 1),
-      ReplacedState(:final substitute) => substitute.setCount,
       UnfinishedState() => rng.nextInt(plannedSetCount),
     };
 
@@ -201,126 +161,13 @@ Session _sessionWithFullSets(
       plannedExerciseIdInSnapshot: planned.id,
       state: state,
       executedSets: List.generate(executedSetCount, (j) {
-        final effectiveMt = switch (state) {
-          ReplacedState(:final substitute) => substitute.measurementType,
-          _ => mt,
-        };
+        final effectiveMt = mt;
         return ExecutedSet(
           id: anyUuidV4(rng),
           sessionExerciseId: anyUuidV4(rng),
           position: j,
           measurementType: effectiveMt,
           actualValues: anyActualSetValuesForMeasurement(rng, effectiveMt),
-          plannedSetIdInSnapshot: j < planned.sets.length
-              ? planned.sets[j].id
-              : null,
-          completedAt: anyUtcDateTime(rng),
-          createdAt: anyUtcDateTime(rng),
-          updatedAt: anyUtcDateTime(rng),
-          schemaVersion: 1,
-        );
-      }),
-      createdAt: anyUtcDateTime(rng),
-      updatedAt: anyUtcDateTime(rng),
-      schemaVersion: 1,
-    );
-  });
-
-  return Session(
-    id: sessionId,
-    workoutDayId: workoutDay.id,
-    snapshot: snapshot,
-    sessionExercises: sessionExercises,
-    notes: const [],
-    extraWork: const [],
-    startedAt: anyUtcDateTime(rng),
-    endedAt: null,
-    createdAt: anyUtcDateTime(rng),
-    updatedAt: anyUtcDateTime(rng),
-    schemaVersion: 1,
-  );
-}
-
-Session _sessionWithIncompleteReplaced(Random rng) {
-  final exerciseCount = 1 + rng.nextInt(4);
-  final replacedIndex = rng.nextInt(exerciseCount);
-
-  final workoutDay = _anyWorkoutDayWithExerciseCount(rng, exerciseCount);
-  final snapshot = SessionSnapshot.capture(
-    workoutDay: workoutDay,
-    capturedAt: anyUtcDateTime(rng),
-    schemaVersion: 1,
-  );
-
-  final allExercises = [
-    for (final group in workoutDay.exerciseGroups) ...group.exercises,
-  ];
-  final sessionId = anyUuidV4(rng);
-
-  final sessionExercises = List.generate(exerciseCount, (i) {
-    final planned = allExercises[i];
-    final mt = planned.measurementType;
-    final plannedSetCount = planned.sets.length;
-
-    if (i == replacedIndex) {
-      final substitute = anySubstituteExercise(rng);
-      final state = ExerciseState.replaced(substitute: substitute);
-      final incompleteSets = substitute.setCount > 1
-          ? rng.nextInt(substitute.setCount - 1)
-          : 0;
-
-      return SessionExercise(
-        id: anyUuidV4(rng),
-        sessionId: sessionId,
-        position: i,
-        plannedExerciseIdInSnapshot: planned.id,
-        state: state,
-        executedSets: List.generate(incompleteSets, (j) {
-          final effectiveMt = substitute.measurementType;
-          return ExecutedSet(
-            id: anyUuidV4(rng),
-            sessionExerciseId: anyUuidV4(rng),
-            position: j,
-            measurementType: effectiveMt,
-            actualValues: anyActualSetValuesForMeasurement(rng, effectiveMt),
-            plannedSetIdInSnapshot: j < planned.sets.length
-                ? planned.sets[j].id
-                : null,
-            completedAt: anyUtcDateTime(rng),
-            createdAt: anyUtcDateTime(rng),
-            updatedAt: anyUtcDateTime(rng),
-            schemaVersion: 1,
-          );
-        }),
-        createdAt: anyUtcDateTime(rng),
-        updatedAt: anyUtcDateTime(rng),
-        schemaVersion: 1,
-      );
-    }
-
-    final state = switch (rng.nextInt(2)) {
-      0 => const ExerciseState.completed(),
-      _ => const ExerciseState.skipped(),
-    };
-
-    final executedSetCount = switch (state) {
-      CompletedState() => plannedSetCount,
-      _ => rng.nextInt(plannedSetCount + 1),
-    };
-
-    return SessionExercise(
-      id: anyUuidV4(rng),
-      sessionId: sessionId,
-      position: i,
-      plannedExerciseIdInSnapshot: planned.id,
-      state: state,
-      executedSets: List.generate(executedSetCount, (j) {
-        return ExecutedSet(
-          id: anyUuidV4(rng),
-          sessionExerciseId: anyUuidV4(rng),
-          position: j,
-          measurementType: mt,
-          actualValues: anyActualSetValuesForMeasurement(rng, mt),
           plannedSetIdInSnapshot: j < planned.sets.length
               ? planned.sets[j].id
               : null,

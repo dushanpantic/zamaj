@@ -3,7 +3,6 @@ import 'package:zamaj/modules/domain/models/added_exercise_plan.dart';
 import 'package:zamaj/modules/domain/models/exercise.dart';
 import 'package:zamaj/modules/domain/models/exercise_group_role.dart';
 import 'package:zamaj/modules/domain/models/exercise_metadata.dart';
-import 'package:zamaj/modules/domain/models/exercise_state.dart';
 import 'package:zamaj/modules/domain/models/measurement_type.dart';
 import 'package:zamaj/modules/domain/models/planned_set_values.dart';
 import 'package:zamaj/modules/domain/models/session.dart';
@@ -14,13 +13,12 @@ import 'package:zamaj/modules/domain/models/workout_set.dart';
 /// Snapshot-aware resolver for [SessionExercise]s.
 ///
 /// A session's immutable snapshot is the source of truth for a snapshot-backed
-/// session-exercise's planned data; a [ReplacedState] substitute overrides the
-/// measurement type, set count, display name, and planned values while the
-/// group role still derives from the snapshot. This projection is the one place
-/// that pairing lives — previously copied into the engine, the Drift repo, and
-/// the overview/focus assemblers with three behavioural divergences (a silent
-/// planned-set-count of zero and a `main` group-role fallback on a missing
-/// snapshot entry).
+/// session-exercise's planned data: measurement type, set count, display name,
+/// and planned values, with the group role deriving from the snapshot. This
+/// projection is the one place that pairing lives — previously copied into the
+/// engine, the Drift repo, and the overview/focus assemblers with three
+/// behavioural divergences (a silent planned-set-count of zero and a `main`
+/// group-role fallback on a missing snapshot entry).
 ///
 /// An **added** session-exercise ([SessionExercise.addedPlan] non-null) is work
 /// not present in the frozen snapshot: it resolves entirely from its inline
@@ -57,11 +55,9 @@ class EffectiveExercises {
   /// Resolves the effective view of [sessionExercise].
   ///
   /// Branch order: an added exercise (inline plan) resolves from its plan; a
-  /// snapshot-backed exercise resolves from the snapshot (the replaced
-  /// substitute is then applied by the [EffectiveExercise] getters). Throws
-  /// [NotFoundError] only when a non-added session-exercise's planned exercise
-  /// is absent from the snapshot — including for a replaced exercise, whose
-  /// group role still requires the snapshot original.
+  /// snapshot-backed exercise resolves from the snapshot. Throws [NotFoundError]
+  /// only when a non-added session-exercise's planned exercise is absent from
+  /// the snapshot.
   EffectiveExercise forSessionExercise(SessionExercise sessionExercise) {
     final addedPlan = sessionExercise.addedPlan;
     if (addedPlan != null) {
@@ -130,10 +126,9 @@ class EffectiveExercise {
   });
 
   /// The planned exercise this view resolves against. For a snapshot-backed
-  /// session-exercise it is the snapshot entry (present even when the exercise
-  /// is replaced — the substitute is applied by the getters below). For an
-  /// added exercise it is a stand-in synthesized from the inline plan, since
-  /// there is no snapshot entry.
+  /// session-exercise it is the snapshot entry. For an added exercise it is a
+  /// stand-in synthesized from the inline plan, since there is no snapshot
+  /// entry.
   final Exercise plannedExercise;
 
   final SessionExercise sessionExercise;
@@ -141,36 +136,19 @@ class EffectiveExercise {
   /// The role of the snapshot group the planned exercise belongs to.
   final ExerciseGroupRole plannedGroupRole;
 
-  /// The measurement type the user logs against — the substitute's when
-  /// replaced, otherwise the planned exercise's.
+  /// The measurement type the user logs against.
   MeasurementType get effectiveMeasurementType =>
-      switch (sessionExercise.state) {
-        ReplacedState(:final substitute) => substitute.measurementType,
-        _ => plannedExercise.measurementType,
-      };
+      plannedExercise.measurementType;
 
-  /// The number of planned sets — the substitute's set count when replaced,
-  /// otherwise the planned exercise's set count.
-  int get plannedSetCount => switch (sessionExercise.state) {
-    ReplacedState(:final substitute) => substitute.setCount,
-    _ => plannedExercise.sets.length,
-  };
+  /// The number of planned sets.
+  int get plannedSetCount => plannedExercise.sets.length;
 
-  /// The name shown to the user — the substitute's when replaced.
-  String get displayName => switch (sessionExercise.state) {
-    ReplacedState(:final substitute) => substitute.name,
-    _ => plannedExercise.name,
-  };
+  /// The name shown to the user.
+  String get displayName => plannedExercise.name;
 
-  /// The effective planned values for the set at [position] (0-based),
-  /// resolving the substitute when replaced. A replaced exercise uses the same
-  /// substitute values for every set. Throws [NotFoundError] when [position] is
-  /// out of range for a non-replaced exercise.
+  /// The effective planned values for the set at [position] (0-based). Throws
+  /// [NotFoundError] when [position] is out of range.
   PlannedSetValues plannedValuesAt(int position) {
-    final state = sessionExercise.state;
-    if (state is ReplacedState) {
-      return state.substitute.plannedValues;
-    }
     final sorted = List<WorkoutSet>.of(plannedExercise.sets)
       ..sort((a, b) => a.position.compareTo(b.position));
     if (position >= sorted.length) {

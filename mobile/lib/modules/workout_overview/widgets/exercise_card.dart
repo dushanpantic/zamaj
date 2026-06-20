@@ -212,10 +212,7 @@ class _Header extends StatelessWidget {
   Widget build(BuildContext context) {
     final state = viewModel.sessionExercise.state;
     final isUnfinished = state is UnfinishedState;
-    final displayName = switch (state) {
-      ReplacedState(:final substitute) => substitute.name,
-      _ => viewModel.plannedExerciseName,
-    };
+    final displayName = viewModel.displayName;
     final completedCount = viewModel.setRows
         .where((r) => r.executedSet != null)
         .length;
@@ -231,10 +228,7 @@ class _Header extends StatelessWidget {
       executedSetCount: completedCount,
       plannedSetCount: totalPlanned,
     );
-    final videoUrl = switch (state) {
-      ReplacedState(:final substitute) => substitute.metadata?.videoUrl,
-      _ => viewModel.plannedMetadata.videoUrl,
-    };
+    final videoUrl = viewModel.plannedMetadata.videoUrl;
 
     return Material(
       color: Colors.transparent,
@@ -720,39 +714,13 @@ class _ExpandedBody extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final state = viewModel.sessionExercise.state;
-    final notes = switch (state) {
-      ReplacedState(:final substitute) => substitute.metadata?.notes,
-      _ => viewModel.plannedMetadata.notes,
-    };
-    final videoUrl = switch (state) {
-      ReplacedState(:final substitute) => substitute.metadata?.videoUrl,
-      _ => viewModel.plannedMetadata.videoUrl,
-    };
-    final replacementBanner = state is ReplacedState
-        ? Padding(
-            padding: const EdgeInsets.fromLTRB(
-              AppSpacing.md,
-              0,
-              AppSpacing.md,
-              AppSpacing.sm,
-            ),
-            child: Text(
-              'Replaced from "${viewModel.plannedExerciseName}"',
-              style: typography.caption.copyWith(
-                color: colors.exerciseReplaced,
-              ),
-            ),
-          )
-        : null;
+    final notes = viewModel.plannedMetadata.notes;
+    final videoUrl = viewModel.plannedMetadata.videoUrl;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         const Divider(),
-        if (replacementBanner != null) ...[
-          const SizedBox(height: AppSpacing.sm),
-          replacementBanner,
-        ],
         ...viewModel.setRows.map(
           (row) => SetRow(
             key: ValueKey(
@@ -818,8 +786,6 @@ class _ExpandedBody extends StatelessWidget {
   }
 
   bool _exerciseAllowsMutation(ExerciseState state) {
-    return state is UnfinishedState ||
-        state is ReplacedState ||
-        state is CompletedState;
+    return state is UnfinishedState || state is CompletedState;
   }
 }

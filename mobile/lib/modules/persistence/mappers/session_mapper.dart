@@ -13,7 +13,6 @@ import 'package:zamaj/modules/domain/models/session.dart' as domain;
 import 'package:zamaj/modules/domain/models/session_exercise.dart' as domain;
 import 'package:zamaj/modules/domain/models/session_note.dart' as domain;
 import 'package:zamaj/modules/domain/models/session_snapshot.dart';
-import 'package:zamaj/modules/domain/models/substitute_exercise.dart';
 import 'package:zamaj/modules/domain/models/workout_day.dart' as domain;
 import 'package:zamaj/modules/persistence/database/app_database.dart';
 
@@ -176,11 +175,6 @@ class SessionMapper {
       'unfinished' => const ExerciseState.unfinished(),
       'completed' => const ExerciseState.completed(),
       'skipped' => const ExerciseState.skipped(),
-      'replaced' => ExerciseState.replaced(
-        substitute: SubstituteExercise.fromJson(
-          jsonDecode(row.substitutePayloadJson!) as Map<String, dynamic>,
-        ),
-      ),
       final d => throw DeserializationError(
         field: 'stateDiscriminator',
         discriminator: d,
@@ -241,14 +235,10 @@ class SessionMapper {
   SessionExercisesCompanion sessionExerciseToRow(
     domain.SessionExercise exercise,
   ) {
-    final (discriminator, substituteJson) = switch (exercise.state) {
-      UnfinishedState() => ('unfinished', null),
-      CompletedState() => ('completed', null),
-      SkippedState() => ('skipped', null),
-      ReplacedState(:final substitute) => (
-        'replaced',
-        CanonicalJson.encode(substitute.toJson()),
-      ),
+    final discriminator = switch (exercise.state) {
+      UnfinishedState() => 'unfinished',
+      CompletedState() => 'completed',
+      SkippedState() => 'skipped',
     };
 
     return SessionExercisesCompanion(
@@ -257,7 +247,8 @@ class SessionMapper {
       position: Value(exercise.position),
       plannedExerciseIdInSnapshot: Value(exercise.plannedExerciseIdInSnapshot),
       stateDiscriminator: Value(discriminator),
-      substitutePayloadJson: Value(substituteJson),
+      // Dead column retained post-retirement; SQLite can't cheaply drop it.
+      substitutePayloadJson: const Value(null),
       addedPlanJson: Value(
         exercise.addedPlan != null
             ? CanonicalJson.encode(exercise.addedPlan!.toJson())

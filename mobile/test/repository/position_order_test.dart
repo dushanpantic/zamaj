@@ -404,7 +404,6 @@ bool _isLocked(domain.SessionExercise se) {
     UnfinishedState() => false,
     CompletedState() => true,
     SkippedState() => true,
-    ReplacedState() => true,
   };
 }
 

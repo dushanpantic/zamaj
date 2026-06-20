@@ -4,7 +4,6 @@ import 'dart:math';
 import 'package:clock/clock.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:zamaj/modules/domain/errors.dart';
-import 'package:zamaj/modules/domain/models/executed_set.dart';
 import 'package:zamaj/modules/domain/models/exercise.dart';
 import 'package:zamaj/modules/domain/models/exercise_state.dart';
 import 'package:zamaj/modules/domain/models/session.dart';
@@ -33,17 +32,13 @@ void main() {
 
         final exerciseCount = 1 + rng.nextInt(5);
         final states = List.generate(exerciseCount, (_) {
-          switch (rng.nextInt(4)) {
+          switch (rng.nextInt(3)) {
             case 0:
               return const ExerciseState.unfinished();
             case 1:
               return const ExerciseState.completed();
-            case 2:
-              return const ExerciseState.skipped();
             default:
-              return ExerciseState.replaced(
-                substitute: anySubstituteExercise(rng),
-              );
+              return const ExerciseState.skipped();
           }
         });
 
@@ -156,10 +151,7 @@ void main() {
 
         final exercise = session.sessionExercises.first;
         final planned = _lookupPlannedExercise(exercise, session);
-        final effectiveMt = switch (exercise.state) {
-          ReplacedState(:final substitute) => substitute.measurementType,
-          _ => planned.measurementType,
-        };
+        final effectiveMt = planned.measurementType;
         final values = anyActualSetValuesForMeasurement(rng, effectiveMt);
 
         expect(
@@ -241,50 +233,11 @@ Exercise _lookupPlannedExercise(
 Session _anyAllTerminalSession(Random rng) {
   final exerciseCount = 1 + rng.nextInt(5);
   final states = List.generate(exerciseCount, (_) {
-    switch (rng.nextInt(3)) {
-      case 0:
-        return const ExerciseState.completed();
-      case 1:
-        return const ExerciseState.skipped();
-      default:
-        return ExerciseState.replaced(substitute: anySubstituteExercise(rng));
-    }
+    return rng.nextBool()
+        ? const ExerciseState.completed()
+        : const ExerciseState.skipped();
   });
 
   final session = anySessionWithStates(rng, states: states);
-
-  final fixedExercises = session.sessionExercises.map((exercise) {
-    final planned = _lookupPlannedExercise(exercise, session);
-
-    if (exercise.state is ReplacedState) {
-      final ReplacedState replacedState = exercise.state as ReplacedState;
-      final substitute = replacedState.substitute;
-      if (exercise.executedSets.length < substitute.setCount) {
-        final mt = substitute.measurementType;
-        final sets = List.generate(substitute.setCount, (j) {
-          if (j < exercise.executedSets.length) {
-            return exercise.executedSets[j];
-          }
-          return ExecutedSet(
-            id: anyUuidV4(rng),
-            sessionExerciseId: exercise.id,
-            position: j,
-            measurementType: mt,
-            actualValues: anyActualSetValuesForMeasurement(rng, mt),
-            plannedSetIdInSnapshot: j < planned.sets.length
-                ? planned.sets[j].id
-                : null,
-            completedAt: anyUtcDateTime(rng),
-            createdAt: anyUtcDateTime(rng),
-            updatedAt: anyUtcDateTime(rng),
-            schemaVersion: 1,
-          );
-        });
-        return exercise.copyWith(executedSets: sets);
-      }
-    }
-    return exercise;
-  }).toList();
-
-  return session.copyWith(sessionExercises: fixedExercises, endedAt: null);
+  return session.copyWith(endedAt: null);
 }

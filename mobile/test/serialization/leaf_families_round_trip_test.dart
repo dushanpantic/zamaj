@@ -9,7 +9,6 @@ import 'package:zamaj/modules/domain/models/exercise_state.dart';
 import 'package:zamaj/modules/domain/models/measurement_type.dart';
 import 'package:zamaj/modules/domain/models/planned_set_values.dart';
 import 'package:zamaj/modules/domain/models/rep_target.dart';
-import 'package:zamaj/modules/domain/models/substitute_exercise.dart';
 import 'package:zamaj/modules/domain/models/workout_set.dart';
 
 import '../support/generators.dart';
@@ -37,13 +36,6 @@ void main() {
       for (var i = 0; i < iterations; i++) {
         final v = anyExerciseMetadata(rng);
         expect(ExerciseMetadata.fromJson(v.toJson()), equals(v));
-      }
-    });
-
-    test('SubstituteExercise round-trips through JSON', () {
-      for (var i = 0; i < iterations; i++) {
-        final v = anySubstituteExercise(rng);
-        expect(SubstituteExercise.fromJson(v.toJson()), equals(v));
       }
     });
 

@@ -27,10 +27,6 @@ ExerciseState _$ExerciseStateFromJson(
           return SkippedState.fromJson(
             json
           );
-                case 'replaced':
-          return ReplacedState.fromJson(
-            json
-          );
         
           default:
             throw CheckedFromJsonException(
@@ -89,14 +85,13 @@ extension ExerciseStatePatterns on ExerciseState {
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeMap<TResult extends Object?>({TResult Function( UnfinishedState value)?  unfinished,TResult Function( CompletedState value)?  completed,TResult Function( SkippedState value)?  skipped,TResult Function( ReplacedState value)?  replaced,required TResult orElse(),}){
+@optionalTypeArgs TResult maybeMap<TResult extends Object?>({TResult Function( UnfinishedState value)?  unfinished,TResult Function( CompletedState value)?  completed,TResult Function( SkippedState value)?  skipped,required TResult orElse(),}){
 final _that = this;
 switch (_that) {
 case UnfinishedState() when unfinished != null:
 return unfinished(_that);case CompletedState() when completed != null:
 return completed(_that);case SkippedState() when skipped != null:
-return skipped(_that);case ReplacedState() when replaced != null:
-return replaced(_that);case _:
+return skipped(_that);case _:
   return orElse();
 
 }
@@ -114,14 +109,13 @@ return replaced(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult map<TResult extends Object?>({required TResult Function( UnfinishedState value)  unfinished,required TResult Function( CompletedState value)  completed,required TResult Function( SkippedState value)  skipped,required TResult Function( ReplacedState value)  replaced,}){
+@optionalTypeArgs TResult map<TResult extends Object?>({required TResult Function( UnfinishedState value)  unfinished,required TResult Function( CompletedState value)  completed,required TResult Function( SkippedState value)  skipped,}){
 final _that = this;
 switch (_that) {
 case UnfinishedState():
 return unfinished(_that);case CompletedState():
 return completed(_that);case SkippedState():
-return skipped(_that);case ReplacedState():
-return replaced(_that);}
+return skipped(_that);}
 }
 /// A variant of `map` that fallback to returning `null`.
 ///
@@ -135,14 +129,13 @@ return replaced(_that);}
 /// }
 /// ```
 
-@optionalTypeArgs TResult? mapOrNull<TResult extends Object?>({TResult? Function( UnfinishedState value)?  unfinished,TResult? Function( CompletedState value)?  completed,TResult? Function( SkippedState value)?  skipped,TResult? Function( ReplacedState value)?  replaced,}){
+@optionalTypeArgs TResult? mapOrNull<TResult extends Object?>({TResult? Function( UnfinishedState value)?  unfinished,TResult? Function( CompletedState value)?  completed,TResult? Function( SkippedState value)?  skipped,}){
 final _that = this;
 switch (_that) {
 case UnfinishedState() when unfinished != null:
 return unfinished(_that);case CompletedState() when completed != null:
 return completed(_that);case SkippedState() when skipped != null:
-return skipped(_that);case ReplacedState() when replaced != null:
-return replaced(_that);case _:
+return skipped(_that);case _:
   return null;
 
 }
@@ -159,13 +152,12 @@ return replaced(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>({TResult Function()?  unfinished,TResult Function()?  completed,TResult Function()?  skipped,TResult Function( SubstituteExercise substitute)?  replaced,required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>({TResult Function()?  unfinished,TResult Function()?  completed,TResult Function()?  skipped,required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case UnfinishedState() when unfinished != null:
 return unfinished();case CompletedState() when completed != null:
 return completed();case SkippedState() when skipped != null:
-return skipped();case ReplacedState() when replaced != null:
-return replaced(_that.substitute);case _:
+return skipped();case _:
   return orElse();
 
 }
@@ -183,13 +175,12 @@ return replaced(_that.substitute);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>({required TResult Function()  unfinished,required TResult Function()  completed,required TResult Function()  skipped,required TResult Function( SubstituteExercise substitute)  replaced,}) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>({required TResult Function()  unfinished,required TResult Function()  completed,required TResult Function()  skipped,}) {final _that = this;
 switch (_that) {
 case UnfinishedState():
 return unfinished();case CompletedState():
 return completed();case SkippedState():
-return skipped();case ReplacedState():
-return replaced(_that.substitute);}
+return skipped();}
 }
 /// A variant of `when` that fallback to returning `null`
 ///
@@ -203,13 +194,12 @@ return replaced(_that.substitute);}
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>({TResult? Function()?  unfinished,TResult? Function()?  completed,TResult? Function()?  skipped,TResult? Function( SubstituteExercise substitute)?  replaced,}) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>({TResult? Function()?  unfinished,TResult? Function()?  completed,TResult? Function()?  skipped,}) {final _that = this;
 switch (_that) {
 case UnfinishedState() when unfinished != null:
 return unfinished();case CompletedState() when completed != null:
 return completed();case SkippedState() when skipped != null:
-return skipped();case ReplacedState() when replaced != null:
-return replaced(_that.substitute);case _:
+return skipped();case _:
   return null;
 
 }
@@ -333,87 +323,5 @@ String toString() {
 
 
 
-
-/// @nodoc
-@JsonSerializable()
-
-class ReplacedState implements ExerciseState {
-  const ReplacedState({required this.substitute, final  String? $type}): $type = $type ?? 'replaced';
-  factory ReplacedState.fromJson(Map<String, dynamic> json) => _$ReplacedStateFromJson(json);
-
- final  SubstituteExercise substitute;
-
-@JsonKey(name: 'type')
-final String $type;
-
-
-/// Create a copy of ExerciseState
-/// with the given fields replaced by the non-null parameter values.
-@JsonKey(includeFromJson: false, includeToJson: false)
-@pragma('vm:prefer-inline')
-$ReplacedStateCopyWith<ReplacedState> get copyWith => _$ReplacedStateCopyWithImpl<ReplacedState>(this, _$identity);
-
-@override
-Map<String, dynamic> toJson() {
-  return _$ReplacedStateToJson(this, );
-}
-
-@override
-bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is ReplacedState&&(identical(other.substitute, substitute) || other.substitute == substitute));
-}
-
-@JsonKey(includeFromJson: false, includeToJson: false)
-@override
-int get hashCode => Object.hash(runtimeType,substitute);
-
-@override
-String toString() {
-  return 'ExerciseState.replaced(substitute: $substitute)';
-}
-
-
-}
-
-/// @nodoc
-abstract mixin class $ReplacedStateCopyWith<$Res> implements $ExerciseStateCopyWith<$Res> {
-  factory $ReplacedStateCopyWith(ReplacedState value, $Res Function(ReplacedState) _then) = _$ReplacedStateCopyWithImpl;
-@useResult
-$Res call({
- SubstituteExercise substitute
-});
-
-
-$SubstituteExerciseCopyWith<$Res> get substitute;
-
-}
-/// @nodoc
-class _$ReplacedStateCopyWithImpl<$Res>
-    implements $ReplacedStateCopyWith<$Res> {
-  _$ReplacedStateCopyWithImpl(this._self, this._then);
-
-  final ReplacedState _self;
-  final $Res Function(ReplacedState) _then;
-
-/// Create a copy of ExerciseState
-/// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') $Res call({Object? substitute = null,}) {
-  return _then(ReplacedState(
-substitute: null == substitute ? _self.substitute : substitute // ignore: cast_nullable_to_non_nullable
-as SubstituteExercise,
-  ));
-}
-
-/// Create a copy of ExerciseState
-/// with the given fields replaced by the non-null parameter values.
-@override
-@pragma('vm:prefer-inline')
-$SubstituteExerciseCopyWith<$Res> get substitute {
-  
-  return $SubstituteExerciseCopyWith<$Res>(_self.substitute, (value) {
-    return _then(_self.copyWith(substitute: value));
-  });
-}
-}
 
 // dart format on

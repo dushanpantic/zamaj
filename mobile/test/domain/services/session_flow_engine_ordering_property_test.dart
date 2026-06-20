@@ -290,14 +290,9 @@ Session _anySessionWithNonUnfinishedInSuperset(Random rng) {
 }
 
 ExerciseState _anyNonUnfinishedState(Random rng) {
-  switch (rng.nextInt(3)) {
-    case 0:
-      return const ExerciseState.completed();
-    case 1:
-      return const ExerciseState.skipped();
-    default:
-      return ExerciseState.replaced(substitute: anySubstituteExercise(rng));
-  }
+  return rng.nextBool()
+      ? const ExerciseState.completed()
+      : const ExerciseState.skipped();
 }
 
 SessionExercise _pickNonUnfinishedExercise(Random rng, Session session) {

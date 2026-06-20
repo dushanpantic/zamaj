@@ -19,7 +19,6 @@ import 'package:zamaj/modules/domain/models/session.dart';
 import 'package:zamaj/modules/domain/models/session_exercise.dart';
 import 'package:zamaj/modules/domain/models/session_note.dart';
 import 'package:zamaj/modules/domain/models/session_snapshot.dart';
-import 'package:zamaj/modules/domain/models/substitute_exercise.dart';
 import 'package:zamaj/modules/domain/models/workout_day.dart';
 import 'package:zamaj/modules/domain/models/workout_set.dart';
 
@@ -81,22 +80,6 @@ void main() {
       );
     });
 
-    test('ExerciseState.replaced', () {
-      final substitute = SubstituteExercise(
-        name: 'Dumbbell Press',
-        measurementType: const MeasurementType.repBased(),
-        plannedValues: PlannedSetValues.repBased(
-          weightKg: 22.5,
-          repTarget: RepTarget.fixed(reps: 10),
-        ),
-        setCount: 3,
-        metadata: null,
-      );
-      expect(
-        _encode(ExerciseState.replaced(substitute: substitute).toJson()),
-        equals(_golden('exercise_state_replaced')),
-      );
-    });
 
     test('RepTarget.fixed', () {
       expect(
@@ -291,22 +274,6 @@ void main() {
       expect(_encode(program.toJson()), equals(_golden('program')));
     });
 
-    test('SubstituteExercise', () {
-      final substitute = SubstituteExercise(
-        name: 'Dumbbell Press',
-        measurementType: const MeasurementType.repBased(),
-        plannedValues: PlannedSetValues.repBased(
-          weightKg: 22.5,
-          repTarget: RepTarget.fixed(reps: 10),
-        ),
-        setCount: 3,
-        metadata: const ExerciseMetadata(notes: 'Use 30kg dumbbells'),
-      );
-      expect(
-        _encode(substitute.toJson()),
-        equals(_golden('substitute_exercise')),
-      );
-    });
 
     test('ExecutedSet', () {
       final executedSet = ExecutedSet(
