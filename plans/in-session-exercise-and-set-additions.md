@@ -1,8 +1,8 @@
 # Plan: In-Session Exercise & Set Additions (and Replace)
 
 **Created**: 2026-06-19
-**Branch**: master
-**Status**: approved
+**Branch**: feat/in-session-exercise-and-set-additions
+**Status**: complete
 **Spec**: docs/specs/in-session-exercise-and-set-additions.md
 
 ## Goal
@@ -22,22 +22,22 @@ Open the live session to three structural additions while keeping the frozen pla
 
 ## Acceptance Criteria
 
-- [ ] AC1 — Add a library-linked exercise from the live overview; it appears appended, loggable, `UnfinishedState`, with planned rows from its inline plan.
-- [ ] AC2 — Add a one-off (unlinked) exercise the same way; never blocked by the dedup guard.
-- [ ] AC3 — Logging on an added exercise auto-completes at its inline quota and derives completed/partial/skipped identically to a planned exercise.
-- [ ] AC4 — `addExercise` with a `libraryExerciseId` matching **any** session exercise (any state) is rejected with a domain error and writes nothing; the picker excludes it. One-off adds always allowed.
-- [ ] AC4b — A skipped/ended exercise can be **resumed** to `UnfinishedState`, retaining logged sets (the re-do path for skipped/ended); a completed exercise re-does via Add set (AC6). Resume doesn't change the snapshot.
-- [ ] AC5 — Adding an exercise does not change `session.snapshot.sha256Hash`.
-- [ ] AC6 — On a `completed` exercise the user can log an extra set; the exercise still reads completed and the extra set appears as a row beyond the planned rows.
-- [ ] AC7 — Extra sets never alter the planned quota or snapshot; they render in session review and plain-text export as work beyond plan.
-- [ ] AC8 — Replacing terminates the original (partial if sets logged, skipped if none) and adds a new exercise in one user action.
-- [ ] AC9 — Replace is atomic: a fault while writing the second half leaves the session unchanged (no orphan, no terminated-without-replacement).
-- [ ] AC10 — The dedup guard applies to the replacement movement, excluding the original being replaced from its own block-set.
-- [ ] AC11 — No "Replaced" badge/outcome appears anywhere (live card, review, history tile, export).
-- [ ] AC12 — `ReplacedState`, `SubstituteExercise`, `ExerciseOutcome.replaced` removed; `tool/check_offline_imports.sh` and `tool/ci.sh` pass.
-- [ ] AC13 — Historical sessions (snapshot-only exercises) load/render identically before and after the change; completed-session outcomes don't change retroactively in a misrepresenting way.
-- [ ] AC14 — `schema_versions.dart` bumped + migrations present; `test/integration/` covers add-exercise → extra set → replace → end, plus the legacy-`replaced` retirement path.
-- [ ] AC15 — `product-context.md` updated for the new add-exercise / add-set features and the reworked replace.
+- [x] AC1 — Add a library-linked exercise from the live overview; it appears appended, loggable, `UnfinishedState`, with planned rows from its inline plan.
+- [x] AC2 — Add a one-off (unlinked) exercise the same way; never blocked by the dedup guard.
+- [x] AC3 — Logging on an added exercise auto-completes at its inline quota and derives completed/partial/skipped identically to a planned exercise.
+- [x] AC4 — `addExercise` with a `libraryExerciseId` matching **any** session exercise (any state) is rejected with a domain error and writes nothing; the picker excludes it. One-off adds always allowed.
+- [x] AC4b — A skipped/ended exercise can be **resumed** to `UnfinishedState`, retaining logged sets (the re-do path for skipped/ended); a completed exercise re-does via Add set (AC6). Resume doesn't change the snapshot.
+- [x] AC5 — Adding an exercise does not change `session.snapshot.sha256Hash`.
+- [x] AC6 — On a `completed` exercise the user can log an extra set; the exercise still reads completed and the extra set appears as a row beyond the planned rows.
+- [x] AC7 — Extra sets never alter the planned quota or snapshot; they render in session review and plain-text export as work beyond plan.
+- [x] AC8 — Replacing terminates the original (partial if sets logged, skipped if none) and adds a new exercise in one user action.
+- [x] AC9 — Replace is atomic: a fault while writing the second half leaves the session unchanged (no orphan, no terminated-without-replacement).
+- [x] AC10 — The dedup guard applies to the replacement movement, excluding the original being replaced from its own block-set.
+- [x] AC11 — No "Replaced" badge/outcome appears anywhere (live card, review, history tile, export).
+- [x] AC12 — `ReplacedState`, `SubstituteExercise`, `ExerciseOutcome.replaced` removed; `tool/check_offline_imports.sh` and `tool/ci.sh` pass.
+- [x] AC13 — Historical sessions (snapshot-only exercises) load/render identically before and after the change; completed-session outcomes don't change retroactively in a misrepresenting way.
+- [x] AC14 — `schema_versions.dart` bumped + migrations present; `test/integration/` covers add-exercise → extra set → replace → end, plus the legacy-`replaced` retirement path.
+- [x] AC15 — `product-context.md` updated for the new add-exercise / add-set features and the reworked replace.
 
 ## Slices
 
@@ -519,12 +519,12 @@ Slice 2 and Slice 5 carry the `complex` weight (new abstraction + schema/migrati
 
 ## Pre-PR Quality Gate
 
-- [ ] All tests pass (`tool/ci.sh`)
-- [ ] `tool/check_offline_imports.sh` passes
-- [ ] Codegen clean (`dart run build_runner build --force-jit`)
-- [ ] Linter / analyzer passes
+- [x] All tests pass (`tool/ci.sh`) — 1090 tests green
+- [x] `tool/check_offline_imports.sh` passes
+- [x] Codegen clean (`dart run build_runner build --force-jit`)
+- [x] Linter / analyzer passes
 - [ ] `/code-review` passes
-- [ ] `product-context.md` updated
+- [x] `product-context.md` updated
 
 ## Risks & Open Questions
 
@@ -581,27 +581,27 @@ Five plan-review personas ran. Parallelization approved in iteration 1. Acceptan
   - [x] Step 4.3: Update product-context for replace
 
 #### Wave 4
-- [ ] Slice 5: Retire the replaced/substitute machinery + legacy migration
+- [x] Slice 5: Retire the replaced/substitute machinery + legacy migration
   - [x] Step 5.1: Legacy replaced → skip + added-exercise migration
   - [x] Step 5.2: Remove replaced read path + delete SubstituteExercise
   - [x] Step 5.3: Remove ExerciseOutcome.replaced + all replaced render sites
-  - [ ] Step 5.4: Final sweep — product-context + CI
+  - [x] Step 5.4: Final sweep — product-context + CI
 
 ### Acceptance Criteria
 
-- [ ] AC1 — Add library-linked exercise; appended, loggable, unfinished, inline planned rows
-- [ ] AC2 — Add one-off exercise; never blocked by dedup
-- [ ] AC3 — Added exercise auto-completes at inline quota; outcome derived
-- [ ] AC4 — Dedup rejects any-state library match; one-off always allowed; picker excludes match
-- [ ] AC4b — Skipped/ended exercise can be resumed (retains sets); completed re-does via Add set
-- [ ] AC5 — Adding does not change snapshot sha256Hash
-- [ ] AC6 — Extra set on completed exercise; stays completed; row beyond plan
-- [ ] AC7 — Extra sets don't alter quota/snapshot; render in review + export
-- [ ] AC8 — Replace terminates original (partial/skipped) + adds new in one action
-- [ ] AC9 — Replace atomic: add-write fault rolls back the whole transaction
-- [ ] AC10 — Dedup guard applies to replacement (original excluded from its own block-set)
-- [ ] AC11 — No "Replaced" badge/outcome anywhere
-- [ ] AC12 — ReplacedState/SubstituteExercise/ExerciseOutcome.replaced removed; CI + import guard green
-- [ ] AC13 — Snapshot-only historical sessions render identically; no misrepresenting retroactive change
-- [ ] AC14 — schema_versions bumped + migrations; integration covers full flow + legacy retirement path
-- [ ] AC15 — product-context.md updated
+- [x] AC1 — Add library-linked exercise; appended, loggable, unfinished, inline planned rows
+- [x] AC2 — Add one-off exercise; never blocked by dedup
+- [x] AC3 — Added exercise auto-completes at inline quota; outcome derived
+- [x] AC4 — Dedup rejects any-state library match; one-off always allowed; picker excludes match
+- [x] AC4b — Skipped/ended exercise can be resumed (retains sets); completed re-does via Add set
+- [x] AC5 — Adding does not change snapshot sha256Hash
+- [x] AC6 — Extra set on completed exercise; stays completed; row beyond plan
+- [x] AC7 — Extra sets don't alter quota/snapshot; render in review + export
+- [x] AC8 — Replace terminates original (partial/skipped) + adds new in one action
+- [x] AC9 — Replace atomic: add-write fault rolls back the whole transaction
+- [x] AC10 — Dedup guard applies to replacement (original excluded from its own block-set)
+- [x] AC11 — No "Replaced" badge/outcome anywhere
+- [x] AC12 — ReplacedState/SubstituteExercise/ExerciseOutcome.replaced removed; CI + import guard green
+- [x] AC13 — Snapshot-only historical sessions render identically; no misrepresenting retroactive change
+- [x] AC14 — schema_versions bumped + migrations; integration covers full flow + legacy retirement path
+- [x] AC15 — product-context.md updated
