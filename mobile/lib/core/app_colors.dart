@@ -25,7 +25,6 @@ class AppColors {
     required this.exerciseCompleted,
     required this.exercisePartial,
     required this.exerciseSkipped,
-    required this.exerciseReplaced,
     required this.warmup,
     required this.warmupBg,
     required this.loggableHint,
@@ -69,7 +68,6 @@ class AppColors {
   final Color exercisePartial;
 
   final Color exerciseSkipped;
-  final Color exerciseReplaced;
 
   /// Foreground accent for warmup chips/badges/pills.
   final Color warmup;
@@ -89,8 +87,7 @@ class AppColors {
 
   /// Accent for the DELOAD badge on session surfaces (overview header, review
   /// header, recent-sessions tile). An indigo family reads as a deliberate
-  /// lighter/recovery week, distinct from [warmup], [restTimer], and
-  /// [exerciseReplaced].
+  /// lighter/recovery week, distinct from [warmup] and [restTimer].
   final Color deload;
 
   /// Translucent overlay color for modal/scrim layers behind dialogs and
@@ -118,7 +115,6 @@ class AppColors {
     exerciseCompleted: Color(0xFF22C55E),
     exercisePartial: Color(0xFFF59E0B),
     exerciseSkipped: Color(0xFF78716C),
-    exerciseReplaced: Color(0xFFC084FC),
     warmup: Color(0xFF38BDF8),
     warmupBg: Color(0xFF13262B),
     loggableHint: Color(0xFFF97316),
@@ -149,7 +145,6 @@ class AppColors {
     exerciseCompleted: Color(0xFF16A34A),
     exercisePartial: Color(0xFFB45309),
     exerciseSkipped: Color(0xFFA8A29E),
-    exerciseReplaced: Color(0xFF9333EA),
     warmup: Color(0xFF0284C7),
     warmupBg: Color(0xFFE0F2FE),
     loggableHint: Color(0xFFEA580C),

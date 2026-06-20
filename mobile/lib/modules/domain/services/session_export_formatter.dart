@@ -175,7 +175,6 @@ abstract final class SessionExportFormatter {
             ExerciseOutcome.completed => '',
             ExerciseOutcome.partial => '  ($executedCount/$plannedCount sets)',
             ExerciseOutcome.skipped => '  (skipped)',
-            ExerciseOutcome.replaced => '  (replaced)',
           };
     buf.writeln('$indent$headerName$headerSuffix');
 

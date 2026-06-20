@@ -354,10 +354,6 @@ class _StateBadge extends StatelessWidget {
         label: 'Skipped',
         color: colors.exerciseSkipped,
       ),
-      ExerciseOutcome.replaced => StatusBadge.pill(
-        label: 'Replaced',
-        color: colors.exerciseReplaced,
-      ),
     };
   }
 }

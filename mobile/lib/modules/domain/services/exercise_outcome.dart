@@ -9,7 +9,7 @@ import 'package:zamaj/modules/domain/models/exercise_state.dart';
 /// record keeps display honest — a ✓ never editorializes over partial work, and
 /// legacy rows (e.g. marked-done-early or skipped-with-sets, written before
 /// completion was tied to the set quota) self-heal with no migration.
-enum ExerciseOutcome { completed, partial, skipped, replaced }
+enum ExerciseOutcome { completed, partial, skipped }
 
 /// Pure derivation of an [ExerciseOutcome] from a record's stored state and its
 /// logged-vs-planned set counts.

@@ -378,11 +378,6 @@ class _LeadingStateTile extends StatelessWidget {
               Icons.skip_next,
               'Skipped',
             ),
-            ExerciseOutcome.replaced => (
-              colors.exerciseReplaced,
-              Icons.swap_horiz,
-              'Replaced',
-            ),
           };
     return Container(
       width: kExerciseLeadingSlotWidth,
