@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import 'package:drift/drift.dart';
+import 'package:uuid/uuid.dart';
 import 'package:zamaj/core/canonical_json.dart';
 import 'package:zamaj/core/schema_versions.dart';
 import 'package:zamaj/modules/domain/errors.dart';
@@ -68,6 +69,92 @@ abstract final class AppMigrations {
           db.sessionExercises.addedPlanJson,
         );
       }
+    }
+    if (from < 15) {
+      await _migrateLegacyReplacedRows(db);
+    }
+  }
+
+  /// Converts every residual legacy `replaced` session-exercise row into the
+  /// composed-replace shape used since Slice 4: the original is terminated as
+  /// `skipped`, and a new added-exercise row carries the former substitute
+  /// payload in `added_plan_json`. The legacy `SubstituteExercise` and the
+  /// current `AddedExercisePlan` share an identical JSON shape, so the payload
+  /// transfers verbatim (decoded and re-canonicalized).
+  ///
+  /// Runs **before** the Slice 5 symbol removal so the post-retirement read
+  /// path never sees a `replaced` discriminator. Realistically a no-op — the
+  /// v6→v7 wipe cleared domain rows and the `replaced` write path was removed
+  /// in Slice 4 — but authored and tested defensively. A DB with zero replaced
+  /// rows upgrades cleanly.
+  ///
+  /// The new row mirrors `DriftSessionRepository.insertAddedExerciseRow`:
+  /// appended at `maxPosition + gap`, `unfinished`, with synthetic 36-char
+  /// `id` and `planned_exercise_id_in_snapshot` (the latter never resolved —
+  /// `EffectiveExercises` branches on `addedPlan` first).
+  static Future<void> _migrateLegacyReplacedRows(AppDatabase db) async {
+    if (!await _tableExists(db, 'session_exercises')) return;
+
+    const gap = 1024;
+    const uuid = Uuid();
+
+    final replacedRows = await db
+        .customSelect(
+          'SELECT id, session_id, substitute_payload_json, '
+          'created_at_ms, updated_at_ms '
+          'FROM session_exercises '
+          "WHERE state_discriminator = 'replaced'",
+        )
+        .get();
+
+    for (final row in replacedRows) {
+      final originalId = row.read<String>('id');
+      final sessionId = row.read<String>('session_id');
+      final payloadJson = row.read<String?>('substitute_payload_json');
+
+      // Terminate the original. Its outcome (skipped with no sets, partial with
+      // some) is derived downstream; the stored discriminator is `skipped`.
+      await db.customStatement(
+        "UPDATE session_exercises SET state_discriminator = 'skipped', "
+        'substitute_payload_json = NULL, schema_version = ? WHERE id = ?',
+        [SchemaVersions.domain, originalId],
+      );
+
+      // A replaced row with no payload cannot seed a replacement; terminating
+      // the original is then the whole conversion.
+      if (payloadJson == null) continue;
+
+      final addedPlanJson = CanonicalJson.encode(
+        jsonDecode(payloadJson) as Map<String, dynamic>,
+      );
+
+      final maxRow = await db
+          .customSelect(
+            'SELECT MAX(position) AS max_pos FROM session_exercises '
+            'WHERE session_id = ?',
+            variables: [Variable<String>(sessionId)],
+          )
+          .getSingle();
+      final maxPosition = maxRow.read<int?>('max_pos') ?? -gap;
+
+      await db.customStatement(
+        'INSERT INTO session_exercises '
+        '(id, session_id, position, planned_exercise_id_in_snapshot, '
+        'state_discriminator, substitute_payload_json, added_plan_json, '
+        'superset_tag, created_at_ms, updated_at_ms, schema_version) '
+        'VALUES (?, ?, ?, ?, ?, NULL, ?, NULL, ?, ?, ?)',
+        [
+          uuid.v4(),
+          sessionId,
+          maxPosition + gap,
+          uuid.v4(),
+          'unfinished',
+          addedPlanJson,
+          row.read<int>('created_at_ms'),
+          row.read<int>('updated_at_ms'),
+          SchemaVersions.domain,
+        ],
+      );
     }
   }
 

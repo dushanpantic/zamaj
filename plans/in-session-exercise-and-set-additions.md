@@ -566,7 +566,7 @@ Five plan-review personas ran. Parallelization approved in iteration 1. Acceptan
   - [x] Step 2.5: resumeExercise (skipped/ended → unfinished)
 
 #### Wave 2
-- [ ] Slice 3: Overview UI — add an exercise
+- [x] Slice 3: Overview UI — add an exercise
   - [x] Step 3.1: Picker pre-filter + plan-builder (pure logic)
   - [x] Step 3.2: Add-exercise bloc event → engine
   - [x] Step 3.3: Assembler renders added exercises from inline plan
@@ -575,7 +575,7 @@ Five plan-review personas ran. Parallelization approved in iteration 1. Acceptan
   - [x] Step 3.6: Update product-context for add-exercise + resume
 
 #### Wave 3
-- [ ] Slice 4: Replace as composed terminate + add
+- [x] Slice 4: Replace as composed terminate + add
   - [x] Step 4.1: Composed replaceExercise — engine + atomic repo transaction
   - [x] Step 4.2: Overview replace action wired through bloc
   - [x] Step 4.3: Update product-context for replace
