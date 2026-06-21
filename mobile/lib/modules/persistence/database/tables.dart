@@ -168,6 +168,12 @@ class SessionExercises extends Table {
   TextColumn get plannedExerciseIdInSnapshot =>
       text().withLength(min: 36, max: 36)();
   TextColumn get stateDiscriminator => text()();
+
+  /// Dead legacy column: the old slot-inheriting substitution payload. The
+  /// substitution feature was retired (replaced by terminate + add, persisted in
+  /// [addedPlanJson]), and the column is retained only so the `from < 15`
+  /// `_migrateLegacyReplacedRows` migration can read and clear any residual
+  /// `replaced` rows. Always null on new rows — never write it from new code.
   TextColumn get substitutePayloadJson => text().nullable()();
 
   /// Inline plan JSON for an exercise added to the session after start (work

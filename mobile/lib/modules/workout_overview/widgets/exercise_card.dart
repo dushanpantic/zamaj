@@ -526,8 +526,8 @@ class _Actions extends StatelessWidget {
     // rendered disabled so the menu layout stays stable.
     final canReorder = onMoveUp != null || onMoveDown != null;
     // The single adaptive terminal action is offered only while the exercise is
-    // still unfinished; terminal exercises (ended, skipped, auto-completed,
-    // replaced) keep only their non-terminal menu items (e.g. Open video).
+    // still unfinished; terminal exercises (ended, skipped, auto-completed)
+    // keep only their non-terminal menu items (e.g. Open video).
     final canEndOrSkip = canMutate && isUnfinished;
     // "Add set" is the re-do affordance for a completed exercise — logging one
     // extra set beyond plan. Gated on the assembler's canAddSet (completed +

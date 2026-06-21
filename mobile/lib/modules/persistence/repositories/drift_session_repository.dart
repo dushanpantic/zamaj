@@ -736,12 +736,15 @@ class DriftSessionRepository implements SessionRepository {
     required String sessionId,
     required AddedExercisePlan plan,
   }) async {
-    final existing = await (_db.select(
-      _db.sessionExercises,
-    )..where((t) => t.sessionId.equals(sessionId))).get();
-    final maxPosition = existing.isEmpty
-        ? -_gap
-        : existing.map((e) => e.position).reduce((a, b) => a > b ? a : b);
+    // Fetch only the highest-position row (mirrors addExtraWork) instead of
+    // materializing every session_exercises row just to compute MAX(position).
+    final last =
+        await (_db.select(_db.sessionExercises)
+              ..where((t) => t.sessionId.equals(sessionId))
+              ..orderBy([(t) => OrderingTerm.desc(t.position)])
+              ..limit(1))
+            .getSingleOrNull();
+    final newPosition = last == null ? 0 : last.position + _gap;
 
     final nowMs = utcToMs(_clock.now().toUtc());
 
@@ -751,7 +754,7 @@ class DriftSessionRepository implements SessionRepository {
           SessionExercisesCompanion.insert(
             id: _uuid.v4(),
             sessionId: sessionId,
-            position: maxPosition + _gap,
+            position: newPosition,
             plannedExerciseIdInSnapshot: _uuid.v4(),
             stateDiscriminator: 'unfinished',
             substitutePayloadJson: const Value(null),
@@ -1324,11 +1327,12 @@ class DriftSessionRepository implements SessionRepository {
     final workoutDay = _parseSnapshotWorkoutDay(sessionRow);
     // Reconstruct the inline plan so an added (snapshot-less) row resolves via
     // its plan instead of throwing NotFoundError on its synthetic snapshot id.
-    final addedPlan = exerciseRow.addedPlanJson != null
-        ? AddedExercisePlan.fromJson(
-            jsonDecode(exerciseRow.addedPlanJson!) as Map<String, dynamic>,
-          )
-        : null;
+    // Routed through the shared decoder so a corrupt payload surfaces a typed
+    // DeserializationError rather than an unhandled FormatException/TypeError.
+    final addedPlan = SessionMapper.decodeAddedPlan(
+      exerciseRow.addedPlanJson,
+      rowId: exerciseRow.id,
+    );
     final sessionExercise = domain.SessionExercise(
       id: exerciseRow.id,
       sessionId: exerciseRow.sessionId,

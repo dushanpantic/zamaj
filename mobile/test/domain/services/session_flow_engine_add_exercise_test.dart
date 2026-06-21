@@ -112,22 +112,28 @@ void main() {
       );
     });
 
-    test('appends a one-off (unlinked) exercise', () async {
-      final s = _setup();
-      s.repo.seedWorkoutDay(_day());
-      final started = await s.repo.startSession(workoutDayId: 'wd-1');
+    test(
+      'appends a one-off (unlinked) exercise, snapshot hash unchanged',
+      () async {
+        final s = _setup();
+        s.repo.seedWorkoutDay(_day());
+        final started = await s.repo.startSession(workoutDayId: 'wd-1');
+        final hashBefore = started.snapshot.sha256Hash;
 
-      final state = await s.engine.addExercise(
-        sessionId: started.id,
-        plan: _plan(name: 'Cable Thing'),
-      );
+        final state = await s.engine.addExercise(
+          sessionId: started.id,
+          plan: _plan(name: 'Cable Thing'),
+        );
 
-      expect(state.session.sessionExercises, hasLength(2));
-      expect(
-        state.session.sessionExercises.last.addedPlan?.libraryExerciseId,
-        isNull,
-      );
-    });
+        expect(state.session.sessionExercises, hasLength(2));
+        expect(
+          state.session.sessionExercises.last.addedPlan?.libraryExerciseId,
+          isNull,
+        );
+        // The frozen snapshot is untouched on the one-off path too.
+        expect(state.session.snapshot.sha256Hash, hashBefore);
+      },
+    );
 
     test('two one-off adds with the same name are both accepted (never '
         'deduped)', () async {

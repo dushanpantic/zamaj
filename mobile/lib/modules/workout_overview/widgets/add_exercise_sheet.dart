@@ -130,14 +130,27 @@ class _PlanConfigSheet extends StatefulWidget {
 }
 
 class _PlanConfigSheetState extends State<_PlanConfigSheet> {
+  // Seeded defaults — sensible non-zero starting points the user tunes.
+  static const int kDefaultSetCount = 3;
+  static const double kDefaultWeightKg = 20;
+  static const int kDefaultReps = 8;
+  static const int kDefaultDurationSeconds = 30;
+
+  // Stepper increments. kDurationStepSeconds doubles as the duration floor (the
+  // decrement is disabled at one step above zero).
+  static const double kWeightStepKg = 2.5;
+  static const int kDurationStepSeconds = 5;
+
+  // Hard ceiling on the weight stepper so a stuck "+" can't overflow the field.
+  static const double kMaxWeightKg = 9999;
+
   late final TextEditingController _name;
   late MeasurementType _measurementType;
 
-  // Seeded defaults — sensible non-zero starting points the user tunes.
-  int _setCount = 3;
-  double _weight = 20;
-  int _reps = 8;
-  int _duration = 30;
+  int _setCount = kDefaultSetCount;
+  double _weight = kDefaultWeightKg;
+  int _reps = kDefaultReps;
+  int _duration = kDefaultDurationSeconds;
 
   bool get _isOneOff => widget.lockedName == null;
 
@@ -269,9 +282,11 @@ class _PlanConfigSheetState extends State<_PlanConfigSheet> {
         ? _weight.toStringAsFixed(0)
         : _weight.toStringAsFixed(1),
     onDecrement: _weight > 0
-        ? () => setState(() => _weight = (_weight - 2.5).clamp(0, 9999))
+        ? () => setState(
+            () => _weight = (_weight - kWeightStepKg).clamp(0, kMaxWeightKg),
+          )
         : null,
-    onIncrement: () => setState(() => _weight += 2.5),
+    onIncrement: () => setState(() => _weight += kWeightStepKg),
   );
 
   Widget _repsStepper() => _CounterRow(
@@ -284,8 +299,10 @@ class _PlanConfigSheetState extends State<_PlanConfigSheet> {
   Widget _durationStepper() => _CounterRow(
     label: 'seconds',
     value: '$_duration',
-    onDecrement: _duration > 5 ? () => setState(() => _duration -= 5) : null,
-    onIncrement: () => setState(() => _duration += 5),
+    onDecrement: _duration > kDurationStepSeconds
+        ? () => setState(() => _duration -= kDurationStepSeconds)
+        : null,
+    onIncrement: () => setState(() => _duration += kDurationStepSeconds),
   );
 }
 

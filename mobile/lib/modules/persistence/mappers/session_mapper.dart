@@ -129,6 +129,40 @@ class SessionMapper {
     );
   }
 
+  /// Decodes a nullable `added_plan_json` column into an [AddedExercisePlan].
+  ///
+  /// Returns null for a non-added row (null column). Wraps malformed JSON
+  /// ([FormatException] from `jsonDecode`) and non-object payloads ([TypeError]
+  /// from the `as Map` cast / field-type mismatches) in a typed
+  /// [DeserializationError] naming the column and owning row — consistent with
+  /// [_reconstructState] / [_reconstructSnapshot] — so a single corrupt row
+  /// surfaces a typed domain error instead of crashing the session-load path.
+  static AddedExercisePlan? decodeAddedPlan(
+    String? addedPlanJson, {
+    required String rowId,
+  }) {
+    if (addedPlanJson == null) return null;
+    try {
+      return AddedExercisePlan.fromJson(
+        jsonDecode(addedPlanJson) as Map<String, dynamic>,
+      );
+    } on FormatException catch (e) {
+      throw DeserializationError(
+        field: 'addedPlanJson',
+        discriminator: rowId,
+        message: 'Malformed added_plan_json for session-exercise $rowId: $e',
+      );
+    } on TypeError catch (e) {
+      throw DeserializationError(
+        field: 'addedPlanJson',
+        discriminator: rowId,
+        message:
+            'added_plan_json for session-exercise $rowId is not a valid '
+            'AddedExercisePlan object: $e',
+      );
+    }
+  }
+
   domain.SessionExercise _exerciseToDomain(
     SessionExercise row,
     List<ExecutedSet> setRows,
@@ -143,11 +177,7 @@ class SessionMapper {
 
     // Read unconditionally — independent of stateDiscriminator — so an added
     // exercise's inline plan rehydrates in every state.
-    final addedPlan = row.addedPlanJson != null
-        ? AddedExercisePlan.fromJson(
-            jsonDecode(row.addedPlanJson!) as Map<String, dynamic>,
-          )
-        : null;
+    final addedPlan = decodeAddedPlan(row.addedPlanJson, rowId: row.id);
 
     return domain.SessionExercise(
       id: row.id,

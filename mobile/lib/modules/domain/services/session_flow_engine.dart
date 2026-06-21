@@ -282,7 +282,7 @@ class SessionFlowEngine {
 
   /// Computes the list of currently-loggable [LogTarget]s for a session.
   ///
-  /// One target per exercise in `unfinished` or `replaced` state whose
+  /// One target per exercise in `unfinished` state whose
   /// `executedSets.length < plannedSetCount`, sorted by exercise position.
   /// Each target's `plannedSetIndex == exercise.executedSets.length`, i.e. the
   /// next chronological slot for that exercise. Returns an empty list when no
@@ -396,7 +396,7 @@ class SessionFlowEngine {
 
   /// Completes a set on [sessionExerciseId] with [actualValues].
   ///
-  /// Loggable states are `unfinished`, `replaced`, and `completed`. Completion
+  /// Loggable states are `unfinished` and `completed`. Completion
   /// is reachable only by logging the full planned-set quota (auto-complete),
   /// so the `completed` case here covers the "extra set on an auto-completed
   /// exercise" affordance. Logging on a `skipped` exercise throws
@@ -555,7 +555,7 @@ class SessionFlowEngine {
   ///
   /// Preconditions:
   /// - Every existing member of [supersetTag] is in `UnfinishedState`. Refuse
-  ///   if any member is Completed/Skipped/Replaced — mixing terminal and
+  ///   if any member is Completed/Skipped — mixing terminal and
   ///   live members in one group is the unsafe state the workflow avoids.
   /// - The exercise at [sessionExerciseId] exists, is in `UnfinishedState`,
   ///   and currently has `supersetTag == null`.

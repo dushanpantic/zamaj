@@ -12,8 +12,8 @@ import 'package:zamaj/modules/export/widgets/session_detail_exercise_card.dart';
 import 'package:zamaj/modules/export/widgets/set_value_editor_sheet.dart';
 
 /// Review of a finished [Session]: the frozen snapshot's planned values
-/// rendered beside what was actually logged, set by set, with skipped and
-/// replaced exercises marked and supersets grouped, followed by the session's
+/// rendered beside what was actually logged, set by set, with skipped
+/// exercises marked and supersets grouped, followed by the session's
 /// notes and extra work.
 ///
 /// Read-only by default; for an in-week session ([SessionDetailLoaded.canEdit])

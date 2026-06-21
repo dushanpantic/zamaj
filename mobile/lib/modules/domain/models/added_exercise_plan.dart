@@ -8,6 +8,9 @@ import 'package:zamaj/modules/domain/models/planned_set_values.dart';
 part 'added_exercise_plan.freezed.dart';
 part 'added_exercise_plan.g.dart';
 
+/// Length of a canonical UUIDv4 string (`8-4-4-4-12` plus four hyphens).
+const _canonicalUuidLength = 36;
+
 /// Inline plan carried by an exercise added to a live session that is not part
 /// of the frozen day snapshot.
 ///
@@ -28,13 +31,14 @@ abstract class AddedExercisePlan with _$AddedExercisePlan {
         message: 'setCount must be >= 1, got $setCount',
       );
     }
-    if (libraryExerciseId != null && libraryExerciseId!.length != 36) {
+    if (libraryExerciseId != null &&
+        libraryExerciseId!.length != _canonicalUuidLength) {
       throw ValidationError(
         entityId: name,
         invariant: 'libraryExerciseId_not_uuid_v4',
         message:
-            'libraryExerciseId must be canonical UUIDv4 (36 chars), '
-            'got ${libraryExerciseId!.length}',
+            'libraryExerciseId must be canonical UUIDv4 '
+            '($_canonicalUuidLength chars), got ${libraryExerciseId!.length}',
       );
     }
     final mismatch = switch ((measurementType, plannedValues)) {

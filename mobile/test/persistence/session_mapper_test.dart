@@ -1,5 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:zamaj/core/canonical_json.dart';
+import 'package:zamaj/modules/domain/errors.dart';
 import 'package:zamaj/modules/domain/models/actual_set_values.dart';
 import 'package:zamaj/modules/domain/models/exercise.dart' as domain;
 import 'package:zamaj/modules/domain/models/exercise_group.dart' as domain;
@@ -311,4 +312,40 @@ void main() {
     expect(companion.updatedAtMs.value, equals(extraWorkRow.updatedAtMs));
     expect(companion.schemaVersion.value, equals(extraWorkRow.schemaVersion));
   });
+
+  group(
+    'decodeAddedPlan surfaces corrupt payloads as DeserializationError',
+    () {
+      const rowId = 'sx-corrupt';
+
+      test('null column returns null', () {
+        expect(SessionMapper.decodeAddedPlan(null, rowId: rowId), isNull);
+      });
+
+      test('truncated JSON throws a typed error naming the row', () {
+        expect(
+          () => SessionMapper.decodeAddedPlan('{', rowId: rowId),
+          throwsA(
+            isA<DeserializationError>()
+                .having((e) => e.field, 'field', 'addedPlanJson')
+                .having((e) => e.discriminator, 'discriminator', rowId),
+          ),
+        );
+      });
+
+      test('non-object JSON (array) throws a typed error', () {
+        expect(
+          () => SessionMapper.decodeAddedPlan('[]', rowId: rowId),
+          throwsA(isA<DeserializationError>()),
+        );
+      });
+
+      test('non-object JSON (string) throws a typed error', () {
+        expect(
+          () => SessionMapper.decodeAddedPlan('"x"', rowId: rowId),
+          throwsA(isA<DeserializationError>()),
+        );
+      });
+    },
+  );
 }

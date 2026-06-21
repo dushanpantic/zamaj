@@ -88,7 +88,8 @@ void main() {
         ),
       );
     }
-    // Planned summary derives from the same formatter the snapshot path uses.
-    expect(vm.plannedSummary, isNotEmpty);
+    // Planned summary derives from the same formatter the snapshot path uses,
+    // rendering the inline plan's concrete values (60kg, 3 sets, 12 reps).
+    expect(vm.plannedSummary, '60kg 3×12');
   });
 }

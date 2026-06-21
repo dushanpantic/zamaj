@@ -6,7 +6,7 @@ import 'package:zamaj/core/app_theme.dart';
 /// on (the overview header, the review header, and the recent-sessions tile).
 ///
 /// A thin wrapper over [StatusBadge.pill] so the marker stays visually
-/// consistent with the other exception pills (CAPPED / Skipped / Replaced),
+/// consistent with the other exception pills (CAPPED / Skipped),
 /// tinted with the semantic [AppColors.deload] accent.
 class DeloadBadge extends StatelessWidget {
   const DeloadBadge({super.key});

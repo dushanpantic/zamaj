@@ -10,9 +10,9 @@ import 'package:zamaj/core/app_typography.dart';
 ///   (done check, warmup flame). Quiet by design, and never colour-only: the
 ///   tooltip + semantic label always name the state.
 /// * [StatusBadge.pill] — a rounded, tinted pill for exception / high-stakes
-///   states (the sanctioned in-progress exception, plus Skipped / Replaced).
+///   states (the sanctioned in-progress exception, plus Skipped).
 ///   The caller supplies the casing — in-progress stays UPPERCASE, while
-///   Skipped / Replaced are Title-case — and the colour, from which the fill
+///   Skipped is Title-case — and the colour, from which the fill
 ///   and hairline border are derived.
 class StatusBadge extends StatelessWidget {
   /// Glyph variant for positive / neutral states. [label] is used as both the

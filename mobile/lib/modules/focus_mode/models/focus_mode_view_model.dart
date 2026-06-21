@@ -28,8 +28,8 @@ abstract class FocusModeViewModel with _$FocusModeViewModel {
     required int completedSetsCount,
 
     /// Planned values for the current set index, or null when the panel is
-    /// past the planned set list (e.g. completed, or extra sets on a
-    /// replaced exercise).
+    /// past the planned set list (e.g. completed, or extra sets logged beyond
+    /// an exercise's planned quota).
     required PlannedSetValues? currentPlannedValues,
 
     /// Pre-formatted "100kg 4 × 8" summary of all planned sets.

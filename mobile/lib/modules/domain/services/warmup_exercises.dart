@@ -4,8 +4,9 @@ import 'package:zamaj/modules/domain/models/workout_day.dart';
 /// The snapshot exercise ids that belong to a warmup group in [day].
 ///
 /// Single source of truth for warmup-set exclusion across read surfaces (the
-/// plain-text export, the session summary). A replaced exercise inherits its
-/// slot, so a substituted warmup is still excluded by id.
+/// plain-text export, the session summary). Warmup ids come straight from the
+/// snapshot; an added exercise (e.g. a replacement) carries a synthetic id that
+/// is never in a warmup group, so it is simply not excluded here.
 Set<String> warmupExerciseIdsIn(WorkoutDay day) {
   final out = <String>{};
   for (final group in day.exerciseGroups) {

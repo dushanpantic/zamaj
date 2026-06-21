@@ -379,6 +379,23 @@ class FakeSessionRepository implements SessionRepository {
     final session = await getSessionByExerciseId(sessionExerciseId);
     final now = clock.now().toUtc();
 
+    // Mirror DriftSessionRepository._requireUnfinished: the original must be
+    // unfinished before it can be terminated, so the fake faithfully rejects a
+    // not-unfinished target with OrderingError even when called directly
+    // (bypassing the engine's upstream guard).
+    final original = session.sessionExercises.firstWhere(
+      (e) => e.id == sessionExerciseId,
+    );
+    if (original.state is! UnfinishedState) {
+      throw OrderingError(
+        sessionExerciseId: sessionExerciseId,
+        currentState: original.state.discriminator,
+        message:
+            'SessionExercise $sessionExerciseId is already locked in state '
+            '${original.state.discriminator}',
+      );
+    }
+
     // Composed replace: terminate the original via the existing skip action
     // (outcome is derived — skipped with no sets, partial with some) and append
     // the replacement as an added exercise, in one atomic step.
