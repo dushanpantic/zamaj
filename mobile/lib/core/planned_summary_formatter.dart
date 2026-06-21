@@ -21,8 +21,9 @@ abstract final class PlannedSummaryFormatter {
   }
 
   /// Formats [setCount] identical planned [values] into the same one-line
-  /// summary [summarize] produces for an equivalent uniform exercise. Used for
-  /// in-session substitutes, whose every set shares one planned value.
+  /// summary [summarize] produces for an equivalent uniform exercise. Useful
+  /// when the planned values are uniform by construction (every set shares one
+  /// value) and only the count varies.
   static String summarizeValues(PlannedSetValues values, int setCount) {
     if (setCount == 0) return '0 sets';
 

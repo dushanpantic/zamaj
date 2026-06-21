@@ -28,8 +28,8 @@ abstract class FocusModeViewModel with _$FocusModeViewModel {
     required int completedSetsCount,
 
     /// Planned values for the current set index, or null when the panel is
-    /// past the planned set list (e.g. completed, or extra sets on a
-    /// replaced exercise).
+    /// past the planned set list (e.g. completed, or extra sets logged beyond
+    /// an exercise's planned quota).
     required PlannedSetValues? currentPlannedValues,
 
     /// Pre-formatted "100kg 4 × 8" summary of all planned sets.
@@ -46,16 +46,13 @@ abstract class FocusModeViewModel with _$FocusModeViewModel {
     /// shared rest-timer's planned/remaining display.
     required int? plannedRestSeconds,
 
-    /// True if the panel exercise is currently in `replaced` state.
-    required bool isReplaced,
-
-    /// Original planned exercise name; relevant when [isReplaced] is true
-    /// so the UI can show "Replaced from <plannedName>".
+    /// The planned exercise's name (for a snapshot-backed exercise the snapshot
+    /// entry; for an added exercise the inline plan's name).
     required String plannedExerciseName,
 
     /// True when the user can still log a working set on this exercise —
-    /// i.e. state is `unfinished` or `replaced` and `executedSets.length <
-    /// plannedSetCount`. False for completed/skipped panels.
+    /// i.e. state is `unfinished` and `executedSets.length < plannedSetCount`.
+    /// False for completed/skipped panels.
     required bool isLoggable,
     @Default(ExerciseGroupRole.main) ExerciseGroupRole plannedGroupRole,
   }) = _FocusModeViewModel;

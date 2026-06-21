@@ -8,9 +8,8 @@ import 'package:zamaj/modules/domain/models/exercise_state.dart';
 import 'package:zamaj/modules/domain/models/planned_set_values.dart';
 import 'package:zamaj/modules/domain/models/session.dart';
 import 'package:zamaj/modules/domain/models/session_exercise.dart';
-import 'package:zamaj/modules/domain/models/substitute_exercise.dart';
-import 'package:zamaj/modules/domain/models/workout_day.dart';
 import 'package:zamaj/modules/domain/models/workout_set.dart';
+import 'package:zamaj/modules/domain/services/effective_exercises.dart';
 import 'package:zamaj/modules/domain/services/exercise_outcome.dart';
 import 'package:zamaj/modules/domain/services/warmup_exercises.dart';
 
@@ -44,7 +43,7 @@ abstract final class SessionExportFormatter {
       }
     }
 
-    final plannedById = _plannedLookup(session.snapshot.workoutDay);
+    final effective = EffectiveExercises.of(session);
     final warmupExerciseIds = warmupExerciseIdsIn(session.snapshot.workoutDay);
     final ordered = [...session.sessionExercises]
       ..sort((a, b) => a.position.compareTo(b.position));
@@ -59,7 +58,7 @@ abstract final class SessionExportFormatter {
 
     for (final block in _groupConsecutiveBySupersetTag(filtered)) {
       buf.writeln();
-      _renderBlock(buf, block, plannedById);
+      _renderBlock(buf, block, effective);
     }
 
     if (session.notes.isNotEmpty) {
@@ -79,16 +78,6 @@ abstract final class SessionExportFormatter {
     }
 
     return buf.toString().trimRight();
-  }
-
-  static Map<String, Exercise> _plannedLookup(WorkoutDay day) {
-    final out = <String, Exercise>{};
-    for (final g in day.exerciseGroups) {
-      for (final e in g.exercises) {
-        out[e.id] = e;
-      }
-    }
-    return out;
   }
 
   // Renders a positive Duration as `1h 24m`, `45m`, `2h`, or `<1m` for
@@ -124,39 +113,34 @@ abstract final class SessionExportFormatter {
   static void _renderBlock(
     StringBuffer buf,
     List<SessionExercise> block,
-    Map<String, Exercise> plannedById,
+    EffectiveExercises effective,
   ) {
     if (block.length > 1) {
-      final names = block.map((e) => _displayName(e, plannedById)).join(' + ');
+      final names = block.map((e) => _displayName(e, effective)).join(' + ');
       buf.writeln('Superset: $names');
       for (var i = 0; i < block.length; i++) {
         if (i > 0) buf.writeln();
-        _renderExercise(buf, block[i], plannedById, indent: '  ');
+        _renderExercise(buf, block[i], effective, indent: '  ');
       }
     } else {
-      _renderExercise(buf, block.single, plannedById);
+      _renderExercise(buf, block.single, effective);
     }
   }
 
-  static String _displayName(
-    SessionExercise sx,
-    Map<String, Exercise> plannedById,
-  ) {
-    final planned = plannedById[sx.plannedExerciseIdInSnapshot];
-    final plannedName = planned?.name ?? '(unknown)';
-    return switch (sx.state) {
-      ReplacedState(:final substitute) => '$plannedName → ${substitute.name}',
-      _ => plannedName,
-    };
+  static String _displayName(SessionExercise sx, EffectiveExercises effective) {
+    return effective.forSessionExercise(sx).plannedExercise.name;
   }
 
   static void _renderExercise(
     StringBuffer buf,
     SessionExercise sx,
-    Map<String, Exercise> plannedById, {
+    EffectiveExercises effective, {
     String indent = '',
   }) {
-    final planned = plannedById[sx.plannedExerciseIdInSnapshot];
+    // Resolve through the inline-aware projection so an added exercise (whose
+    // synthetic snapshot id is absent from the snapshot) renders its real name,
+    // planned set count, and plan line instead of degrading to "(unknown)".
+    final planned = effective.forSessionExercise(sx).plannedExercise;
     final state = sx.state;
 
     // Outcome is derived from the logged-set record, not the stored
@@ -165,10 +149,7 @@ abstract final class SessionExportFormatter {
     // as partial too. An unfinished exercise (only seen in an in-progress
     // export) carries no verdict suffix.
     final executedCount = sx.executedSets.length;
-    final plannedCount = switch (state) {
-      ReplacedState(:final substitute) => substitute.setCount,
-      _ => planned?.sets.length ?? 0,
-    };
+    final plannedCount = planned.sets.length;
     final outcome = ExerciseOutcomes.of(
       state: state,
       executedSetCount: executedCount,
@@ -176,28 +157,19 @@ abstract final class SessionExportFormatter {
     );
 
     // Header line: name (+ derived status tag)
-    final headerName = _displayName(sx, plannedById);
+    final headerName = planned.name;
     final headerSuffix = state is UnfinishedState
         ? ''
         : switch (outcome) {
             ExerciseOutcome.completed => '',
             ExerciseOutcome.partial => '  ($executedCount/$plannedCount sets)',
             ExerciseOutcome.skipped => '  (skipped)',
-            ExerciseOutcome.replaced => '  (replaced)',
           };
     buf.writeln('$indent$headerName$headerSuffix');
 
-    // Plan line — always show coach's planned values from snapshot.
-    if (planned != null) {
-      buf.writeln('${indent}Plan: ${_plannedSummary(planned)}');
-    }
-
-    // If replaced, show substitute's planned values on a second line.
-    if (state is ReplacedState) {
-      buf.writeln(
-        '${indent}Sub plan: ${_substitutePlanSummary(state.substitute)}',
-      );
-    }
+    // Plan line — always show planned values (the snapshot's for a planned
+    // exercise, the inline plan's for an added one).
+    buf.writeln('${indent}Plan: ${_plannedSummary(planned)}');
 
     final sets = [...sx.executedSets]
       ..sort((a, b) => a.position.compareTo(b.position));
@@ -296,20 +268,6 @@ abstract final class SessionExportFormatter {
             : '${WeightFormatter.formatKg(weightKg)}kg × ${durationSeconds}s',
       PlannedBodyweight(:final repTarget) =>
         '× ${RepTargetFormatter.format(repTarget)}',
-    };
-  }
-
-  static String _substitutePlanSummary(SubstituteExercise sub) {
-    return switch (sub.plannedValues) {
-      PlannedRepBased(:final weightKg, :final repTarget) =>
-        '${WeightFormatter.formatKg(weightKg)}kg ${sub.setCount} × ${RepTargetFormatter.format(repTarget)}',
-      PlannedTimeBased(:final durationSeconds, :final weightKg) =>
-        weightKg == null
-            ? '${sub.setCount} × ${durationSeconds}s'
-            : '${WeightFormatter.formatKg(weightKg)}kg '
-                  '${sub.setCount} × ${durationSeconds}s',
-      PlannedBodyweight(:final repTarget) =>
-        '${sub.setCount} × ${RepTargetFormatter.format(repTarget)}',
     };
   }
 }

@@ -284,38 +284,6 @@ void main() {
       expect(out, isNot(contains('(skipped)')));
     });
 
-    test('replaced exercise shows arrow header + sub plan + actuals', () {
-      final session = _session(
-        workoutDayName: 'Upper A',
-        endedAt: DateTime.utc(2026, 5, 12),
-        exercises: [
-          _ExerciseSpec(
-            name: 'Bench Press',
-            measurementType: const MeasurementType.repBased(),
-            plannedRep: const [(100.0, 8), (100.0, 8), (100.0, 8), (100.0, 8)],
-            state: ExerciseState.replaced(
-              substitute: SubstituteExercise(
-                name: 'Cable Fly',
-                measurementType: const MeasurementType.repBased(),
-                plannedValues: PlannedSetValues.repBased(
-                  weightKg: 20,
-                  repTarget: RepTarget.fixed(reps: 12),
-                ),
-                setCount: 3,
-              ),
-            ),
-            actualRep: const [(20.0, 12), (20.0, 12), (20.0, 10)],
-          ),
-        ],
-      );
-      final out = SessionExportFormatter.format(session);
-      expect(out, contains('Bench Press → Cable Fly  (replaced)'));
-      expect(out, contains('Plan: 100kg 4 × 8'));
-      expect(out, contains('Sub plan: 20kg 3 × 12'));
-      expect(out, contains('20kg × 12'));
-      expect(out, contains('20kg × 10'));
-    });
-
     test('consecutive exercises sharing a supersetTag render as a block', () {
       final session = _session(
         workoutDayName: 'Pull',
@@ -607,37 +575,6 @@ void main() {
       expect(out, contains('Done: 60kg 3 × 9'));
     });
 
-    test('replaced exercise with uniform actuals collapses the Done line', () {
-      final session = _session(
-        workoutDayName: 'Upper A',
-        endedAt: DateTime.utc(2026, 5, 12),
-        exercises: [
-          _ExerciseSpec(
-            name: 'Bench Press',
-            measurementType: const MeasurementType.repBased(),
-            plannedRep: const [(100.0, 8), (100.0, 8), (100.0, 8), (100.0, 8)],
-            state: ExerciseState.replaced(
-              substitute: SubstituteExercise(
-                name: 'Cable Fly',
-                measurementType: const MeasurementType.repBased(),
-                plannedValues: PlannedSetValues.repBased(
-                  weightKg: 20,
-                  repTarget: RepTarget.fixed(reps: 12),
-                ),
-                setCount: 3,
-              ),
-            ),
-            actualRep: const [(20.0, 12), (20.0, 12), (20.0, 12)],
-          ),
-        ],
-      );
-      final out = SessionExportFormatter.format(session);
-      expect(out, contains('Bench Press → Cable Fly  (replaced)'));
-      expect(out, contains('Sub plan: 20kg 3 × 12'));
-      expect(out, contains('Done: 20kg 3 × 12'));
-      expect(out, isNot(contains('Done: as planned')));
-    });
-
     test('warmup groups are included by default', () {
       final session = _session(
         workoutDayName: 'Upper A',
@@ -691,50 +628,6 @@ void main() {
       expect(out, isNot(contains('Band Pull-Apart')));
       expect(out, contains('Bench Press'));
     });
-
-    test(
-      'includeWarmups: false still excludes a warmup slot that was replaced',
-      () {
-        final session = _session(
-          workoutDayName: 'Upper A',
-          endedAt: DateTime.utc(2026, 5, 12),
-          exercises: [
-            _ExerciseSpec(
-              name: 'Light Rows',
-              measurementType: const MeasurementType.repBased(),
-              plannedRep: const [(20.0, 10), (20.0, 10)],
-              state: ExerciseState.replaced(
-                substitute: SubstituteExercise(
-                  name: 'Face Pull',
-                  measurementType: const MeasurementType.repBased(),
-                  plannedValues: PlannedSetValues.repBased(
-                    weightKg: 15,
-                    repTarget: RepTarget.fixed(reps: 12),
-                  ),
-                  setCount: 2,
-                ),
-              ),
-              actualRep: const [(15.0, 12), (15.0, 12)],
-              role: ExerciseGroupRole.warmup,
-            ),
-            _ExerciseSpec(
-              name: 'Bench Press',
-              measurementType: const MeasurementType.repBased(),
-              plannedRep: const [(100.0, 8)],
-              state: const ExerciseState.completed(),
-              actualRep: const [(100.0, 8)],
-            ),
-          ],
-        );
-        final out = SessionExportFormatter.format(
-          session,
-          includeWarmups: false,
-        );
-        expect(out, isNot(contains('Light Rows')));
-        expect(out, isNot(contains('Face Pull')));
-        expect(out, contains('Bench Press'));
-      },
-    );
 
     test('output ends without trailing whitespace', () {
       final session = _session(

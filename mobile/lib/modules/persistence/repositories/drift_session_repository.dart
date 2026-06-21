@@ -8,13 +8,11 @@ import 'package:zamaj/core/canonical_json.dart';
 import 'package:zamaj/core/schema_versions.dart';
 import 'package:zamaj/modules/domain/errors.dart';
 import 'package:zamaj/modules/domain/models/actual_set_values.dart';
-import 'package:zamaj/modules/domain/models/exercise_metadata.dart';
+import 'package:zamaj/modules/domain/models/added_exercise_plan.dart';
 import 'package:zamaj/modules/domain/models/exercise_state.dart' as domain;
 import 'package:zamaj/modules/domain/models/measurement_type.dart';
-import 'package:zamaj/modules/domain/models/planned_set_values.dart';
 import 'package:zamaj/modules/domain/models/session.dart' as domain;
 import 'package:zamaj/modules/domain/models/session_exercise.dart' as domain;
-import 'package:zamaj/modules/domain/models/substitute_exercise.dart';
 import 'package:zamaj/modules/domain/models/workout_day.dart' as domain;
 import 'package:zamaj/modules/domain/repositories/program_repository.dart';
 import 'package:zamaj/modules/domain/repositories/session_repository.dart';
@@ -640,40 +638,23 @@ class DriftSessionRepository implements SessionRepository {
   }
 
   @override
-  Future<domain.Session> replaceExercise({
-    required String sessionExerciseId,
-    required String substituteName,
-    required MeasurementType substituteMeasurementType,
-    required PlannedSetValues substitutePlannedValues,
-    required int substituteSetCount,
-    ExerciseMetadata? substituteMetadata,
-    String? substituteLibraryExerciseId,
-  }) async {
+  Future<domain.Session> resumeExercise(String sessionExerciseId) async {
     return _db.transaction(() async {
       final exerciseRow = await _requireSessionExerciseRow(sessionExerciseId);
-      _requireUnfinished(exerciseRow);
-
-      final substitute = SubstituteExercise(
-        name: substituteName,
-        measurementType: substituteMeasurementType,
-        plannedValues: substitutePlannedValues,
-        setCount: substituteSetCount,
-        metadata: substituteMetadata,
-        libraryExerciseId: substituteLibraryExerciseId,
-      );
-      final substituteJson = CanonicalJson.encode(substitute.toJson());
 
       final exerciseUpdatedAt = _timestamps.nextUpdatedAt(
         previousUpdatedAt: msToUtc(exerciseRow.updatedAtMs),
         createdAt: msToUtc(exerciseRow.createdAtMs),
       );
 
+      // Single-row state flip back to unfinished; sets, position, and
+      // superset_tag are left untouched. The engine guards that the current
+      // state is skipped.
       await (_db.update(
         _db.sessionExercises,
       )..where((t) => t.id.equals(sessionExerciseId))).write(
         SessionExercisesCompanion(
-          stateDiscriminator: const Value('replaced'),
-          substitutePayloadJson: Value(substituteJson),
+          stateDiscriminator: const Value('unfinished'),
           updatedAtMs: Value(utcToMs(exerciseUpdatedAt)),
         ),
       );
@@ -691,6 +672,112 @@ class DriftSessionRepository implements SessionRepository {
 
       return _loadSession(exerciseRow.sessionId);
     });
+  }
+
+  @override
+  Future<domain.Session> addExercise({
+    required String sessionId,
+    required AddedExercisePlan plan,
+  }) async {
+    return _db.transaction(() async {
+      final sessionRow = await _requireSessionRow(sessionId);
+      await insertAddedExerciseRow(sessionId: sessionId, plan: plan);
+      await _touchSession(sessionRow);
+      return _loadSession(sessionId);
+    });
+  }
+
+  @override
+  Future<domain.Session> replaceExercise({
+    required String sessionExerciseId,
+    required AddedExercisePlan plan,
+  }) async {
+    return _db.transaction(() async {
+      final exerciseRow = await _requireSessionExerciseRow(sessionExerciseId);
+      _requireUnfinished(exerciseRow);
+      final sessionId = exerciseRow.sessionId;
+
+      // Terminate the original via the existing skip action (the outcome —
+      // skipped with no sets, partial with some — is derived downstream); no
+      // `replaced` state is written.
+      final exerciseUpdatedAt = _timestamps.nextUpdatedAt(
+        previousUpdatedAt: msToUtc(exerciseRow.updatedAtMs),
+        createdAt: msToUtc(exerciseRow.createdAtMs),
+      );
+      await (_db.update(
+        _db.sessionExercises,
+      )..where((t) => t.id.equals(sessionExerciseId))).write(
+        SessionExercisesCompanion(
+          stateDiscriminator: const Value('skipped'),
+          updatedAtMs: Value(utcToMs(exerciseUpdatedAt)),
+        ),
+      );
+
+      // Append the replacement as an added exercise in the same transaction, so
+      // a half-applied replace (terminated original with no replacement, or an
+      // orphan added exercise) can never be observed.
+      await insertAddedExerciseRow(sessionId: sessionId, plan: plan);
+
+      final sessionRow = await _requireSessionRow(sessionId);
+      await _touchSession(sessionRow);
+      return _loadSession(sessionId);
+    });
+  }
+
+  /// Inserts an added-exercise row at `maxPosition + gap` from [plan], with a
+  /// synthetic 36-char `plannedExerciseIdInSnapshot` that is never resolved
+  /// against the snapshot (EffectiveExercises branches on `addedPlan` first).
+  /// Shared by [addExercise] and the add half of [replaceExercise].
+  ///
+  /// Non-private so a test subclass can override it to simulate an add-write
+  /// fault mid-`replaceExercise` and assert the whole transaction rolls back
+  /// (true atomicity); not part of the [SessionRepository] contract.
+  Future<void> insertAddedExerciseRow({
+    required String sessionId,
+    required AddedExercisePlan plan,
+  }) async {
+    // Fetch only the highest-position row (mirrors addExtraWork) instead of
+    // materializing every session_exercises row just to compute MAX(position).
+    final last =
+        await (_db.select(_db.sessionExercises)
+              ..where((t) => t.sessionId.equals(sessionId))
+              ..orderBy([(t) => OrderingTerm.desc(t.position)])
+              ..limit(1))
+            .getSingleOrNull();
+    final newPosition = last == null ? 0 : last.position + _gap;
+
+    final nowMs = utcToMs(_clock.now().toUtc());
+
+    await _db
+        .into(_db.sessionExercises)
+        .insert(
+          SessionExercisesCompanion.insert(
+            id: _uuid.v4(),
+            sessionId: sessionId,
+            position: newPosition,
+            plannedExerciseIdInSnapshot: _uuid.v4(),
+            stateDiscriminator: 'unfinished',
+            substitutePayloadJson: const Value(null),
+            addedPlanJson: Value(CanonicalJson.encode(plan.toJson())),
+            supersetTag: const Value(null),
+            createdAtMs: nowMs,
+            updatedAtMs: nowMs,
+            schemaVersion: SchemaVersions.domain,
+          ),
+        );
+  }
+
+  /// Bumps [sessionRow]'s `updatedAt` under the monotonic timestamp oracle.
+  Future<void> _touchSession(Session sessionRow) async {
+    final sessionUpdatedAt = _timestamps.nextUpdatedAt(
+      previousUpdatedAt: msToUtc(sessionRow.updatedAtMs),
+      createdAt: msToUtc(sessionRow.createdAtMs),
+    );
+    await (_db.update(
+      _db.sessions,
+    )..where((t) => t.id.equals(sessionRow.id))).write(
+      SessionsCompanion(updatedAtMs: Value(utcToMs(sessionUpdatedAt))),
+    );
   }
 
   @override
@@ -1238,6 +1325,14 @@ class DriftSessionRepository implements SessionRepository {
     Session sessionRow,
   ) {
     final workoutDay = _parseSnapshotWorkoutDay(sessionRow);
+    // Reconstruct the inline plan so an added (snapshot-less) row resolves via
+    // its plan instead of throwing NotFoundError on its synthetic snapshot id.
+    // Routed through the shared decoder so a corrupt payload surfaces a typed
+    // DeserializationError rather than an unhandled FormatException/TypeError.
+    final addedPlan = SessionMapper.decodeAddedPlan(
+      exerciseRow.addedPlanJson,
+      rowId: exerciseRow.id,
+    );
     final sessionExercise = domain.SessionExercise(
       id: exerciseRow.id,
       sessionId: exerciseRow.sessionId,
@@ -1246,6 +1341,7 @@ class DriftSessionRepository implements SessionRepository {
       state: _stateForRow(exerciseRow),
       executedSets: const [],
       supersetTag: exerciseRow.supersetTag,
+      addedPlan: addedPlan,
       createdAt: msToUtc(exerciseRow.createdAtMs),
       updatedAt: msToUtc(exerciseRow.updatedAtMs),
       schemaVersion: exerciseRow.schemaVersion,
@@ -1274,12 +1370,6 @@ class DriftSessionRepository implements SessionRepository {
       'unfinished' => const domain.ExerciseState.unfinished(),
       'completed' => const domain.ExerciseState.completed(),
       'skipped' => const domain.ExerciseState.skipped(),
-      'replaced' => domain.ExerciseState.replaced(
-        substitute: SubstituteExercise.fromJson(
-          jsonDecode(exerciseRow.substitutePayloadJson!)
-              as Map<String, dynamic>,
-        ),
-      ),
       final d => throw DeserializationError(
         field: 'stateDiscriminator',
         discriminator: d,

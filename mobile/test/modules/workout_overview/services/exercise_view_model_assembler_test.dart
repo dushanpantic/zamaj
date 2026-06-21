@@ -108,46 +108,6 @@ void main() {
       },
     );
 
-    test('replaced exercise → effectiveMeasurementType = substitute\'s', () {
-      final session = _sessionFromGroups([
-        _standalone(
-          'a',
-          plannedMeasurement: const MeasurementType.repBased(),
-          state: ExerciseState.replaced(
-            substitute: SubstituteExercise(
-              name: 'Cable Fly',
-              measurementType: const MeasurementType.timeBased(),
-              plannedValues: const PlannedSetValues.timeBased(
-                durationSeconds: 30,
-              ),
-              setCount: 3,
-              metadata: const ExerciseMetadata(),
-            ),
-          ),
-          plannedSetCount: 3,
-          executedSetCount: 0,
-        ),
-      ]);
-      final state = SessionState(
-        session: session,
-        openTargets: const [
-          LogTarget(sessionExerciseId: 'se-a', plannedSetIndex: 0),
-        ],
-        isComplete: false,
-      );
-
-      final groups = ExerciseViewModelAssembler.assemble(state);
-
-      expect(
-        groups.single.allExercises.single.effectiveMeasurementType,
-        const MeasurementType.timeBased(),
-      );
-      expect(
-        groups.single.allExercises.single.plannedMeasurementType,
-        const MeasurementType.repBased(),
-      );
-    });
-
     test(
       'completed exercise → not loggable, unfinished exercise → loggable',
       () {
@@ -331,7 +291,7 @@ void main() {
   });
 
   group('ExerciseViewModelAssembler.assembleReadOnly', () {
-    test('completed session with completed/skipped/replaced + superset → '
+    test('completed session with completed/skipped + superset → '
         'grouped, every row read-only', () {
       final session = _sessionFromGroups([
         _standalone(
@@ -361,18 +321,7 @@ void main() {
         ),
         _standalone(
           'e',
-          state: ExerciseState.replaced(
-            substitute: SubstituteExercise(
-              name: 'Cable Fly',
-              measurementType: const MeasurementType.repBased(),
-              plannedValues: PlannedSetValues.repBased(
-                weightKg: 20,
-                repTarget: RepTarget.fixed(reps: 12),
-              ),
-              setCount: 3,
-              metadata: const ExerciseMetadata(),
-            ),
-          ),
+          state: const ExerciseState.skipped(),
           plannedSetCount: 3,
           executedSetCount: 0,
         ),
@@ -380,7 +329,7 @@ void main() {
 
       final groups = ExerciseViewModelAssembler.assembleReadOnly(session);
 
-      // Skipped/replaced are present, not hidden: 5 exercises across 4
+      // Skipped exercises are present, not hidden: 5 exercises across 4
       // top-level groups (the adjacent tag-x pair forms one superset).
       expect(groups, hasLength(4));
       expect(groups[2], isA<SupersetGroup>());
@@ -524,10 +473,7 @@ Session _sessionFromGroups(List<_ExerciseSpec> specs) {
   final sessionExercises = <SessionExercise>[];
   for (var i = 0; i < specs.length; i++) {
     final spec = specs[i];
-    final effectiveMt = switch (spec.state) {
-      ReplacedState(:final substitute) => substitute.measurementType,
-      _ => spec.plannedMeasurement,
-    };
+    final effectiveMt = spec.plannedMeasurement;
     sessionExercises.add(
       SessionExercise(
         id: 'se-${spec.id}',

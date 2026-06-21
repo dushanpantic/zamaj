@@ -2,22 +2,7 @@ import 'dart:math';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:zamaj/modules/domain/models/exercise_state.dart';
-import 'package:zamaj/modules/domain/models/measurement_type.dart';
-import 'package:zamaj/modules/domain/models/planned_set_values.dart';
-import 'package:zamaj/modules/domain/models/rep_target.dart';
-import 'package:zamaj/modules/domain/models/substitute_exercise.dart';
 import 'package:zamaj/modules/domain/services/exercise_outcome.dart';
-
-ExerciseState _replaced() => ExerciseState.replaced(
-  substitute: SubstituteExercise(
-    name: 'Goblet Squat',
-    measurementType: const MeasurementType.bodyweight(),
-    plannedValues: PlannedSetValues.bodyweight(
-      repTarget: RepTarget.fixed(reps: 10),
-    ),
-    setCount: 3,
-  ),
-);
 
 void main() {
   group('ExerciseOutcomes.of', () {
@@ -53,20 +38,6 @@ void main() {
         ExerciseOutcome.skipped,
       );
     });
-
-    test(
-      'replaced exercise keeps its replaced outcome regardless of counts',
-      () {
-        expect(
-          ExerciseOutcomes.of(
-            state: _replaced(),
-            executedSetCount: 1,
-            plannedSetCount: 4,
-          ),
-          ExerciseOutcome.replaced,
-        );
-      },
-    );
 
     test('legacy early-marked-done record self-heals to partial', () {
       expect(
@@ -113,19 +84,16 @@ void main() {
       );
     });
 
-    test('property: derivation follows replaced -> counts precedence', () {
+    test('property: derivation follows the logged-set counts', () {
       final rng = Random(20260612);
       for (var i = 0; i < 2000; i++) {
         final planned = rng.nextInt(8); // 0..7
         final executed = rng.nextInt(10); // 0..9
-        final replaced = rng.nextBool();
-        final state = replaced
-            ? _replaced()
-            : switch (rng.nextInt(3)) {
-                0 => const ExerciseState.unfinished(),
-                1 => const ExerciseState.completed(),
-                _ => const ExerciseState.skipped(),
-              };
+        final state = switch (rng.nextInt(3)) {
+          0 => const ExerciseState.unfinished(),
+          1 => const ExerciseState.completed(),
+          _ => const ExerciseState.skipped(),
+        };
 
         final outcome = ExerciseOutcomes.of(
           state: state,
@@ -133,9 +101,7 @@ void main() {
           plannedSetCount: planned,
         );
 
-        final expected = replaced
-            ? ExerciseOutcome.replaced
-            : executed >= planned
+        final expected = executed >= planned
             ? ExerciseOutcome.completed
             : executed == 0
             ? ExerciseOutcome.skipped
@@ -144,7 +110,7 @@ void main() {
         expect(
           outcome,
           expected,
-          reason: 'planned=$planned executed=$executed replaced=$replaced',
+          reason: 'planned=$planned executed=$executed',
         );
       }
     });

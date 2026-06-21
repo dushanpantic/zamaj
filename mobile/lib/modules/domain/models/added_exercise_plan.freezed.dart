@@ -3,7 +3,7 @@
 // ignore_for_file: type=lint
 // ignore_for_file: unused_element, deprecated_member_use, deprecated_member_use_from_same_package, use_function_type_syntax_for_parameters, unnecessary_const, avoid_init_to_null, invalid_override_different_default_values_named, prefer_expression_function_bodies, annotate_overrides, invalid_annotation_target, unnecessary_question_mark
 
-part of 'substitute_exercise.dart';
+part of 'added_exercise_plan.dart';
 
 // **************************************************************************
 // FreezedGenerator
@@ -13,22 +13,22 @@ part of 'substitute_exercise.dart';
 T _$identity<T>(T value) => value;
 
 /// @nodoc
-mixin _$SubstituteExercise {
+mixin _$AddedExercisePlan {
 
  String get name; MeasurementType get measurementType; PlannedSetValues get plannedValues; int get setCount; ExerciseMetadata? get metadata; String? get libraryExerciseId;
-/// Create a copy of SubstituteExercise
+/// Create a copy of AddedExercisePlan
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
-$SubstituteExerciseCopyWith<SubstituteExercise> get copyWith => _$SubstituteExerciseCopyWithImpl<SubstituteExercise>(this as SubstituteExercise, _$identity);
+$AddedExercisePlanCopyWith<AddedExercisePlan> get copyWith => _$AddedExercisePlanCopyWithImpl<AddedExercisePlan>(this as AddedExercisePlan, _$identity);
 
-  /// Serializes this SubstituteExercise to a JSON map.
+  /// Serializes this AddedExercisePlan to a JSON map.
   Map<String, dynamic> toJson();
 
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is SubstituteExercise&&(identical(other.name, name) || other.name == name)&&(identical(other.measurementType, measurementType) || other.measurementType == measurementType)&&(identical(other.plannedValues, plannedValues) || other.plannedValues == plannedValues)&&(identical(other.setCount, setCount) || other.setCount == setCount)&&(identical(other.metadata, metadata) || other.metadata == metadata)&&(identical(other.libraryExerciseId, libraryExerciseId) || other.libraryExerciseId == libraryExerciseId));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is AddedExercisePlan&&(identical(other.name, name) || other.name == name)&&(identical(other.measurementType, measurementType) || other.measurementType == measurementType)&&(identical(other.plannedValues, plannedValues) || other.plannedValues == plannedValues)&&(identical(other.setCount, setCount) || other.setCount == setCount)&&(identical(other.metadata, metadata) || other.metadata == metadata)&&(identical(other.libraryExerciseId, libraryExerciseId) || other.libraryExerciseId == libraryExerciseId));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -37,15 +37,15 @@ int get hashCode => Object.hash(runtimeType,name,measurementType,plannedValues,s
 
 @override
 String toString() {
-  return 'SubstituteExercise(name: $name, measurementType: $measurementType, plannedValues: $plannedValues, setCount: $setCount, metadata: $metadata, libraryExerciseId: $libraryExerciseId)';
+  return 'AddedExercisePlan(name: $name, measurementType: $measurementType, plannedValues: $plannedValues, setCount: $setCount, metadata: $metadata, libraryExerciseId: $libraryExerciseId)';
 }
 
 
 }
 
 /// @nodoc
-abstract mixin class $SubstituteExerciseCopyWith<$Res>  {
-  factory $SubstituteExerciseCopyWith(SubstituteExercise value, $Res Function(SubstituteExercise) _then) = _$SubstituteExerciseCopyWithImpl;
+abstract mixin class $AddedExercisePlanCopyWith<$Res>  {
+  factory $AddedExercisePlanCopyWith(AddedExercisePlan value, $Res Function(AddedExercisePlan) _then) = _$AddedExercisePlanCopyWithImpl;
 @useResult
 $Res call({
  String name, MeasurementType measurementType, PlannedSetValues plannedValues, int setCount, ExerciseMetadata? metadata, String? libraryExerciseId
@@ -56,14 +56,14 @@ $MeasurementTypeCopyWith<$Res> get measurementType;$PlannedSetValuesCopyWith<$Re
 
 }
 /// @nodoc
-class _$SubstituteExerciseCopyWithImpl<$Res>
-    implements $SubstituteExerciseCopyWith<$Res> {
-  _$SubstituteExerciseCopyWithImpl(this._self, this._then);
+class _$AddedExercisePlanCopyWithImpl<$Res>
+    implements $AddedExercisePlanCopyWith<$Res> {
+  _$AddedExercisePlanCopyWithImpl(this._self, this._then);
 
-  final SubstituteExercise _self;
-  final $Res Function(SubstituteExercise) _then;
+  final AddedExercisePlan _self;
+  final $Res Function(AddedExercisePlan) _then;
 
-/// Create a copy of SubstituteExercise
+/// Create a copy of AddedExercisePlan
 /// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') @override $Res call({Object? name = null,Object? measurementType = null,Object? plannedValues = null,Object? setCount = null,Object? metadata = freezed,Object? libraryExerciseId = freezed,}) {
   return _then(_self.copyWith(
@@ -76,7 +76,7 @@ as ExerciseMetadata?,libraryExerciseId: freezed == libraryExerciseId ? _self.lib
 as String?,
   ));
 }
-/// Create a copy of SubstituteExercise
+/// Create a copy of AddedExercisePlan
 /// with the given fields replaced by the non-null parameter values.
 @override
 @pragma('vm:prefer-inline')
@@ -85,7 +85,7 @@ $MeasurementTypeCopyWith<$Res> get measurementType {
   return $MeasurementTypeCopyWith<$Res>(_self.measurementType, (value) {
     return _then(_self.copyWith(measurementType: value));
   });
-}/// Create a copy of SubstituteExercise
+}/// Create a copy of AddedExercisePlan
 /// with the given fields replaced by the non-null parameter values.
 @override
 @pragma('vm:prefer-inline')
@@ -94,7 +94,7 @@ $PlannedSetValuesCopyWith<$Res> get plannedValues {
   return $PlannedSetValuesCopyWith<$Res>(_self.plannedValues, (value) {
     return _then(_self.copyWith(plannedValues: value));
   });
-}/// Create a copy of SubstituteExercise
+}/// Create a copy of AddedExercisePlan
 /// with the given fields replaced by the non-null parameter values.
 @override
 @pragma('vm:prefer-inline')
@@ -110,8 +110,8 @@ $ExerciseMetadataCopyWith<$Res>? get metadata {
 }
 
 
-/// Adds pattern-matching-related methods to [SubstituteExercise].
-extension SubstituteExercisePatterns on SubstituteExercise {
+/// Adds pattern-matching-related methods to [AddedExercisePlan].
+extension AddedExercisePlanPatterns on AddedExercisePlan {
 /// A variant of `map` that fallback to returning `orElse`.
 ///
 /// It is equivalent to doing:
@@ -124,10 +124,10 @@ extension SubstituteExercisePatterns on SubstituteExercise {
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeMap<TResult extends Object?>(TResult Function( _SubstituteExercise value)?  $default,{required TResult orElse(),}){
+@optionalTypeArgs TResult maybeMap<TResult extends Object?>(TResult Function( _AddedExercisePlan value)?  $default,{required TResult orElse(),}){
 final _that = this;
 switch (_that) {
-case _SubstituteExercise() when $default != null:
+case _AddedExercisePlan() when $default != null:
 return $default(_that);case _:
   return orElse();
 
@@ -146,10 +146,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult map<TResult extends Object?>(TResult Function( _SubstituteExercise value)  $default,){
+@optionalTypeArgs TResult map<TResult extends Object?>(TResult Function( _AddedExercisePlan value)  $default,){
 final _that = this;
 switch (_that) {
-case _SubstituteExercise():
+case _AddedExercisePlan():
 return $default(_that);case _:
   throw StateError('Unexpected subclass');
 
@@ -167,10 +167,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult? mapOrNull<TResult extends Object?>(TResult? Function( _SubstituteExercise value)?  $default,){
+@optionalTypeArgs TResult? mapOrNull<TResult extends Object?>(TResult? Function( _AddedExercisePlan value)?  $default,){
 final _that = this;
 switch (_that) {
-case _SubstituteExercise() when $default != null:
+case _AddedExercisePlan() when $default != null:
 return $default(_that);case _:
   return null;
 
@@ -190,7 +190,7 @@ return $default(_that);case _:
 
 @optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String name,  MeasurementType measurementType,  PlannedSetValues plannedValues,  int setCount,  ExerciseMetadata? metadata,  String? libraryExerciseId)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
-case _SubstituteExercise() when $default != null:
+case _AddedExercisePlan() when $default != null:
 return $default(_that.name,_that.measurementType,_that.plannedValues,_that.setCount,_that.metadata,_that.libraryExerciseId);case _:
   return orElse();
 
@@ -211,7 +211,7 @@ return $default(_that.name,_that.measurementType,_that.plannedValues,_that.setCo
 
 @optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String name,  MeasurementType measurementType,  PlannedSetValues plannedValues,  int setCount,  ExerciseMetadata? metadata,  String? libraryExerciseId)  $default,) {final _that = this;
 switch (_that) {
-case _SubstituteExercise():
+case _AddedExercisePlan():
 return $default(_that.name,_that.measurementType,_that.plannedValues,_that.setCount,_that.metadata,_that.libraryExerciseId);case _:
   throw StateError('Unexpected subclass');
 
@@ -231,7 +231,7 @@ return $default(_that.name,_that.measurementType,_that.plannedValues,_that.setCo
 
 @optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String name,  MeasurementType measurementType,  PlannedSetValues plannedValues,  int setCount,  ExerciseMetadata? metadata,  String? libraryExerciseId)?  $default,) {final _that = this;
 switch (_that) {
-case _SubstituteExercise() when $default != null:
+case _AddedExercisePlan() when $default != null:
 return $default(_that.name,_that.measurementType,_that.plannedValues,_that.setCount,_that.metadata,_that.libraryExerciseId);case _:
   return null;
 
@@ -243,9 +243,9 @@ return $default(_that.name,_that.measurementType,_that.plannedValues,_that.setCo
 /// @nodoc
 @JsonSerializable()
 
-class _SubstituteExercise extends SubstituteExercise {
-   _SubstituteExercise({required this.name, required this.measurementType, required this.plannedValues, required this.setCount, this.metadata, this.libraryExerciseId}): super._();
-  factory _SubstituteExercise.fromJson(Map<String, dynamic> json) => _$SubstituteExerciseFromJson(json);
+class _AddedExercisePlan extends AddedExercisePlan {
+   _AddedExercisePlan({required this.name, required this.measurementType, required this.plannedValues, required this.setCount, this.metadata, this.libraryExerciseId}): super._();
+  factory _AddedExercisePlan.fromJson(Map<String, dynamic> json) => _$AddedExercisePlanFromJson(json);
 
 @override final  String name;
 @override final  MeasurementType measurementType;
@@ -254,20 +254,20 @@ class _SubstituteExercise extends SubstituteExercise {
 @override final  ExerciseMetadata? metadata;
 @override final  String? libraryExerciseId;
 
-/// Create a copy of SubstituteExercise
+/// Create a copy of AddedExercisePlan
 /// with the given fields replaced by the non-null parameter values.
 @override @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
-_$SubstituteExerciseCopyWith<_SubstituteExercise> get copyWith => __$SubstituteExerciseCopyWithImpl<_SubstituteExercise>(this, _$identity);
+_$AddedExercisePlanCopyWith<_AddedExercisePlan> get copyWith => __$AddedExercisePlanCopyWithImpl<_AddedExercisePlan>(this, _$identity);
 
 @override
 Map<String, dynamic> toJson() {
-  return _$SubstituteExerciseToJson(this, );
+  return _$AddedExercisePlanToJson(this, );
 }
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _SubstituteExercise&&(identical(other.name, name) || other.name == name)&&(identical(other.measurementType, measurementType) || other.measurementType == measurementType)&&(identical(other.plannedValues, plannedValues) || other.plannedValues == plannedValues)&&(identical(other.setCount, setCount) || other.setCount == setCount)&&(identical(other.metadata, metadata) || other.metadata == metadata)&&(identical(other.libraryExerciseId, libraryExerciseId) || other.libraryExerciseId == libraryExerciseId));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _AddedExercisePlan&&(identical(other.name, name) || other.name == name)&&(identical(other.measurementType, measurementType) || other.measurementType == measurementType)&&(identical(other.plannedValues, plannedValues) || other.plannedValues == plannedValues)&&(identical(other.setCount, setCount) || other.setCount == setCount)&&(identical(other.metadata, metadata) || other.metadata == metadata)&&(identical(other.libraryExerciseId, libraryExerciseId) || other.libraryExerciseId == libraryExerciseId));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -276,15 +276,15 @@ int get hashCode => Object.hash(runtimeType,name,measurementType,plannedValues,s
 
 @override
 String toString() {
-  return 'SubstituteExercise(name: $name, measurementType: $measurementType, plannedValues: $plannedValues, setCount: $setCount, metadata: $metadata, libraryExerciseId: $libraryExerciseId)';
+  return 'AddedExercisePlan(name: $name, measurementType: $measurementType, plannedValues: $plannedValues, setCount: $setCount, metadata: $metadata, libraryExerciseId: $libraryExerciseId)';
 }
 
 
 }
 
 /// @nodoc
-abstract mixin class _$SubstituteExerciseCopyWith<$Res> implements $SubstituteExerciseCopyWith<$Res> {
-  factory _$SubstituteExerciseCopyWith(_SubstituteExercise value, $Res Function(_SubstituteExercise) _then) = __$SubstituteExerciseCopyWithImpl;
+abstract mixin class _$AddedExercisePlanCopyWith<$Res> implements $AddedExercisePlanCopyWith<$Res> {
+  factory _$AddedExercisePlanCopyWith(_AddedExercisePlan value, $Res Function(_AddedExercisePlan) _then) = __$AddedExercisePlanCopyWithImpl;
 @override @useResult
 $Res call({
  String name, MeasurementType measurementType, PlannedSetValues plannedValues, int setCount, ExerciseMetadata? metadata, String? libraryExerciseId
@@ -295,17 +295,17 @@ $Res call({
 
 }
 /// @nodoc
-class __$SubstituteExerciseCopyWithImpl<$Res>
-    implements _$SubstituteExerciseCopyWith<$Res> {
-  __$SubstituteExerciseCopyWithImpl(this._self, this._then);
+class __$AddedExercisePlanCopyWithImpl<$Res>
+    implements _$AddedExercisePlanCopyWith<$Res> {
+  __$AddedExercisePlanCopyWithImpl(this._self, this._then);
 
-  final _SubstituteExercise _self;
-  final $Res Function(_SubstituteExercise) _then;
+  final _AddedExercisePlan _self;
+  final $Res Function(_AddedExercisePlan) _then;
 
-/// Create a copy of SubstituteExercise
+/// Create a copy of AddedExercisePlan
 /// with the given fields replaced by the non-null parameter values.
 @override @pragma('vm:prefer-inline') $Res call({Object? name = null,Object? measurementType = null,Object? plannedValues = null,Object? setCount = null,Object? metadata = freezed,Object? libraryExerciseId = freezed,}) {
-  return _then(_SubstituteExercise(
+  return _then(_AddedExercisePlan(
 name: null == name ? _self.name : name // ignore: cast_nullable_to_non_nullable
 as String,measurementType: null == measurementType ? _self.measurementType : measurementType // ignore: cast_nullable_to_non_nullable
 as MeasurementType,plannedValues: null == plannedValues ? _self.plannedValues : plannedValues // ignore: cast_nullable_to_non_nullable
@@ -316,7 +316,7 @@ as String?,
   ));
 }
 
-/// Create a copy of SubstituteExercise
+/// Create a copy of AddedExercisePlan
 /// with the given fields replaced by the non-null parameter values.
 @override
 @pragma('vm:prefer-inline')
@@ -325,7 +325,7 @@ $MeasurementTypeCopyWith<$Res> get measurementType {
   return $MeasurementTypeCopyWith<$Res>(_self.measurementType, (value) {
     return _then(_self.copyWith(measurementType: value));
   });
-}/// Create a copy of SubstituteExercise
+}/// Create a copy of AddedExercisePlan
 /// with the given fields replaced by the non-null parameter values.
 @override
 @pragma('vm:prefer-inline')
@@ -334,7 +334,7 @@ $PlannedSetValuesCopyWith<$Res> get plannedValues {
   return $PlannedSetValuesCopyWith<$Res>(_self.plannedValues, (value) {
     return _then(_self.copyWith(plannedValues: value));
   });
-}/// Create a copy of SubstituteExercise
+}/// Create a copy of AddedExercisePlan
 /// with the given fields replaced by the non-null parameter values.
 @override
 @pragma('vm:prefer-inline')

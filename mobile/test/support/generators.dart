@@ -3,6 +3,7 @@ import 'dart:math';
 import 'package:zamaj/core/canonical_json.dart';
 import 'package:zamaj/core/clock.dart';
 import 'package:zamaj/modules/domain/models/actual_set_values.dart';
+import 'package:zamaj/modules/domain/models/added_exercise_plan.dart';
 import 'package:zamaj/modules/domain/models/executed_set.dart';
 import 'package:zamaj/modules/domain/models/exercise.dart';
 import 'package:zamaj/modules/domain/models/exercise_group.dart';
@@ -19,7 +20,6 @@ import 'package:zamaj/modules/domain/models/session.dart';
 import 'package:zamaj/modules/domain/models/session_exercise.dart';
 import 'package:zamaj/modules/domain/models/session_note.dart';
 import 'package:zamaj/modules/domain/models/session_snapshot.dart';
-import 'package:zamaj/modules/domain/models/substitute_exercise.dart';
 import 'package:zamaj/modules/domain/models/workout_day.dart';
 import 'package:zamaj/modules/domain/models/workout_set.dart';
 import 'package:zamaj/modules/domain/services/log_target.dart';
@@ -68,15 +68,18 @@ ExerciseMetadata anyExerciseMetadata(Random rng) {
   );
 }
 
-SubstituteExercise anySubstituteExercise(Random rng) {
+/// Inline plan for an added exercise. [libraryLinked] forces the library id
+/// to null (one-off) or non-null; left null it is randomized.
+AddedExercisePlan anyAddedExercisePlan(Random rng, {bool? libraryLinked}) {
   final mt = anyMeasurementType(rng);
-  return SubstituteExercise(
-    name: _anyString(rng, maxLen: 40),
+  final linked = libraryLinked ?? rng.nextBool();
+  return AddedExercisePlan(
+    name: _anyTrimmedNonEmptyString(rng, maxLen: 40),
     measurementType: mt,
     plannedValues: anyPlannedSetValuesForMeasurement(rng, mt),
     setCount: 1 + rng.nextInt(5),
     metadata: rng.nextBool() ? anyExerciseMetadata(rng) : null,
-    libraryExerciseId: rng.nextBool() ? anyUuidV4(rng) : null,
+    libraryExerciseId: linked ? anyUuidV4(rng) : null,
   );
 }
 
@@ -104,15 +107,13 @@ String _anyTrimmedNonEmptyString(Random rng, {required int maxLen}) {
 }
 
 ExerciseState anyExerciseState(Random rng) {
-  switch (rng.nextInt(4)) {
+  switch (rng.nextInt(3)) {
     case 0:
       return const ExerciseState.unfinished();
     case 1:
       return const ExerciseState.completed();
-    case 2:
-      return const ExerciseState.skipped();
     default:
-      return ExerciseState.replaced(substitute: anySubstituteExercise(rng));
+      return const ExerciseState.skipped();
   }
 }
 
@@ -747,20 +748,9 @@ final class SkipExerciseOp extends SessionRepoOp {
 }
 
 final class ReplaceExerciseOp extends SessionRepoOp {
-  ReplaceExerciseOp({
-    required this.sessionExerciseId,
-    required this.substituteName,
-    required this.substituteMeasurementType,
-    required this.substitutePlannedValues,
-    required this.substituteSetCount,
-    this.substituteMetadata,
-  });
+  ReplaceExerciseOp({required this.sessionExerciseId, required this.plan});
   final String sessionExerciseId;
-  final String substituteName;
-  final MeasurementType substituteMeasurementType;
-  final PlannedSetValues substitutePlannedValues;
-  final int substituteSetCount;
-  final ExerciseMetadata? substituteMetadata;
+  final AddedExercisePlan plan;
 }
 
 final class ReorderUnfinishedOp extends SessionRepoOp {
@@ -813,18 +803,12 @@ List<SessionRepoOp> anySessionRepoOpSequence(Random rng) {
     } else if (roll < 6) {
       ops.add(SkipExerciseOp(sessionExerciseId: seId));
     } else if (roll < 7) {
-      final substituteMt = anyMeasurementType(rng);
       ops.add(
         ReplaceExerciseOp(
           sessionExerciseId: seId,
-          substituteName: _anyString(rng, maxLen: 30),
-          substituteMeasurementType: substituteMt,
-          substitutePlannedValues: anyPlannedSetValuesForMeasurement(
-            rng,
-            substituteMt,
-          ),
-          substituteSetCount: 1 + rng.nextInt(5),
-          substituteMetadata: rng.nextBool() ? anyExerciseMetadata(rng) : null,
+          // One-off plan (null library id) so the engine's any-state dedup
+          // guard never spuriously rejects a random replacement.
+          plan: anyAddedExercisePlan(rng, libraryLinked: false),
         ),
       );
     } else if (roll == 7) {
@@ -977,10 +961,7 @@ Session anySessionForEngine(Random rng) {
       plannedExerciseIdInSnapshot: planned.id,
       state: state,
       executedSets: List.generate(executedSetCount, (j) {
-        final effectiveMt = switch (state) {
-          ReplacedState(:final substitute) => substitute.measurementType,
-          _ => mt,
-        };
+        final effectiveMt = mt;
         return ExecutedSet(
           id: anyUuidV4(rng),
           sessionExerciseId: anyUuidV4(rng),
@@ -1051,10 +1032,7 @@ Session anySessionWithStates(
       plannedExerciseIdInSnapshot: planned.id,
       state: state,
       executedSets: List.generate(executedSetCount, (j) {
-        final effectiveMt = switch (state) {
-          ReplacedState(:final substitute) => substitute.measurementType,
-          _ => mt,
-        };
+        final effectiveMt = mt;
         return ExecutedSet(
           id: anyUuidV4(rng),
           sessionExerciseId: anyUuidV4(rng),
@@ -1098,14 +1076,9 @@ Session anySessionWithLoggableTargets(Random rng) {
   final states = List.generate(exerciseCount, (i) {
     if (i == unfinishedIndex) return const ExerciseState.unfinished();
     if (i < unfinishedIndex) {
-      switch (rng.nextInt(3)) {
-        case 0:
-          return const ExerciseState.completed();
-        case 1:
-          return const ExerciseState.skipped();
-        default:
-          return ExerciseState.replaced(substitute: anySubstituteExercise(rng));
-      }
+      return rng.nextBool()
+          ? const ExerciseState.completed()
+          : const ExerciseState.skipped();
     }
     return anyExerciseState(rng);
   });
@@ -1140,10 +1113,7 @@ Session anySessionWithLoggableTargets(Random rng) {
       plannedExerciseIdInSnapshot: planned.id,
       state: state,
       executedSets: List.generate(executedSetCount, (j) {
-        final effectiveMt = switch (state) {
-          ReplacedState(:final substitute) => substitute.measurementType,
-          _ => mt,
-        };
+        final effectiveMt = mt;
         return ExecutedSet(
           id: anyUuidV4(rng),
           sessionExerciseId: anyUuidV4(rng),
@@ -1210,15 +1180,6 @@ List<LogTarget> _openTargetsForSession(Session session) {
           ),
         );
       }
-    } else if (state is ReplacedState) {
-      if (ex.executedSets.length < state.substitute.setCount) {
-        targets.add(
-          LogTarget(
-            sessionExerciseId: ex.id,
-            plannedSetIndex: ex.executedSets.length,
-          ),
-        );
-      }
     }
   }
   return targets;
@@ -1230,8 +1191,6 @@ bool _isSessionComplete(Session session) {
       case CompletedState():
       case SkippedState():
         continue;
-      case ReplacedState(:final substitute):
-        if (ex.executedSets.length < substitute.setCount) return false;
       case UnfinishedState():
         return false;
     }
@@ -1363,7 +1322,6 @@ int _executedSetCountForState(
   return switch (state) {
     CompletedState() => plannedSetCount,
     SkippedState() => rng.nextInt(plannedSetCount + 1),
-    ReplacedState(:final substitute) => rng.nextInt(substitute.setCount + 1),
     UnfinishedState() => rng.nextInt(plannedSetCount),
   };
 }

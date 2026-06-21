@@ -176,13 +176,6 @@ class _Exercise extends StatelessWidget {
           viewModel.plannedSummary,
           style: typography.caption.copyWith(color: colors.onSurfaceMuted),
         ),
-        if (state is ReplacedState) ...[
-          const SizedBox(height: AppSpacing.xxs),
-          Text(
-            'Replaced from "${viewModel.plannedExerciseName}"',
-            style: typography.caption.copyWith(color: colors.exerciseReplaced),
-          ),
-        ],
         const Divider(height: AppSpacing.lg),
         for (final row in viewModel.setRows)
           _SetLine(
@@ -360,10 +353,6 @@ class _StateBadge extends StatelessWidget {
       ExerciseOutcome.skipped => StatusBadge.pill(
         label: 'Skipped',
         color: colors.exerciseSkipped,
-      ),
-      ExerciseOutcome.replaced => StatusBadge.pill(
-        label: 'Replaced',
-        color: colors.exerciseReplaced,
       ),
     };
   }

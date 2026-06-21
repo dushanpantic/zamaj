@@ -26,6 +26,10 @@ class WorkoutOverviewBloc
     on<WorkoutOverviewSupersetUngrouped>(_onSupersetUngrouped);
     on<WorkoutOverviewSessionNoteAdded>(_onSessionNoteAdded);
     on<WorkoutOverviewExtraWorkAdded>(_onExtraWorkAdded);
+    on<WorkoutOverviewExtraSetRequested>(_onExtraSetRequested);
+    on<WorkoutOverviewAddExerciseRequested>(_onAddExerciseRequested);
+    on<WorkoutOverviewReplaceRequested>(_onReplaceRequested);
+    on<WorkoutOverviewResumeRequested>(_onResumeRequested);
     on<WorkoutOverviewSessionEnded>(_onSessionEnded);
     on<InternalSessionPushed>(_onSessionPushed);
     on<InternalSessionMissing>(_onSessionMissing);
@@ -109,7 +113,7 @@ class WorkoutOverviewBloc
     } on DomainError catch (e) {
       // A corrupt snapshot (a planned exercise missing from the immutable
       // snapshot) makes the synchronous assemble throw. The watch stream's
-      // engine projection only resolves unfinished/replaced exercises, so a
+      // engine projection only resolves unfinished exercises, so a
       // terminal corrupt exercise slips through to here. Route it through the
       // existing failure path rather than letting it escape and crash.
       add(InternalSessionFailed(e, next.session.id));
@@ -320,6 +324,78 @@ class WorkoutOverviewBloc
         sessionId: current.sessionState.session.id,
         body: event.body,
       ),
+    );
+  }
+
+  Future<void> _onExtraSetRequested(
+    WorkoutOverviewExtraSetRequested event,
+    Emitter<WorkoutOverviewState> emit,
+  ) async {
+    final current = state;
+    if (current is! WorkoutOverviewLoaded) return;
+    if (current.isEnded) return;
+    // Seed the extra set from the exercise's last logged set (or its planned
+    // values if none) so the user lands on a sensible default and dials in
+    // from there with the inline editor.
+    final suggested = _engine.suggestValuesFor(
+      session: current.sessionState.session,
+      sessionExerciseId: event.sessionExerciseId,
+    );
+    await _runMutation(
+      emit,
+      // No plannedSetIdInSnapshot: this set is beyond the planned quota.
+      () => _engine.completeSet(
+        sessionExerciseId: event.sessionExerciseId,
+        actualValues: suggested,
+      ),
+      touchedSessionExerciseId: event.sessionExerciseId,
+    );
+  }
+
+  Future<void> _onAddExerciseRequested(
+    WorkoutOverviewAddExerciseRequested event,
+    Emitter<WorkoutOverviewState> emit,
+  ) async {
+    final current = state;
+    if (current is! WorkoutOverviewLoaded) return;
+    if (current.isEnded) return;
+    await _runMutation(
+      emit,
+      () => _engine.addExercise(
+        sessionId: current.sessionState.session.id,
+        plan: event.plan,
+      ),
+    );
+  }
+
+  Future<void> _onReplaceRequested(
+    WorkoutOverviewReplaceRequested event,
+    Emitter<WorkoutOverviewState> emit,
+  ) async {
+    final current = state;
+    if (current is! WorkoutOverviewLoaded) return;
+    if (current.isEnded) return;
+    await _runMutation(
+      emit,
+      () => _engine.replaceExercise(
+        sessionExerciseId: event.sessionExerciseId,
+        plan: event.plan,
+      ),
+      touchedSessionExerciseId: event.sessionExerciseId,
+    );
+  }
+
+  Future<void> _onResumeRequested(
+    WorkoutOverviewResumeRequested event,
+    Emitter<WorkoutOverviewState> emit,
+  ) async {
+    final current = state;
+    if (current is! WorkoutOverviewLoaded) return;
+    if (current.isEnded) return;
+    await _runMutation(
+      emit,
+      () => _engine.resumeExercise(sessionExerciseId: event.sessionExerciseId),
+      touchedSessionExerciseId: event.sessionExerciseId,
     );
   }
 

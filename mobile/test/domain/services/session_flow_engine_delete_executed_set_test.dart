@@ -2,6 +2,7 @@ import 'package:clock/clock.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:zamaj/modules/domain/errors.dart';
 import 'package:zamaj/modules/domain/models/actual_set_values.dart';
+import 'package:zamaj/modules/domain/models/added_exercise_plan.dart';
 import 'package:zamaj/modules/domain/models/exercise.dart';
 import 'package:zamaj/modules/domain/models/exercise_group.dart';
 import 'package:zamaj/modules/domain/models/exercise_group_kind.dart';
@@ -200,8 +201,8 @@ void main() {
       );
     });
 
-    test('deleting a set on a replaced exercise that already had extra logged '
-        'sets keeps the exercise replaced', () async {
+    test('deleting a logged set on a replacement (added) exercise keeps it an '
+        'added exercise and re-opens its next slot', () async {
       final s = setup();
       s.repo.seedWorkoutDay(buildWorkoutDay(benchSets: 1));
       final started = await s.engine.startSession(workoutDayId: 'wd-1');
@@ -209,39 +210,52 @@ void main() {
           .firstWhere((e) => e.plannedExerciseIdInSnapshot == 'ex-bench')
           .id;
 
-      await s.engine.replaceExercise(
+      // Composed replace terminates the original; logging continues on the new
+      // added card, not the original.
+      final afterReplace = await s.engine.replaceExercise(
         sessionExerciseId: benchId,
-        substituteName: 'Cable Fly',
-        substituteMeasurementType: const MeasurementType.repBased(),
-        substitutePlannedValues: PlannedSetValues.repBased(
-          weightKg: 20,
-          repTarget: RepTarget.fixed(reps: 12),
+        plan: AddedExercisePlan(
+          name: 'Cable Fly',
+          measurementType: const MeasurementType.repBased(),
+          plannedValues: PlannedSetValues.repBased(
+            weightKg: 20,
+            repTarget: RepTarget.fixed(reps: 12),
+          ),
+          setCount: 3,
         ),
-        substituteSetCount: 3,
       );
+      expect(
+        afterReplace.session.sessionExercises
+            .firstWhere((e) => e.id == benchId)
+            .state,
+        isA<SkippedState>(),
+      );
+      final flyId = afterReplace.session.sessionExercises.last.id;
+
       await s.engine.completeSet(
-        sessionExerciseId: benchId,
+        sessionExerciseId: flyId,
         actualValues: const ActualSetValues.repBased(weightKg: 20, reps: 12),
       );
       final afterTwo = await s.engine.completeSet(
-        sessionExerciseId: benchId,
+        sessionExerciseId: flyId,
         actualValues: const ActualSetValues.repBased(weightKg: 20, reps: 10),
       );
-      final benchBefore = afterTwo.session.sessionExercises.firstWhere(
-        (e) => e.id == benchId,
+      final flyBefore = afterTwo.session.sessionExercises.firstWhere(
+        (e) => e.id == flyId,
       );
-      expect(benchBefore.state, isA<ReplacedState>());
-      expect(benchBefore.executedSets, hasLength(2));
+      expect(flyBefore.addedPlan, isNotNull);
+      expect(flyBefore.executedSets, hasLength(2));
 
-      final lastId = benchBefore.executedSets.last.id;
+      final lastId = flyBefore.executedSets.last.id;
       final afterDelete = await s.engine.deleteExecutedSet(
         executedSetId: lastId,
       );
-      final benchAfter = afterDelete.session.sessionExercises.firstWhere(
-        (e) => e.id == benchId,
+      final flyAfter = afterDelete.session.sessionExercises.firstWhere(
+        (e) => e.id == flyId,
       );
-      expect(benchAfter.state, isA<ReplacedState>());
-      expect(benchAfter.executedSets, hasLength(1));
+      expect(flyAfter.addedPlan, isNotNull);
+      expect(flyAfter.state, isA<UnfinishedState>());
+      expect(flyAfter.executedSets, hasLength(1));
     });
 
     test('deleting an unknown executed set throws NotFoundError', () async {

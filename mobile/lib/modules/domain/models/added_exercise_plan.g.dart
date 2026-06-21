@@ -1,14 +1,14 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 
-part of 'substitute_exercise.dart';
+part of 'added_exercise_plan.dart';
 
 // **************************************************************************
 // JsonSerializableGenerator
 // **************************************************************************
 
-_SubstituteExercise _$SubstituteExerciseFromJson(Map<String, dynamic> json) =>
-    $checkedCreate('_SubstituteExercise', json, ($checkedConvert) {
-      final val = _SubstituteExercise(
+_AddedExercisePlan _$AddedExercisePlanFromJson(Map<String, dynamic> json) =>
+    $checkedCreate('_AddedExercisePlan', json, ($checkedConvert) {
+      final val = _AddedExercisePlan(
         name: $checkedConvert('name', (v) => v as String),
         measurementType: $checkedConvert(
           'measurementType',
@@ -33,7 +33,7 @@ _SubstituteExercise _$SubstituteExerciseFromJson(Map<String, dynamic> json) =>
       return val;
     });
 
-Map<String, dynamic> _$SubstituteExerciseToJson(_SubstituteExercise instance) =>
+Map<String, dynamic> _$AddedExercisePlanToJson(_AddedExercisePlan instance) =>
     <String, dynamic>{
       'name': instance.name,
       'measurementType': instance.measurementType.toJson(),

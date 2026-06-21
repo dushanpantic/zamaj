@@ -1,6 +1,6 @@
 import 'package:zamaj/modules/domain/errors.dart';
 import 'package:zamaj/modules/domain/models/actual_set_values.dart';
-import 'package:zamaj/modules/domain/models/exercise_metadata.dart';
+import 'package:zamaj/modules/domain/models/added_exercise_plan.dart';
 import 'package:zamaj/modules/domain/models/exercise_state.dart';
 import 'package:zamaj/modules/domain/models/measurement_type.dart';
 import 'package:zamaj/modules/domain/models/planned_set_values.dart';
@@ -85,31 +85,148 @@ class SessionFlowEngine {
     return _buildState(updatedSession);
   }
 
-  /// Replaces an unfinished exercise with a substitute.
+  /// Resumes a terminated (`skipped`) exercise back to `unfinished`.
+  ///
+  /// The inverse of [skipExercise] and the re-do path for a skipped or
+  /// ended-early exercise: its logged sets, position, and superset membership
+  /// are retained, and it re-enters the normal under-quota [UnfinishedState]
+  /// flow (loggable from its next un-logged set). Throws [OrderingError] if the
+  /// exercise is not currently `skipped`. The snapshot is never changed.
+  Future<SessionState> resumeExercise({
+    required String sessionExerciseId,
+  }) async {
+    final session = await _repository.getSessionByExerciseId(sessionExerciseId);
+    final exercise = session.sessionExercises.firstWhere(
+      (SessionExercise e) => e.id == sessionExerciseId,
+    );
+    if (exercise.state is! SkippedState) {
+      throw OrderingError(
+        sessionExerciseId: sessionExerciseId,
+        currentState: exercise.state.discriminator,
+        message:
+            'Cannot resume exercise $sessionExerciseId: state is '
+            '${exercise.state.discriminator}, not skipped',
+      );
+    }
+    final updatedSession = await _repository.resumeExercise(sessionExerciseId);
+    return _buildState(updatedSession);
+  }
+
+  /// Replaces an unfinished exercise as a composition of terminate + add: the
+  /// original is terminated via the existing skip action (it reads `skipped`
+  /// when no sets were logged, `partial` when some were) and a new exercise is
+  /// added in its place from [plan], in one atomic repository transaction.
+  /// There is no `replaced` state — composition makes it redundant, so the
+  /// original simply finishes in its terminal state and a fresh added-exercise
+  /// card takes its place.
+  ///
+  /// The any-state dedup guard (see [addExercise]) applies to [plan], except the
+  /// original being replaced is excluded from its own block-set — it is about to
+  /// be terminated, so re-picking its own movement as the replacement is
+  /// allowed. Returns a fresh [SessionState]; the snapshot is never changed.
   Future<SessionState> replaceExercise({
     required String sessionExerciseId,
-    required String substituteName,
-    required MeasurementType substituteMeasurementType,
-    required PlannedSetValues substitutePlannedValues,
-    required int substituteSetCount,
-    ExerciseMetadata? substituteMetadata,
-    String? substituteLibraryExerciseId,
+    required AddedExercisePlan plan,
   }) async {
     final session = await _repository.getSessionByExerciseId(sessionExerciseId);
     final exercise = session.sessionExercises.firstWhere(
       (SessionExercise e) => e.id == sessionExerciseId,
     );
     _assertUnfinished(exercise);
+    _assertNoDuplicateMovement(
+      session,
+      plan,
+      excludeSessionExerciseId: sessionExerciseId,
+    );
     final updatedSession = await _repository.replaceExercise(
       sessionExerciseId: sessionExerciseId,
-      substituteName: substituteName,
-      substituteMeasurementType: substituteMeasurementType,
-      substitutePlannedValues: substitutePlannedValues,
-      substituteSetCount: substituteSetCount,
-      substituteMetadata: substituteMetadata,
-      substituteLibraryExerciseId: substituteLibraryExerciseId,
+      plan: plan,
     );
     return _buildState(updatedSession);
+  }
+
+  /// Adds an exercise to [sessionId] from an inline [plan] — work not present
+  /// in the frozen snapshot.
+  ///
+  /// When [plan] carries a `libraryExerciseId`, the add is rejected with a
+  /// [ValidationError] if that movement is already present as **any** session
+  /// exercise regardless of state (re-doing a movement already in the session
+  /// is done on its existing card via Resume or Add set, not by re-adding). A
+  /// one-off plan (null library id) is never deduplicated. [excludeSessionExerciseId],
+  /// when set, drops one exercise from the block-set — used by replace, where
+  /// the exercise being terminated may share the replacement's movement.
+  ///
+  /// Returns a fresh [SessionState]. The session snapshot is never changed.
+  Future<SessionState> addExercise({
+    required String sessionId,
+    required AddedExercisePlan plan,
+    String? excludeSessionExerciseId,
+  }) async {
+    final session = await _repository.getSession(sessionId);
+    if (session == null) {
+      throw NotFoundError(entityType: 'Session', id: sessionId);
+    }
+
+    _assertNoDuplicateMovement(
+      session,
+      plan,
+      excludeSessionExerciseId: excludeSessionExerciseId,
+    );
+
+    final updatedSession = await _repository.addExercise(
+      sessionId: sessionId,
+      plan: plan,
+    );
+    return _buildState(updatedSession);
+  }
+
+  /// Throws a [ValidationError] when [plan] carries a `libraryExerciseId` that
+  /// is already the effective movement of a session exercise (other than
+  /// [excludeSessionExerciseId]). Shared by [addExercise] and [replaceExercise]
+  /// — re-doing a movement already in the session is done on its existing card
+  /// (Resume / Add set), not by re-adding. One-off plans (null id) are never
+  /// deduplicated.
+  void _assertNoDuplicateMovement(
+    Session session,
+    AddedExercisePlan plan, {
+    String? excludeSessionExerciseId,
+  }) {
+    final libraryId = plan.libraryExerciseId;
+    if (libraryId != null &&
+        _libraryMovementInSession(
+          session,
+          libraryId,
+          excludeSessionExerciseId: excludeSessionExerciseId,
+        )) {
+      throw ValidationError(
+        entityId: session.id,
+        invariant: 'added_exercise_duplicate_library_movement',
+        message:
+            'Library movement $libraryId is already in session ${session.id}; '
+            'resume or add a set on its existing card instead',
+      );
+    }
+  }
+
+  /// Whether [libraryId] is the effective library movement of any session
+  /// exercise (other than [excludeSessionExerciseId]). Resolves each exercise's
+  /// movement through the inline-aware [EffectiveExercises] so added rows (which
+  /// have no snapshot entry) are matched on their inline plan's library id.
+  bool _libraryMovementInSession(
+    Session session,
+    String libraryId, {
+    String? excludeSessionExerciseId,
+  }) {
+    final effective = EffectiveExercises.of(session);
+    for (final exercise in session.sessionExercises) {
+      if (exercise.id == excludeSessionExerciseId) continue;
+      final exLibraryId = effective
+          .forSessionExercise(exercise)
+          .plannedExercise
+          .libraryExerciseId;
+      if (exLibraryId == libraryId) return true;
+    }
+    return false;
   }
 
   /// Reorders all unfinished exercises to the specified order.
@@ -165,7 +282,7 @@ class SessionFlowEngine {
 
   /// Computes the list of currently-loggable [LogTarget]s for a session.
   ///
-  /// One target per exercise in `unfinished` or `replaced` state whose
+  /// One target per exercise in `unfinished` state whose
   /// `executedSets.length < plannedSetCount`, sorted by exercise position.
   /// Each target's `plannedSetIndex == exercise.executedSets.length`, i.e. the
   /// next chronological slot for that exercise. Returns an empty list when no
@@ -183,7 +300,6 @@ class SessionFlowEngine {
     for (final exercise in sorted) {
       switch (exercise.state) {
         case UnfinishedState():
-        case ReplacedState():
           final plannedSetCount = effective
               .forSessionExercise(exercise)
               .plannedSetCount;
@@ -280,7 +396,7 @@ class SessionFlowEngine {
 
   /// Completes a set on [sessionExerciseId] with [actualValues].
   ///
-  /// Loggable states are `unfinished`, `replaced`, and `completed`. Completion
+  /// Loggable states are `unfinished` and `completed`. Completion
   /// is reachable only by logging the full planned-set quota (auto-complete),
   /// so the `completed` case here covers the "extra set on an auto-completed
   /// exercise" affordance. Logging on a `skipped` exercise throws
@@ -439,7 +555,7 @@ class SessionFlowEngine {
   ///
   /// Preconditions:
   /// - Every existing member of [supersetTag] is in `UnfinishedState`. Refuse
-  ///   if any member is Completed/Skipped/Replaced — mixing terminal and
+  ///   if any member is Completed/Skipped — mixing terminal and
   ///   live members in one group is the unsafe state the workflow avoids.
   /// - The exercise at [sessionExerciseId] exists, is in `UnfinishedState`,
   ///   and currently has `supersetTag == null`.
@@ -560,19 +676,11 @@ class SessionFlowEngine {
   /// Returns `true` when every exercise is in a terminal state with all
   /// planned sets fulfilled.
   bool isSessionComplete(Session session) {
-    final effective = EffectiveExercises.of(session);
     for (final exercise in session.sessionExercises) {
       switch (exercise.state) {
         case CompletedState():
         case SkippedState():
           continue;
-        case ReplacedState():
-          final plannedSetCount = effective
-              .forSessionExercise(exercise)
-              .plannedSetCount;
-          if (exercise.executedSets.length < plannedSetCount) {
-            return false;
-          }
         case UnfinishedState():
           return false;
       }

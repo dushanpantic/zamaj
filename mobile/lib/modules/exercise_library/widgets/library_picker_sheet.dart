@@ -5,6 +5,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:zamaj/building_blocks/building_blocks.dart';
 import 'package:zamaj/core/app_colors.dart';
 import 'package:zamaj/core/app_icon.dart';
+import 'package:zamaj/core/app_opacity.dart';
 import 'package:zamaj/core/app_spacing.dart';
 import 'package:zamaj/core/app_theme.dart';
 import 'package:zamaj/core/app_typography.dart';
@@ -45,9 +46,17 @@ class LibraryPickerSheet extends StatefulWidget {
     this.allowCreateOneOff = true,
     this.allowAddToLibrary = false,
     this.title = 'Pick from library',
+    this.disabledEntryIds = const <String>{},
+    this.disabledNote,
   });
 
   final ExerciseLibraryRepository repository;
+
+  /// Library entry ids shown as disabled (non-tappable) rows rather than hidden
+  /// — used by the add-exercise flow so a movement already in the session reads
+  /// as "already here" instead of silently missing. [disabledNote] explains why.
+  final Set<String> disabledEntryIds;
+  final String? disabledNote;
 
   /// Lock the picker to this type. When non-null, the type chip is shown in
   /// the header and only matching entries are loaded.
@@ -69,6 +78,8 @@ class LibraryPickerSheet extends StatefulWidget {
     bool allowCreateOneOff = true,
     bool allowAddToLibrary = false,
     String title = 'Pick from library',
+    Set<String> disabledEntryIds = const <String>{},
+    String? disabledNote,
   }) {
     final repository = context.read<ExerciseLibraryRepository>();
     return showModalBottomSheet<LibraryPickerResult>(
@@ -85,6 +96,8 @@ class LibraryPickerSheet extends StatefulWidget {
         allowCreateOneOff: allowCreateOneOff,
         allowAddToLibrary: allowAddToLibrary,
         title: title,
+        disabledEntryIds: disabledEntryIds,
+        disabledNote: disabledNote,
       ),
     );
   }
@@ -294,9 +307,14 @@ class _LibraryPickerSheetState extends State<LibraryPickerSheet> {
       separatorBuilder: (_, _) => const SizedBox(height: AppSpacing.xs),
       itemBuilder: (context, index) {
         final entry = _entries[index];
+        final disabled = widget.disabledEntryIds.contains(entry.id);
         return _PickerRow(
           entry: entry,
-          onTap: () => Navigator.of(context).pop(LibraryPickerSelected(entry)),
+          disabled: disabled,
+          disabledNote: disabled ? widget.disabledNote : null,
+          onTap: disabled
+              ? null
+              : () => Navigator.of(context).pop(LibraryPickerSelected(entry)),
         );
       },
     );
@@ -304,57 +322,71 @@ class _LibraryPickerSheetState extends State<LibraryPickerSheet> {
 }
 
 class _PickerRow extends StatelessWidget {
-  const _PickerRow({required this.entry, required this.onTap});
+  const _PickerRow({
+    required this.entry,
+    required this.onTap,
+    this.disabled = false,
+    this.disabledNote,
+  });
 
   final LibraryExercise entry;
-  final VoidCallback onTap;
+  final VoidCallback? onTap;
+  final bool disabled;
+  final String? disabledNote;
 
   @override
   Widget build(BuildContext context) {
     final colors = Theme.of(context).appColors;
     const typography = AppTypography.standard;
+    // A disabled row reads "already in this session" — dimmed and inert, with
+    // the explanatory note replacing the cue line.
+    final subtitle = disabled ? disabledNote : entry.cues;
+    final nameColor = disabled ? colors.onSurfaceMuted : colors.onSurface;
 
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(AppRadius.md),
-      child: Container(
-        padding: const EdgeInsets.symmetric(
-          horizontal: AppSpacing.md,
-          vertical: AppSpacing.md,
-        ),
-        decoration: BoxDecoration(
-          color: colors.surfaceVariant,
-          borderRadius: BorderRadius.circular(AppRadius.md),
-        ),
-        child: Row(
-          children: [
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    entry.name,
-                    style: typography.label.copyWith(color: colors.onSurface),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  if (entry.cues != null) ...[
-                    const SizedBox(height: AppSpacing.xs),
+    return Opacity(
+      opacity: disabled ? AppOpacity.muted : 1,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(AppRadius.md),
+        child: Container(
+          padding: const EdgeInsets.symmetric(
+            horizontal: AppSpacing.md,
+            vertical: AppSpacing.md,
+          ),
+          decoration: BoxDecoration(
+            color: colors.surfaceVariant,
+            borderRadius: BorderRadius.circular(AppRadius.md),
+          ),
+          child: Row(
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
                     Text(
-                      entry.cues!,
-                      style: typography.caption.copyWith(
-                        color: colors.onSurfaceMuted,
-                      ),
+                      entry.name,
+                      style: typography.label.copyWith(color: nameColor),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                     ),
+                    if (subtitle != null) ...[
+                      const SizedBox(height: AppSpacing.xs),
+                      Text(
+                        subtitle,
+                        style: typography.caption.copyWith(
+                          color: colors.onSurfaceMuted,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ],
                   ],
-                ],
+                ),
               ),
-            ),
-            const SizedBox(width: AppSpacing.sm),
-            MeasurementTypeChip(measurementType: entry.measurementType),
-          ],
+              const SizedBox(width: AppSpacing.sm),
+              MeasurementTypeChip(measurementType: entry.measurementType),
+            ],
+          ),
         ),
       ),
     );

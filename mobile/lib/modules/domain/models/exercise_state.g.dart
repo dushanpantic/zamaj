@@ -38,21 +38,3 @@ SkippedState _$SkippedStateFromJson(Map<String, dynamic> json) =>
 
 Map<String, dynamic> _$SkippedStateToJson(SkippedState instance) =>
     <String, dynamic>{'type': instance.$type};
-
-ReplacedState _$ReplacedStateFromJson(Map<String, dynamic> json) =>
-    $checkedCreate('ReplacedState', json, ($checkedConvert) {
-      final val = ReplacedState(
-        substitute: $checkedConvert(
-          'substitute',
-          (v) => SubstituteExercise.fromJson(v as Map<String, dynamic>),
-        ),
-        $type: $checkedConvert('type', (v) => v as String?),
-      );
-      return val;
-    }, fieldKeyMap: const {r'$type': 'type'});
-
-Map<String, dynamic> _$ReplacedStateToJson(ReplacedState instance) =>
-    <String, dynamic>{
-      'substitute': instance.substitute.toJson(),
-      'type': instance.$type,
-    };

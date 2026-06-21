@@ -27,9 +27,9 @@ class FocusPanelActionsMenu extends StatelessWidget {
     final videoUrl = panel.displayMetadata?.videoUrl;
     final hasVideo = showVideoItem && videoUrl != null && videoUrl.isNotEmpty;
     // The single adaptive terminal action is offered only while the exercise is
-    // still unfinished (`isLoggable && !isReplaced`); a replaced or already-
-    // terminal panel offers no terminal action, only its non-terminal items.
-    final canEndOrSkip = panel.isLoggable && !panel.isReplaced;
+    // still unfinished (`isLoggable`); an already-terminal panel offers no
+    // terminal action, only its non-terminal items.
+    final canEndOrSkip = panel.isLoggable;
     final hasSets = panel.completedSetsCount > 0;
     return PopupMenuButton<_PanelMenuAction>(
       icon: Icon(Icons.more_vert, color: colors.onSurface),

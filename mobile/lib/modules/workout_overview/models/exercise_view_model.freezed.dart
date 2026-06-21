@@ -20,7 +20,11 @@ mixin _$ExerciseViewModel {
  String? get libraryExerciseId; MeasurementType get plannedMeasurementType; ExerciseMetadata get plannedMetadata; int? get plannedRestSeconds; List<SetRowViewModel> get setRows;/// True when this exercise has at least one row in [setRows] flagged as
 /// `isLoggable` — i.e. the user can log a new set on it right now.
 /// Derived from the engine's [SessionState.openTargets] projection.
- bool get isLoggable; MeasurementType get effectiveMeasurementType; ExerciseGroupRole get plannedGroupRole;
+ bool get isLoggable; MeasurementType get effectiveMeasurementType; ExerciseGroupRole get plannedGroupRole;/// True when the user may log an extra set beyond the planned quota on this
+/// exercise: it is `completed` and the session is still live. The kebab's
+/// "Add set" item is gated on this — the re-do affordance for a completed
+/// exercise (skipped/ended use Resume; unfinished use the inline LOG SET).
+ bool get canAddSet;
 /// Create a copy of ExerciseViewModel
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -31,16 +35,16 @@ $ExerciseViewModelCopyWith<ExerciseViewModel> get copyWith => _$ExerciseViewMode
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is ExerciseViewModel&&(identical(other.sessionExercise, sessionExercise) || other.sessionExercise == sessionExercise)&&(identical(other.plannedExerciseName, plannedExerciseName) || other.plannedExerciseName == plannedExerciseName)&&(identical(other.plannedSummary, plannedSummary) || other.plannedSummary == plannedSummary)&&(identical(other.libraryExerciseId, libraryExerciseId) || other.libraryExerciseId == libraryExerciseId)&&(identical(other.plannedMeasurementType, plannedMeasurementType) || other.plannedMeasurementType == plannedMeasurementType)&&(identical(other.plannedMetadata, plannedMetadata) || other.plannedMetadata == plannedMetadata)&&(identical(other.plannedRestSeconds, plannedRestSeconds) || other.plannedRestSeconds == plannedRestSeconds)&&const DeepCollectionEquality().equals(other.setRows, setRows)&&(identical(other.isLoggable, isLoggable) || other.isLoggable == isLoggable)&&(identical(other.effectiveMeasurementType, effectiveMeasurementType) || other.effectiveMeasurementType == effectiveMeasurementType)&&(identical(other.plannedGroupRole, plannedGroupRole) || other.plannedGroupRole == plannedGroupRole));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is ExerciseViewModel&&(identical(other.sessionExercise, sessionExercise) || other.sessionExercise == sessionExercise)&&(identical(other.plannedExerciseName, plannedExerciseName) || other.plannedExerciseName == plannedExerciseName)&&(identical(other.plannedSummary, plannedSummary) || other.plannedSummary == plannedSummary)&&(identical(other.libraryExerciseId, libraryExerciseId) || other.libraryExerciseId == libraryExerciseId)&&(identical(other.plannedMeasurementType, plannedMeasurementType) || other.plannedMeasurementType == plannedMeasurementType)&&(identical(other.plannedMetadata, plannedMetadata) || other.plannedMetadata == plannedMetadata)&&(identical(other.plannedRestSeconds, plannedRestSeconds) || other.plannedRestSeconds == plannedRestSeconds)&&const DeepCollectionEquality().equals(other.setRows, setRows)&&(identical(other.isLoggable, isLoggable) || other.isLoggable == isLoggable)&&(identical(other.effectiveMeasurementType, effectiveMeasurementType) || other.effectiveMeasurementType == effectiveMeasurementType)&&(identical(other.plannedGroupRole, plannedGroupRole) || other.plannedGroupRole == plannedGroupRole)&&(identical(other.canAddSet, canAddSet) || other.canAddSet == canAddSet));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,sessionExercise,plannedExerciseName,plannedSummary,libraryExerciseId,plannedMeasurementType,plannedMetadata,plannedRestSeconds,const DeepCollectionEquality().hash(setRows),isLoggable,effectiveMeasurementType,plannedGroupRole);
+int get hashCode => Object.hash(runtimeType,sessionExercise,plannedExerciseName,plannedSummary,libraryExerciseId,plannedMeasurementType,plannedMetadata,plannedRestSeconds,const DeepCollectionEquality().hash(setRows),isLoggable,effectiveMeasurementType,plannedGroupRole,canAddSet);
 
 @override
 String toString() {
-  return 'ExerciseViewModel(sessionExercise: $sessionExercise, plannedExerciseName: $plannedExerciseName, plannedSummary: $plannedSummary, libraryExerciseId: $libraryExerciseId, plannedMeasurementType: $plannedMeasurementType, plannedMetadata: $plannedMetadata, plannedRestSeconds: $plannedRestSeconds, setRows: $setRows, isLoggable: $isLoggable, effectiveMeasurementType: $effectiveMeasurementType, plannedGroupRole: $plannedGroupRole)';
+  return 'ExerciseViewModel(sessionExercise: $sessionExercise, plannedExerciseName: $plannedExerciseName, plannedSummary: $plannedSummary, libraryExerciseId: $libraryExerciseId, plannedMeasurementType: $plannedMeasurementType, plannedMetadata: $plannedMetadata, plannedRestSeconds: $plannedRestSeconds, setRows: $setRows, isLoggable: $isLoggable, effectiveMeasurementType: $effectiveMeasurementType, plannedGroupRole: $plannedGroupRole, canAddSet: $canAddSet)';
 }
 
 
@@ -51,7 +55,7 @@ abstract mixin class $ExerciseViewModelCopyWith<$Res>  {
   factory $ExerciseViewModelCopyWith(ExerciseViewModel value, $Res Function(ExerciseViewModel) _then) = _$ExerciseViewModelCopyWithImpl;
 @useResult
 $Res call({
- SessionExercise sessionExercise, String plannedExerciseName, String plannedSummary, String? libraryExerciseId, MeasurementType plannedMeasurementType, ExerciseMetadata plannedMetadata, int? plannedRestSeconds, List<SetRowViewModel> setRows, bool isLoggable, MeasurementType effectiveMeasurementType, ExerciseGroupRole plannedGroupRole
+ SessionExercise sessionExercise, String plannedExerciseName, String plannedSummary, String? libraryExerciseId, MeasurementType plannedMeasurementType, ExerciseMetadata plannedMetadata, int? plannedRestSeconds, List<SetRowViewModel> setRows, bool isLoggable, MeasurementType effectiveMeasurementType, ExerciseGroupRole plannedGroupRole, bool canAddSet
 });
 
 
@@ -68,7 +72,7 @@ class _$ExerciseViewModelCopyWithImpl<$Res>
 
 /// Create a copy of ExerciseViewModel
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? sessionExercise = null,Object? plannedExerciseName = null,Object? plannedSummary = null,Object? libraryExerciseId = freezed,Object? plannedMeasurementType = null,Object? plannedMetadata = null,Object? plannedRestSeconds = freezed,Object? setRows = null,Object? isLoggable = null,Object? effectiveMeasurementType = null,Object? plannedGroupRole = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? sessionExercise = null,Object? plannedExerciseName = null,Object? plannedSummary = null,Object? libraryExerciseId = freezed,Object? plannedMeasurementType = null,Object? plannedMetadata = null,Object? plannedRestSeconds = freezed,Object? setRows = null,Object? isLoggable = null,Object? effectiveMeasurementType = null,Object? plannedGroupRole = null,Object? canAddSet = null,}) {
   return _then(_self.copyWith(
 sessionExercise: null == sessionExercise ? _self.sessionExercise : sessionExercise // ignore: cast_nullable_to_non_nullable
 as SessionExercise,plannedExerciseName: null == plannedExerciseName ? _self.plannedExerciseName : plannedExerciseName // ignore: cast_nullable_to_non_nullable
@@ -81,7 +85,8 @@ as int?,setRows: null == setRows ? _self.setRows : setRows // ignore: cast_nulla
 as List<SetRowViewModel>,isLoggable: null == isLoggable ? _self.isLoggable : isLoggable // ignore: cast_nullable_to_non_nullable
 as bool,effectiveMeasurementType: null == effectiveMeasurementType ? _self.effectiveMeasurementType : effectiveMeasurementType // ignore: cast_nullable_to_non_nullable
 as MeasurementType,plannedGroupRole: null == plannedGroupRole ? _self.plannedGroupRole : plannedGroupRole // ignore: cast_nullable_to_non_nullable
-as ExerciseGroupRole,
+as ExerciseGroupRole,canAddSet: null == canAddSet ? _self.canAddSet : canAddSet // ignore: cast_nullable_to_non_nullable
+as bool,
   ));
 }
 /// Create a copy of ExerciseViewModel
@@ -202,10 +207,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( SessionExercise sessionExercise,  String plannedExerciseName,  String plannedSummary,  String? libraryExerciseId,  MeasurementType plannedMeasurementType,  ExerciseMetadata plannedMetadata,  int? plannedRestSeconds,  List<SetRowViewModel> setRows,  bool isLoggable,  MeasurementType effectiveMeasurementType,  ExerciseGroupRole plannedGroupRole)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( SessionExercise sessionExercise,  String plannedExerciseName,  String plannedSummary,  String? libraryExerciseId,  MeasurementType plannedMeasurementType,  ExerciseMetadata plannedMetadata,  int? plannedRestSeconds,  List<SetRowViewModel> setRows,  bool isLoggable,  MeasurementType effectiveMeasurementType,  ExerciseGroupRole plannedGroupRole,  bool canAddSet)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _ExerciseViewModel() when $default != null:
-return $default(_that.sessionExercise,_that.plannedExerciseName,_that.plannedSummary,_that.libraryExerciseId,_that.plannedMeasurementType,_that.plannedMetadata,_that.plannedRestSeconds,_that.setRows,_that.isLoggable,_that.effectiveMeasurementType,_that.plannedGroupRole);case _:
+return $default(_that.sessionExercise,_that.plannedExerciseName,_that.plannedSummary,_that.libraryExerciseId,_that.plannedMeasurementType,_that.plannedMetadata,_that.plannedRestSeconds,_that.setRows,_that.isLoggable,_that.effectiveMeasurementType,_that.plannedGroupRole,_that.canAddSet);case _:
   return orElse();
 
 }
@@ -223,10 +228,10 @@ return $default(_that.sessionExercise,_that.plannedExerciseName,_that.plannedSum
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( SessionExercise sessionExercise,  String plannedExerciseName,  String plannedSummary,  String? libraryExerciseId,  MeasurementType plannedMeasurementType,  ExerciseMetadata plannedMetadata,  int? plannedRestSeconds,  List<SetRowViewModel> setRows,  bool isLoggable,  MeasurementType effectiveMeasurementType,  ExerciseGroupRole plannedGroupRole)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( SessionExercise sessionExercise,  String plannedExerciseName,  String plannedSummary,  String? libraryExerciseId,  MeasurementType plannedMeasurementType,  ExerciseMetadata plannedMetadata,  int? plannedRestSeconds,  List<SetRowViewModel> setRows,  bool isLoggable,  MeasurementType effectiveMeasurementType,  ExerciseGroupRole plannedGroupRole,  bool canAddSet)  $default,) {final _that = this;
 switch (_that) {
 case _ExerciseViewModel():
-return $default(_that.sessionExercise,_that.plannedExerciseName,_that.plannedSummary,_that.libraryExerciseId,_that.plannedMeasurementType,_that.plannedMetadata,_that.plannedRestSeconds,_that.setRows,_that.isLoggable,_that.effectiveMeasurementType,_that.plannedGroupRole);case _:
+return $default(_that.sessionExercise,_that.plannedExerciseName,_that.plannedSummary,_that.libraryExerciseId,_that.plannedMeasurementType,_that.plannedMetadata,_that.plannedRestSeconds,_that.setRows,_that.isLoggable,_that.effectiveMeasurementType,_that.plannedGroupRole,_that.canAddSet);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -243,10 +248,10 @@ return $default(_that.sessionExercise,_that.plannedExerciseName,_that.plannedSum
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( SessionExercise sessionExercise,  String plannedExerciseName,  String plannedSummary,  String? libraryExerciseId,  MeasurementType plannedMeasurementType,  ExerciseMetadata plannedMetadata,  int? plannedRestSeconds,  List<SetRowViewModel> setRows,  bool isLoggable,  MeasurementType effectiveMeasurementType,  ExerciseGroupRole plannedGroupRole)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( SessionExercise sessionExercise,  String plannedExerciseName,  String plannedSummary,  String? libraryExerciseId,  MeasurementType plannedMeasurementType,  ExerciseMetadata plannedMetadata,  int? plannedRestSeconds,  List<SetRowViewModel> setRows,  bool isLoggable,  MeasurementType effectiveMeasurementType,  ExerciseGroupRole plannedGroupRole,  bool canAddSet)?  $default,) {final _that = this;
 switch (_that) {
 case _ExerciseViewModel() when $default != null:
-return $default(_that.sessionExercise,_that.plannedExerciseName,_that.plannedSummary,_that.libraryExerciseId,_that.plannedMeasurementType,_that.plannedMetadata,_that.plannedRestSeconds,_that.setRows,_that.isLoggable,_that.effectiveMeasurementType,_that.plannedGroupRole);case _:
+return $default(_that.sessionExercise,_that.plannedExerciseName,_that.plannedSummary,_that.libraryExerciseId,_that.plannedMeasurementType,_that.plannedMetadata,_that.plannedRestSeconds,_that.setRows,_that.isLoggable,_that.effectiveMeasurementType,_that.plannedGroupRole,_that.canAddSet);case _:
   return null;
 
 }
@@ -258,7 +263,7 @@ return $default(_that.sessionExercise,_that.plannedExerciseName,_that.plannedSum
 
 
 class _ExerciseViewModel implements ExerciseViewModel {
-  const _ExerciseViewModel({required this.sessionExercise, required this.plannedExerciseName, required this.plannedSummary, required this.libraryExerciseId, required this.plannedMeasurementType, required this.plannedMetadata, required this.plannedRestSeconds, required final  List<SetRowViewModel> setRows, required this.isLoggable, required this.effectiveMeasurementType, this.plannedGroupRole = ExerciseGroupRole.main}): _setRows = setRows;
+  const _ExerciseViewModel({required this.sessionExercise, required this.plannedExerciseName, required this.plannedSummary, required this.libraryExerciseId, required this.plannedMeasurementType, required this.plannedMetadata, required this.plannedRestSeconds, required final  List<SetRowViewModel> setRows, required this.isLoggable, required this.effectiveMeasurementType, this.plannedGroupRole = ExerciseGroupRole.main, this.canAddSet = false}): _setRows = setRows;
   
 
 @override final  SessionExercise sessionExercise;
@@ -284,6 +289,11 @@ class _ExerciseViewModel implements ExerciseViewModel {
 @override final  bool isLoggable;
 @override final  MeasurementType effectiveMeasurementType;
 @override@JsonKey() final  ExerciseGroupRole plannedGroupRole;
+/// True when the user may log an extra set beyond the planned quota on this
+/// exercise: it is `completed` and the session is still live. The kebab's
+/// "Add set" item is gated on this — the re-do affordance for a completed
+/// exercise (skipped/ended use Resume; unfinished use the inline LOG SET).
+@override@JsonKey() final  bool canAddSet;
 
 /// Create a copy of ExerciseViewModel
 /// with the given fields replaced by the non-null parameter values.
@@ -295,16 +305,16 @@ _$ExerciseViewModelCopyWith<_ExerciseViewModel> get copyWith => __$ExerciseViewM
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _ExerciseViewModel&&(identical(other.sessionExercise, sessionExercise) || other.sessionExercise == sessionExercise)&&(identical(other.plannedExerciseName, plannedExerciseName) || other.plannedExerciseName == plannedExerciseName)&&(identical(other.plannedSummary, plannedSummary) || other.plannedSummary == plannedSummary)&&(identical(other.libraryExerciseId, libraryExerciseId) || other.libraryExerciseId == libraryExerciseId)&&(identical(other.plannedMeasurementType, plannedMeasurementType) || other.plannedMeasurementType == plannedMeasurementType)&&(identical(other.plannedMetadata, plannedMetadata) || other.plannedMetadata == plannedMetadata)&&(identical(other.plannedRestSeconds, plannedRestSeconds) || other.plannedRestSeconds == plannedRestSeconds)&&const DeepCollectionEquality().equals(other._setRows, _setRows)&&(identical(other.isLoggable, isLoggable) || other.isLoggable == isLoggable)&&(identical(other.effectiveMeasurementType, effectiveMeasurementType) || other.effectiveMeasurementType == effectiveMeasurementType)&&(identical(other.plannedGroupRole, plannedGroupRole) || other.plannedGroupRole == plannedGroupRole));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _ExerciseViewModel&&(identical(other.sessionExercise, sessionExercise) || other.sessionExercise == sessionExercise)&&(identical(other.plannedExerciseName, plannedExerciseName) || other.plannedExerciseName == plannedExerciseName)&&(identical(other.plannedSummary, plannedSummary) || other.plannedSummary == plannedSummary)&&(identical(other.libraryExerciseId, libraryExerciseId) || other.libraryExerciseId == libraryExerciseId)&&(identical(other.plannedMeasurementType, plannedMeasurementType) || other.plannedMeasurementType == plannedMeasurementType)&&(identical(other.plannedMetadata, plannedMetadata) || other.plannedMetadata == plannedMetadata)&&(identical(other.plannedRestSeconds, plannedRestSeconds) || other.plannedRestSeconds == plannedRestSeconds)&&const DeepCollectionEquality().equals(other._setRows, _setRows)&&(identical(other.isLoggable, isLoggable) || other.isLoggable == isLoggable)&&(identical(other.effectiveMeasurementType, effectiveMeasurementType) || other.effectiveMeasurementType == effectiveMeasurementType)&&(identical(other.plannedGroupRole, plannedGroupRole) || other.plannedGroupRole == plannedGroupRole)&&(identical(other.canAddSet, canAddSet) || other.canAddSet == canAddSet));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,sessionExercise,plannedExerciseName,plannedSummary,libraryExerciseId,plannedMeasurementType,plannedMetadata,plannedRestSeconds,const DeepCollectionEquality().hash(_setRows),isLoggable,effectiveMeasurementType,plannedGroupRole);
+int get hashCode => Object.hash(runtimeType,sessionExercise,plannedExerciseName,plannedSummary,libraryExerciseId,plannedMeasurementType,plannedMetadata,plannedRestSeconds,const DeepCollectionEquality().hash(_setRows),isLoggable,effectiveMeasurementType,plannedGroupRole,canAddSet);
 
 @override
 String toString() {
-  return 'ExerciseViewModel(sessionExercise: $sessionExercise, plannedExerciseName: $plannedExerciseName, plannedSummary: $plannedSummary, libraryExerciseId: $libraryExerciseId, plannedMeasurementType: $plannedMeasurementType, plannedMetadata: $plannedMetadata, plannedRestSeconds: $plannedRestSeconds, setRows: $setRows, isLoggable: $isLoggable, effectiveMeasurementType: $effectiveMeasurementType, plannedGroupRole: $plannedGroupRole)';
+  return 'ExerciseViewModel(sessionExercise: $sessionExercise, plannedExerciseName: $plannedExerciseName, plannedSummary: $plannedSummary, libraryExerciseId: $libraryExerciseId, plannedMeasurementType: $plannedMeasurementType, plannedMetadata: $plannedMetadata, plannedRestSeconds: $plannedRestSeconds, setRows: $setRows, isLoggable: $isLoggable, effectiveMeasurementType: $effectiveMeasurementType, plannedGroupRole: $plannedGroupRole, canAddSet: $canAddSet)';
 }
 
 
@@ -315,7 +325,7 @@ abstract mixin class _$ExerciseViewModelCopyWith<$Res> implements $ExerciseViewM
   factory _$ExerciseViewModelCopyWith(_ExerciseViewModel value, $Res Function(_ExerciseViewModel) _then) = __$ExerciseViewModelCopyWithImpl;
 @override @useResult
 $Res call({
- SessionExercise sessionExercise, String plannedExerciseName, String plannedSummary, String? libraryExerciseId, MeasurementType plannedMeasurementType, ExerciseMetadata plannedMetadata, int? plannedRestSeconds, List<SetRowViewModel> setRows, bool isLoggable, MeasurementType effectiveMeasurementType, ExerciseGroupRole plannedGroupRole
+ SessionExercise sessionExercise, String plannedExerciseName, String plannedSummary, String? libraryExerciseId, MeasurementType plannedMeasurementType, ExerciseMetadata plannedMetadata, int? plannedRestSeconds, List<SetRowViewModel> setRows, bool isLoggable, MeasurementType effectiveMeasurementType, ExerciseGroupRole plannedGroupRole, bool canAddSet
 });
 
 
@@ -332,7 +342,7 @@ class __$ExerciseViewModelCopyWithImpl<$Res>
 
 /// Create a copy of ExerciseViewModel
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? sessionExercise = null,Object? plannedExerciseName = null,Object? plannedSummary = null,Object? libraryExerciseId = freezed,Object? plannedMeasurementType = null,Object? plannedMetadata = null,Object? plannedRestSeconds = freezed,Object? setRows = null,Object? isLoggable = null,Object? effectiveMeasurementType = null,Object? plannedGroupRole = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? sessionExercise = null,Object? plannedExerciseName = null,Object? plannedSummary = null,Object? libraryExerciseId = freezed,Object? plannedMeasurementType = null,Object? plannedMetadata = null,Object? plannedRestSeconds = freezed,Object? setRows = null,Object? isLoggable = null,Object? effectiveMeasurementType = null,Object? plannedGroupRole = null,Object? canAddSet = null,}) {
   return _then(_ExerciseViewModel(
 sessionExercise: null == sessionExercise ? _self.sessionExercise : sessionExercise // ignore: cast_nullable_to_non_nullable
 as SessionExercise,plannedExerciseName: null == plannedExerciseName ? _self.plannedExerciseName : plannedExerciseName // ignore: cast_nullable_to_non_nullable
@@ -345,7 +355,8 @@ as int?,setRows: null == setRows ? _self._setRows : setRows // ignore: cast_null
 as List<SetRowViewModel>,isLoggable: null == isLoggable ? _self.isLoggable : isLoggable // ignore: cast_nullable_to_non_nullable
 as bool,effectiveMeasurementType: null == effectiveMeasurementType ? _self.effectiveMeasurementType : effectiveMeasurementType // ignore: cast_nullable_to_non_nullable
 as MeasurementType,plannedGroupRole: null == plannedGroupRole ? _self.plannedGroupRole : plannedGroupRole // ignore: cast_nullable_to_non_nullable
-as ExerciseGroupRole,
+as ExerciseGroupRole,canAddSet: null == canAddSet ? _self.canAddSet : canAddSet // ignore: cast_nullable_to_non_nullable
+as bool,
   ));
 }
 

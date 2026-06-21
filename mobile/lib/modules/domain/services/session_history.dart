@@ -24,9 +24,9 @@ abstract final class SessionHistory {
   /// derived via [ExerciseOutcomes.of] rather than the stored discriminator.
   ///
   /// A legacy marked-done-early row (stored `completed` but short of its quota)
-  /// and a skipped-with-sets row both read as partial and are excluded; a
-  /// replaced exercise reads as replaced and is excluded, matching prior
-  /// behavior.
+  /// and a skipped-with-sets row both read as partial and are excluded. A
+  /// replace-terminated original is just a skipped/partial row by then, so it is
+  /// excluded through that same outcome derivation — no special-casing.
   static int completedExerciseCount(Session session) {
     final effective = EffectiveExercises.of(session);
     var count = 0;

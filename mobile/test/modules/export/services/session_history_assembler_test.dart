@@ -164,13 +164,6 @@ void main() {
         ExerciseOutcome.skipped,
       );
     });
-
-    test('replaced → replaced regardless of logged sets', () {
-      final session = _sessionWithReplaced(executed: 1, substituteSetCount: 3);
-      final group = ExerciseViewModelAssembler.assembleReadOnly(session).single;
-      final vm = (group as SingleGroupViewModel).exercise;
-      expect(_reviewBadgeOutcome(vm), ExerciseOutcome.replaced);
-    });
   });
 }
 
@@ -279,46 +272,6 @@ Session _sessionWithSpecs({
     updatedAt: t,
     schemaVersion: 1,
   );
-}
-
-Session _sessionWithReplaced({
-  required int executed,
-  required int substituteSetCount,
-}) {
-  final t = DateTime.utc(2026, 5, 12);
-  const mt = MeasurementType.repBased();
-  final session = _sessionWithSpecs(
-    id: 'rep',
-    endedAt: DateTime.utc(2026, 5, 12, 18),
-    specs: const [(state: ExerciseState.unfinished(), executed: 0, planned: 4)],
-  );
-  final substitute = SubstituteExercise(
-    name: 'Cable Fly',
-    measurementType: mt,
-    plannedValues: PlannedSetValues.repBased(
-      weightKg: 20,
-      repTarget: RepTarget.fixed(reps: 12),
-    ),
-    setCount: substituteSetCount,
-  );
-  final ex = session.sessionExercises.single.copyWith(
-    state: ExerciseState.replaced(substitute: substitute),
-    executedSets: [
-      for (var j = 0; j < executed; j++)
-        ExecutedSet(
-          id: 'es-rep-$j',
-          sessionExerciseId: session.sessionExercises.single.id,
-          position: j,
-          measurementType: mt,
-          actualValues: const ActualSetValues.repBased(weightKg: 20, reps: 12),
-          completedAt: t,
-          createdAt: t,
-          updatedAt: t,
-          schemaVersion: 1,
-        ),
-    ],
-  );
-  return session.copyWith(sessionExercises: [ex]);
 }
 
 Session _session({required String id, required DateTime? endedAt}) {

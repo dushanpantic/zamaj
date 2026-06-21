@@ -35,6 +35,9 @@ class ExerciseCard extends StatelessWidget {
     required this.onEditSet,
     required this.onEndOrSkipPressed,
     required this.onOpenVideo,
+    this.onAddSetPressed,
+    this.onResumePressed,
+    this.onReplacePressed,
     this.onGroupIntoPressed,
     this.onMoveUp,
     this.onMoveDown,
@@ -57,6 +60,21 @@ class ExerciseCard extends StatelessWidget {
   /// terminal mutation — read surfaces derive skipped-vs-partial from counts.
   final VoidCallback onEndOrSkipPressed;
   final void Function(String videoUrl) onOpenVideo;
+
+  /// Logs an extra set beyond plan. Surfaced as the "Add set" kebab item on a
+  /// completed card (the re-do affordance) while [ExerciseViewModel.canAddSet]
+  /// is true. Null hides the entry.
+  final VoidCallback? onAddSetPressed;
+
+  /// Resumes a skipped/ended exercise back to in-progress. Surfaced as the
+  /// "Resume" kebab item on a terminated (skipped) card — the re-do slot for a
+  /// movement that was skipped or ended early. Null hides the entry.
+  final VoidCallback? onResumePressed;
+
+  /// Replaces this exercise (terminate + add a new one in its place). Surfaced
+  /// as the "Replace" kebab item on an unfinished, non-terminal card. Null
+  /// hides the entry.
+  final VoidCallback? onReplacePressed;
 
   /// When non-null, the per-card ⋮ menu surfaces a "Group into superset…"
   /// entry that opens the picker dialog. Null hides the entry — used inside
@@ -126,6 +144,9 @@ class ExerciseCard extends StatelessWidget {
               onTap: onToggleExpansion,
               onEndOrSkip: onEndOrSkipPressed,
               onOpenVideo: onOpenVideo,
+              onAddSet: onAddSetPressed,
+              onResume: onResumePressed,
+              onReplace: onReplacePressed,
               onGroupInto: onGroupIntoPressed,
               onMoveUp: onMoveUp,
               onMoveDown: onMoveDown,
@@ -160,6 +181,9 @@ class _Header extends StatelessWidget {
     required this.onTap,
     required this.onEndOrSkip,
     required this.onOpenVideo,
+    required this.onAddSet,
+    required this.onResume,
+    required this.onReplace,
     required this.onGroupInto,
     required this.onMoveUp,
     required this.onMoveDown,
@@ -175,6 +199,9 @@ class _Header extends StatelessWidget {
   final VoidCallback onTap;
   final VoidCallback onEndOrSkip;
   final void Function(String videoUrl) onOpenVideo;
+  final VoidCallback? onAddSet;
+  final VoidCallback? onResume;
+  final VoidCallback? onReplace;
   final VoidCallback? onGroupInto;
   final VoidCallback? onMoveUp;
   final VoidCallback? onMoveDown;
@@ -185,10 +212,7 @@ class _Header extends StatelessWidget {
   Widget build(BuildContext context) {
     final state = viewModel.sessionExercise.state;
     final isUnfinished = state is UnfinishedState;
-    final displayName = switch (state) {
-      ReplacedState(:final substitute) => substitute.name,
-      _ => viewModel.plannedExerciseName,
-    };
+    final displayName = viewModel.displayName;
     final completedCount = viewModel.setRows
         .where((r) => r.executedSet != null)
         .length;
@@ -204,10 +228,7 @@ class _Header extends StatelessWidget {
       executedSetCount: completedCount,
       plannedSetCount: totalPlanned,
     );
-    final videoUrl = switch (state) {
-      ReplacedState(:final substitute) => substitute.metadata?.videoUrl,
-      _ => viewModel.plannedMetadata.videoUrl,
-    };
+    final videoUrl = viewModel.plannedMetadata.videoUrl;
 
     return Material(
       color: Colors.transparent,
@@ -289,10 +310,15 @@ class _Header extends StatelessWidget {
                 isUnfinished: isUnfinished,
                 canMutate: canMutate,
                 hasExecutedSet: hasExecutedSet,
+                canAddSet: viewModel.canAddSet,
+                canResume: state is SkippedState,
                 videoUrl: videoUrl,
                 isExpanded: isExpanded,
                 onEndOrSkip: onEndOrSkip,
                 onOpenVideo: onOpenVideo,
+                onAddSet: onAddSet,
+                onResume: onResume,
+                onReplace: onReplace,
                 onGroupInto: onGroupInto,
                 onMoveUp: onMoveUp,
                 onMoveDown: onMoveDown,
@@ -351,11 +377,6 @@ class _LeadingStateTile extends StatelessWidget {
               colors.exerciseSkipped,
               Icons.skip_next,
               'Skipped',
-            ),
-            ExerciseOutcome.replaced => (
-              colors.exerciseReplaced,
-              Icons.swap_horiz,
-              'Replaced',
             ),
           };
     return Container(
@@ -465,10 +486,15 @@ class _Actions extends StatelessWidget {
     required this.isUnfinished,
     required this.canMutate,
     required this.hasExecutedSet,
+    required this.canAddSet,
+    required this.canResume,
     required this.videoUrl,
     required this.isExpanded,
     required this.onEndOrSkip,
     required this.onOpenVideo,
+    required this.onAddSet,
+    required this.onResume,
+    required this.onReplace,
     required this.onGroupInto,
     required this.onMoveUp,
     required this.onMoveDown,
@@ -478,10 +504,15 @@ class _Actions extends StatelessWidget {
   final bool isUnfinished;
   final bool canMutate;
   final bool hasExecutedSet;
+  final bool canAddSet;
+  final bool canResume;
   final String? videoUrl;
   final bool isExpanded;
   final VoidCallback onEndOrSkip;
   final void Function(String videoUrl) onOpenVideo;
+  final VoidCallback? onAddSet;
+  final VoidCallback? onResume;
+  final VoidCallback? onReplace;
   final VoidCallback? onGroupInto;
   final VoidCallback? onMoveUp;
   final VoidCallback? onMoveDown;
@@ -495,13 +526,29 @@ class _Actions extends StatelessWidget {
     // rendered disabled so the menu layout stays stable.
     final canReorder = onMoveUp != null || onMoveDown != null;
     // The single adaptive terminal action is offered only while the exercise is
-    // still unfinished; terminal exercises (ended, skipped, auto-completed,
-    // replaced) keep only their non-terminal menu items (e.g. Open video).
+    // still unfinished; terminal exercises (ended, skipped, auto-completed)
+    // keep only their non-terminal menu items (e.g. Open video).
     final canEndOrSkip = canMutate && isUnfinished;
-    // Every secondary action lives in the kebab: Move up/down / Group into /
-    // End or Skip / Open video. The card surface stays reserved for the one
-    // direct control that matters in the gym, LOG SET.
+    // "Add set" is the re-do affordance for a completed exercise — logging one
+    // extra set beyond plan. Gated on the assembler's canAddSet (completed +
+    // live session) and a wired callback.
+    final showAddSet = canMutate && canAddSet && onAddSet != null;
+    // "Resume" is the re-do affordance for a skipped or ended-early exercise —
+    // reverting it to in-progress (retaining any logged sets). It shares the
+    // completed card's re-do slot; the two are mutually exclusive by state
+    // (skipped vs completed) so they never both appear.
+    final showResume = canMutate && canResume && onResume != null;
+    // "Replace" terminates this exercise and adds a new one in its place —
+    // offered only on an unfinished, non-terminal card.
+    final showReplace = canMutate && isUnfinished && onReplace != null;
+    // Every secondary action lives in the kebab: Add set / Resume / Replace /
+    // Move up/down / Group into / End or Skip / Open video. The card surface
+    // stays reserved for the one direct control that matters in the gym,
+    // LOG SET.
     final hasMenu =
+        showAddSet ||
+        showResume ||
+        showReplace ||
         canReorder ||
         canGroupInto ||
         canEndOrSkip ||
@@ -525,10 +572,16 @@ class _Actions extends StatelessWidget {
             padding: EdgeInsets.zero,
             onSelected: (action) {
               switch (action) {
+                case _MenuAction.addSet:
+                  onAddSet?.call();
+                case _MenuAction.resume:
+                  onResume?.call();
                 case _MenuAction.moveUp:
                   onMoveUp?.call();
                 case _MenuAction.moveDown:
                   onMoveDown?.call();
+                case _MenuAction.replace:
+                  onReplace?.call();
                 case _MenuAction.groupInto:
                   onGroupInto?.call();
                 case _MenuAction.endOrSkip:
@@ -539,6 +592,18 @@ class _Actions extends StatelessWidget {
               }
             },
             itemBuilder: (context) => [
+              // The re-do slot sits first in the menu: "Add set" for a
+              // completed exercise, "Resume" for a skipped/ended-early one.
+              if (showAddSet)
+                const PopupMenuItem(
+                  value: _MenuAction.addSet,
+                  child: AppMenuRow(icon: Icons.add, label: 'Add set'),
+                ),
+              if (showResume)
+                const PopupMenuItem(
+                  value: _MenuAction.resume,
+                  child: AppMenuRow(icon: Icons.play_arrow, label: 'Resume'),
+                ),
               if (canReorder) ...[
                 PopupMenuItem(
                   value: _MenuAction.moveUp,
@@ -567,6 +632,11 @@ class _Actions extends StatelessWidget {
                     label: 'Group into superset…',
                   ),
                 ),
+              if (showReplace)
+                const PopupMenuItem(
+                  value: _MenuAction.replace,
+                  child: AppMenuRow(icon: Icons.swap_horiz, label: 'Replace…'),
+                ),
               if (canEndOrSkip)
                 PopupMenuItem(
                   value: _MenuAction.endOrSkip,
@@ -594,7 +664,16 @@ class _Actions extends StatelessWidget {
   }
 }
 
-enum _MenuAction { moveUp, moveDown, groupInto, endOrSkip, openVideo }
+enum _MenuAction {
+  addSet,
+  resume,
+  replace,
+  moveUp,
+  moveDown,
+  groupInto,
+  endOrSkip,
+  openVideo,
+}
 
 class _ExpandedBody extends StatelessWidget {
   const _ExpandedBody({
@@ -621,39 +700,13 @@ class _ExpandedBody extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final state = viewModel.sessionExercise.state;
-    final notes = switch (state) {
-      ReplacedState(:final substitute) => substitute.metadata?.notes,
-      _ => viewModel.plannedMetadata.notes,
-    };
-    final videoUrl = switch (state) {
-      ReplacedState(:final substitute) => substitute.metadata?.videoUrl,
-      _ => viewModel.plannedMetadata.videoUrl,
-    };
-    final replacementBanner = state is ReplacedState
-        ? Padding(
-            padding: const EdgeInsets.fromLTRB(
-              AppSpacing.md,
-              0,
-              AppSpacing.md,
-              AppSpacing.sm,
-            ),
-            child: Text(
-              'Replaced from "${viewModel.plannedExerciseName}"',
-              style: typography.caption.copyWith(
-                color: colors.exerciseReplaced,
-              ),
-            ),
-          )
-        : null;
+    final notes = viewModel.plannedMetadata.notes;
+    final videoUrl = viewModel.plannedMetadata.videoUrl;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         const Divider(),
-        if (replacementBanner != null) ...[
-          const SizedBox(height: AppSpacing.sm),
-          replacementBanner,
-        ],
         ...viewModel.setRows.map(
           (row) => SetRow(
             key: ValueKey(
@@ -719,8 +772,6 @@ class _ExpandedBody extends StatelessWidget {
   }
 
   bool _exerciseAllowsMutation(ExerciseState state) {
-    return state is UnfinishedState ||
-        state is ReplacedState ||
-        state is CompletedState;
+    return state is UnfinishedState || state is CompletedState;
   }
 }

@@ -11,7 +11,6 @@ import 'package:zamaj/modules/domain/models/session.dart';
 import 'package:zamaj/modules/domain/models/session_exercise.dart';
 import 'package:zamaj/modules/domain/models/session_note.dart';
 import 'package:zamaj/modules/domain/models/session_snapshot.dart';
-import 'package:zamaj/modules/domain/models/substitute_exercise.dart';
 import 'package:zamaj/modules/domain/models/workout_day.dart';
 import 'package:zamaj/modules/domain/models/workout_set.dart';
 
@@ -62,13 +61,6 @@ void main() {
       for (var i = 0; i < iterations; i++) {
         final v = anyExerciseMetadata(rng);
         expect(ExerciseMetadata.fromJson(v.toJson()), equals(v));
-      }
-    });
-
-    test('SubstituteExercise round-trips through JSON', () {
-      for (var i = 0; i < iterations; i++) {
-        final v = anySubstituteExercise(rng);
-        expect(SubstituteExercise.fromJson(v.toJson()), equals(v));
       }
     });
 

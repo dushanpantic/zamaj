@@ -5,9 +5,7 @@
 library;
 
 import 'package:zamaj/modules/domain/models/actual_set_values.dart';
-import 'package:zamaj/modules/domain/models/exercise_metadata.dart';
-import 'package:zamaj/modules/domain/models/measurement_type.dart';
-import 'package:zamaj/modules/domain/models/planned_set_values.dart';
+import 'package:zamaj/modules/domain/models/added_exercise_plan.dart';
 import 'package:zamaj/modules/domain/models/session.dart';
 
 abstract class SessionRepository {
@@ -87,14 +85,36 @@ abstract class SessionRepository {
 
   Future<Session> skipExercise(String sessionExerciseId);
 
+  /// Reverts a terminated (`skipped`) exercise back to `unfinished`, retaining
+  /// its logged sets, position, and superset membership. The single-row state
+  /// write is the inverse of [skipExercise]; the engine guards that the current
+  /// state is `skipped`.
+  Future<Session> resumeExercise(String sessionExerciseId);
+
+  /// Appends a new exercise to [sessionId] from an inline [plan] — work added
+  /// after the session started that is not part of the frozen snapshot.
+  ///
+  /// The new [SessionExercise] is positioned after the current last exercise,
+  /// starts in `unfinished` state with no executed sets, and carries [plan] in
+  /// its `addedPlan` field (with a synthetic `plannedExerciseIdInSnapshot` that
+  /// is never resolved against the snapshot). The session snapshot is untouched.
+  /// The any-state duplicate-movement guard lives in the engine, not here.
+  Future<Session> addExercise({
+    required String sessionId,
+    required AddedExercisePlan plan,
+  });
+
+  /// Replaces [sessionExerciseId] in one transaction: the original is
+  /// terminated via the existing skip action (it reads `skipped` when no sets
+  /// were logged, `partial` when some were) and a new exercise is appended from
+  /// [plan] (same insert as [addExercise]). Both writes commit together so a
+  /// half-applied replace — a terminated original with no replacement, or an
+  /// orphan added exercise — can never be observed. The snapshot is untouched.
+  /// The any-state duplicate-movement guard (with the original excluded) lives
+  /// in the engine, not here.
   Future<Session> replaceExercise({
     required String sessionExerciseId,
-    required String substituteName,
-    required MeasurementType substituteMeasurementType,
-    required PlannedSetValues substitutePlannedValues,
-    required int substituteSetCount,
-    ExerciseMetadata? substituteMetadata,
-    String? substituteLibraryExerciseId,
+    required AddedExercisePlan plan,
   });
 
   /// Reorders unfinished [SessionExercise]s only. Throws [OrderingError] if

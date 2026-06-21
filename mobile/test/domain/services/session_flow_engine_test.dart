@@ -2,6 +2,7 @@ import 'package:clock/clock.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:zamaj/modules/domain/errors.dart';
 import 'package:zamaj/modules/domain/models/actual_set_values.dart';
+import 'package:zamaj/modules/domain/models/added_exercise_plan.dart';
 import 'package:zamaj/modules/domain/models/exercise.dart';
 import 'package:zamaj/modules/domain/models/exercise_group.dart';
 import 'package:zamaj/modules/domain/models/exercise_group_kind.dart';
@@ -186,13 +187,15 @@ void main() {
         expect(
           () => s.engine.replaceExercise(
             sessionExerciseId: 'missing-ex',
-            substituteName: 'sub',
-            substituteMeasurementType: const MeasurementType.repBased(),
-            substitutePlannedValues: PlannedSetValues.repBased(
-              weightKg: 20,
-              repTarget: RepTarget.fixed(reps: 8),
+            plan: AddedExercisePlan(
+              name: 'sub',
+              measurementType: const MeasurementType.repBased(),
+              plannedValues: PlannedSetValues.repBased(
+                weightKg: 20,
+                repTarget: RepTarget.fixed(reps: 8),
+              ),
+              setCount: 3,
             ),
-            substituteSetCount: 3,
           ),
           throwsA(isA<NotFoundError>()),
         );
@@ -489,35 +492,35 @@ void main() {
         equals([plankId]),
       );
 
+      // Composed replace: the original (plank) is terminated (skipped, no sets)
+      // and a fresh added exercise takes its place — no Replaced state.
       state = await s.engine.replaceExercise(
         sessionExerciseId: plankId,
-        substituteName: 'Wall Sit',
-        substituteMeasurementType: const MeasurementType.timeBased(),
-        substitutePlannedValues: const PlannedSetValues.timeBased(
-          durationSeconds: 45,
+        plan: AddedExercisePlan(
+          name: 'Wall Sit',
+          measurementType: const MeasurementType.timeBased(),
+          plannedValues: const PlannedSetValues.timeBased(durationSeconds: 45),
+          setCount: 2,
         ),
-        substituteSetCount: 2,
       );
-      final replacedExercise = _findExercise(
-        state.session.sessionExercises,
-        plankId,
-      );
-      expect(replacedExercise.state, isA<ReplacedState>());
       expect(
-        (replacedExercise.state as ReplacedState).substitute.name,
-        equals('Wall Sit'),
+        _findExercise(state.session.sessionExercises, plankId).state,
+        equals(const ExerciseState.skipped()),
       );
+      final wallSit = state.session.sessionExercises.last;
+      expect(wallSit.addedPlan?.name, equals('Wall Sit'));
+      expect(wallSit.state, isA<UnfinishedState>());
       expect(
         state.openTargets,
-        equals([LogTarget(sessionExerciseId: plankId, plannedSetIndex: 0)]),
+        equals([LogTarget(sessionExerciseId: wallSit.id, plannedSetIndex: 0)]),
       );
 
       state = await s.engine.completeSet(
-        sessionExerciseId: plankId,
+        sessionExerciseId: wallSit.id,
         actualValues: const ActualSetValues.timeBased(durationSeconds: 45),
       );
       state = await s.engine.completeSet(
-        sessionExerciseId: plankId,
+        sessionExerciseId: wallSit.id,
         actualValues: const ActualSetValues.timeBased(durationSeconds: 40),
       );
 
@@ -534,166 +537,14 @@ void main() {
         _findExercise(finalExercises, ohpId).state,
         equals(const ExerciseState.skipped()),
       );
-      expect(_findExercise(finalExercises, plankId).executedSets, hasLength(2));
-    });
-  });
-
-  group('substitute carries its own planned values and setCount', () {
-    test('replacing rep-based with time-based substitute suggests the '
-        "substitute's planned values for set 0", () async {
-      final s = setup();
-      final workoutDay = _buildWorkoutDay(
-        id: 'wd-rep-to-time',
-        exerciseSpecs: [
-          _ExerciseSpec(
-            name: 'Shoulder Press',
-            measurementType: const MeasurementType.repBased(),
-            setCount: 3,
-          ),
-        ],
-      );
-      s.repo.seedWorkoutDay(workoutDay);
-      final started = await s.engine.startSession(workoutDayId: workoutDay.id);
-      final pressId = started.session.sessionExercises.single.id;
-
-      final state = await s.engine.replaceExercise(
-        sessionExerciseId: pressId,
-        substituteName: 'Nordic Shoulder',
-        substituteMeasurementType: const MeasurementType.timeBased(),
-        substitutePlannedValues: const PlannedSetValues.timeBased(
-          durationSeconds: 25,
-        ),
-        substituteSetCount: 4,
-      );
-
       expect(
-        s.engine.suggestValuesFor(
-          session: state.session,
-          sessionExerciseId: pressId,
-        ),
-        equals(const ActualSetValues.timeBased(durationSeconds: 25)),
+        _findExercise(finalExercises, plankId).state,
+        equals(const ExerciseState.skipped()),
       );
-      final replaced =
-          state.session.sessionExercises.single.state as ReplacedState;
-      expect(replaced.substitute.setCount, 4);
-    });
-
-    test('replacing rep-based with rep-based substitute pre-fills with the '
-        "substitute's weight (not the original snapshot's)", () async {
-      final s = setup();
-      final workoutDay = _buildWorkoutDay(
-        id: 'wd-rep-to-rep',
-        exerciseSpecs: [
-          _ExerciseSpec(
-            name: 'Bench Press',
-            measurementType: const MeasurementType.repBased(),
-            setCount: 3,
-          ),
-        ],
-      );
-      s.repo.seedWorkoutDay(workoutDay);
-      final started = await s.engine.startSession(workoutDayId: workoutDay.id);
-      final benchId = started.session.sessionExercises.single.id;
-
-      final state = await s.engine.replaceExercise(
-        sessionExerciseId: benchId,
-        substituteName: 'Push-Up',
-        substituteMeasurementType: const MeasurementType.repBased(),
-        substitutePlannedValues: PlannedSetValues.repBased(
-          weightKg: 0,
-          repTarget: RepTarget.fixed(reps: 12),
-        ),
-        substituteSetCount: 3,
-      );
-
       expect(
-        s.engine.suggestValuesFor(
-          session: state.session,
-          sessionExerciseId: benchId,
-        ),
-        equals(const ActualSetValues.repBased(weightKg: 0, reps: 12)),
+        _findExercise(finalExercises, wallSit.id).executedSets,
+        hasLength(2),
       );
-    });
-
-    test('set 1 onwards inherits the previously executed actuals on the '
-        'substitute', () async {
-      final s = setup();
-      final workoutDay = _buildWorkoutDay(
-        id: 'wd-last-actual',
-        exerciseSpecs: [
-          _ExerciseSpec(
-            name: 'Squat',
-            measurementType: const MeasurementType.repBased(),
-            setCount: 3,
-          ),
-        ],
-      );
-      s.repo.seedWorkoutDay(workoutDay);
-      final started = await s.engine.startSession(workoutDayId: workoutDay.id);
-      final squatId = started.session.sessionExercises.single.id;
-
-      await s.engine.replaceExercise(
-        sessionExerciseId: squatId,
-        substituteName: 'Leg Press',
-        substituteMeasurementType: const MeasurementType.repBased(),
-        substitutePlannedValues: PlannedSetValues.repBased(
-          weightKg: 60,
-          repTarget: RepTarget.fixed(reps: 10),
-        ),
-        substituteSetCount: 3,
-      );
-      final afterFirst = await s.engine.completeSet(
-        sessionExerciseId: squatId,
-        actualValues: const ActualSetValues.repBased(weightKg: 70, reps: 12),
-      );
-
-      expect(
-        s.engine.suggestValuesFor(
-          session: afterFirst.session,
-          sessionExerciseId: squatId,
-        ),
-        equals(const ActualSetValues.repBased(weightKg: 70, reps: 12)),
-      );
-    });
-
-    test('substitute with smaller setCount completes the session', () async {
-      final s = setup();
-      final workoutDay = _buildWorkoutDay(
-        id: 'wd-shorter',
-        exerciseSpecs: [
-          _ExerciseSpec(
-            name: 'Bench Press',
-            measurementType: const MeasurementType.repBased(),
-            setCount: 4,
-          ),
-        ],
-      );
-      s.repo.seedWorkoutDay(workoutDay);
-      final started = await s.engine.startSession(workoutDayId: workoutDay.id);
-      final benchId = started.session.sessionExercises.single.id;
-
-      await s.engine.replaceExercise(
-        sessionExerciseId: benchId,
-        substituteName: 'Push-Up',
-        substituteMeasurementType: const MeasurementType.repBased(),
-        substitutePlannedValues: PlannedSetValues.repBased(
-          weightKg: 0,
-          repTarget: RepTarget.fixed(reps: 15),
-        ),
-        substituteSetCount: 2,
-      );
-      await s.engine.completeSet(
-        sessionExerciseId: benchId,
-        actualValues: const ActualSetValues.repBased(weightKg: 0, reps: 15),
-      );
-      final afterSecond = await s.engine.completeSet(
-        sessionExerciseId: benchId,
-        actualValues: const ActualSetValues.repBased(weightKg: 0, reps: 12),
-      );
-
-      expect(afterSecond.openTargets, isEmpty);
-      expect(afterSecond.isComplete, isTrue);
-      expect(s.engine.isSessionComplete(afterSecond.session), isTrue);
     });
   });
 

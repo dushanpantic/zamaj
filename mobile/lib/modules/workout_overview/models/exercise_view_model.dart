@@ -35,14 +35,18 @@ abstract class ExerciseViewModel with _$ExerciseViewModel {
     required bool isLoggable,
     required MeasurementType effectiveMeasurementType,
     @Default(ExerciseGroupRole.main) ExerciseGroupRole plannedGroupRole,
+
+    /// True when the user may log an extra set beyond the planned quota on this
+    /// exercise: it is `completed` and the session is still live. The kebab's
+    /// "Add set" item is gated on this — the re-do affordance for a completed
+    /// exercise (skipped/ended use Resume; unfinished use the inline LOG SET).
+    @Default(false) bool canAddSet,
   }) = _ExerciseViewModel;
 }
 
 extension ExerciseViewModelDisplayNameX on ExerciseViewModel {
-  /// The name to show for this exercise: a replaced exercise shows its
-  /// substitute's name, everything else shows the planned name.
-  String get displayName => switch (sessionExercise.state) {
-    ReplacedState(:final substitute) => substitute.name,
-    _ => plannedExerciseName,
-  };
+  /// The name to show for this exercise. For a snapshot-backed exercise this is
+  /// the planned name; for an added exercise the assembler has already resolved
+  /// it from the inline plan.
+  String get displayName => plannedExerciseName;
 }

@@ -6,9 +6,8 @@ import 'package:zamaj/modules/domain/models/exercise_state.dart';
 /// This is the single definition of the quota-driven transitions the Drift
 /// session repository previously computed inline. Auto-completion is
 /// deliberately one-directional from [UnfinishedState] and reversion only from
-/// [CompletedState]; explicit terminal states ([SkippedState], [ReplacedState])
-/// are never moved by set logging, so a replaced exercise that happens to meet
-/// quota stays replaced.
+/// [CompletedState]; the explicit terminal [SkippedState] is never moved by set
+/// logging.
 abstract final class ExerciseStateTransitions {
   /// The state after logging a set. An [UnfinishedState] whose executed-set
   /// count has reached the planned quota auto-completes; every other state is

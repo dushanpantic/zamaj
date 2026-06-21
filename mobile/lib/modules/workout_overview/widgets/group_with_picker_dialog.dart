@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:zamaj/core/app_spacing.dart';
 import 'package:zamaj/core/app_theme.dart';
 import 'package:zamaj/core/app_typography.dart';
-import 'package:zamaj/modules/domain/domain.dart';
 import 'package:zamaj/modules/workout_overview/models/exercise_view_model.dart';
 import 'package:zamaj/modules/workout_overview/models/superset_group_view_model.dart';
 
@@ -103,13 +102,7 @@ abstract final class GroupWithPickerDialog {
     );
   }
 
-  static String _displayName(ExerciseViewModel vm) {
-    final state = vm.sessionExercise.state;
-    return switch (state) {
-      ReplacedState(:final substitute) => substitute.name,
-      _ => vm.plannedExerciseName,
-    };
-  }
+  static String _displayName(ExerciseViewModel vm) => vm.plannedExerciseName;
 
   static String _groupLabel(SupersetGroup group) {
     return group.exercises.map(_displayName).join(' + ');

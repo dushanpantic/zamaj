@@ -5,12 +5,25 @@ import 'package:zamaj/modules/domain/models/exercise_metadata.dart';
 import 'package:zamaj/modules/domain/models/measurement_type.dart';
 import 'package:zamaj/modules/domain/models/planned_set_values.dart';
 
-part 'substitute_exercise.freezed.dart';
-part 'substitute_exercise.g.dart';
+part 'added_exercise_plan.freezed.dart';
+part 'added_exercise_plan.g.dart';
 
+/// Length of a canonical UUIDv4 string (`8-4-4-4-12` plus four hyphens).
+const _canonicalUuidLength = 36;
+
+/// Inline plan carried by an exercise added to a live session that is not part
+/// of the frozen day snapshot.
+///
+/// A [SessionExercise] whose `addedPlan` is non-null resolves its name,
+/// measurement type, planned values, and set count from here rather than from
+/// the snapshot — so added exercises (library-linked or one-off) record their
+/// own intended work alongside the immutable plan without ever mutating it.
+///
+/// The single inline-plan carrier for non-snapshot work; it superseded the
+/// former substitute/replaced machinery, which has been retired.
 @freezed
-abstract class SubstituteExercise with _$SubstituteExercise {
-  SubstituteExercise._() {
+abstract class AddedExercisePlan with _$AddedExercisePlan {
+  AddedExercisePlan._() {
     if (setCount < 1) {
       throw ValidationError(
         entityId: name,
@@ -18,13 +31,14 @@ abstract class SubstituteExercise with _$SubstituteExercise {
         message: 'setCount must be >= 1, got $setCount',
       );
     }
-    if (libraryExerciseId != null && libraryExerciseId!.length != 36) {
+    if (libraryExerciseId != null &&
+        libraryExerciseId!.length != _canonicalUuidLength) {
       throw ValidationError(
         entityId: name,
         invariant: 'libraryExerciseId_not_uuid_v4',
         message:
-            'libraryExerciseId must be canonical UUIDv4 (36 chars), '
-            'got ${libraryExerciseId!.length}',
+            'libraryExerciseId must be canonical UUIDv4 '
+            '($_canonicalUuidLength chars), got ${libraryExerciseId!.length}',
       );
     }
     final mismatch = switch ((measurementType, plannedValues)) {
@@ -42,19 +56,19 @@ abstract class SubstituteExercise with _$SubstituteExercise {
     }
   }
 
-  factory SubstituteExercise({
+  factory AddedExercisePlan({
     required String name,
     required MeasurementType measurementType,
     required PlannedSetValues plannedValues,
     required int setCount,
     ExerciseMetadata? metadata,
     String? libraryExerciseId,
-  }) = _SubstituteExercise;
+  }) = _AddedExercisePlan;
 
-  factory SubstituteExercise.fromJson(Map<String, dynamic> json) =>
+  factory AddedExercisePlan.fromJson(Map<String, dynamic> json) =>
       wrapDeserializationErrors(
-        () => _$SubstituteExerciseFromJson(json),
+        () => _$AddedExercisePlanFromJson(json),
         json,
-        'SubstituteExercise',
+        'AddedExercisePlan',
       );
 }

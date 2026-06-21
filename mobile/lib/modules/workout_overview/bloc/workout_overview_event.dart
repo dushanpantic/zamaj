@@ -148,6 +148,63 @@ final class WorkoutOverviewExtraWorkAdded extends WorkoutOverviewEvent {
   List<Object?> get props => [body];
 }
 
+/// Logs one extra set beyond the planned quota on [sessionExerciseId].
+///
+/// The single secondary "re-do more" affordance for a completed exercise: the
+/// bloc seeds the new set from the exercise's last logged set (via
+/// `engine.suggestValuesFor`) and routes it through the same `completeSet`
+/// path. The exercise stays completed; the new set is recorded as work beyond
+/// the plan, never folded into the snapshot.
+final class WorkoutOverviewExtraSetRequested extends WorkoutOverviewEvent {
+  const WorkoutOverviewExtraSetRequested(this.sessionExerciseId);
+
+  final String sessionExerciseId;
+
+  @override
+  List<Object?> get props => [sessionExerciseId];
+}
+
+/// Adds an exercise to the live session from a built [AddedExercisePlan]
+/// (library-linked or one-off). Routed through `engine.addExercise`; a
+/// duplicate-movement guard rejection surfaces as a transient error.
+final class WorkoutOverviewAddExerciseRequested extends WorkoutOverviewEvent {
+  const WorkoutOverviewAddExerciseRequested(this.plan);
+
+  final AddedExercisePlan plan;
+
+  @override
+  List<Object?> get props => [plan];
+}
+
+/// Resumes a skipped/ended exercise back to in-progress (the re-do path for a
+/// terminated movement), retaining its logged sets. Routed through
+/// `engine.resumeExercise`.
+final class WorkoutOverviewResumeRequested extends WorkoutOverviewEvent {
+  const WorkoutOverviewResumeRequested(this.sessionExerciseId);
+
+  final String sessionExerciseId;
+
+  @override
+  List<Object?> get props => [sessionExerciseId];
+}
+
+/// Replaces [sessionExerciseId] with a built [AddedExercisePlan]: the original
+/// is terminated (skip/end) and a new exercise is added in its place, in one
+/// action. Routed through `engine.replaceExercise`; a duplicate-movement guard
+/// rejection surfaces as a transient error and leaves the original unchanged.
+final class WorkoutOverviewReplaceRequested extends WorkoutOverviewEvent {
+  const WorkoutOverviewReplaceRequested({
+    required this.sessionExerciseId,
+    required this.plan,
+  });
+
+  final String sessionExerciseId;
+  final AddedExercisePlan plan;
+
+  @override
+  List<Object?> get props => [sessionExerciseId, plan];
+}
+
 final class WorkoutOverviewSessionEnded extends WorkoutOverviewEvent {
   const WorkoutOverviewSessionEnded();
 }

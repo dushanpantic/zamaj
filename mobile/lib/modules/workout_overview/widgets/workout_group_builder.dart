@@ -11,6 +11,7 @@ import 'package:zamaj/modules/workout_overview/services/drag_auto_scroller.dart'
 import 'package:zamaj/modules/workout_overview/services/drag_session.dart';
 import 'package:zamaj/modules/workout_overview/services/reorder_move_resolver.dart';
 import 'package:zamaj/modules/workout_overview/services/superset_reorder_resolver.dart';
+import 'package:zamaj/modules/workout_overview/widgets/add_exercise_sheet.dart';
 import 'package:zamaj/modules/workout_overview/widgets/drag_handle.dart';
 import 'package:zamaj/modules/workout_overview/widgets/draggable_exercise.dart';
 import 'package:zamaj/modules/workout_overview/widgets/exercise_card.dart';
@@ -86,6 +87,28 @@ class WorkoutGroupBuilder extends StatelessWidget {
       if (allUnfinished) result.add(g);
     }
     return result;
+  }
+
+  /// Opens the add-exercise sheet in "replace" mode for [exercise] — same
+  /// two-step flow as Add, but headed `Replacing: <name>` and with the original
+  /// excluded from its own dedup block-set (re-picking its own movement as the
+  /// replacement is allowed). On confirm, dispatches the composed replace.
+  Future<void> _onReplacePressed(
+    BuildContext context,
+    ExerciseViewModel exercise,
+  ) async {
+    final bloc = context.read<WorkoutOverviewBloc>();
+    final id = exercise.sessionExercise.id;
+    final plan = await AddExerciseSheet.show(
+      context,
+      session: state.sessionState.session,
+      excludeSessionExerciseId: id,
+      replacingName: exercise.displayName,
+    );
+    if (plan == null) return;
+    bloc.add(
+      WorkoutOverviewReplaceRequested(sessionExerciseId: id, plan: plan),
+    );
   }
 
   /// Builds the tap-only Move up/down handler for [exerciseId] aimed at
@@ -175,6 +198,22 @@ class WorkoutGroupBuilder extends StatelessWidget {
             ),
         onEndOrSkipPressed: () => onEndOrSkip(exercise),
         onOpenVideo: onOpenVideo,
+        onAddSetPressed: () {
+          Haptics.tap();
+          context.read<WorkoutOverviewBloc>().add(
+            WorkoutOverviewExtraSetRequested(exerciseId),
+          );
+        },
+        onResumePressed: () {
+          Haptics.tap();
+          context.read<WorkoutOverviewBloc>().add(
+            WorkoutOverviewResumeRequested(exerciseId),
+          );
+        },
+        onReplacePressed: () {
+          Haptics.tap();
+          _onReplacePressed(context, exercise);
+        },
         onGroupIntoPressed: (candidates.isEmpty && eligibleGroups.isEmpty)
             ? null
             : () => onGroupInto(exercise, candidates, eligibleGroups),
@@ -395,6 +434,25 @@ class WorkoutGroupBuilder extends StatelessWidget {
       onEndOrSkipPressed: (id) =>
           onEndOrSkip(exercises.firstWhere((e) => e.sessionExercise.id == id)),
       onOpenVideo: onOpenVideo,
+      onAddSetPressed: (id) {
+        Haptics.tap();
+        context.read<WorkoutOverviewBloc>().add(
+          WorkoutOverviewExtraSetRequested(id),
+        );
+      },
+      onResumePressed: (id) {
+        Haptics.tap();
+        context.read<WorkoutOverviewBloc>().add(
+          WorkoutOverviewResumeRequested(id),
+        );
+      },
+      onReplacePressed: (id) {
+        Haptics.tap();
+        _onReplacePressed(
+          context,
+          exercises.firstWhere((e) => e.sessionExercise.id == id),
+        );
+      },
       memberDragHandleBuilder: memberDragHandle,
       memberMoveBuilder: memberMove,
       gapBuilder: gapWrap,

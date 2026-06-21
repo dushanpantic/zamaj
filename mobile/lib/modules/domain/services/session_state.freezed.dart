@@ -15,11 +15,10 @@ T _$identity<T>(T value) => value;
 mixin _$SessionState {
 
  Session get session;/// One [LogTarget] for every currently-loggable exercise (state
-/// `unfinished` or `replaced` with `executedSets.length <
-/// plannedSetCount`), in position order.
+/// `unfinished` with `executedSets.length < plannedSetCount`), in position
+/// order.
  List<LogTarget> get openTargets;/// True when every exercise is in a terminal state with its planned-set
-/// quota satisfied (`completed`, `skipped`, or `replaced` with all
-/// substitute sets logged).
+/// quota satisfied (`completed` or `skipped`).
  bool get isComplete;
 /// Create a copy of SessionState
 /// with the given fields replaced by the non-null parameter values.
@@ -228,12 +227,12 @@ class _SessionState implements SessionState {
 
 @override final  Session session;
 /// One [LogTarget] for every currently-loggable exercise (state
-/// `unfinished` or `replaced` with `executedSets.length <
-/// plannedSetCount`), in position order.
+/// `unfinished` with `executedSets.length < plannedSetCount`), in position
+/// order.
  final  List<LogTarget> _openTargets;
 /// One [LogTarget] for every currently-loggable exercise (state
-/// `unfinished` or `replaced` with `executedSets.length <
-/// plannedSetCount`), in position order.
+/// `unfinished` with `executedSets.length < plannedSetCount`), in position
+/// order.
 @override List<LogTarget> get openTargets {
   if (_openTargets is EqualUnmodifiableListView) return _openTargets;
   // ignore: implicit_dynamic_type
@@ -241,8 +240,7 @@ class _SessionState implements SessionState {
 }
 
 /// True when every exercise is in a terminal state with its planned-set
-/// quota satisfied (`completed`, `skipped`, or `replaced` with all
-/// substitute sets logged).
+/// quota satisfied (`completed` or `skipped`).
 @override final  bool isComplete;
 
 /// Create a copy of SessionState

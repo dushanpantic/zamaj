@@ -4,6 +4,7 @@ import 'package:drift/drift.dart';
 import 'package:zamaj/core/canonical_json.dart';
 import 'package:zamaj/modules/domain/errors.dart';
 import 'package:zamaj/modules/domain/models/actual_set_values.dart';
+import 'package:zamaj/modules/domain/models/added_exercise_plan.dart';
 import 'package:zamaj/modules/domain/models/executed_set.dart' as domain;
 import 'package:zamaj/modules/domain/models/exercise_state.dart';
 import 'package:zamaj/modules/domain/models/extra_work.dart' as domain;
@@ -12,7 +13,6 @@ import 'package:zamaj/modules/domain/models/session.dart' as domain;
 import 'package:zamaj/modules/domain/models/session_exercise.dart' as domain;
 import 'package:zamaj/modules/domain/models/session_note.dart' as domain;
 import 'package:zamaj/modules/domain/models/session_snapshot.dart';
-import 'package:zamaj/modules/domain/models/substitute_exercise.dart';
 import 'package:zamaj/modules/domain/models/workout_day.dart' as domain;
 import 'package:zamaj/modules/persistence/database/app_database.dart';
 
@@ -129,6 +129,40 @@ class SessionMapper {
     );
   }
 
+  /// Decodes a nullable `added_plan_json` column into an [AddedExercisePlan].
+  ///
+  /// Returns null for a non-added row (null column). Wraps malformed JSON
+  /// ([FormatException] from `jsonDecode`) and non-object payloads ([TypeError]
+  /// from the `as Map` cast / field-type mismatches) in a typed
+  /// [DeserializationError] naming the column and owning row — consistent with
+  /// [_reconstructState] / [_reconstructSnapshot] — so a single corrupt row
+  /// surfaces a typed domain error instead of crashing the session-load path.
+  static AddedExercisePlan? decodeAddedPlan(
+    String? addedPlanJson, {
+    required String rowId,
+  }) {
+    if (addedPlanJson == null) return null;
+    try {
+      return AddedExercisePlan.fromJson(
+        jsonDecode(addedPlanJson) as Map<String, dynamic>,
+      );
+    } on FormatException catch (e) {
+      throw DeserializationError(
+        field: 'addedPlanJson',
+        discriminator: rowId,
+        message: 'Malformed added_plan_json for session-exercise $rowId: $e',
+      );
+    } on TypeError catch (e) {
+      throw DeserializationError(
+        field: 'addedPlanJson',
+        discriminator: rowId,
+        message:
+            'added_plan_json for session-exercise $rowId is not a valid '
+            'AddedExercisePlan object: $e',
+      );
+    }
+  }
+
   domain.SessionExercise _exerciseToDomain(
     SessionExercise row,
     List<ExecutedSet> setRows,
@@ -141,6 +175,10 @@ class SessionMapper {
 
     final executedSets = sortedSets.map(_executedSetToDomain).toList();
 
+    // Read unconditionally — independent of stateDiscriminator — so an added
+    // exercise's inline plan rehydrates in every state.
+    final addedPlan = decodeAddedPlan(row.addedPlanJson, rowId: row.id);
+
     return domain.SessionExercise(
       id: row.id,
       sessionId: row.sessionId,
@@ -149,6 +187,7 @@ class SessionMapper {
       state: state,
       executedSets: executedSets,
       supersetTag: row.supersetTag,
+      addedPlan: addedPlan,
       createdAt: DateTime.fromMillisecondsSinceEpoch(
         row.createdAtMs,
         isUtc: true,
@@ -166,11 +205,6 @@ class SessionMapper {
       'unfinished' => const ExerciseState.unfinished(),
       'completed' => const ExerciseState.completed(),
       'skipped' => const ExerciseState.skipped(),
-      'replaced' => ExerciseState.replaced(
-        substitute: SubstituteExercise.fromJson(
-          jsonDecode(row.substitutePayloadJson!) as Map<String, dynamic>,
-        ),
-      ),
       final d => throw DeserializationError(
         field: 'stateDiscriminator',
         discriminator: d,
@@ -231,14 +265,10 @@ class SessionMapper {
   SessionExercisesCompanion sessionExerciseToRow(
     domain.SessionExercise exercise,
   ) {
-    final (discriminator, substituteJson) = switch (exercise.state) {
-      UnfinishedState() => ('unfinished', null),
-      CompletedState() => ('completed', null),
-      SkippedState() => ('skipped', null),
-      ReplacedState(:final substitute) => (
-        'replaced',
-        CanonicalJson.encode(substitute.toJson()),
-      ),
+    final discriminator = switch (exercise.state) {
+      UnfinishedState() => 'unfinished',
+      CompletedState() => 'completed',
+      SkippedState() => 'skipped',
     };
 
     return SessionExercisesCompanion(
@@ -247,7 +277,13 @@ class SessionMapper {
       position: Value(exercise.position),
       plannedExerciseIdInSnapshot: Value(exercise.plannedExerciseIdInSnapshot),
       stateDiscriminator: Value(discriminator),
-      substitutePayloadJson: Value(substituteJson),
+      // Dead column retained post-retirement; SQLite can't cheaply drop it.
+      substitutePayloadJson: const Value(null),
+      addedPlanJson: Value(
+        exercise.addedPlan != null
+            ? CanonicalJson.encode(exercise.addedPlan!.toJson())
+            : null,
+      ),
       supersetTag: Value(exercise.supersetTag),
       createdAtMs: Value(exercise.createdAt.millisecondsSinceEpoch),
       updatedAtMs: Value(exercise.updatedAt.millisecondsSinceEpoch),
