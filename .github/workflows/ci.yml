@@ -6,6 +6,10 @@ on:
 permissions:
   contents: read
 
+# Pin Flutter so CI matches the release pipelines and local dev.
+env:
+  FLUTTER_VERSION: "3.38.5"
+
 jobs:
   build-and-test:
     runs-on: ubuntu-latest
@@ -18,7 +22,7 @@ jobs:
 
       - uses: subosito/flutter-action@v2.18.0
         with:
-          channel: stable
+          flutter-version: ${{ env.FLUTTER_VERSION }}
 
       - name: Get dependencies
         run: flutter pub get

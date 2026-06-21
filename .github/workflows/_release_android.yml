@@ -27,6 +27,11 @@ on:
 permissions:
   contents: read
 
+# Pin Flutter for reproducible release builds (matches the version used locally
+# and in dushanpantic/Runqo). Bump deliberately rather than floating `stable`.
+env:
+  FLUTTER_VERSION: "3.38.5"
+
 jobs:
   release:
     name: Build & upload (${{ inputs.lane }})
@@ -63,7 +68,7 @@ jobs:
       - name: Set up Flutter
         uses: subosito/flutter-action@v2
         with:
-          channel: stable
+          flutter-version: ${{ env.FLUTTER_VERSION }}
           cache: true
 
       - name: Set up Ruby + Bundler
@@ -93,6 +98,26 @@ jobs:
           keyAlias=${KEY_ALIAS}
           keyPassword=${KEYSTORE_PASSWORD}
           EOF
+
+      # Fail fast on bad signing material / secrets before spending minutes on a
+      # full Flutter build that would only fail at the very end.
+      - name: Validate keystore
+        env:
+          KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ vars.ANDROID_KEY_ALIAS }}
+        run: |
+          set -euo pipefail
+          keytool -list -keystore mobile/android/app/release.jks \
+            -alias "$KEY_ALIAS" -storepass "$KEYSTORE_PASSWORD" > /dev/null
+          echo "✅ Keystore validated"
+
+      - name: Validate Play service account JSON
+        env:
+          ANDROID_PLAY_STORE_SERVICE_ACCOUNT_JSON: ${{ secrets.ANDROID_PLAY_STORE_SERVICE_ACCOUNT_JSON }}
+        run: |
+          set -euo pipefail
+          printf '%s' "$ANDROID_PLAY_STORE_SERVICE_ACCOUNT_JSON" | python3 -m json.tool > /dev/null
+          echo "✅ Play service account JSON validated"
 
       - name: Flutter pub get
         working-directory: mobile
