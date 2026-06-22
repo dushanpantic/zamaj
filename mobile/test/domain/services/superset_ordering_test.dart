@@ -92,4 +92,63 @@ void main() {
       },
     );
   });
+
+  group('SupersetOrdering.orderForExtract', () {
+    // Background mirrors the Slice 1 Gherkin: order
+    // "Squat, [Bench, Row, Curl], Plank" with all five unfinished.
+    const all = ['Squat', 'Bench', 'Row', 'Curl', 'Plank'];
+    const members = ['Bench', 'Row', 'Curl'];
+
+    test('extracting the middle member places it right under the group', () {
+      final order = SupersetOrdering.orderForExtract(
+        unfinishedIds: all,
+        memberIds: members,
+        extractedId: 'Row',
+      );
+      // Remaining group [Bench, Curl] stays contiguous; Row drops just below.
+      expect(order, ['Squat', 'Bench', 'Curl', 'Row', 'Plank']);
+    });
+
+    test('extracting the first member places it right under the group', () {
+      final order = SupersetOrdering.orderForExtract(
+        unfinishedIds: all,
+        memberIds: members,
+        extractedId: 'Bench',
+      );
+      expect(order, ['Squat', 'Row', 'Curl', 'Bench', 'Plank']);
+    });
+
+    test('extracting the last member leaves it in place under the group', () {
+      final order = SupersetOrdering.orderForExtract(
+        unfinishedIds: all,
+        memberIds: members,
+        extractedId: 'Curl',
+      );
+      expect(order, ['Squat', 'Bench', 'Row', 'Curl', 'Plank']);
+    });
+
+    test('non-members keep their relative order', () {
+      final order = SupersetOrdering.orderForExtract(
+        unfinishedIds: all,
+        memberIds: members,
+        extractedId: 'Row',
+      );
+      final nonMembers = order
+          .where((id) => id == 'Squat' || id == 'Plank')
+          .toList();
+      expect(nonMembers, ['Squat', 'Plank']);
+    });
+
+    test('output is exactly a permutation of the unfinished input — the '
+        'function never sees finished ids, so the caller splices them back at '
+        'their absolute slots', () {
+      final order = SupersetOrdering.orderForExtract(
+        unfinishedIds: all,
+        memberIds: members,
+        extractedId: 'Bench',
+      );
+      expect(order.toSet(), all.toSet());
+      expect(order.length, all.length);
+    });
+  });
 }

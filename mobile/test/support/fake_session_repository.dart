@@ -17,6 +17,7 @@ import 'package:zamaj/modules/domain/models/session_snapshot.dart';
 import 'package:zamaj/modules/domain/models/workout_day.dart';
 import 'package:zamaj/modules/domain/repositories/session_repository.dart';
 import 'package:zamaj/modules/domain/services/deload_transform.dart';
+import 'package:zamaj/modules/domain/services/superset_ordering.dart';
 
 class FakeSessionRepository implements SessionRepository {
   FakeSessionRepository({required this.clock, Uuid? uuid})
@@ -618,6 +619,70 @@ class FakeSessionRepository implements SessionRepository {
       if (e.id == sessionExerciseId) {
         return e.copyWith(
           supersetTag: supersetTag,
+          position: newPos ?? e.position,
+          updatedAt: now,
+        );
+      }
+      if (newPos != null && newPos != e.position) {
+        return e.copyWith(position: newPos, updatedAt: now);
+      }
+      return e;
+    }).toList();
+
+    final updated = session.copyWith(
+      sessionExercises: updatedExercises,
+      updatedAt: now,
+    );
+    _sessions[sessionId] = updated;
+    _notify(sessionId);
+    return updated;
+  }
+
+  @override
+  Future<Session> removeFromSuperset({
+    required String sessionId,
+    required String sessionExerciseId,
+  }) async {
+    final session = _requireSession(sessionId);
+    final now = clock.now().toUtc();
+
+    final target = session.sessionExercises.firstWhere(
+      (e) => e.id == sessionExerciseId,
+      orElse: () => throw NotFoundError(
+        entityType: 'SessionExercise',
+        id: sessionExerciseId,
+      ),
+    );
+    final tag = target.supersetTag;
+
+    // Permute only the unfinished slots — locked exercises keep their absolute
+    // positions — clearing the extracted member's tag and landing it right
+    // after the group's last remaining member (SupersetOrdering.orderForExtract).
+    final unfinishedSorted =
+        session.sessionExercises
+            .where((e) => e.state is UnfinishedState)
+            .toList()
+          ..sort((a, b) => a.position.compareTo(b.position));
+    final memberIds = unfinishedSorted
+        .where((e) => e.supersetTag == tag)
+        .map((e) => e.id)
+        .toList();
+    final newUnfinishedIds = SupersetOrdering.orderForExtract(
+      unfinishedIds: unfinishedSorted.map((e) => e.id).toList(),
+      memberIds: memberIds,
+      extractedId: sessionExerciseId,
+    );
+    final slots = unfinishedSorted.map((e) => e.position).toList()..sort();
+    final newPositionById = <String, int>{
+      for (var i = 0; i < newUnfinishedIds.length; i++)
+        newUnfinishedIds[i]: slots[i],
+    };
+
+    final updatedExercises = session.sessionExercises.map((e) {
+      final newPos = newPositionById[e.id];
+      if (e.id == sessionExerciseId) {
+        return e.copyWith(
+          supersetTag: null,
           position: newPos ?? e.position,
           updatedAt: now,
         );

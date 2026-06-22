@@ -164,4 +164,23 @@ abstract class SessionRepository {
     required String supersetTag,
     required String sessionExerciseId,
   });
+
+  /// Extracts [sessionExerciseId] from its superset — the inverse of
+  /// [addToSuperset]. Atomic: the member's `supersetTag` is cleared and the
+  /// row is repositioned to sit immediately after the group's last remaining
+  /// member, so the remaining members stay one contiguous run and the extracted
+  /// exercise lands directly below the group. All in a single transaction; a
+  /// mid-operation failure must leave the prior structure intact (no split run).
+  ///
+  /// Preconditions (engine-validated, repo may rely on them):
+  /// - [sessionId] exists and the session has not ended.
+  /// - The exercise at [sessionExerciseId] is in `UnfinishedState` with a
+  ///   non-null `supersetTag`, and every member sharing that tag is unfinished.
+  ///
+  /// The member's logged/planned sets and state are untouched — only its
+  /// grouping and position change.
+  Future<Session> removeFromSuperset({
+    required String sessionId,
+    required String sessionExerciseId,
+  });
 }

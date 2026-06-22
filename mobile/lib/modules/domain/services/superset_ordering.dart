@@ -66,4 +66,30 @@ abstract final class SupersetOrdering {
     result.insert(insertAfter + 1, draggedId);
     return result;
   }
+
+  /// The unfinished id order after extracting [extractedId] from a superset.
+  ///
+  /// The inverse of [orderForAppend]: [extractedId] is removed from its place
+  /// in the group and reinserted immediately after the group's *last remaining*
+  /// member (every member except the extracted one), so the remaining members
+  /// stay one contiguous run and the extracted exercise lands right under the
+  /// group. Every non-member keeps its relative order.
+  ///
+  /// Operates purely over [unfinishedIds]; finished exercises are never passed
+  /// in, so the caller splices them back at their absolute slots. [extractedId]
+  /// must be one of [memberIds], and the group must have at least one other
+  /// member (the 2-member case is handled by Ungroup, not extraction).
+  static List<String> orderForExtract({
+    required List<String> unfinishedIds,
+    required List<String> memberIds,
+    required String extractedId,
+  }) {
+    final remainingMembers = memberIds
+        .where((id) => id != extractedId)
+        .toList();
+    final result = List<String>.of(unfinishedIds)..remove(extractedId);
+    final insertAfter = result.indexOf(remainingMembers.last);
+    result.insert(insertAfter + 1, extractedId);
+    return result;
+  }
 }

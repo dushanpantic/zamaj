@@ -5020,6 +5020,12 @@ class SessionExercise extends DataClass implements Insertable<SessionExercise> {
   final int position;
   final String plannedExerciseIdInSnapshot;
   final String stateDiscriminator;
+
+  /// Dead legacy column: the old slot-inheriting substitution payload. The
+  /// substitution feature was retired (replaced by terminate + add, persisted in
+  /// [addedPlanJson]), and the column is retained only so the `from < 15`
+  /// `_migrateLegacyReplacedRows` migration can read and clear any residual
+  /// `replaced` rows. Always null on new rows — never write it from new code.
   final String? substitutePayloadJson;
 
   /// Inline plan JSON for an exercise added to the session after start (work

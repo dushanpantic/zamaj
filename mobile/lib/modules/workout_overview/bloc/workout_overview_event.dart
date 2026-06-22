@@ -130,6 +130,21 @@ final class WorkoutOverviewSupersetReordered extends WorkoutOverviewEvent {
   List<Object?> get props => [supersetTag, targetUnfinishedIndex];
 }
 
+/// Extracts [sessionExerciseId] from its superset — the inverse of grouping.
+/// Routed through `engine.removeFromSuperset`: the member is pulled out (keeping
+/// its sets/state) and re-listed as a standalone exercise directly under the
+/// superset, while the remaining members stay one contiguous group. Dispatched
+/// from the per-member kebab's "Remove from superset" item, which the UI offers
+/// only on a fully-unfinished ≥3-member superset while the session is live.
+final class WorkoutOverviewSupersetMemberRemoved extends WorkoutOverviewEvent {
+  const WorkoutOverviewSupersetMemberRemoved(this.sessionExerciseId);
+
+  final String sessionExerciseId;
+
+  @override
+  List<Object?> get props => [sessionExerciseId];
+}
+
 final class WorkoutOverviewSessionNoteAdded extends WorkoutOverviewEvent {
   const WorkoutOverviewSessionNoteAdded(this.body);
 

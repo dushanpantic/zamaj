@@ -621,6 +621,91 @@ class SessionFlowEngine {
     return _buildState(updatedSession);
   }
 
+  /// Extracts a single member from a superset — the inverse of [addToSuperset].
+  ///
+  /// Clears [sessionExerciseId]'s grouping and repositions it to sit
+  /// immediately after the group's last remaining member, keeping the remaining
+  /// members one contiguous run, in one atomic repository transaction. The
+  /// member's logged/planned sets and state are untouched; only its grouping
+  /// and position change. The frozen snapshot is never changed.
+  ///
+  /// Offered (by the UI) only on a fully-unfinished group with three-or-more
+  /// members — a 2-member group is split with Ungroup instead. The engine does
+  /// not enforce the member-count gate (that is a UI affordance, like the
+  /// single-active-session guard), but it does enforce the "fully unfinished"
+  /// precondition: a partially-finished superset is a fixed anchor.
+  ///
+  /// Throws:
+  /// - [NotFoundError] if the session or the exercise does not exist.
+  /// - [ImmutabilityError] if the session has ended.
+  /// - [ValidationError] if the exercise has no `supersetTag`.
+  /// - [OrderingError] if the target — or any other member sharing its tag — is
+  ///   not in `UnfinishedState`.
+  Future<SessionState> removeFromSuperset({
+    required String sessionId,
+    required String sessionExerciseId,
+  }) async {
+    final session = await _repository.getSession(sessionId);
+    if (session == null) {
+      throw NotFoundError(entityType: 'Session', id: sessionId);
+    }
+    if (session.endedAt != null) {
+      throw ImmutabilityError(
+        sessionId: sessionId,
+        message: 'Cannot remove from superset on ended session $sessionId',
+      );
+    }
+
+    final exercise = session.sessionExercises.firstWhere(
+      (e) => e.id == sessionExerciseId,
+      orElse: () => throw NotFoundError(
+        entityType: 'SessionExercise',
+        id: sessionExerciseId,
+      ),
+    );
+
+    final tag = exercise.supersetTag;
+    if (tag == null) {
+      throw ValidationError(
+        entityId: sessionExerciseId,
+        invariant: 'remove_from_superset_not_grouped',
+        message:
+            'Exercise $sessionExerciseId does not belong to a superset '
+            '(supersetTag is null)',
+      );
+    }
+    if (exercise.state is! UnfinishedState) {
+      throw OrderingError(
+        sessionExerciseId: sessionExerciseId,
+        currentState: exercise.state.discriminator,
+        message:
+            'Cannot remove exercise $sessionExerciseId from superset: state is '
+            '${exercise.state.discriminator}',
+      );
+    }
+
+    // The whole group must be unfinished — a partially-finished superset is a
+    // fixed anchor (mirrors addToSuperset's member precondition).
+    final members = session.sessionExercises.where((e) => e.supersetTag == tag);
+    for (final member in members) {
+      if (member.state is! UnfinishedState) {
+        throw OrderingError(
+          sessionExerciseId: member.id,
+          currentState: member.state.discriminator,
+          message:
+              'Cannot remove from superset $tag: member ${member.id} is '
+              '${member.state.discriminator}, not unfinished',
+        );
+      }
+    }
+
+    final updatedSession = await _repository.removeFromSuperset(
+      sessionId: sessionId,
+      sessionExerciseId: sessionExerciseId,
+    );
+    return _buildState(updatedSession);
+  }
+
   /// Removes superset grouping from exercises.
   Future<SessionState> removeSuperset({
     required String sessionId,

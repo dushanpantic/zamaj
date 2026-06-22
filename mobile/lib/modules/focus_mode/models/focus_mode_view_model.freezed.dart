@@ -21,8 +21,8 @@ mixin _$FocusModeViewModel {
 /// planned exercises that were stripped of sets.
  int get totalPlannedSets;/// Always equals `executedSets.length` for the panel exercise.
  int get completedSetsCount;/// Planned values for the current set index, or null when the panel is
-/// past the planned set list (e.g. completed, or extra sets on a
-/// replaced exercise).
+/// past the planned set list (e.g. completed, or extra sets logged beyond
+/// an exercise's planned quota).
  PlannedSetValues? get currentPlannedValues;/// Pre-formatted "100kg 4 × 8" summary of all planned sets.
  String get plannedSummary;/// Identity of the planned set being targeted; copied onto the logged
 /// [ExecutedSet] when known.
@@ -302,8 +302,8 @@ class _FocusModeViewModel implements FocusModeViewModel {
 /// Always equals `executedSets.length` for the panel exercise.
 @override final  int completedSetsCount;
 /// Planned values for the current set index, or null when the panel is
-/// past the planned set list (e.g. completed, or extra sets on a
-/// replaced exercise).
+/// past the planned set list (e.g. completed, or extra sets logged beyond
+/// an exercise's planned quota).
 @override final  PlannedSetValues? currentPlannedValues;
 /// Pre-formatted "100kg 4 × 8" summary of all planned sets.
 @override final  String plannedSummary;

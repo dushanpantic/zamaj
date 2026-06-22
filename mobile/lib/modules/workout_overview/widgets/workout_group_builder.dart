@@ -10,6 +10,7 @@ import 'package:zamaj/modules/workout_overview/models/superset_group_view_model.
 import 'package:zamaj/modules/workout_overview/services/drag_auto_scroller.dart';
 import 'package:zamaj/modules/workout_overview/services/drag_session.dart';
 import 'package:zamaj/modules/workout_overview/services/reorder_move_resolver.dart';
+import 'package:zamaj/modules/workout_overview/services/superset_remove_eligibility.dart';
 import 'package:zamaj/modules/workout_overview/services/superset_reorder_resolver.dart';
 import 'package:zamaj/modules/workout_overview/widgets/add_exercise_sheet.dart';
 import 'package:zamaj/modules/workout_overview/widgets/drag_handle.dart';
@@ -377,6 +378,25 @@ class WorkoutGroupBuilder extends StatelessWidget {
           )
         : null;
 
+    // Per-member "Remove from superset": offered on every member only when the
+    // group is eligible (live, fully unfinished, 3+ members) per the shared
+    // eligibility predicate — so the kebab item appears on all members or none,
+    // and disappears the moment the group shrinks to two. Dispatches the bloc
+    // event, which routes through the atomic engine extraction.
+    final canRemoveMembers = SupersetRemoveEligibility.canRemoveFromGroup(
+      group,
+      canMutate: canMutate,
+    );
+    VoidCallback? memberRemove(ExerciseViewModel member) {
+      if (!canRemoveMembers) return null;
+      return () {
+        Haptics.tap();
+        context.read<WorkoutOverviewBloc>().add(
+          WorkoutOverviewSupersetMemberRemoved(member.sessionExercise.id),
+        );
+      };
+    }
+
     // Tap-only whole-group reorder for the header kebab. Resolves to the same
     // unfinished target indices the group drag uses (shared resolver), then
     // dispatches the whole-superset reorder event — disabled directions arrive
@@ -455,6 +475,7 @@ class WorkoutGroupBuilder extends StatelessWidget {
       },
       memberDragHandleBuilder: memberDragHandle,
       memberMoveBuilder: memberMove,
+      memberRemoveBuilder: memberRemove,
       gapBuilder: gapWrap,
     );
 

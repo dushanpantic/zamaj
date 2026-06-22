@@ -24,6 +24,7 @@ class WorkoutOverviewBloc
     on<WorkoutOverviewDropResolved>(_onDropResolved);
     on<WorkoutOverviewSupersetReordered>(_onSupersetReordered);
     on<WorkoutOverviewSupersetUngrouped>(_onSupersetUngrouped);
+    on<WorkoutOverviewSupersetMemberRemoved>(_onSupersetMemberRemoved);
     on<WorkoutOverviewSessionNoteAdded>(_onSessionNoteAdded);
     on<WorkoutOverviewExtraWorkAdded>(_onExtraWorkAdded);
     on<WorkoutOverviewExtraSetRequested>(_onExtraSetRequested);
@@ -294,6 +295,23 @@ class WorkoutOverviewBloc
         sessionId: current.sessionState.session.id,
         sessionExerciseIds: ids,
       ),
+    );
+  }
+
+  Future<void> _onSupersetMemberRemoved(
+    WorkoutOverviewSupersetMemberRemoved event,
+    Emitter<WorkoutOverviewState> emit,
+  ) async {
+    final current = state;
+    if (current is! WorkoutOverviewLoaded) return;
+    if (current.isEnded) return;
+    await _runMutation(
+      emit,
+      () => _engine.removeFromSuperset(
+        sessionId: current.sessionState.session.id,
+        sessionExerciseId: event.sessionExerciseId,
+      ),
+      touchedSessionExerciseId: event.sessionExerciseId,
     );
   }
 

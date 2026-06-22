@@ -36,6 +36,7 @@ class SupersetCard extends StatelessWidget {
     this.groupDragHandle,
     this.memberDragHandleBuilder,
     this.memberMoveBuilder,
+    this.memberRemoveBuilder,
     this.gapBuilder,
   });
 
@@ -103,6 +104,13 @@ class SupersetCard extends StatelessWidget {
     ExerciseViewModel member,
   )?
   memberMoveBuilder;
+
+  /// Optional per-member "Remove from superset" handler. Returns a non-null
+  /// callback for a member only when the group is eligible for extraction (live,
+  /// fully unfinished, 3+ members) — otherwise null, which hides the kebab item
+  /// on that member. Gated by [SupersetRemoveEligibility] at the call site, so
+  /// either every member offers it or none does.
+  final VoidCallback? Function(ExerciseViewModel member)? memberRemoveBuilder;
 
   /// Optional builder for the gap widgets surrounding each member.
   /// `position` ranges over `0..exercises.length` inclusive:
@@ -199,6 +207,9 @@ class SupersetCard extends StatelessWidget {
                     onReplacePressed: onReplacePressed == null
                         ? null
                         : () => onReplacePressed!(memberId),
+                    onRemoveFromSupersetPressed: memberRemoveBuilder?.call(
+                      exercises[i],
+                    ),
                     onMoveUp: move?.up,
                     onMoveDown: move?.down,
                     dragHandle: memberDragHandleBuilder?.call(exercises[i]),

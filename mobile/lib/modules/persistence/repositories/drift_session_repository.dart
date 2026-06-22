@@ -767,6 +767,56 @@ class DriftSessionRepository implements SessionRepository {
         );
   }
 
+  /// Two-phase, UNIQUE-dodging position permutation shared by
+  /// [reorderUnfinished], [createSuperset], [addToSuperset], and
+  /// [removeFromSuperset].
+  ///
+  /// [orderedIds] is the desired row order; [slots] the destination positions
+  /// (the slots those rows currently occupy, sorted ascending — same length as
+  /// [orderedIds]); [rowsById] supplies each id's current row for its parking
+  /// position and timestamp bump.
+  ///
+  /// SQLite checks the (session_id, position) UNIQUE constraint per-statement
+  /// (no deferred constraints), so a direct row-by-row update collides whenever
+  /// two rows swap slots. Phase 1 parks every moving row in a disjoint negative
+  /// range; phase 2 writes the final positions. Rows already at their target
+  /// slot are skipped (no write, no timestamp bump).
+  Future<void> _applyTwoPhaseReorder({
+    required List<String> orderedIds,
+    required List<int> slots,
+    required Map<String, SessionExercise> rowsById,
+  }) async {
+    final movers = <({String id, int newPosition, SessionExercise row})>[];
+    for (var i = 0; i < orderedIds.length; i++) {
+      final row = rowsById[orderedIds[i]]!;
+      final newPosition = slots[i];
+      if (newPosition == row.position) continue;
+      movers.add((id: orderedIds[i], newPosition: newPosition, row: row));
+    }
+
+    for (final mover in movers) {
+      await (_db.update(
+        _db.sessionExercises,
+      )..where((t) => t.id.equals(mover.id))).write(
+        SessionExercisesCompanion(position: Value(-1 - mover.row.position)),
+      );
+    }
+    for (final mover in movers) {
+      final updatedAt = _timestamps.nextUpdatedAt(
+        previousUpdatedAt: msToUtc(mover.row.updatedAtMs),
+        createdAt: msToUtc(mover.row.createdAtMs),
+      );
+      await (_db.update(
+        _db.sessionExercises,
+      )..where((t) => t.id.equals(mover.id))).write(
+        SessionExercisesCompanion(
+          position: Value(mover.newPosition),
+          updatedAtMs: Value(utcToMs(updatedAt)),
+        ),
+      );
+    }
+  }
+
   /// Bumps [sessionRow]'s `updatedAt` under the monotonic timestamp oracle.
   Future<void> _touchSession(Session sessionRow) async {
     final sessionUpdatedAt = _timestamps.nextUpdatedAt(
@@ -815,41 +865,13 @@ class DriftSessionRepository implements SessionRepository {
           orderedUnfinishedIds.map((id) => exerciseById[id]!.position).toList()
             ..sort();
 
-      // Two-phase write to dodge the (session_id, position) UNIQUE constraint:
-      // SQLite checks UNIQUE per-statement (no deferred constraints), so a
-      // direct row-by-row update collides whenever two rows swap slots.
-      // Phase 1 parks every moving row in a disjoint negative range; phase 2
-      // writes the final positions.
-      final movers = <({String id, int newPosition, SessionExercise row})>[];
-      for (var i = 0; i < orderedUnfinishedIds.length; i++) {
-        final id = orderedUnfinishedIds[i];
-        final exercise = exerciseById[id]!;
-        final newPosition = slots[i];
-        if (newPosition == exercise.position) continue;
-        movers.add((id: id, newPosition: newPosition, row: exercise));
-      }
-
-      for (final mover in movers) {
-        await (_db.update(
-          _db.sessionExercises,
-        )..where((t) => t.id.equals(mover.id))).write(
-          SessionExercisesCompanion(position: Value(-1 - mover.row.position)),
-        );
-      }
-      for (final mover in movers) {
-        final updatedAt = _timestamps.nextUpdatedAt(
-          previousUpdatedAt: msToUtc(mover.row.updatedAtMs),
-          createdAt: msToUtc(mover.row.createdAtMs),
-        );
-        await (_db.update(
-          _db.sessionExercises,
-        )..where((t) => t.id.equals(mover.id))).write(
-          SessionExercisesCompanion(
-            position: Value(mover.newPosition),
-            updatedAtMs: Value(utcToMs(updatedAt)),
-          ),
-        );
-      }
+      // Permute the unfinished rows over their own slots. Locked exercises and
+      // any unfinished exercise not in the input keep their current positions.
+      await _applyTwoPhaseReorder(
+        orderedIds: orderedUnfinishedIds,
+        slots: slots,
+        rowsById: exerciseById,
+      );
 
       final sessionRow = await _requireSessionRow(sessionId);
       final sessionUpdatedAt = _timestamps.nextUpdatedAt(
@@ -954,35 +976,11 @@ class DriftSessionRepository implements SessionRepository {
       );
 
       final slots = allExercises.map((e) => e.position).toList()..sort();
-      final movers = <({String id, int newPosition, SessionExercise row})>[];
-      for (var i = 0; i < newOrder.length; i++) {
-        final row = exerciseById[newOrder[i]]!;
-        final newPosition = slots[i];
-        if (newPosition == row.position) continue;
-        movers.add((id: newOrder[i], newPosition: newPosition, row: row));
-      }
-
-      for (final mover in movers) {
-        await (_db.update(
-          _db.sessionExercises,
-        )..where((t) => t.id.equals(mover.id))).write(
-          SessionExercisesCompanion(position: Value(-1 - mover.row.position)),
-        );
-      }
-      for (final mover in movers) {
-        final updatedAt = _timestamps.nextUpdatedAt(
-          previousUpdatedAt: msToUtc(mover.row.updatedAtMs),
-          createdAt: msToUtc(mover.row.createdAtMs),
-        );
-        await (_db.update(
-          _db.sessionExercises,
-        )..where((t) => t.id.equals(mover.id))).write(
-          SessionExercisesCompanion(
-            position: Value(mover.newPosition),
-            updatedAtMs: Value(utcToMs(updatedAt)),
-          ),
-        );
-      }
+      await _applyTwoPhaseReorder(
+        orderedIds: newOrder,
+        slots: slots,
+        rowsById: exerciseById,
+      );
 
       for (final id in sessionExerciseIds) {
         final row = exerciseById[id]!;
@@ -1090,38 +1088,11 @@ class DriftSessionRepository implements SessionRepository {
       final unfinishedById = {for (final e in unfinished) e.id: e};
       final slots = unfinished.map((e) => e.position).toList()..sort();
 
-      // Two-phase write to dodge the (session_id, position) UNIQUE
-      // constraint, mirroring `reorderUnfinished`.
-      final movers = <({String id, int newPosition, SessionExercise row})>[];
-      for (var i = 0; i < unfinishedIds.length; i++) {
-        final id = unfinishedIds[i];
-        final row = unfinishedById[id]!;
-        final newPosition = slots[i];
-        if (newPosition == row.position) continue;
-        movers.add((id: id, newPosition: newPosition, row: row));
-      }
-
-      for (final mover in movers) {
-        await (_db.update(
-          _db.sessionExercises,
-        )..where((t) => t.id.equals(mover.id))).write(
-          SessionExercisesCompanion(position: Value(-1 - mover.row.position)),
-        );
-      }
-      for (final mover in movers) {
-        final updatedAt = _timestamps.nextUpdatedAt(
-          previousUpdatedAt: msToUtc(mover.row.updatedAtMs),
-          createdAt: msToUtc(mover.row.createdAtMs),
-        );
-        await (_db.update(
-          _db.sessionExercises,
-        )..where((t) => t.id.equals(mover.id))).write(
-          SessionExercisesCompanion(
-            position: Value(mover.newPosition),
-            updatedAtMs: Value(utcToMs(updatedAt)),
-          ),
-        );
-      }
+      await _applyTwoPhaseReorder(
+        orderedIds: unfinishedIds,
+        slots: slots,
+        rowsById: unfinishedById,
+      );
 
       final draggedUpdatedAt = _timestamps.nextUpdatedAt(
         previousUpdatedAt: msToUtc(dragged.updatedAtMs),
@@ -1150,6 +1121,131 @@ class DriftSessionRepository implements SessionRepository {
       return _loadSession(sessionId);
     });
   }
+
+  @override
+  Future<domain.Session> removeFromSuperset({
+    required String sessionId,
+    required String sessionExerciseId,
+  }) async {
+    return _db.transaction(() async {
+      final sessionRow = await _requireSessionRow(sessionId);
+      if (sessionRow.endedAtMs != null) {
+        throw ImmutabilityError(
+          sessionId: sessionId,
+          message: 'Cannot remove from superset on ended session $sessionId',
+        );
+      }
+
+      final allExercises =
+          await (_db.select(_db.sessionExercises)
+                ..where((t) => t.sessionId.equals(sessionId))
+                ..orderBy([(t) => OrderingTerm.asc(t.position)]))
+              .get();
+
+      final target = allExercises.firstWhere(
+        (e) => e.id == sessionExerciseId,
+        orElse: () => throw NotFoundError(
+          entityType: 'SessionExercise',
+          id: sessionExerciseId,
+        ),
+      );
+      final tag = target.supersetTag;
+      if (tag == null) {
+        throw ValidationError(
+          entityId: sessionExerciseId,
+          invariant: 'remove_from_superset_not_grouped',
+          message:
+              'Exercise $sessionExerciseId does not belong to a superset '
+              '(supersetTag is null)',
+        );
+      }
+      if (target.stateDiscriminator != 'unfinished') {
+        throw OrderingError(
+          sessionExerciseId: sessionExerciseId,
+          currentState: target.stateDiscriminator,
+          message:
+              'Cannot remove exercise $sessionExerciseId from superset: state '
+              'is ${target.stateDiscriminator}',
+        );
+      }
+
+      // The whole group must be unfinished — a partially-finished superset is a
+      // fixed anchor (mirrors addToSuperset's member precondition).
+      final members = allExercises.where((e) => e.supersetTag == tag).toList();
+      for (final m in members) {
+        if (m.stateDiscriminator != 'unfinished') {
+          throw OrderingError(
+            sessionExerciseId: m.id,
+            currentState: m.stateDiscriminator,
+            message:
+                'Cannot remove from superset $tag: member ${m.id} is '
+                '${m.stateDiscriminator}, not unfinished',
+          );
+        }
+      }
+
+      // Compute the new unfinished order: clear the member's tag and reinsert it
+      // immediately after the group's last remaining member, so the run stays
+      // contiguous. Locked exercises keep their positions — only the unfinished
+      // slots are permuted, the same approach addToSuperset/reorderUnfinished
+      // use.
+      final unfinished = allExercises
+          .where((e) => e.stateDiscriminator == 'unfinished')
+          .toList();
+      final unfinishedIds = domain.SupersetOrdering.orderForExtract(
+        unfinishedIds: unfinished.map((e) => e.id).toList(),
+        memberIds: members.map((e) => e.id).toList(),
+        extractedId: sessionExerciseId,
+      );
+
+      final unfinishedById = {for (final e in unfinished) e.id: e};
+      final slots = unfinished.map((e) => e.position).toList()..sort();
+
+      await _applyTwoPhaseReorder(
+        orderedIds: unfinishedIds,
+        slots: slots,
+        rowsById: unfinishedById,
+      );
+
+      // Test seam: a fault injected here — after the two-phase position rewrite
+      // but before the tag is cleared — proves the whole extraction rolls back.
+      // No-op in production.
+      await debugRemoveFromSupersetBarrier();
+
+      final clearedUpdatedAt = _timestamps.nextUpdatedAt(
+        previousUpdatedAt: msToUtc(target.updatedAtMs),
+        createdAt: msToUtc(target.createdAtMs),
+      );
+      await (_db.update(
+        _db.sessionExercises,
+      )..where((t) => t.id.equals(sessionExerciseId))).write(
+        SessionExercisesCompanion(
+          supersetTag: const Value(null),
+          updatedAtMs: Value(utcToMs(clearedUpdatedAt)),
+        ),
+      );
+
+      final refreshedSessionRow = await _requireSessionRow(sessionId);
+      final sessionUpdatedAt = _timestamps.nextUpdatedAt(
+        previousUpdatedAt: msToUtc(refreshedSessionRow.updatedAtMs),
+        createdAt: msToUtc(refreshedSessionRow.createdAtMs),
+      );
+      await (_db.update(
+        _db.sessions,
+      )..where((t) => t.id.equals(sessionId))).write(
+        SessionsCompanion(updatedAtMs: Value(utcToMs(sessionUpdatedAt))),
+      );
+
+      return _loadSession(sessionId);
+    });
+  }
+
+  /// Test seam invoked inside [removeFromSuperset]'s transaction, between the
+  /// two-phase position rewrite and the extracted member's tag clear. Overridden
+  /// by a test repo to inject a mid-transaction fault and prove the whole
+  /// extraction rolls back. A no-op in production; not part of
+  /// [SessionRepository].
+  Future<void> debugRemoveFromSupersetBarrier() async {}
 
   @override
   Future<domain.Session> removeSuperset({

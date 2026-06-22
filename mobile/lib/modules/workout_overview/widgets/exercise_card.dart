@@ -39,6 +39,7 @@ class ExerciseCard extends StatelessWidget {
     this.onResumePressed,
     this.onReplacePressed,
     this.onGroupIntoPressed,
+    this.onRemoveFromSupersetPressed,
     this.onMoveUp,
     this.onMoveDown,
     this.isCurrent = false,
@@ -80,6 +81,12 @@ class ExerciseCard extends StatelessWidget {
   /// entry that opens the picker dialog. Null hides the entry — used inside
   /// already-grouped supersets and whenever no eligible partner exists.
   final VoidCallback? onGroupIntoPressed;
+
+  /// When non-null, the per-card ⋮ menu surfaces a "Remove from superset" entry
+  /// — the inverse of "Group into superset…". The caller (the superset card's
+  /// member builder) supplies it only for an eligible member, so the card just
+  /// shows the item whenever the callback is present. Null hides it.
+  final VoidCallback? onRemoveFromSupersetPressed;
 
   /// Tap-only reorder fallback: dispatched from the ⋮ menu's "Move up" /
   /// "Move down" entries and the matching screen-reader custom actions, so
@@ -148,6 +155,7 @@ class ExerciseCard extends StatelessWidget {
               onResume: onResumePressed,
               onReplace: onReplacePressed,
               onGroupInto: onGroupIntoPressed,
+              onRemoveFromSuperset: onRemoveFromSupersetPressed,
               onMoveUp: onMoveUp,
               onMoveDown: onMoveDown,
               typography: typography,
@@ -185,6 +193,7 @@ class _Header extends StatelessWidget {
     required this.onResume,
     required this.onReplace,
     required this.onGroupInto,
+    required this.onRemoveFromSuperset,
     required this.onMoveUp,
     required this.onMoveDown,
     required this.typography,
@@ -203,6 +212,7 @@ class _Header extends StatelessWidget {
   final VoidCallback? onResume;
   final VoidCallback? onReplace;
   final VoidCallback? onGroupInto;
+  final VoidCallback? onRemoveFromSuperset;
   final VoidCallback? onMoveUp;
   final VoidCallback? onMoveDown;
   final AppTypography typography;
@@ -320,6 +330,7 @@ class _Header extends StatelessWidget {
                 onResume: onResume,
                 onReplace: onReplace,
                 onGroupInto: onGroupInto,
+                onRemoveFromSuperset: onRemoveFromSuperset,
                 onMoveUp: onMoveUp,
                 onMoveDown: onMoveDown,
                 colors: colors,
@@ -496,6 +507,7 @@ class _Actions extends StatelessWidget {
     required this.onResume,
     required this.onReplace,
     required this.onGroupInto,
+    required this.onRemoveFromSuperset,
     required this.onMoveUp,
     required this.onMoveDown,
     required this.colors,
@@ -514,6 +526,7 @@ class _Actions extends StatelessWidget {
   final VoidCallback? onResume;
   final VoidCallback? onReplace;
   final VoidCallback? onGroupInto;
+  final VoidCallback? onRemoveFromSuperset;
   final VoidCallback? onMoveUp;
   final VoidCallback? onMoveDown;
   final AppColors colors;
@@ -541,16 +554,22 @@ class _Actions extends StatelessWidget {
     // "Replace" terminates this exercise and adds a new one in its place —
     // offered only on an unfinished, non-terminal card.
     final showReplace = canMutate && isUnfinished && onReplace != null;
+    // "Remove from superset" — the inverse of "Group into superset…". The
+    // superset card's member builder supplies the callback only for an eligible
+    // member (live, fully-unfinished, 3+ member group), so the card just shows
+    // it whenever present.
+    final showRemoveFromSuperset = onRemoveFromSuperset != null;
     // Every secondary action lives in the kebab: Add set / Resume / Replace /
-    // Move up/down / Group into / End or Skip / Open video. The card surface
-    // stays reserved for the one direct control that matters in the gym,
-    // LOG SET.
+    // Move up/down / Group into / Remove from superset / End or Skip / Open
+    // video. The card surface stays reserved for the one direct control that
+    // matters in the gym, LOG SET.
     final hasMenu =
         showAddSet ||
         showResume ||
         showReplace ||
         canReorder ||
         canGroupInto ||
+        showRemoveFromSuperset ||
         canEndOrSkip ||
         (videoUrl != null && videoUrl!.isNotEmpty);
     return Row(
@@ -584,6 +603,8 @@ class _Actions extends StatelessWidget {
                   onReplace?.call();
                 case _MenuAction.groupInto:
                   onGroupInto?.call();
+                case _MenuAction.removeFromSuperset:
+                  onRemoveFromSuperset?.call();
                 case _MenuAction.endOrSkip:
                   onEndOrSkip();
                 case _MenuAction.openVideo:
@@ -632,6 +653,14 @@ class _Actions extends StatelessWidget {
                     label: 'Group into superset…',
                   ),
                 ),
+              if (showRemoveFromSuperset)
+                const PopupMenuItem(
+                  value: _MenuAction.removeFromSuperset,
+                  child: AppMenuRow(
+                    icon: Icons.link_off,
+                    label: 'Remove from superset',
+                  ),
+                ),
               if (showReplace)
                 const PopupMenuItem(
                   value: _MenuAction.replace,
@@ -671,6 +700,7 @@ enum _MenuAction {
   moveUp,
   moveDown,
   groupInto,
+  removeFromSuperset,
   endOrSkip,
   openVideo,
 }
