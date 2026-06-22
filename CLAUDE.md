@@ -6,11 +6,11 @@
 
 Sessions capture an immutable **snapshot** of the planned workout at start. The program template is never mutated by in-session edits; completed sessions never change retroactively. Planned and actual values are tracked separately.
 
-**Product context lives in [product-context.md](product-context.md)** — the source of truth for what the app does, who it's for, the user-facing features, and the screens that host them. Read it before any user-facing work.
+**Product context lives in [PRODUCT.md](PRODUCT.md)** — the source of truth for what the app does, who it's for, the user-facing features, and the screens that host them. Read it before any user-facing work.
 
-### Keeping product-context.md current
+### Keeping PRODUCT.md current
 
-When a change adds, removes, or renames a user-facing screen or feature, or shifts a pillar or non-goal, update [product-context.md](product-context.md) in the same change. Pure internal refactors (bloc renames, widget moves, repo signature tweaks) do not. When in doubt, update — a slightly-stale doc is worse than a slightly-redundant edit.
+When a change adds, removes, or renames a user-facing screen or feature, or shifts a pillar or non-goal, update [PRODUCT.md](PRODUCT.md) in the same change. Pure internal refactors (bloc renames, widget moves, repo signature tweaks) do not. When in doubt, update — a slightly-stale doc is worse than a slightly-redundant edit.
 
 ## Commands (project-specific only)
 
