@@ -43,6 +43,9 @@ class ExerciseEditorBloc
     on<ExerciseSavePressed>(_onSavePressed);
     on<ExerciseLibraryLinked>(_onLibraryLinked);
     on<ExerciseLibraryUnlinked>(_onLibraryUnlinked);
+    on<RecentHistoryEntryApplied>(_onRecentHistoryEntryApplied);
+    on<RecentHistoryApplyConfirmed>(_onRecentHistoryApplyConfirmed);
+    on<RecentHistoryApplyDismissed>(_onRecentHistoryApplyDismissed);
   }
 
   final ProgramRepository _programRepository;
@@ -627,6 +630,92 @@ class ExerciseEditorBloc
     emit(current.copyWith(draft: draft, validation: validation));
   }
 
+  Future<void> _onRecentHistoryEntryApplied(
+    RecentHistoryEntryApplied event,
+    Emitter<ExerciseEditorState> emit,
+  ) async {
+    final current = state;
+    if (current is! ExerciseEditorEditing) return;
+    final mapped = _mappedDraftSets(current.draft, event.entry);
+    if (mapped == null) return; // nothing to apply: empty or wrong type
+    if (_isSingleBlankSet(current.draft.sets)) {
+      // A blank default set holds no data to protect — replace silently.
+      _applyMappedSets(emit, current, mapped);
+    } else {
+      // The draft already holds set data — stash the entry and let the screen
+      // surface a confirm dialog before overwriting (AC5).
+      emit(current.copyWith(pendingHistoryApply: () => event.entry));
+    }
+  }
+
+  Future<void> _onRecentHistoryApplyConfirmed(
+    RecentHistoryApplyConfirmed event,
+    Emitter<ExerciseEditorState> emit,
+  ) async {
+    final current = state;
+    if (current is! ExerciseEditorEditing) return;
+    final entry = current.pendingHistoryApply;
+    if (entry == null) return;
+    final mapped = _mappedDraftSets(current.draft, entry);
+    if (mapped == null) {
+      emit(current.copyWith(pendingHistoryApply: () => null));
+      return;
+    }
+    _applyMappedSets(emit, current, mapped);
+  }
+
+  Future<void> _onRecentHistoryApplyDismissed(
+    RecentHistoryApplyDismissed event,
+    Emitter<ExerciseEditorState> emit,
+  ) async {
+    final current = state;
+    if (current is! ExerciseEditorEditing) return;
+    if (current.pendingHistoryApply == null) return;
+    emit(current.copyWith(pendingHistoryApply: () => null));
+  }
+
+  /// The draft sets a [entry] would apply, or null when there is nothing to
+  /// apply: the entry logged no sets (AC4), or its logged sets are not the
+  /// exercise's measurement type (AC9 — the whole apply is rejected, never
+  /// partially applied; a session's logged sets are all one locked type).
+  List<PlannedSetDraft>? _mappedDraftSets(
+    ExerciseDraft draft,
+    CapHistoryEntry entry,
+  ) {
+    final actuals = entry.actualSets;
+    if (actuals.isEmpty) return null;
+    if (!actuals.every((a) => a.matches(draft.measurementType))) return null;
+    return [
+      for (final values in ActualToPlannedSets.fromActuals(actuals))
+        PlannedSetDraft(
+          draftId: _uuid.v4(),
+          persistedId: null,
+          values: plannedSetValuesToDraftValues(values),
+        ),
+    ];
+  }
+
+  /// Whether [sets] is the single blank default — the only state in which a
+  /// pre-fill replaces silently (composed on the existing blank check).
+  bool _isSingleBlankSet(List<PlannedSetDraft> sets) =>
+      sets.length == 1 && sets.single.isBlank;
+
+  void _applyMappedSets(
+    Emitter<ExerciseEditorState> emit,
+    ExerciseEditorEditing current,
+    List<PlannedSetDraft> mapped,
+  ) {
+    final updated = current.draft.copyWith(sets: mapped);
+    final validation = _computeValidation(updated);
+    emit(
+      current.copyWith(
+        draft: updated,
+        validation: validation,
+        pendingHistoryApply: () => null,
+      ),
+    );
+  }
+
   ExerciseDraft _exerciseToDraft(Exercise exercise) {
     return ExerciseDraft(
       draftId: _uuid.v4(),
@@ -641,32 +730,10 @@ class ExerciseEditorBloc
   }
 
   PlannedSetDraft _setToDraft(WorkoutSet set) {
-    final values = switch (set.plannedValues) {
-      PlannedRepBased(:final weightKg, :final repTarget) =>
-        PlannedSetDraftValues.repBased(
-          weightInput: weightKg.toString(),
-          repsInput: switch (repTarget) {
-            RepTargetFixed(:final reps) => reps.toString(),
-            RepTargetRange(:final minReps, :final maxReps) =>
-              '$minReps-$maxReps',
-          },
-        ),
-      PlannedTimeBased(:final durationSeconds, :final weightKg) =>
-        PlannedSetDraftValues.timeBased(
-          durationInput: durationSeconds.toString(),
-          weightInput: weightKg == null ? '' : weightKg.toString(),
-        ),
-      PlannedBodyweight(:final repTarget) => PlannedSetDraftValues.bodyweight(
-        repsInput: switch (repTarget) {
-          RepTargetFixed(:final reps) => reps.toString(),
-          RepTargetRange(:final minReps, :final maxReps) => '$minReps-$maxReps',
-        },
-      ),
-    };
     return PlannedSetDraft(
       draftId: _uuid.v4(),
       persistedId: set.id,
-      values: values,
+      values: plannedSetValuesToDraftValues(set.plannedValues),
     );
   }
 

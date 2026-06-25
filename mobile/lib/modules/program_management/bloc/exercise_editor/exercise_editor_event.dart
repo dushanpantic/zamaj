@@ -254,3 +254,40 @@ final class ExerciseLibraryUnlinked extends ExerciseEditorEvent {
   @override
   List<Object?> get props => [];
 }
+
+/// Applies a recent-history [entry]'s logged (actual) sets to the planned
+/// draft, replacing the current planned sets with the session's logged
+/// structure (one planned set per logged set, fixed targets).
+///
+/// A no-op when the entry logged nothing, or when its logged sets are a
+/// different measurement type than the exercise (the whole apply is rejected,
+/// never partially applied). When the draft already holds user-entered set
+/// data the apply is stashed pending a confirmation rather than replacing
+/// immediately (see [RecentHistoryApplyConfirmed] / [RecentHistoryApplyDismissed]).
+final class RecentHistoryEntryApplied extends ExerciseEditorEvent {
+  const RecentHistoryEntryApplied({required this.entry});
+
+  final CapHistoryEntry entry;
+
+  @override
+  List<Object?> get props => [entry];
+}
+
+/// Confirms the overwrite stashed in `pendingHistoryApply`, replacing the
+/// planned sets and clearing the pending state. No payload — the entry already
+/// lives in the editing state.
+final class RecentHistoryApplyConfirmed extends ExerciseEditorEvent {
+  const RecentHistoryApplyConfirmed();
+
+  @override
+  List<Object?> get props => [];
+}
+
+/// Dismisses the pending overwrite, clearing it and leaving the planned sets
+/// untouched.
+final class RecentHistoryApplyDismissed extends ExerciseEditorEvent {
+  const RecentHistoryApplyDismissed();
+
+  @override
+  List<Object?> get props => [];
+}

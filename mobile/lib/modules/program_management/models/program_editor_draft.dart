@@ -214,6 +214,33 @@ sealed class PlannedSetDraftValues with _$PlannedSetDraftValues {
       _$PlannedSetDraftValuesFromJson(json);
 }
 
+/// Converts persisted/domain [PlannedSetValues] into editable draft inputs —
+/// the single planned→draft string mapping shared by the editor's load path
+/// and the recent-history pre-fill. The inverse of
+/// [ProgramDraft._toPlannedSetValues]; keep the two in step.
+PlannedSetDraftValues plannedSetValuesToDraftValues(PlannedSetValues values) {
+  return switch (values) {
+    PlannedRepBased(:final weightKg, :final repTarget) =>
+      PlannedSetDraftValues.repBased(
+        weightInput: weightKg.toString(),
+        repsInput: _repTargetInput(repTarget),
+      ),
+    PlannedTimeBased(:final durationSeconds, :final weightKg) =>
+      PlannedSetDraftValues.timeBased(
+        durationInput: durationSeconds.toString(),
+        weightInput: weightKg == null ? '' : weightKg.toString(),
+      ),
+    PlannedBodyweight(:final repTarget) => PlannedSetDraftValues.bodyweight(
+      repsInput: _repTargetInput(repTarget),
+    ),
+  };
+}
+
+String _repTargetInput(RepTarget target) => switch (target) {
+  RepTargetFixed(:final reps) => reps.toString(),
+  RepTargetRange(:final minReps, :final maxReps) => '$minReps-$maxReps',
+};
+
 extension PlannedSetDraftBlankness on PlannedSetDraft {
   /// True when every input field is empty — an untouched placeholder row.
   /// Blank rows don't count toward validation and are stripped on save, so

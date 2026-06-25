@@ -338,9 +338,9 @@ events/handler within existing patterns, UI wiring within existing widgets);
   - [x] Step 1.1: Mapper + list conversion
 
 #### Wave 2
-- [ ] Slice 2: Apply handler + overwrite gate (exercise-editor bloc)
-  - [ ] Step 2.1: Apply event + pristine-replace + count/no-op/defensive
-  - [ ] Step 2.2: Overwrite-confirm gate (pending → confirm/dismiss)
+- [x] Slice 2: Apply handler + overwrite gate (exercise-editor bloc)
+  - [x] Step 2.1: Apply event + pristine-replace + count/no-op/defensive
+  - [x] Step 2.2: Overwrite-confirm gate (pending → confirm/dismiss)
 
 #### Wave 3
 - [ ] Slice 3: Tappable rows, confirm dialog, coach-mark, docs (UI)

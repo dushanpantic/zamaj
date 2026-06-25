@@ -162,6 +162,7 @@ final class ExerciseEditorEditing extends ExerciseEditorState {
     this.lastSaveError,
     this.controllerSyncRevision = 0,
     this.recentHistory = const RecentHistoryUnlinked(),
+    this.pendingHistoryApply,
   });
 
   final ExerciseDraft draft;
@@ -170,6 +171,13 @@ final class ExerciseEditorEditing extends ExerciseEditorState {
 
   /// Recent set-history for this movement, resolved once on load.
   final RecentHistoryView recentHistory;
+
+  /// A recent-history entry whose apply is awaiting overwrite confirmation,
+  /// or null when nothing is pending. Set only when a pre-fill would replace a
+  /// draft that already holds user-entered set data; the screen surfaces a
+  /// confirm dialog and resolves it via [RecentHistoryApplyConfirmed] /
+  /// [RecentHistoryApplyDismissed]. Transient — never persisted.
+  final CapHistoryEntry? pendingHistoryApply;
 
   /// Bumped when the bloc rewrites controller-backed text (name, video URL)
   /// programmatically — e.g. linking to a library entry with "update row".
@@ -184,6 +192,7 @@ final class ExerciseEditorEditing extends ExerciseEditorState {
     DomainError? Function()? lastSaveError,
     int? controllerSyncRevision,
     RecentHistoryView? recentHistory,
+    CapHistoryEntry? Function()? pendingHistoryApply,
   }) {
     return ExerciseEditorEditing(
       draft: draft ?? this.draft,
@@ -194,6 +203,9 @@ final class ExerciseEditorEditing extends ExerciseEditorState {
       controllerSyncRevision:
           controllerSyncRevision ?? this.controllerSyncRevision,
       recentHistory: recentHistory ?? this.recentHistory,
+      pendingHistoryApply: pendingHistoryApply != null
+          ? pendingHistoryApply()
+          : this.pendingHistoryApply,
     );
   }
 
@@ -204,6 +216,7 @@ final class ExerciseEditorEditing extends ExerciseEditorState {
     lastSaveError,
     controllerSyncRevision,
     recentHistory,
+    pendingHistoryApply,
   ];
 }
 
