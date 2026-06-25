@@ -1,20 +1,14 @@
 {
-  "permissions": {
-    "allow": [
-      "mcp__dart__run_tests",
-      "Bash(bash tool/check_offline_imports.sh)",
-      "Bash(dart run *)",
-      "Bash(mkdir -p /Users/dusanpantic/Projects/github.com/dushanpantic/zamaj/mobile/.kiro/specs/workout-overview-screen)",
-      "Bash(flutter pub *)",
-      "mcp__dart__analyze_files",
-      "Bash(flutter --version)",
-      "Bash(dart --version)",
-      "Bash(dart pub *)",
-      "Bash(dart analyze *)",
-      "Bash(bash tool/ci.sh)"
-    ],
-    "additionalDirectories": [
-      "/Users/dusanpantic/Projects/github.com/dushanpantic/zamaj/mobile/.kiro/specs"
-    ]
+  "extraKnownMarketplaces": {
+    "bfinster": {
+      "source": {
+        "source": "git",
+        "url": "https://github.com/bdfinst/agentic-dev-team.git"
+      },
+      "autoUpdate": true
+    }
+  },
+  "enabledPlugins": {
+    "dev-team@bfinster": true
   }
 }
