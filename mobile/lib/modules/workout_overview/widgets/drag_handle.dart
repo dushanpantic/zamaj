@@ -58,16 +58,52 @@ class DragHandle extends StatefulWidget {
   State<DragHandle> createState() => _DragHandleState();
 }
 
-class _DragHandleState extends State<DragHandle> {
+class _DragHandleState extends State<DragHandle>
+    with AutomaticKeepAliveClientMixin {
   bool _pressed = false;
+
+  /// While a drag this handle started is in flight, the enclosing list row is
+  /// force-kept-alive. The drag *source* lives in a lazy [SliverList], so
+  /// dragging toward the bottom auto-scrolls the source off the top of the
+  /// viewport — and the sliver would then dispose it mid-drag. A disposed
+  /// [LongPressDraggable] never fires [onDragEnd]/[onDraggableCanceled] (the
+  /// drag avatar guards both on `mounted`), which strands the auto-scroller's
+  /// ticker (runaway scroll that snaps back to the bottom, no way to scroll up)
+  /// and leaves [DragSession.active] true (the "Move here" gaps stay lit after
+  /// release). Keeping the row alive lets the gesture complete normally so the
+  /// existing teardown runs.
+  bool _dragging = false;
+
+  @override
+  bool get wantKeepAlive => _dragging;
 
   void _setPressed(bool value) {
     if (_pressed == value || !mounted) return;
     setState(() => _pressed = value);
   }
 
+  void _beginDrag() {
+    _setPressed(false);
+    Haptics.grab();
+    widget.autoScroller.begin();
+    widget.dragSession.begin();
+    _dragging = true;
+    updateKeepAlive();
+  }
+
+  void _endDrag() {
+    _setPressed(false);
+    widget.autoScroller.end();
+    widget.dragSession.end();
+    if (_dragging) {
+      _dragging = false;
+      updateKeepAlive();
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
+    super.build(context); // Required by AutomaticKeepAliveClientMixin.
     final colors = Theme.of(context).appColors;
     final screenWidth = MediaQuery.of(context).size.width;
     final pillWidth = (screenWidth * 0.7).clamp(220.0, 360.0);
@@ -102,24 +138,11 @@ class _DragHandleState extends State<DragHandle> {
       child: LongPressDraggable<OverviewDragPayload>(
         data: widget.payload,
         delay: AppDuration.dragHold,
-        onDragStarted: () {
-          _setPressed(false);
-          Haptics.grab();
-          widget.autoScroller.begin();
-          widget.dragSession.begin();
-        },
+        onDragStarted: _beginDrag,
         onDragUpdate: (details) =>
             widget.autoScroller.updatePointer(details.globalPosition.dy),
-        onDragEnd: (_) {
-          _setPressed(false);
-          widget.autoScroller.end();
-          widget.dragSession.end();
-        },
-        onDraggableCanceled: (_, _) {
-          _setPressed(false);
-          widget.autoScroller.end();
-          widget.dragSession.end();
-        },
+        onDragEnd: (_) => _endDrag(),
+        onDraggableCanceled: (_, _) => _endDrag(),
         feedback: _DragFeedbackPill(
           label: widget.feedbackLabel,
           isGroup: widget.isGroup,
