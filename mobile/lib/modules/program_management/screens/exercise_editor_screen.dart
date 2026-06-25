@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:zamaj/building_blocks/building_blocks.dart';
+import 'package:zamaj/core/relative_date_formatter.dart';
+import 'package:zamaj/modules/domain/domain.dart';
 import 'package:zamaj/modules/program_management/bloc/exercise_editor/exercise_editor_bloc.dart';
 import 'package:zamaj/modules/program_management/bloc/exercise_editor/exercise_editor_event.dart';
 import 'package:zamaj/modules/program_management/bloc/exercise_editor/exercise_editor_state.dart';
@@ -99,6 +101,33 @@ class _ExerciseEditorScreenState extends State<ExerciseEditorScreen> {
     return confirmed == true;
   }
 
+  /// Surfaces the overwrite-confirm dialog for a pending recent-history apply.
+  /// The lifter can tap-apply and then Save without leaving the screen, which
+  /// never invokes the discard guard — so this gate is the only thing
+  /// protecting already-entered set data on a pre-fill.
+  Future<void> _confirmHistoryApply(
+    BuildContext context,
+    CapHistoryEntry entry,
+  ) async {
+    final bloc = context.read<ExerciseEditorBloc>();
+    final loggedOn = RelativeDateFormatter.formatAbsolute(entry.date.toLocal());
+    final confirmed = await AppConfirmDialog.show(
+      context: context,
+      title: 'Replace planned sets?',
+      body:
+          'This replaces your current planned sets with what you logged on '
+          '$loggedOn.',
+      confirmLabel: 'Replace',
+      cancelLabel: 'Keep editing',
+      isDestructive: true,
+    );
+    bloc.add(
+      confirmed == true
+          ? const RecentHistoryApplyConfirmed()
+          : const RecentHistoryApplyDismissed(),
+    );
+  }
+
   Future<void> _handlePop(bool didPop, BuildContext context) async {
     if (didPop) return;
     final shouldDiscard = await _confirmDiscard(context);
@@ -116,6 +145,12 @@ class _ExerciseEditorScreenState extends State<ExerciseEditorScreen> {
         if (current is ExerciseEditorVideoLinkError) return true;
         if (current is ExerciseEditorEditing) {
           if (previous is! ExerciseEditorEditing) return true;
+          // A pre-fill over user-entered sets just stashed a pending apply —
+          // surface the overwrite-confirm dialog.
+          if (current.pendingHistoryApply != null &&
+              previous.pendingHistoryApply != current.pendingHistoryApply) {
+            return true;
+          }
           // The bloc rewrote controller-backed text (e.g. library link with
           // "update row") — resync, but never on plain typing emissions.
           return previous.controllerSyncRevision !=
@@ -137,6 +172,11 @@ class _ExerciseEditorScreenState extends State<ExerciseEditorScreen> {
         }
 
         if (state is ExerciseEditorEditing) {
+          final pending = state.pendingHistoryApply;
+          if (pending != null) {
+            _confirmHistoryApply(context, pending);
+            return;
+          }
           if (!_controllersInitialized) return;
           if (_didInitialControllerSync) {
             _syncLinkProvidedFields(state.draft);

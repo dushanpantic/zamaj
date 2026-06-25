@@ -343,26 +343,26 @@ events/handler within existing patterns, UI wiring within existing widgets);
   - [x] Step 2.2: Overwrite-confirm gate (pending → confirm/dismiss)
 
 #### Wave 3
-- [ ] Slice 3: Tappable rows, confirm dialog, coach-mark, docs (UI)
-  - [ ] Step 3.1: Tappable rows + confirm dialog + coach-mark
-  - [ ] Step 3.2: Update PRODUCT.md
+- [x] Slice 3: Tappable rows, confirm dialog, coach-mark, docs (UI)
+  - [x] Step 3.1: Tappable rows + confirm dialog + coach-mark
+  - [x] Step 3.2: Update PRODUCT.md
 
 ### Acceptance Criteria
 
-- [ ] AC1 — Rows with logged sets tappable; tap replaces planned sets (full structure)
-- [ ] AC2 — Per-set actual→planned mapping; no rep ranges
-- [ ] AC3 — Planned set count equals logged count
-- [ ] AC4 — Zero-logged row not tappable / no-op
-- [ ] AC5 — Confirm before overwriting edited sets; blank default applies silently
-- [ ] AC6 — Draft-only mutation, dirty, reversible, no write until save
-- [ ] AC7 — Unlinked / no-history shows existing nudge/empty state
-- [ ] AC8 — Deloads never offered as applyable rows
-- [ ] AC9 — Defensive measurement-type mismatch not applied; no crash
-- [ ] AC10 — Added-from-library lands in editor with tappable rows; add path unchanged
-- [ ] AC11 — One-time per-app-process coach-mark
-- [ ] AC12 — No schema/migration; no extra repository call
-- [ ] AC13 — Mapper + bloc apply/gate unit-tested
-- [ ] AC14 — Theme tokens; ≥48 dp; numericSm
-- [ ] AC15 — PRODUCT.md updated
-- [ ] AC16 — Per-row screen-reader label (date, set count, capped) + tap-to-pre-fill hint; "—" rows not actionable
-- [ ] AC17 — Applying a second entry after a prior apply prompts for confirmation
+- [x] AC1 — Rows with logged sets tappable; tap replaces planned sets (full structure)
+- [x] AC2 — Per-set actual→planned mapping; no rep ranges
+- [x] AC3 — Planned set count equals logged count
+- [x] AC4 — Zero-logged row not tappable / no-op
+- [x] AC5 — Confirm before overwriting edited sets; blank default applies silently
+- [x] AC6 — Draft-only mutation, dirty, reversible, no write until save
+- [x] AC7 — Unlinked / no-history shows existing nudge/empty state
+- [x] AC8 — Deloads never offered as applyable rows
+- [x] AC9 — Defensive measurement-type mismatch not applied; no crash
+- [x] AC10 — Added-from-library lands in editor with tappable rows; add path unchanged
+- [x] AC11 — One-time per-app-process coach-mark
+- [x] AC12 — No schema/migration; no extra repository call
+- [x] AC13 — Mapper + bloc apply/gate unit-tested
+- [x] AC14 — Theme tokens; ≥48 dp; numericSm
+- [x] AC15 — PRODUCT.md updated
+- [x] AC16 — Per-row screen-reader label (date, set count, capped) + tap-to-pre-fill hint; "—" rows not actionable
+- [x] AC17 — Applying a second entry after a prior apply prompts for confirmation

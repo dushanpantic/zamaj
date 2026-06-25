@@ -36,7 +36,7 @@ The app opens into a two-tab shell — **Programs** and **Library** — launchin
 - **Program list** (the Programs tab) — browse, create, and delete programs; entry point to text import.
 - **Program editor** — rename a program and manage its workout days.
 - **Workout-day editor** — order and group exercises into supersets; add from the library or as a one-off. Linked exercises show the **CAPPED** flag.
-- **Exercise editor** — name, measurement type, planned sets, rest, notes, video, optional library link. Identical sets edit as one (a single weight / reps / set-count with ± steppers drives every set); **Vary by set** drops to per-set rows for pyramids and drop sets. A **Recent history** section lists the last five completed sessions of a linked movement (across every program it appears in) — date, planned target, per-set actuals, with a `▲` when that session capped its target.
+- **Exercise editor** — name, measurement type, planned sets, rest, notes, video, optional library link. Identical sets edit as one (a single weight / reps / set-count with ± steppers drives every set); **Vary by set** drops to per-set rows for pyramids and drop sets. A **Recent history** section lists the last five completed sessions of a linked movement (across every program it appears in) — date, planned target, per-set actuals, with a `▲` when that session capped its target. Tapping a row pre-fills the planned sets from that session's logged values (one fixed-target set per logged set); when the draft already holds set data it asks before replacing.
 - **Plan import** — paste a coach's plan as plain text, parse it into a structured program, preview before saving.
 
 ### Exercise library — [exercise_library/](mobile/lib/modules/exercise_library/)
