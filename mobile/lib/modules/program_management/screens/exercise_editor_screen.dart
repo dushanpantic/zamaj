@@ -121,6 +121,9 @@ class _ExerciseEditorScreenState extends State<ExerciseEditorScreen> {
       cancelLabel: 'Keep editing',
       isDestructive: true,
     );
+    // The dialog awaited above; the route (and its scoped bloc) may have been
+    // popped meanwhile. Guard before dispatching to a possibly-closed bloc.
+    if (!context.mounted) return;
     bloc.add(
       confirmed == true
           ? const RecentHistoryApplyConfirmed()

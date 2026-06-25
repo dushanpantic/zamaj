@@ -54,6 +54,22 @@ void main() {
       expect(_editing(bloc).draft.sets, hasLength(2));
     });
 
+    test('a bodyweight entry replaces the blank default with fixed-rep, '
+        'weightless sets (AC1, AC2)', () async {
+      final bloc = await _opened(exercise: _bodyweightExercise());
+
+      bloc.add(
+        RecentHistoryEntryApplied(entry: _bodyweightEntry(const [12, 10])),
+      );
+      await pumpEventQueue();
+
+      final sets = _editing(bloc).draft.sets;
+      expect(sets, hasLength(2));
+      expect(sets.map(_reps).toList(), ['12', '10']);
+      // Bodyweight sets carry no weight field — the projection reads blank.
+      expect(sets.map(_weight).toList(), ['', '']);
+    });
+
     test('an entry that logged no sets is a no-op (AC4)', () async {
       final bloc = await _opened(exercise: _linkedExercise());
       final before = _editing(bloc).draft.sets;
@@ -246,6 +262,31 @@ void main() {
         expect(_editing(bloc).draft.sets, hasLength(1));
       },
     );
+
+    test('confirming after the measurement type changed under the pending '
+        'entry is a no-op that clears pending (AC9)', () async {
+      final bloc = await _opened(exercise: _linkedExercise(setCount: 3));
+      bloc.add(
+        RecentHistoryEntryApplied(entry: _repEntry(const [(100, 5), (100, 5)])),
+      );
+      await pumpEventQueue();
+      expect(_editing(bloc).pendingHistoryApply, isNotNull);
+
+      // The exercise becomes time-based while the confirm is pending; the
+      // stashed rep-based entry no longer matches, so confirming must reject
+      // the whole apply (mapped == null) and just clear pending.
+      bloc.add(
+        const ExerciseMeasurementTypeChanged(next: MeasurementType.timeBased()),
+      );
+      await pumpEventQueue();
+      final before = _editing(bloc).draft.sets;
+
+      bloc.add(const RecentHistoryApplyConfirmed());
+      await pumpEventQueue();
+
+      expect(_editing(bloc).pendingHistoryApply, isNull);
+      expect(_editing(bloc).draft.sets, before);
+    });
   });
 }
 
@@ -273,6 +314,15 @@ CapHistoryEntry _repEntry(List<(double, int)> sets) => CapHistoryEntry(
     for (final (weight, reps) in sets)
       ActualSetValues.repBased(weightKg: weight, reps: reps),
   ],
+  isCapped: false,
+);
+
+CapHistoryEntry _bodyweightEntry(List<int> reps) => CapHistoryEntry(
+  date: DateTime.utc(2026, 3, 1),
+  programId: 'prog',
+  sourceWorkoutDayName: 'Push',
+  plannedSets: const [],
+  actualSets: [for (final r in reps) ActualSetValues.bodyweight(reps: r)],
   isCapped: false,
 );
 
@@ -330,6 +380,26 @@ Exercise _linkedExercise({int setCount = 0}) {
           schemaVersion: SchemaVersions.domain,
         ),
     ],
+    createdAt: _now,
+    updatedAt: _now,
+    schemaVersion: SchemaVersions.domain,
+  );
+}
+
+/// A linked bodyweight exercise with no persisted sets — the bloc seeds a
+/// single blank bodyweight default, the starting point for the bodyweight
+/// silent-replace path.
+Exercise _bodyweightExercise() {
+  return Exercise(
+    id: 'ex1',
+    exerciseGroupId: 'g1',
+    position: 0,
+    name: 'Pull-up',
+    measurementType: const MeasurementType.bodyweight(),
+    metadata: ExerciseMetadata.empty,
+    plannedRestSeconds: 180,
+    libraryExerciseId: _benchLibraryId,
+    sets: const [],
     createdAt: _now,
     updatedAt: _now,
     schemaVersion: SchemaVersions.domain,

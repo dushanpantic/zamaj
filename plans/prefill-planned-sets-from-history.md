@@ -2,7 +2,7 @@
 
 **Created**: 2026-06-25
 **Branch**: master
-**Status**: in-progress
+**Status**: complete
 **Spec**: [docs/specs/prefill-planned-sets-from-history.md](../docs/specs/prefill-planned-sets-from-history.md)
 
 ## Goal
