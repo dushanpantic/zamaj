@@ -76,6 +76,35 @@ void main() {
       expect(_editing(bloc).draft.sets, before);
     });
 
+    test('an entry mixing matching and non-matching set types is a whole '
+        'no-op, never a partial apply (AC9)', () async {
+      final bloc = await _opened(exercise: _linkedExercise()); // rep-based
+      final before = _editing(bloc).draft.sets;
+
+      // One rep-based set (matches the exercise) and one time-based set (does
+      // not). The whole entry must be rejected — proving the gate rejects the
+      // row outright rather than applying only the matching subset. (A real
+      // session never logs mixed types, but the guard is value-based.)
+      bloc.add(
+        RecentHistoryEntryApplied(
+          entry: CapHistoryEntry(
+            date: DateTime.utc(2026, 3, 1),
+            programId: 'prog',
+            sourceWorkoutDayName: 'Push',
+            plannedSets: const [],
+            actualSets: const [
+              ActualSetValues.repBased(weightKg: 100, reps: 5),
+              ActualSetValues.timeBased(durationSeconds: 30),
+            ],
+            isCapped: false,
+          ),
+        ),
+      );
+      await pumpEventQueue();
+
+      expect(_editing(bloc).draft.sets, before);
+    });
+
     test(
       'applying marks the editor dirty and does not persist (AC6)',
       () async {
@@ -208,14 +237,12 @@ void main() {
         expect(_editing(bloc).pendingHistoryApply, isNull);
         expect(_editing(bloc).draft.sets, hasLength(1));
 
-        bloc.add(
-          RecentHistoryEntryApplied(
-            entry: _repEntry(const [(110, 3), (110, 3)]),
-          ),
-        );
+        final second = _repEntry(const [(110, 3), (110, 3)]);
+        bloc.add(RecentHistoryEntryApplied(entry: second));
         await pumpEventQueue();
 
-        expect(_editing(bloc).pendingHistoryApply, isNotNull);
+        // The second (not the stale first) entry is what's stashed pending.
+        expect(_editing(bloc).pendingHistoryApply, second);
         expect(_editing(bloc).draft.sets, hasLength(1));
       },
     );
