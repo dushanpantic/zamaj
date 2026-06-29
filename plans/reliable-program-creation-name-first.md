@@ -316,9 +316,9 @@ and the docs step are `trivial`.
   - [x] Step 1.4: Wire list entry points to the dialog and navigate on create
 
 #### Wave 2
-- [ ] Slice 2: Confirm before discarding a typed-but-uncreated name
-  - [ ] Step 2.1: Pure discard-confirmation predicate
-  - [ ] Step 2.2: Gate dialog dismissal on the predicate
+- [x] Slice 2: Confirm before discarding a typed-but-uncreated name
+  - [x] Step 2.1: Pure discard-confirmation predicate
+  - [x] Step 2.2: Gate dialog dismissal on the predicate
 - [ ] Slice 3: Editor is edit-only and cannot crash on save
   - [ ] Step 3.1: Editor refuses to enter create mode; save failures never crash
   - [ ] Step 3.2: Serialize editor mutations (single-writer)
@@ -334,7 +334,7 @@ and the docs step are `trivial`.
 - [ ] AC3 — Create → add empty day → back: no crash; save failures non-fatal
 - [x] AC4 — Exactly one insert; editor never in create mode from the list _(create half; editor-edit-only half lands in Slice 3)_
 - [x] AC5 — Both entry points open the dialog; editor opens for the new program; cancel creates nothing
-- [ ] AC6 — Typed-name dismissal confirms; empty dismisses silently
+- [x] AC6 — Typed-name dismissal confirms; empty dismisses silently
 - [ ] AC7 — Existing rename/day-management/edit unaffected; no duplicates on edit
 - [ ] AC8 — PRODUCT.md reflects name-first creation
 
