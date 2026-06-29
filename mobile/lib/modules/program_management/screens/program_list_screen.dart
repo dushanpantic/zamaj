@@ -8,6 +8,7 @@ import 'package:zamaj/modules/program_management/bloc/program_list/program_list_
 import 'package:zamaj/modules/program_management/bloc/program_list/program_list_event.dart';
 import 'package:zamaj/modules/program_management/bloc/program_list/program_list_state.dart';
 import 'package:zamaj/modules/program_management/navigation/program_management_routes.dart';
+import 'package:zamaj/modules/program_management/widgets/new_program_dialog.dart';
 import 'package:zamaj/modules/program_management/widgets/program_list_tile.dart';
 import 'package:zamaj/modules/workout_day_picker/models/workout_day_picker_args.dart';
 import 'package:zamaj/modules/workout_day_picker/navigation/workout_day_picker_routes.dart';
@@ -44,6 +45,22 @@ class _ProgramListScreenState extends State<ProgramListScreen> {
     if (mounted) {
       context.read<ProgramListBloc>().add(const ProgramListRequested());
     }
+  }
+
+  /// Name-first creation: collect a required name, then create exactly one
+  /// program. Navigation into the editor is driven by the bloc's one-shot
+  /// `lastCreatedProgramId` signal (see [_onProgramCreated]).
+  Future<void> _startNewProgram() async {
+    final name = await NewProgramDialog.show(context);
+    if (name == null || !mounted) return;
+    context.read<ProgramListBloc>().add(ProgramCreateRequested(name: name));
+  }
+
+  void _onProgramCreated(String programId) {
+    // Clear the one-shot signal so a rebuild can't re-navigate, then open the
+    // editor for the freshly created (named, empty) program.
+    context.read<ProgramListBloc>().add(const ProgramCreateNavigationHandled());
+    _navigateToEditor(programId: programId);
   }
 
   Future<void> _navigateToImport() async {
@@ -94,7 +111,7 @@ class _ProgramListScreenState extends State<ProgramListScreen> {
             tooltip: 'Import from text',
           ),
           IconButton(
-            onPressed: () => _navigateToEditor(),
+            onPressed: _startNewProgram,
             icon: const Icon(Icons.add),
             // Primary action gets the accent so it outranks the secondary
             // Import action, matching the app's primary-action idiom.
@@ -107,7 +124,16 @@ class _ProgramListScreenState extends State<ProgramListScreen> {
         children: [
           const SessionInFlightBanner(),
           Expanded(
-            child: BlocBuilder<ProgramListBloc, ProgramListState>(
+            child: BlocConsumer<ProgramListBloc, ProgramListState>(
+              listenWhen: (prev, curr) =>
+                  curr is ProgramListLoaded &&
+                  curr.lastCreatedProgramId != null,
+              listener: (context, state) {
+                if (state is ProgramListLoaded &&
+                    state.lastCreatedProgramId != null) {
+                  _onProgramCreated(state.lastCreatedProgramId!);
+                }
+              },
               builder: (context, state) {
                 return switch (state) {
                   ProgramListInitial() ||
@@ -150,9 +176,9 @@ class _ProgramListScreenState extends State<ProgramListScreen> {
                                       'Create a program from scratch or '
                                       'import one from text.',
                                   primaryAction: AppStateAction(
-                                    label: 'Create empty program',
+                                    label: 'Create program',
                                     icon: Icons.add,
-                                    onPressed: () => _navigateToEditor(),
+                                    onPressed: _startNewProgram,
                                   ),
                                   secondaryAction: AppStateAction(
                                     label: 'Import from text',
