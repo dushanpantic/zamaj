@@ -3,37 +3,57 @@ import 'package:uuid/uuid.dart';
 import 'package:zamaj/modules/domain/domain.dart';
 import 'package:zamaj/modules/program_management/models/program_editor_draft.dart';
 import 'package:zamaj/modules/program_management/models/workout_day_summary.dart';
-import 'package:zamaj/modules/program_management/services/aggregate_saver.dart';
 
 import 'program_editor_event.dart';
 import 'program_editor_state.dart';
 
+/// Processes events one at a time, in arrival order — each handler runs to
+/// completion before the next starts. Applied to the persisting mutations so a
+/// burst of rapid edits (e.g. fast typing in the name field) can never overlap
+/// into interleaved writes with an inconsistent baseline.
+EventTransformer<E> _sequential<E>() =>
+    (events, mapper) => events.asyncExpand(mapper);
+
 class ProgramEditorBloc extends Bloc<ProgramEditorEvent, ProgramEditorState> {
-  ProgramEditorBloc({
-    required ProgramRepository programRepository,
-    required AggregateSaver aggregateSaver,
-  }) : _programRepository = programRepository,
-       _aggregateSaver = aggregateSaver,
-       super(const ProgramEditorInitial()) {
+  ProgramEditorBloc({required ProgramRepository programRepository})
+    : _programRepository = programRepository,
+      super(const ProgramEditorInitial()) {
     on<ProgramEditorOpened>(_onOpened);
-    on<ProgramEditorNameChanged>(_onNameChanged);
-    on<ProgramEditorWorkoutDayAdded>(_onWorkoutDayAdded);
-    on<ProgramEditorWorkoutDayRenamed>(_onWorkoutDayRenamed);
+    on<ProgramEditorNameChanged>(_onNameChanged, transformer: _sequential());
+    on<ProgramEditorWorkoutDayAdded>(
+      _onWorkoutDayAdded,
+      transformer: _sequential(),
+    );
+    on<ProgramEditorWorkoutDayRenamed>(
+      _onWorkoutDayRenamed,
+      transformer: _sequential(),
+    );
     on<ProgramEditorWorkoutDayDeleteRequested>(_onWorkoutDayDeleteRequested);
-    on<ProgramEditorWorkoutDayDeleteConfirmed>(_onWorkoutDayDeleteConfirmed);
+    on<ProgramEditorWorkoutDayDeleteConfirmed>(
+      _onWorkoutDayDeleteConfirmed,
+      transformer: _sequential(),
+    );
     on<ProgramEditorWorkoutDayDeleteCancelled>(_onWorkoutDayDeleteCancelled);
     on<ProgramEditorWorkoutDayDeleteOptimistic>(_onWorkoutDayDeleteOptimistic);
     on<ProgramEditorWorkoutDayDeleteUndone>(_onWorkoutDayDeleteUndone);
-    on<ProgramEditorWorkoutDayDeleteFinalized>(_onWorkoutDayDeleteFinalized);
-    on<ProgramEditorWorkoutDaysReordered>(_onWorkoutDaysReordered);
-    on<ProgramEditorWorkoutDayDuplicated>(_onWorkoutDayDuplicated);
+    on<ProgramEditorWorkoutDayDeleteFinalized>(
+      _onWorkoutDayDeleteFinalized,
+      transformer: _sequential(),
+    );
+    on<ProgramEditorWorkoutDaysReordered>(
+      _onWorkoutDaysReordered,
+      transformer: _sequential(),
+    );
+    on<ProgramEditorWorkoutDayDuplicated>(
+      _onWorkoutDayDuplicated,
+      transformer: _sequential(),
+    );
   }
 
   /// First N exercise names surfaced in the inline-expand peek.
   static const int _exercisePreviewLimit = 5;
 
   final ProgramRepository _programRepository;
-  final AggregateSaver _aggregateSaver;
   final _uuid = const Uuid();
 
   List<WorkoutDay> _baselineWorkoutDays = [];
@@ -71,23 +91,11 @@ class ProgramEditorBloc extends Bloc<ProgramEditorEvent, ProgramEditorState> {
   ) async {
     final programId = event.programId;
 
+    // The editor is edit-only: programs are created name-first from the list,
+    // so the editor always opens an existing program. A null id is a defensive
+    // dead-end (a deleted/never-created program), never a create draft.
     if (programId == null) {
-      const draft = ProgramDraft(
-        programId: null,
-        name: '',
-        workoutDays: [],
-        schemaVersion: null,
-      );
-      emit(
-        ProgramEditorEditing(
-          draft: draft,
-          isCreateMode: true,
-          validation: ProgramDraftValidation.compute(
-            name: draft.name,
-            isCreateMode: true,
-          ),
-        ),
-      );
+      emit(const ProgramEditorNotFound(programId: ''));
       return;
     }
 
@@ -374,62 +382,23 @@ class ProgramEditorBloc extends Bloc<ProgramEditorEvent, ProgramEditorState> {
     if (current is! ProgramEditorEditing) return;
     if (!current.validation.canSave) return;
 
-    emit(current.copyWith(isSaving: true));
+    emit(current.copyWith(isSaving: true, hadUnexpectedSaveError: false));
 
     try {
-      if (current.isCreateMode) {
-        await _persistCreate(emit);
-      } else {
-        await _persistEdit(emit);
-      }
+      await _persistEdit(emit);
     } on DomainError catch (e) {
       final latest = state;
       if (latest is ProgramEditorEditing) {
         emit(latest.copyWith(isSaving: false, lastSaveError: () => e));
       }
+    } catch (_) {
+      // Defense-in-depth: an unexpected (non-domain) failure must surface as a
+      // non-fatal notice, never an uncaught exception that crashes the editor.
+      final latest = state;
+      if (latest is ProgramEditorEditing) {
+        emit(latest.copyWith(isSaving: false, hadUnexpectedSaveError: true));
+      }
     }
-  }
-
-  Future<void> _persistCreate(Emitter<ProgramEditorState> emit) async {
-    final current = state;
-    if (current is! ProgramEditorEditing) return;
-
-    final saved = await _aggregateSaver.save(current.draft);
-
-    final workoutDays = await _programRepository.listWorkoutDaysForProgram(
-      saved.id,
-    );
-    _baselineWorkoutDays = List.unmodifiable(workoutDays);
-
-    final reloadedDraft = ProgramDraft(
-      programId: saved.id,
-      name: saved.name,
-      workoutDays: workoutDays
-          .map(
-            (day) => WorkoutDayDraft(
-              draftId: day.id,
-              persistedId: day.id,
-              name: day.name,
-              groups: const [],
-            ),
-          )
-          .toList(),
-      schemaVersion: saved.schemaVersion,
-    );
-
-    emit(
-      ProgramEditorEditing(
-        draft: reloadedDraft,
-        isCreateMode: false,
-        validation: ProgramDraftValidation.compute(
-          name: reloadedDraft.name,
-          isCreateMode: false,
-        ),
-        daySummaries: _summariesFor(workoutDays),
-        dayExercisePreviews: _previewsFor(workoutDays),
-        programUpdatedAt: saved.updatedAt,
-      ),
-    );
   }
 
   Future<void> _persistEdit(Emitter<ProgramEditorState> emit) async {

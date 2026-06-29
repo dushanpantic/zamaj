@@ -24,13 +24,34 @@ class FakeProgramRepository implements ProgramRepository {
   /// When non-null, the next [createProgram] throws this instead of inserting.
   Object? createProgramError;
 
+  /// Workout days currently "persisted", in insertion order.
+  final List<WorkoutDay> workoutDays = [];
+
+  /// When non-null, the next [createWorkoutDay] throws this instead of
+  /// inserting — used to exercise the editor's save-failure path.
+  Object? createWorkoutDayError;
+
   @override
   Future<Program> createProgram({required String name}) async {
     createProgramCalls.add(name);
     final error = createProgramError;
     if (error != null) throw error;
+    final program = _newProgram(name);
+    programs.add(program);
+    return program;
+  }
+
+  /// Seeds an already-persisted program (e.g. one the editor opens) without
+  /// counting as a `createProgram` call.
+  Program seedProgram(String name) {
+    final program = _newProgram(name);
+    programs.add(program);
+    return program;
+  }
+
+  Program _newProgram(String name) {
     final now = DateTime.now().toUtc();
-    final program = Program(
+    return Program(
       id: _uuid.v4(),
       name: name,
       workoutDayIds: const [],
@@ -38,8 +59,6 @@ class FakeProgramRepository implements ProgramRepository {
       updatedAt: now,
       schemaVersion: SchemaVersions.domain,
     );
-    programs.add(program);
-    return program;
   }
 
   @override
@@ -54,7 +73,11 @@ class FakeProgramRepository implements ProgramRepository {
   }
 
   @override
-  Future<Program> updateProgram(Program program) => throw UnimplementedError();
+  Future<Program> updateProgram(Program program) async {
+    final i = programs.indexWhere((p) => p.id == program.id);
+    if (i >= 0) programs[i] = program;
+    return program;
+  }
 
   @override
   Future<void> deleteProgram(String programId) => throw UnimplementedError();
@@ -63,29 +86,58 @@ class FakeProgramRepository implements ProgramRepository {
   Future<WorkoutDay> createWorkoutDay({
     required String programId,
     required String name,
-  }) => throw UnimplementedError();
+  }) async {
+    final error = createWorkoutDayError;
+    if (error != null) throw error;
+    final now = DateTime.now().toUtc();
+    final day = WorkoutDay(
+      id: _uuid.v4(),
+      programId: programId,
+      name: name,
+      exerciseGroups: const [],
+      createdAt: now,
+      updatedAt: now,
+      schemaVersion: SchemaVersions.domain,
+    );
+    workoutDays.add(day);
+    final i = programs.indexWhere((p) => p.id == programId);
+    if (i >= 0) {
+      programs[i] = programs[i].copyWith(
+        workoutDayIds: [...programs[i].workoutDayIds, day.id],
+        updatedAt: now,
+      );
+    }
+    return day;
+  }
 
   @override
   Future<WorkoutDay?> getWorkoutDay(String workoutDayId) =>
       throw UnimplementedError();
 
   @override
-  Future<List<WorkoutDay>> listWorkoutDaysForProgram(String programId) =>
-      throw UnimplementedError();
+  Future<List<WorkoutDay>> listWorkoutDaysForProgram(String programId) async =>
+      workoutDays.where((d) => d.programId == programId).toList();
 
   @override
-  Future<WorkoutDay> updateWorkoutDay(WorkoutDay workoutDay) =>
-      throw UnimplementedError();
+  Future<WorkoutDay> updateWorkoutDay(WorkoutDay workoutDay) async {
+    final i = workoutDays.indexWhere((d) => d.id == workoutDay.id);
+    if (i >= 0) workoutDays[i] = workoutDay;
+    return workoutDay;
+  }
 
   @override
-  Future<void> deleteWorkoutDay(String workoutDayId) =>
-      throw UnimplementedError();
+  Future<void> deleteWorkoutDay(String workoutDayId) async {
+    workoutDays.removeWhere((d) => d.id == workoutDayId);
+  }
 
   @override
   Future<void> reorderWorkoutDays(
     String programId,
     List<String> orderedWorkoutDayIds,
-  ) => throw UnimplementedError();
+  ) async {
+    // Insertion order is the source of truth for this fake; reordering days is
+    // not exercised by the editor tests.
+  }
 
   @override
   Future<WorkoutDay> duplicateWorkoutDay(String workoutDayId) =>

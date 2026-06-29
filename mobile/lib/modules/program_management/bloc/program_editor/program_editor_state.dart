@@ -79,6 +79,7 @@ final class ProgramEditorEditing extends ProgramEditorState {
     this.isSaving = false,
     this.deletionCandidateDraftId,
     this.lastSaveError,
+    this.hadUnexpectedSaveError = false,
     this.daySummaries = const {},
     this.dayExercisePreviews = const {},
     this.pendingDeletion,
@@ -91,6 +92,11 @@ final class ProgramEditorEditing extends ProgramEditorState {
   final String? deletionCandidateDraftId;
   final ProgramDraftValidation validation;
   final DomainError? lastSaveError;
+
+  /// True when the last save failed with a non-[DomainError] (e.g. a bug or an
+  /// unexpected storage error). Surfaced as a generic non-fatal notice so a
+  /// failed save never crashes the editor.
+  final bool hadUnexpectedSaveError;
 
   /// Per-day exercise counts keyed by `persistedId`. Days without a
   /// `persistedId` (newly-added, not yet saved) won't appear here and
@@ -138,6 +144,7 @@ final class ProgramEditorEditing extends ProgramEditorState {
     ProgramDraftValidation? validation,
     String? Function()? deletionCandidateDraftId,
     DomainError? Function()? lastSaveError,
+    bool? hadUnexpectedSaveError,
     Map<String, WorkoutDaySummary>? daySummaries,
     Map<String, List<String>>? dayExercisePreviews,
     PendingDeletion? Function()? pendingDeletion,
@@ -154,6 +161,8 @@ final class ProgramEditorEditing extends ProgramEditorState {
       lastSaveError: lastSaveError != null
           ? lastSaveError()
           : this.lastSaveError,
+      hadUnexpectedSaveError:
+          hadUnexpectedSaveError ?? this.hadUnexpectedSaveError,
       daySummaries: daySummaries ?? this.daySummaries,
       dayExercisePreviews: dayExercisePreviews ?? this.dayExercisePreviews,
       pendingDeletion: pendingDeletion != null
@@ -173,6 +182,7 @@ final class ProgramEditorEditing extends ProgramEditorState {
     deletionCandidateDraftId,
     validation,
     lastSaveError,
+    hadUnexpectedSaveError,
     daySummaries,
     dayExercisePreviews,
     pendingDeletion,

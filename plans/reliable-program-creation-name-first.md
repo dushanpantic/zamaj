@@ -319,9 +319,9 @@ and the docs step are `trivial`.
 - [x] Slice 2: Confirm before discarding a typed-but-uncreated name
   - [x] Step 2.1: Pure discard-confirmation predicate
   - [x] Step 2.2: Gate dialog dismissal on the predicate
-- [ ] Slice 3: Editor is edit-only and cannot crash on save
-  - [ ] Step 3.1: Editor refuses to enter create mode; save failures never crash
-  - [ ] Step 3.2: Serialize editor mutations (single-writer)
+- [x] Slice 3: Editor is edit-only and cannot crash on save
+  - [x] Step 3.1: Editor refuses to enter create mode; save failures never crash
+  - [x] Step 3.2: Serialize editor mutations (single-writer)
 
 #### Wave 3
 - [ ] Slice 4: Document the name-first creation flow
@@ -331,11 +331,11 @@ and the docs step are `trivial`.
 
 - [x] AC1 — Creating "ASDF" yields exactly one program; no partial-name programs
 - [x] AC2 — Empty/whitespace/over-limit name cannot create
-- [ ] AC3 — Create → add empty day → back: no crash; save failures non-fatal
-- [x] AC4 — Exactly one insert; editor never in create mode from the list _(create half; editor-edit-only half lands in Slice 3)_
+- [x] AC3 — Create → add empty day → back: no crash; save failures non-fatal
+- [x] AC4 — Exactly one insert; editor never in create mode from the list
 - [x] AC5 — Both entry points open the dialog; editor opens for the new program; cancel creates nothing
 - [x] AC6 — Typed-name dismissal confirms; empty dismisses silently
-- [ ] AC7 — Existing rename/day-management/edit unaffected; no duplicates on edit
+- [x] AC7 — Existing rename/day-management/edit unaffected; no duplicates on edit
 - [ ] AC8 — PRODUCT.md reflects name-first creation
 
 ## Plan Review Summary

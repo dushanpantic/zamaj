@@ -237,6 +237,7 @@ class _ProgramEditorScreenState extends State<ProgramEditorScreen> {
         :final isCreateMode,
         :final isSaving,
         :final lastSaveError,
+        :final hadUnexpectedSaveError,
         :final pendingDeletion,
       ) =>
         () {
@@ -261,6 +262,11 @@ class _ProgramEditorScreenState extends State<ProgramEditorScreen> {
                   AppNoticeBanner(
                     title: presentedSaveError.title,
                     body: presentedSaveError.body,
+                  ),
+                if (hadUnexpectedSaveError)
+                  const AppNoticeBanner(
+                    title: "Couldn't save changes",
+                    body: 'Something went wrong. Please try again.',
                   ),
                 if (!isCreateMode)
                   ProgramStatsHeader(
