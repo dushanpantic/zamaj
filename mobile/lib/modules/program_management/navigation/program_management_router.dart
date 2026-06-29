@@ -25,7 +25,6 @@ abstract final class ProgramManagementRouter {
           return BlocProvider(
             create: (_) => ProgramEditorBloc(
               programRepository: context.read<ProgramRepository>(),
-              aggregateSaver: AggregateSaver(context.read<ProgramRepository>()),
             ),
             child: ProgramEditorScreen(args: args ?? const ProgramEditorArgs()),
           );

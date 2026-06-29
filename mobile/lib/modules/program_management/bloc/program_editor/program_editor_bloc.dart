@@ -1,20 +1,17 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:uuid/uuid.dart';
 import 'package:zamaj/modules/domain/domain.dart';
 import 'package:zamaj/modules/program_management/models/program_editor_draft.dart';
 import 'package:zamaj/modules/program_management/models/workout_day_summary.dart';
-import 'package:zamaj/modules/program_management/services/aggregate_saver.dart';
 
 import 'program_editor_event.dart';
 import 'program_editor_state.dart';
 
 class ProgramEditorBloc extends Bloc<ProgramEditorEvent, ProgramEditorState> {
-  ProgramEditorBloc({
-    required ProgramRepository programRepository,
-    required AggregateSaver aggregateSaver,
-  }) : _programRepository = programRepository,
-       _aggregateSaver = aggregateSaver,
-       super(const ProgramEditorInitial()) {
+  ProgramEditorBloc({required ProgramRepository programRepository})
+    : _programRepository = programRepository,
+      super(const ProgramEditorInitial()) {
     on<ProgramEditorOpened>(_onOpened);
     on<ProgramEditorNameChanged>(_onNameChanged);
     on<ProgramEditorWorkoutDayAdded>(_onWorkoutDayAdded);
@@ -33,10 +30,26 @@ class ProgramEditorBloc extends Bloc<ProgramEditorEvent, ProgramEditorState> {
   static const int _exercisePreviewLimit = 5;
 
   final ProgramRepository _programRepository;
-  final AggregateSaver _aggregateSaver;
   final _uuid = const Uuid();
 
   List<WorkoutDay> _baselineWorkoutDays = [];
+
+  /// Serializes the repository-write critical section of every mutation into a
+  /// single writer. Each persist (or duplicate) runs to completion — repo write
+  /// plus the [_baselineWorkoutDays] reload — before the next starts, no matter
+  /// which event triggered it. Without this, a name edit overlapping an
+  /// add/reorder/delete could diff against a half-updated baseline and issue a
+  /// duplicate or wrong write.
+  Future<void> _writeLock = Future<void>.value();
+
+  /// Runs [action] after any in-flight write finishes; the next caller waits
+  /// for [action] in turn. Errors are isolated so the lock never deadlocks
+  /// (each caller still observes its own failure).
+  Future<void> _serialized(Future<void> Function() action) {
+    final run = _writeLock.then((_) => action());
+    _writeLock = run.then((_) {}, onError: (_) {});
+    return run;
+  }
 
   Map<String, WorkoutDaySummary> _summariesFor(List<WorkoutDay> days) {
     return {
@@ -71,23 +84,11 @@ class ProgramEditorBloc extends Bloc<ProgramEditorEvent, ProgramEditorState> {
   ) async {
     final programId = event.programId;
 
+    // The editor is edit-only: programs are created name-first from the list,
+    // so the editor always opens an existing program. A null id is a defensive
+    // dead-end (a deleted/never-created program), never a create draft.
     if (programId == null) {
-      const draft = ProgramDraft(
-        programId: null,
-        name: '',
-        workoutDays: [],
-        schemaVersion: null,
-      );
-      emit(
-        ProgramEditorEditing(
-          draft: draft,
-          isCreateMode: true,
-          validation: ProgramDraftValidation.compute(
-            name: draft.name,
-            isCreateMode: true,
-          ),
-        ),
-      );
+      emit(const ProgramEditorNotFound(programId: ''));
       return;
     }
 
@@ -124,11 +125,7 @@ class ProgramEditorBloc extends Bloc<ProgramEditorEvent, ProgramEditorState> {
       emit(
         ProgramEditorEditing(
           draft: draft,
-          isCreateMode: false,
-          validation: ProgramDraftValidation.compute(
-            name: draft.name,
-            isCreateMode: false,
-          ),
+          validation: ProgramDraftValidation.compute(name: draft.name),
           daySummaries: _summariesFor(workoutDays),
           dayExercisePreviews: _previewsFor(workoutDays),
           programUpdatedAt: program.updatedAt,
@@ -143,12 +140,8 @@ class ProgramEditorBloc extends Bloc<ProgramEditorEvent, ProgramEditorState> {
             workoutDays: [],
             schemaVersion: null,
           ),
-          isCreateMode: false,
           lastSaveError: e,
-          validation: ProgramDraftValidation.compute(
-            name: '',
-            isCreateMode: false,
-          ),
+          validation: ProgramDraftValidation.compute(name: ''),
         ),
       );
     }
@@ -162,10 +155,7 @@ class ProgramEditorBloc extends Bloc<ProgramEditorEvent, ProgramEditorState> {
     if (current is! ProgramEditorEditing) return;
 
     final updatedDraft = current.draft.copyWith(name: event.name);
-    final validation = ProgramDraftValidation.compute(
-      name: event.name,
-      isCreateMode: current.isCreateMode,
-    );
+    final validation = ProgramDraftValidation.compute(name: event.name);
 
     emit(
       current.copyWith(
@@ -374,69 +364,52 @@ class ProgramEditorBloc extends Bloc<ProgramEditorEvent, ProgramEditorState> {
     if (current is! ProgramEditorEditing) return;
     if (!current.validation.canSave) return;
 
-    emit(current.copyWith(isSaving: true));
+    // Snapshot the draft now, before the lock can defer the write past later
+    // optimistic emits.
+    final draft = current.draft;
+    emit(current.copyWith(isSaving: true, hadUnexpectedSaveError: false));
 
-    try {
-      if (current.isCreateMode) {
-        await _persistCreate(emit);
-      } else {
-        await _persistEdit(emit);
+    await _serialized(() async {
+      try {
+        await _persistEdit(draft, emit);
+      } on DomainError catch (e) {
+        if (emit.isDone) return;
+        final latest = state;
+        if (latest is ProgramEditorEditing) {
+          emit(latest.copyWith(isSaving: false, lastSaveError: () => e));
+        }
+      } catch (e, stack) {
+        _surfaceUnexpectedSaveError(emit, e, stack);
       }
-    } on DomainError catch (e) {
-      final latest = state;
-      if (latest is ProgramEditorEditing) {
-        emit(latest.copyWith(isSaving: false, lastSaveError: () => e));
-      }
+    });
+  }
+
+  /// Turns an unexpected (non-[DomainError]) save failure into a non-fatal
+  /// notice instead of an uncaught crash, while still leaving a diagnostic
+  /// trail.
+  void _surfaceUnexpectedSaveError(
+    Emitter<ProgramEditorState> emit,
+    Object error,
+    StackTrace stack,
+  ) {
+    debugPrint('ProgramEditor: unexpected save failure: $error\n$stack');
+    // The triggering error may itself be a post-close emit failure; never emit
+    // again on a finished emitter or this handler re-throws uncaught.
+    if (emit.isDone) return;
+    final latest = state;
+    if (latest is ProgramEditorEditing) {
+      emit(latest.copyWith(isSaving: false, hadUnexpectedSaveError: true));
     }
   }
 
-  Future<void> _persistCreate(Emitter<ProgramEditorState> emit) async {
-    final current = state;
-    if (current is! ProgramEditorEditing) return;
-
-    final saved = await _aggregateSaver.save(current.draft);
-
-    final workoutDays = await _programRepository.listWorkoutDaysForProgram(
-      saved.id,
-    );
-    _baselineWorkoutDays = List.unmodifiable(workoutDays);
-
-    final reloadedDraft = ProgramDraft(
-      programId: saved.id,
-      name: saved.name,
-      workoutDays: workoutDays
-          .map(
-            (day) => WorkoutDayDraft(
-              draftId: day.id,
-              persistedId: day.id,
-              name: day.name,
-              groups: const [],
-            ),
-          )
-          .toList(),
-      schemaVersion: saved.schemaVersion,
-    );
-
-    emit(
-      ProgramEditorEditing(
-        draft: reloadedDraft,
-        isCreateMode: false,
-        validation: ProgramDraftValidation.compute(
-          name: reloadedDraft.name,
-          isCreateMode: false,
-        ),
-        daySummaries: _summariesFor(workoutDays),
-        dayExercisePreviews: _previewsFor(workoutDays),
-        programUpdatedAt: saved.updatedAt,
-      ),
-    );
-  }
-
-  Future<void> _persistEdit(Emitter<ProgramEditorState> emit) async {
-    final current = state;
-    if (current is! ProgramEditorEditing) return;
-
-    final draft = current.draft;
+  /// Persists [draft] — the snapshot captured at the moment the mutation was
+  /// applied, **not** `state`. Because the write-lock can defer this past later
+  /// optimistic emits, reading `state` here would diff a moved-on draft against
+  /// a reloaded baseline; the captured snapshot keeps the diff self-consistent.
+  Future<void> _persistEdit(
+    ProgramDraft draft,
+    Emitter<ProgramEditorState> emit,
+  ) async {
     final programId = draft.programId;
     if (programId == null) return;
 
@@ -530,11 +503,7 @@ class ProgramEditorBloc extends Bloc<ProgramEditorEvent, ProgramEditorState> {
     emit(
       ProgramEditorEditing(
         draft: reloadedDraft,
-        isCreateMode: false,
-        validation: ProgramDraftValidation.compute(
-          name: reloadedDraft.name,
-          isCreateMode: false,
-        ),
+        validation: ProgramDraftValidation.compute(name: reloadedDraft.name),
         daySummaries: _summariesFor(reloadedDays),
         dayExercisePreviews: _previewsFor(reloadedDays),
         programUpdatedAt: reloadedProgram.updatedAt,
@@ -555,53 +524,63 @@ class ProgramEditorBloc extends Bloc<ProgramEditorEvent, ProgramEditorState> {
     final sourcePersistedId = source?.persistedId;
     if (sourcePersistedId == null) return;
 
-    try {
-      await _programRepository.duplicateWorkoutDay(sourcePersistedId);
-    } on DomainError catch (e) {
-      final latest = state;
-      if (latest is ProgramEditorEditing) {
-        emit(latest.copyWith(lastSaveError: () => e));
-      }
-      return;
-    }
-
     final programId = current.draft.programId;
     if (programId == null) return;
 
-    final reloadedProgram = await _programRepository.getProgram(programId);
-    if (reloadedProgram == null) {
-      emit(ProgramEditorNotFound(programId: programId));
-      return;
-    }
-    final reloadedDays = await _programRepository.listWorkoutDaysForProgram(
-      programId,
-    );
-    _baselineWorkoutDays = List.unmodifiable(reloadedDays);
+    // Shares the single-writer lock with [_persist] so a duplicate can't race a
+    // concurrent edit's baseline, and is wrapped so a non-domain failure is a
+    // non-fatal notice rather than a crash (parity with the persist path).
+    await _serialized(() async {
+      try {
+        await _programRepository.duplicateWorkoutDay(sourcePersistedId);
 
-    final reloadedDraft = ProgramDraft(
-      programId: reloadedProgram.id,
-      name: reloadedProgram.name,
-      workoutDays: reloadedDays
-          .map(
-            (day) => WorkoutDayDraft(
-              draftId: day.id,
-              persistedId: day.id,
-              name: day.name,
-              groups: const [],
+        final reloadedProgram = await _programRepository.getProgram(programId);
+        if (reloadedProgram == null) {
+          emit(ProgramEditorNotFound(programId: programId));
+          return;
+        }
+        final reloadedDays = await _programRepository.listWorkoutDaysForProgram(
+          programId,
+        );
+        _baselineWorkoutDays = List.unmodifiable(reloadedDays);
+
+        final reloadedDraft = ProgramDraft(
+          programId: reloadedProgram.id,
+          name: reloadedProgram.name,
+          workoutDays: reloadedDays
+              .map(
+                (day) => WorkoutDayDraft(
+                  draftId: day.id,
+                  persistedId: day.id,
+                  name: day.name,
+                  groups: const [],
+                ),
+              )
+              .toList(),
+          schemaVersion: reloadedProgram.schemaVersion,
+        );
+
+        final latest = state;
+        if (latest is ProgramEditorEditing) {
+          emit(
+            latest.copyWith(
+              draft: reloadedDraft,
+              daySummaries: _summariesFor(reloadedDays),
+              dayExercisePreviews: _previewsFor(reloadedDays),
+              programUpdatedAt: () => reloadedProgram.updatedAt,
+              lastSaveError: () => null,
             ),
-          )
-          .toList(),
-      schemaVersion: reloadedProgram.schemaVersion,
-    );
-
-    emit(
-      current.copyWith(
-        draft: reloadedDraft,
-        daySummaries: _summariesFor(reloadedDays),
-        dayExercisePreviews: _previewsFor(reloadedDays),
-        programUpdatedAt: () => reloadedProgram.updatedAt,
-        lastSaveError: () => null,
-      ),
-    );
+          );
+        }
+      } on DomainError catch (e) {
+        if (emit.isDone) return;
+        final latest = state;
+        if (latest is ProgramEditorEditing) {
+          emit(latest.copyWith(lastSaveError: () => e));
+        }
+      } catch (e, stack) {
+        _surfaceUnexpectedSaveError(emit, e, stack);
+      }
+    });
   }
 }
