@@ -38,22 +38,16 @@ void main() {
   });
 
   group('ProgramDraftValidation unified 100 limit', () {
-    test('120-char name is invalid even on create', () {
+    test('120-char name is invalid', () {
       expect(
-        ProgramDraftValidation.compute(
-          name: 'A' * 120,
-          isCreateMode: true,
-        ).isNameValid,
+        ProgramDraftValidation.compute(name: 'A' * 120).isNameValid,
         isFalse,
       );
     });
 
-    test('100-char name is valid on create', () {
+    test('100-char name is valid', () {
       expect(
-        ProgramDraftValidation.compute(
-          name: 'A' * 100,
-          isCreateMode: true,
-        ).isNameValid,
+        ProgramDraftValidation.compute(name: 'A' * 100).isNameValid,
         isTrue,
       );
     });

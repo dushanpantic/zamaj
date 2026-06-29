@@ -116,7 +116,13 @@ class _NewProgramDialogState extends State<NewProgramDialog> {
           AppSpacing.md,
         ),
         actions: [
-          TextButton(onPressed: _attemptDismiss, child: const Text('Cancel')),
+          TextButton(
+            onPressed: _attemptDismiss,
+            style: TextButton.styleFrom(
+              minimumSize: const Size.fromHeight(AppSpacing.touchMin),
+            ),
+            child: const Text('Cancel'),
+          ),
           FilledButton(
             onPressed: _canCreate ? _create : null,
             style: FilledButton.styleFrom(

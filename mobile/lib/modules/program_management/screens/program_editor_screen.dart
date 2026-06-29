@@ -234,7 +234,6 @@ class _ProgramEditorScreenState extends State<ProgramEditorScreen> {
       ),
       ProgramEditorEditing(
         :final draft,
-        :final isCreateMode,
         :final isSaving,
         :final lastSaveError,
         :final hadUnexpectedSaveError,
@@ -268,12 +267,11 @@ class _ProgramEditorScreenState extends State<ProgramEditorScreen> {
                     title: "Couldn't save changes",
                     body: 'Something went wrong. Please try again.',
                   ),
-                if (!isCreateMode)
-                  ProgramStatsHeader(
-                    dayCount: draft.workoutDays.length,
-                    exerciseCount: state.totalExerciseCount,
-                    lastEdited: state.programUpdatedAt,
-                  ),
+                ProgramStatsHeader(
+                  dayCount: draft.workoutDays.length,
+                  exerciseCount: state.totalExerciseCount,
+                  lastEdited: state.programUpdatedAt,
+                ),
                 Expanded(
                   child: ProgramEditorDayList(
                     state: state,

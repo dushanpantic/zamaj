@@ -6,6 +6,17 @@ import 'package:zamaj/modules/program_management/services/program_name_rules.dar
 
 import '../../../../support/fake_program_repository.dart';
 
+/// Awaits the first [ProgramListLoaded] matching [test], failing fast with a
+/// readable timeout rather than hanging until the global harness timeout.
+Future<ProgramListLoaded> _awaitLoaded(
+  ProgramListBloc bloc,
+  bool Function(ProgramListLoaded) test,
+) async =>
+    await bloc.stream
+            .firstWhere((s) => s is ProgramListLoaded && test(s))
+            .timeout(const Duration(seconds: 5))
+        as ProgramListLoaded;
+
 void main() {
   group('ProgramListBloc create', () {
     late FakeProgramRepository repo;
@@ -22,9 +33,7 @@ void main() {
 
     test('creates exactly one program with the given name', () async {
       bloc.add(const ProgramCreateRequested(name: 'ASDF'));
-      await bloc.stream.firstWhere(
-        (s) => s is ProgramListLoaded && s.programs.isNotEmpty,
-      );
+      await _awaitLoaded(bloc, (s) => s.programs.isNotEmpty);
 
       expect(repo.createProgramCalls, equals(['ASDF']));
       expect(repo.programs, hasLength(1));
@@ -33,11 +42,10 @@ void main() {
 
     test('surfaces the created program id for navigation', () async {
       bloc.add(const ProgramCreateRequested(name: 'ASDF'));
-      final state =
-          await bloc.stream.firstWhere(
-                (s) => s is ProgramListLoaded && s.lastCreatedProgramId != null,
-              )
-              as ProgramListLoaded;
+      final state = await _awaitLoaded(
+        bloc,
+        (s) => s.lastCreatedProgramId != null,
+      );
 
       expect(state.lastCreatedProgramId, equals(repo.programs.single.id));
       expect(state.programs.single.name, equals('ASDF'));
@@ -45,9 +53,7 @@ void main() {
 
     test('a single request never creates more than one program', () async {
       bloc.add(const ProgramCreateRequested(name: 'ASDF'));
-      await bloc.stream.firstWhere(
-        (s) => s is ProgramListLoaded && s.programs.isNotEmpty,
-      );
+      await _awaitLoaded(bloc, (s) => s.programs.isNotEmpty);
 
       expect(repo.createProgramCalls, hasLength(1));
       expect(
@@ -58,8 +64,10 @@ void main() {
 
     test('does not create a program for an empty name', () async {
       bloc.add(const ProgramCreateRequested(name: ''));
-      // Give the (no-op) handler a chance to run.
-      await Future<void>.delayed(Duration.zero);
+      // The invalid create returns synchronously without emitting; drain the
+      // bloc deterministically by awaiting a sentinel load that DOES emit.
+      bloc.add(const ProgramListRequested());
+      await _awaitLoaded(bloc, (_) => true);
 
       expect(repo.createProgramCalls, isEmpty);
       expect(repo.programs, isEmpty);
@@ -67,7 +75,8 @@ void main() {
 
     test('does not create a program for a whitespace-only name', () async {
       bloc.add(const ProgramCreateRequested(name: '   '));
-      await Future<void>.delayed(Duration.zero);
+      bloc.add(const ProgramListRequested());
+      await _awaitLoaded(bloc, (_) => true);
 
       expect(repo.createProgramCalls, isEmpty);
       expect(repo.programs, isEmpty);
@@ -75,25 +84,20 @@ void main() {
 
     test('trims the name before creating', () async {
       bloc.add(const ProgramCreateRequested(name: '  Push Pull Legs  '));
-      await bloc.stream.firstWhere(
-        (s) => s is ProgramListLoaded && s.programs.isNotEmpty,
-      );
+      await _awaitLoaded(bloc, (s) => s.programs.isNotEmpty);
 
       expect(repo.programs.single.name, equals('Push Pull Legs'));
     });
 
     test('navigation signal is one-shot — cleared once handled', () async {
       bloc.add(const ProgramCreateRequested(name: 'ASDF'));
-      await bloc.stream.firstWhere(
-        (s) => s is ProgramListLoaded && s.lastCreatedProgramId != null,
-      );
+      await _awaitLoaded(bloc, (s) => s.lastCreatedProgramId != null);
 
       bloc.add(const ProgramCreateNavigationHandled());
-      final cleared =
-          await bloc.stream.firstWhere(
-                (s) => s is ProgramListLoaded && s.lastCreatedProgramId == null,
-              )
-              as ProgramListLoaded;
+      final cleared = await _awaitLoaded(
+        bloc,
+        (s) => s.lastCreatedProgramId == null,
+      );
 
       expect(cleared.lastCreatedProgramId, isNull);
       // The program itself is untouched by clearing the navigation signal.

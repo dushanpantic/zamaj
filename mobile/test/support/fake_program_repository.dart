@@ -31,6 +31,10 @@ class FakeProgramRepository implements ProgramRepository {
   /// inserting — used to exercise the editor's save-failure path.
   Object? createWorkoutDayError;
 
+  /// When non-null, [createWorkoutDay] awaits this before doing anything — lets
+  /// a test suspend a persist mid-flight (e.g. to close the bloc underneath it).
+  Future<void>? createWorkoutDayGate;
+
   @override
   Future<Program> createProgram({required String name}) async {
     createProgramCalls.add(name);
@@ -87,6 +91,8 @@ class FakeProgramRepository implements ProgramRepository {
     required String programId,
     required String name,
   }) async {
+    final gate = createWorkoutDayGate;
+    if (gate != null) await gate;
     final error = createWorkoutDayError;
     if (error != null) throw error;
     final now = DateTime.now().toUtc();

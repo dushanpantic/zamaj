@@ -2,6 +2,7 @@ import 'package:equatable/equatable.dart';
 import 'package:zamaj/modules/domain/domain.dart';
 import 'package:zamaj/modules/program_management/models/program_editor_draft.dart';
 import 'package:zamaj/modules/program_management/models/workout_day_summary.dart';
+import 'package:zamaj/modules/program_management/services/program_name_rules.dart';
 
 final class ProgramDraftValidation extends Equatable {
   const ProgramDraftValidation({required this.isNameValid});
@@ -10,17 +11,13 @@ final class ProgramDraftValidation extends Equatable {
 
   bool get canSave => isNameValid;
 
-  static ProgramDraftValidation compute({
-    required String name,
-    required bool isCreateMode,
-  }) {
-    final trimmed = name.trim();
-    // Program-name limit is a uniform 100 chars on both create and edit; the
-    // former 120-on-create cap is gone (single bound in domain ProgramRules).
-    final isNameValid =
-        trimmed.isNotEmpty &&
-        trimmed.length <= ProgramRules.programNameMaxLength;
-    return ProgramDraftValidation(isNameValid: isNameValid);
+  /// Name validity for saving a program. Delegates to the single create/save
+  /// rule in [ProgramNameRules] (non-empty after trim, within the uniform
+  /// 100-char bound) so the create dialog and the editor never diverge.
+  static ProgramDraftValidation compute({required String name}) {
+    return ProgramDraftValidation(
+      isNameValid: ProgramNameRules.canCreate(name),
+    );
   }
 
   @override
@@ -74,7 +71,6 @@ final class ProgramEditorNotFound extends ProgramEditorState {
 final class ProgramEditorEditing extends ProgramEditorState {
   const ProgramEditorEditing({
     required this.draft,
-    required this.isCreateMode,
     required this.validation,
     this.isSaving = false,
     this.deletionCandidateDraftId,
@@ -87,7 +83,6 @@ final class ProgramEditorEditing extends ProgramEditorState {
   });
 
   final ProgramDraft draft;
-  final bool isCreateMode;
   final bool isSaving;
   final String? deletionCandidateDraftId;
   final ProgramDraftValidation validation;
@@ -113,8 +108,8 @@ final class ProgramEditorEditing extends ProgramEditorState {
   final PendingDeletion? pendingDeletion;
 
   /// Last time the program (or any of its children) was saved. Used by the
-  /// header strip's "last edited" label. `null` while the program is still
-  /// in create mode (not yet persisted).
+  /// header strip's "last edited" label. `null` until the first load/save
+  /// resolves.
   final DateTime? programUpdatedAt;
 
   WorkoutDaySummary summaryFor(WorkoutDayDraft day) {
@@ -139,7 +134,6 @@ final class ProgramEditorEditing extends ProgramEditorState {
 
   ProgramEditorEditing copyWith({
     ProgramDraft? draft,
-    bool? isCreateMode,
     bool? isSaving,
     ProgramDraftValidation? validation,
     String? Function()? deletionCandidateDraftId,
@@ -152,7 +146,6 @@ final class ProgramEditorEditing extends ProgramEditorState {
   }) {
     return ProgramEditorEditing(
       draft: draft ?? this.draft,
-      isCreateMode: isCreateMode ?? this.isCreateMode,
       isSaving: isSaving ?? this.isSaving,
       validation: validation ?? this.validation,
       deletionCandidateDraftId: deletionCandidateDraftId != null
@@ -177,7 +170,6 @@ final class ProgramEditorEditing extends ProgramEditorState {
   @override
   List<Object?> get props => [
     draft,
-    isCreateMode,
     isSaving,
     deletionCandidateDraftId,
     validation,

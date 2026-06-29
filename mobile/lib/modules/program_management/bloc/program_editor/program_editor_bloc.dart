@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:uuid/uuid.dart';
 import 'package:zamaj/modules/domain/domain.dart';
@@ -7,47 +8,22 @@ import 'package:zamaj/modules/program_management/models/workout_day_summary.dart
 import 'program_editor_event.dart';
 import 'program_editor_state.dart';
 
-/// Processes events one at a time, in arrival order — each handler runs to
-/// completion before the next starts. Applied to the persisting mutations so a
-/// burst of rapid edits (e.g. fast typing in the name field) can never overlap
-/// into interleaved writes with an inconsistent baseline.
-EventTransformer<E> _sequential<E>() =>
-    (events, mapper) => events.asyncExpand(mapper);
-
 class ProgramEditorBloc extends Bloc<ProgramEditorEvent, ProgramEditorState> {
   ProgramEditorBloc({required ProgramRepository programRepository})
     : _programRepository = programRepository,
       super(const ProgramEditorInitial()) {
     on<ProgramEditorOpened>(_onOpened);
-    on<ProgramEditorNameChanged>(_onNameChanged, transformer: _sequential());
-    on<ProgramEditorWorkoutDayAdded>(
-      _onWorkoutDayAdded,
-      transformer: _sequential(),
-    );
-    on<ProgramEditorWorkoutDayRenamed>(
-      _onWorkoutDayRenamed,
-      transformer: _sequential(),
-    );
+    on<ProgramEditorNameChanged>(_onNameChanged);
+    on<ProgramEditorWorkoutDayAdded>(_onWorkoutDayAdded);
+    on<ProgramEditorWorkoutDayRenamed>(_onWorkoutDayRenamed);
     on<ProgramEditorWorkoutDayDeleteRequested>(_onWorkoutDayDeleteRequested);
-    on<ProgramEditorWorkoutDayDeleteConfirmed>(
-      _onWorkoutDayDeleteConfirmed,
-      transformer: _sequential(),
-    );
+    on<ProgramEditorWorkoutDayDeleteConfirmed>(_onWorkoutDayDeleteConfirmed);
     on<ProgramEditorWorkoutDayDeleteCancelled>(_onWorkoutDayDeleteCancelled);
     on<ProgramEditorWorkoutDayDeleteOptimistic>(_onWorkoutDayDeleteOptimistic);
     on<ProgramEditorWorkoutDayDeleteUndone>(_onWorkoutDayDeleteUndone);
-    on<ProgramEditorWorkoutDayDeleteFinalized>(
-      _onWorkoutDayDeleteFinalized,
-      transformer: _sequential(),
-    );
-    on<ProgramEditorWorkoutDaysReordered>(
-      _onWorkoutDaysReordered,
-      transformer: _sequential(),
-    );
-    on<ProgramEditorWorkoutDayDuplicated>(
-      _onWorkoutDayDuplicated,
-      transformer: _sequential(),
-    );
+    on<ProgramEditorWorkoutDayDeleteFinalized>(_onWorkoutDayDeleteFinalized);
+    on<ProgramEditorWorkoutDaysReordered>(_onWorkoutDaysReordered);
+    on<ProgramEditorWorkoutDayDuplicated>(_onWorkoutDayDuplicated);
   }
 
   /// First N exercise names surfaced in the inline-expand peek.
@@ -57,6 +33,23 @@ class ProgramEditorBloc extends Bloc<ProgramEditorEvent, ProgramEditorState> {
   final _uuid = const Uuid();
 
   List<WorkoutDay> _baselineWorkoutDays = [];
+
+  /// Serializes the repository-write critical section of every mutation into a
+  /// single writer. Each persist (or duplicate) runs to completion — repo write
+  /// plus the [_baselineWorkoutDays] reload — before the next starts, no matter
+  /// which event triggered it. Without this, a name edit overlapping an
+  /// add/reorder/delete could diff against a half-updated baseline and issue a
+  /// duplicate or wrong write.
+  Future<void> _writeLock = Future<void>.value();
+
+  /// Runs [action] after any in-flight write finishes; the next caller waits
+  /// for [action] in turn. Errors are isolated so the lock never deadlocks
+  /// (each caller still observes its own failure).
+  Future<void> _serialized(Future<void> Function() action) {
+    final run = _writeLock.then((_) => action());
+    _writeLock = run.then((_) {}, onError: (_) {});
+    return run;
+  }
 
   Map<String, WorkoutDaySummary> _summariesFor(List<WorkoutDay> days) {
     return {
@@ -132,11 +125,7 @@ class ProgramEditorBloc extends Bloc<ProgramEditorEvent, ProgramEditorState> {
       emit(
         ProgramEditorEditing(
           draft: draft,
-          isCreateMode: false,
-          validation: ProgramDraftValidation.compute(
-            name: draft.name,
-            isCreateMode: false,
-          ),
+          validation: ProgramDraftValidation.compute(name: draft.name),
           daySummaries: _summariesFor(workoutDays),
           dayExercisePreviews: _previewsFor(workoutDays),
           programUpdatedAt: program.updatedAt,
@@ -151,12 +140,8 @@ class ProgramEditorBloc extends Bloc<ProgramEditorEvent, ProgramEditorState> {
             workoutDays: [],
             schemaVersion: null,
           ),
-          isCreateMode: false,
           lastSaveError: e,
-          validation: ProgramDraftValidation.compute(
-            name: '',
-            isCreateMode: false,
-          ),
+          validation: ProgramDraftValidation.compute(name: ''),
         ),
       );
     }
@@ -170,10 +155,7 @@ class ProgramEditorBloc extends Bloc<ProgramEditorEvent, ProgramEditorState> {
     if (current is! ProgramEditorEditing) return;
 
     final updatedDraft = current.draft.copyWith(name: event.name);
-    final validation = ProgramDraftValidation.compute(
-      name: event.name,
-      isCreateMode: current.isCreateMode,
-    );
+    final validation = ProgramDraftValidation.compute(name: event.name);
 
     emit(
       current.copyWith(
@@ -382,30 +364,52 @@ class ProgramEditorBloc extends Bloc<ProgramEditorEvent, ProgramEditorState> {
     if (current is! ProgramEditorEditing) return;
     if (!current.validation.canSave) return;
 
+    // Snapshot the draft now, before the lock can defer the write past later
+    // optimistic emits.
+    final draft = current.draft;
     emit(current.copyWith(isSaving: true, hadUnexpectedSaveError: false));
 
-    try {
-      await _persistEdit(emit);
-    } on DomainError catch (e) {
-      final latest = state;
-      if (latest is ProgramEditorEditing) {
-        emit(latest.copyWith(isSaving: false, lastSaveError: () => e));
+    await _serialized(() async {
+      try {
+        await _persistEdit(draft, emit);
+      } on DomainError catch (e) {
+        if (emit.isDone) return;
+        final latest = state;
+        if (latest is ProgramEditorEditing) {
+          emit(latest.copyWith(isSaving: false, lastSaveError: () => e));
+        }
+      } catch (e, stack) {
+        _surfaceUnexpectedSaveError(emit, e, stack);
       }
-    } catch (_) {
-      // Defense-in-depth: an unexpected (non-domain) failure must surface as a
-      // non-fatal notice, never an uncaught exception that crashes the editor.
-      final latest = state;
-      if (latest is ProgramEditorEditing) {
-        emit(latest.copyWith(isSaving: false, hadUnexpectedSaveError: true));
-      }
+    });
+  }
+
+  /// Turns an unexpected (non-[DomainError]) save failure into a non-fatal
+  /// notice instead of an uncaught crash, while still leaving a diagnostic
+  /// trail.
+  void _surfaceUnexpectedSaveError(
+    Emitter<ProgramEditorState> emit,
+    Object error,
+    StackTrace stack,
+  ) {
+    debugPrint('ProgramEditor: unexpected save failure: $error\n$stack');
+    // The triggering error may itself be a post-close emit failure; never emit
+    // again on a finished emitter or this handler re-throws uncaught.
+    if (emit.isDone) return;
+    final latest = state;
+    if (latest is ProgramEditorEditing) {
+      emit(latest.copyWith(isSaving: false, hadUnexpectedSaveError: true));
     }
   }
 
-  Future<void> _persistEdit(Emitter<ProgramEditorState> emit) async {
-    final current = state;
-    if (current is! ProgramEditorEditing) return;
-
-    final draft = current.draft;
+  /// Persists [draft] — the snapshot captured at the moment the mutation was
+  /// applied, **not** `state`. Because the write-lock can defer this past later
+  /// optimistic emits, reading `state` here would diff a moved-on draft against
+  /// a reloaded baseline; the captured snapshot keeps the diff self-consistent.
+  Future<void> _persistEdit(
+    ProgramDraft draft,
+    Emitter<ProgramEditorState> emit,
+  ) async {
     final programId = draft.programId;
     if (programId == null) return;
 
@@ -499,11 +503,7 @@ class ProgramEditorBloc extends Bloc<ProgramEditorEvent, ProgramEditorState> {
     emit(
       ProgramEditorEditing(
         draft: reloadedDraft,
-        isCreateMode: false,
-        validation: ProgramDraftValidation.compute(
-          name: reloadedDraft.name,
-          isCreateMode: false,
-        ),
+        validation: ProgramDraftValidation.compute(name: reloadedDraft.name),
         daySummaries: _summariesFor(reloadedDays),
         dayExercisePreviews: _previewsFor(reloadedDays),
         programUpdatedAt: reloadedProgram.updatedAt,
@@ -524,53 +524,63 @@ class ProgramEditorBloc extends Bloc<ProgramEditorEvent, ProgramEditorState> {
     final sourcePersistedId = source?.persistedId;
     if (sourcePersistedId == null) return;
 
-    try {
-      await _programRepository.duplicateWorkoutDay(sourcePersistedId);
-    } on DomainError catch (e) {
-      final latest = state;
-      if (latest is ProgramEditorEditing) {
-        emit(latest.copyWith(lastSaveError: () => e));
-      }
-      return;
-    }
-
     final programId = current.draft.programId;
     if (programId == null) return;
 
-    final reloadedProgram = await _programRepository.getProgram(programId);
-    if (reloadedProgram == null) {
-      emit(ProgramEditorNotFound(programId: programId));
-      return;
-    }
-    final reloadedDays = await _programRepository.listWorkoutDaysForProgram(
-      programId,
-    );
-    _baselineWorkoutDays = List.unmodifiable(reloadedDays);
+    // Shares the single-writer lock with [_persist] so a duplicate can't race a
+    // concurrent edit's baseline, and is wrapped so a non-domain failure is a
+    // non-fatal notice rather than a crash (parity with the persist path).
+    await _serialized(() async {
+      try {
+        await _programRepository.duplicateWorkoutDay(sourcePersistedId);
 
-    final reloadedDraft = ProgramDraft(
-      programId: reloadedProgram.id,
-      name: reloadedProgram.name,
-      workoutDays: reloadedDays
-          .map(
-            (day) => WorkoutDayDraft(
-              draftId: day.id,
-              persistedId: day.id,
-              name: day.name,
-              groups: const [],
+        final reloadedProgram = await _programRepository.getProgram(programId);
+        if (reloadedProgram == null) {
+          emit(ProgramEditorNotFound(programId: programId));
+          return;
+        }
+        final reloadedDays = await _programRepository.listWorkoutDaysForProgram(
+          programId,
+        );
+        _baselineWorkoutDays = List.unmodifiable(reloadedDays);
+
+        final reloadedDraft = ProgramDraft(
+          programId: reloadedProgram.id,
+          name: reloadedProgram.name,
+          workoutDays: reloadedDays
+              .map(
+                (day) => WorkoutDayDraft(
+                  draftId: day.id,
+                  persistedId: day.id,
+                  name: day.name,
+                  groups: const [],
+                ),
+              )
+              .toList(),
+          schemaVersion: reloadedProgram.schemaVersion,
+        );
+
+        final latest = state;
+        if (latest is ProgramEditorEditing) {
+          emit(
+            latest.copyWith(
+              draft: reloadedDraft,
+              daySummaries: _summariesFor(reloadedDays),
+              dayExercisePreviews: _previewsFor(reloadedDays),
+              programUpdatedAt: () => reloadedProgram.updatedAt,
+              lastSaveError: () => null,
             ),
-          )
-          .toList(),
-      schemaVersion: reloadedProgram.schemaVersion,
-    );
-
-    emit(
-      current.copyWith(
-        draft: reloadedDraft,
-        daySummaries: _summariesFor(reloadedDays),
-        dayExercisePreviews: _previewsFor(reloadedDays),
-        programUpdatedAt: () => reloadedProgram.updatedAt,
-        lastSaveError: () => null,
-      ),
-    );
+          );
+        }
+      } on DomainError catch (e) {
+        if (emit.isDone) return;
+        final latest = state;
+        if (latest is ProgramEditorEditing) {
+          emit(latest.copyWith(lastSaveError: () => e));
+        }
+      } catch (e, stack) {
+        _surfaceUnexpectedSaveError(emit, e, stack);
+      }
+    });
   }
 }
