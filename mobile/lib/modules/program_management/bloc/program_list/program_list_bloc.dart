@@ -41,10 +41,7 @@ class ProgramListBloc extends Bloc<ProgramListEvent, ProgramListState> {
       final created = await _programRepository.createProgram(name: name);
       final programs = await _sortedPrograms();
       emit(
-        ProgramListLoaded(
-          programs: programs,
-          lastCreatedProgramId: created.id,
-        ),
+        ProgramListLoaded(programs: programs, lastCreatedProgramId: created.id),
       );
     } on DomainError catch (e) {
       // Surface as a non-fatal notice (the same channel as a failed delete).

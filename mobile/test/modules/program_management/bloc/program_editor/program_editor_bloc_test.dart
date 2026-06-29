@@ -45,30 +45,32 @@ void main() {
       expect(repo.programs, isEmpty);
     });
 
-    test('renaming and adding a day never creates a duplicate program',
-        () async {
-      final program = repo.seedProgram('Old');
-      final bloc = _bloc(repo);
-      addTearDown(bloc.close);
+    test(
+      'renaming and adding a day never creates a duplicate program',
+      () async {
+        final program = repo.seedProgram('Old');
+        final bloc = _bloc(repo);
+        addTearDown(bloc.close);
 
-      bloc.add(ProgramEditorOpened(programId: program.id));
-      await _firstEditing(bloc);
+        bloc.add(ProgramEditorOpened(programId: program.id));
+        await _firstEditing(bloc);
 
-      bloc.add(const ProgramEditorNameChanged(name: 'New'));
-      bloc.add(const ProgramEditorWorkoutDayAdded(name: 'Day 1'));
+        bloc.add(const ProgramEditorNameChanged(name: 'New'));
+        bloc.add(const ProgramEditorWorkoutDayAdded(name: 'Day 1'));
 
-      await bloc.stream.firstWhere(
-        (s) =>
-            s is ProgramEditorEditing &&
-            s.draft.workoutDays.any((d) => d.persistedId != null),
-      );
+        await bloc.stream.firstWhere(
+          (s) =>
+              s is ProgramEditorEditing &&
+              s.draft.workoutDays.any((d) => d.persistedId != null),
+        );
 
-      expect(repo.programs, hasLength(1));
-      expect(repo.programs.single.name, equals('New'));
-      final days = await repo.listWorkoutDaysForProgram(program.id);
-      expect(days, hasLength(1));
-      expect(days.single.name, equals('Day 1'));
-    });
+        expect(repo.programs, hasLength(1));
+        expect(repo.programs.single.name, equals('New'));
+        final days = await repo.listWorkoutDaysForProgram(program.id);
+        expect(days, hasLength(1));
+        expect(days.single.name, equals('Day 1'));
+      },
+    );
 
     test('rapid same-type edits apply in order to a single program', () async {
       final program = repo.seedProgram('Old');

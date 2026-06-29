@@ -2,7 +2,7 @@
 
 **Created**: 2026-06-29
 **Branch**: master
-**Status**: approved
+**Status**: implemented
 **Spec**: docs/specs/reliable-program-creation.md
 **Approval**: Approved by user (interactive) on 2026-06-29 — "approve and build". GitHub-issue prompt skipped (user opted straight to build).
 
@@ -324,8 +324,8 @@ and the docs step are `trivial`.
   - [x] Step 3.2: Serialize editor mutations (single-writer)
 
 #### Wave 3
-- [ ] Slice 4: Document the name-first creation flow
-  - [ ] Step 4.1: Update PRODUCT.md program-management bullets
+- [x] Slice 4: Document the name-first creation flow
+  - [x] Step 4.1: Update PRODUCT.md program-management bullets
 
 ### Acceptance Criteria
 
@@ -336,7 +336,7 @@ and the docs step are `trivial`.
 - [x] AC5 — Both entry points open the dialog; editor opens for the new program; cancel creates nothing
 - [x] AC6 — Typed-name dismissal confirms; empty dismisses silently
 - [x] AC7 — Existing rename/day-management/edit unaffected; no duplicates on edit
-- [ ] AC8 — PRODUCT.md reflects name-first creation
+- [x] AC8 — PRODUCT.md reflects name-first creation
 
 ## Plan Review Summary
 

@@ -33,8 +33,8 @@ A session can be started as a **deload**: each working exercise's planned set co
 The app opens into a two-tab shell — **Programs** and **Library** — launching on Programs; each tab keeps its own state. Detail screens and live sessions present *over* the shell, so the bottom bar is absent in-session.
 
 ### Program management — [program_management/](mobile/lib/modules/program_management/)
-- **Program list** (the Programs tab) — browse, create, and delete programs; entry point to text import.
-- **Program editor** — rename a program and manage its workout days.
+- **Program list** (the Programs tab) — browse and delete programs; entry point to text import. Creating a program is **name-first**: a dialog asks for a required name, creates the program in one step, and opens its editor.
+- **Program editor** — edits an existing program: rename it and manage its workout days. (Programs are created from the list, not here, so the editor always has a saved program to work on.)
 - **Workout-day editor** — order and group exercises into supersets; add from the library or as a one-off. Linked exercises show the **CAPPED** flag.
 - **Exercise editor** — name, measurement type, planned sets, rest, notes, video, optional library link. Identical sets edit as one (a single weight / reps / set-count with ± steppers drives every set); **Vary by set** drops to per-set rows for pyramids and drop sets. A **Recent history** section lists the last five completed sessions of a linked movement (across every program it appears in) — date, planned target, per-set actuals, with a `▲` when that session capped its target. Tapping a row pre-fills the planned sets from that session's logged values (one fixed-target set per logged set); when the draft already holds set data it asks before replacing.
 - **Plan import** — paste a coach's plan as plain text, parse it into a structured program, preview before saving.
